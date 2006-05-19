@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<configuration name="Simple IP Server Conf">
+  <define entity="transport-channel"
+    name="trans-ip-v4"
+    file="libtrans_ip.so"
+    create_function="create_cipio_instance"
+    delete_function="delete_cipio_instance"
+    init-args="type=tcp"
+    protocol="diameter-v1">
+  </define>
+  <define entity="traffic-param"
+          name="call-rate"
+          value="2">
+  </define>	
+  <define entity="call-param"
+          name="call-id">
+  </define>
+  <commands>
+    <open entity="trans-ip-v4"
+          args="mode=client;dest=127.0.0.1:3868">
+    </open>
+  </commands>
+</configuration>

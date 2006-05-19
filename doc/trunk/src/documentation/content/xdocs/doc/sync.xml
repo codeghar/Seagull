@@ -1,0 +1,433 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN" "http://forrest.apache.org/dtd/document-v20.dtd">
+<document>
+  <header>
+    <title>Seagull - Synchro protocol</title>
+  </header>
+  <body>
+    <section>
+      <title>Synchro protocol details</title>
+      <p>The aim of the synchro protocol is to synchronize several Seagull 
+      to each other, as well as to other applications. Inside a scenario,
+      you can mix any protocol with synchro commands to interact with
+      other Seagull instances or application. Those synchro commands can 
+      contain parameters that can be extracted from the messages received.</p>
+      <note>An example of a JAVA applet synchronized with Seagull is provided.</note>
+    </section>
+    <section>
+      <title>Getting started with the synchro lib</title>
+      <section>
+        <title>First try</title>
+        <p>So that you can get familiar with the usage of the synchro lib,
+        here is an example in which Seagull is used with the synchro lib and with another protocol. 
+	The Seagull one the left is a server running only with one protocol. 
+	The Seagull in the middle is a client running with the same protocol and with the synchro lib. 
+	The part on the right is a server to synchronise with. It could be a Seagull server.
+	Here is the schema of this example:</p>
+        <figure src="images/synchro_scenario.png" alt="Example scenario" width="665"/>
+        <p>Open one terminal session for each instance of the tool you want to run, 
+	as described in the previous section concerning the protocol you are interested into.</p>
+        <p>In the following section, we will only present the files or part of files 
+	containing the synchronisation commands. To build up a complete example, refer 
+	to the example with the protocol you are interested into.</p>
+      </section>
+      <section>
+        <title>First try explained</title>
+        <p>Here is the script (start_client.ksh) that launched the client in our example:</p>
+        <source><![CDATA[#!/bin/ksh
+
+export LD_LIBRARY_PATH=/usr/local/bin
+
+seagull -conf ../config/conf.client.xml -dico ../config/synchro-dictionnary.xml 
+-scen ../scenario/client.xml -log ../logs/client.log -llevel ET]]>
+	</source>
+        <note>On some HP-UX systems, you might need to include the following export 
+	in your Seagull script: "export SHLIB_PATH=/usr/local/bin".
+	</note>
+        <note>You can specify 2 dictionaries if needed: one for a protocol and 
+	one for the synchronisation library:
+	  <code>#!/bin/ksh
+
+export LD_LIBRARY_PATH=/usr/local/bin
+
+seagull -conf ../config/conf.client.xml -dico ../config/[protocol-dictionary].xml ../config/synchro-dictionnary.xml 
+-scen ../scenario/client.xml -log ../logs/client.log -llevel ET>
+	  </code>
+        </note>
+        <p>This example is based on one server that receives
+        a CMD_INITSYNCHRO and answer by a CMD_INITSYNCHRO message. Then they exchange 
+	CMD_CALLCREATE messages. See the dictionary for the complete list of messages 
+	that can be exchanged between the client and the server.</p>
+        <p>Both sides are relying on the synchro dictionary provided
+        with the tool. The dictionnary is: synchro-dictionnary.xml
+	Refer to <a href="#config_dict">dictionary configuration</a> section for more information on the
+        format of this dictionary. The dictionary is specified using the <code>-dico</code>
+        parameter on the <a href="#cli_help">command line</a>.</p>
+        <p>The generic configuration (including network and other parameters)
+        is different for the client and the server. The client uses <code>conf.client.xml</code>
+        and the server uses <code>conf.server.xml</code>. The configuration file is specified
+        using the <code>-conf</code> parameter on the  <a href="#cli_help">command line</a>.</p>
+        <p>Here are both files:</p>
+        <table>
+          <caption>Example client and server configuration</caption>
+          <tr>
+            <th>conf.client.xml</th>
+            <th>conf.server.xml</th>
+          </tr>
+          <tr>
+            <td>
+              <source><![CDATA[<?xml version="1.0" encoding="ISO-8859-1"?>
+<configuration name="Simple IP Server Conf">
+
+  <define entity="transport"
+    name="trans-ip-v4"
+    file="libtrans_ip.so"
+    create_function="create_cipio_instance"
+    delete_function="delete_cipio_instance"
+    init-args="type=tcp">
+  </define>
+
+  <define entity="channel"
+    name="channel-1"
+    protocol="command-synchro-v1"
+    transport="trans-ip-v4"
+    open-args="mode=]]><strong><![CDATA[client]]></strong><![CDATA[;dest=127.0.0.1:15000">
+  </define>
+
+  <define entity="traffic-param"
+          name="call-rate"
+          value="1">
+  </define>	
+  
+  <define entity="traffic-param"
+          name="display-period"
+          value="1">
+  </define>
+
+  <define entity="traffic-param"
+          name="log-stat-period"
+          value="1">
+  </define>
+
+  <define entity="traffic-param"
+          name="call-timeout-ms"
+          value="5000">
+  </define>
+
+  <define entity="traffic-param"
+          name="data-log-period"
+	  value="10">
+  </define>
+
+  <define entity="traffic-param"
+          name="data-log-number"
+	  value="100">
+  </define>
+
+  <define entity="traffic-param"
+          name="data-log-rtdistrib"
+	  value="3000">
+  </define>
+
+  <define entity="traffic-param"
+          name="log-stat-file"
+          value="../logs/client-stat.csv">
+  </define>
+
+  <define entity="traffic-param"
+          name="data-log-file"
+          value="../logs/client-rtt.csv">
+  </define>
+
+  <define entity="traffic-param"
+          name="max-send"
+          value="1000">
+  </define>
+
+  <define entity="traffic-param"
+          name="max-receive"
+          value="1000">
+  </define>
+
+  <define entity="traffic-param"
+          name="max-simultaneous-calls"
+          value="5000">
+  </define>
+
+  <define entity="traffic-param"
+          name="msg-check-level"
+          value="P">
+  </define>
+
+  <define entity="traffic-param"
+          name="msg-check-behaviour"
+          value="E">
+  </define>
+
+</configuration>]]></source>
+            </td>
+            <td>
+              <source><![CDATA[<?xml version="1.0" encoding="ISO-8859-1"?>
+<configuration name="Simple IP Server Conf">
+
+  <define entity="transport"
+    name="trans-ip-v4"
+    file="libtrans_ip.so"
+    create_function="create_cipio_instance"
+    delete_function="delete_cipio_instance"
+    init-args="type=tcp">
+  </define>
+
+  <define entity="channel"
+    name="channel-1"
+    protocol="command-synchro-v1"
+    transport="trans-ip-v4"
+    open-args="mode=]]><strong><![CDATA[server]]></strong><![CDATA[;source=127.0.0.1:15000">
+  </define>
+
+  <define entity="traffic-param"
+          name="call-rate"
+          value="1">
+  </define>	
+  
+  <define entity="traffic-param"
+          name="display-period"
+          value="1">
+  </define>
+
+  <define entity="traffic-param"
+          name="log-stat-period"
+          value="1">
+  </define>
+
+  <define entity="traffic-param"
+          name="call-timeout-ms"
+          value="5000">
+  </define>
+
+  <define entity="traffic-param"
+          name="data-log-period"
+	  value="10">
+  </define>
+
+  <define entity="traffic-param"
+          name="data-log-number"
+	  value="100">
+  </define>
+
+  <define entity="traffic-param"
+          name="data-log-rtdistrib"
+	  value="3000">
+  </define>
+
+  <define entity="traffic-param"
+          name="max-send"
+          value="1000">
+  </define>
+
+  <define entity="traffic-param"
+          name="max-receive"
+          value="1000">
+  </define>
+
+  <define entity="traffic-param"
+          name="max-simultaneous-calls"
+          value="5000">
+  </define>
+
+  <define entity="traffic-param"
+          name="number-calls"
+          value="1">
+  </define>
+
+  <define entity="traffic-param"
+          name="msg-check-level"
+          value="P">
+  </define>
+
+  <define entity="traffic-param"
+          name="msg-check-behaviour"
+          value="E">
+  </define>
+
+</configuration>]]></source>
+            </td>
+          </tr>
+        </table>
+        <note>Refer to <a href="#config_generic">generic configuration</a>
+        section for more information on the format and possible values.</note>
+        <p>Now comes the real stuff: the scenario.</p>
+        <p>First, the scenario source: <a href="synchro.conf.client.xml.html">synchro.conf.client.xml</a>
+        </p>
+        <p>And now the commented version:</p>
+        <table>
+          <tr>
+            <th>Scenario</th>
+            <th>Comments</th>
+          </tr>
+          <tr>
+            <td>
+              <source><![CDATA[<?xml version="1.0" encoding="ISO-8859-1" ?>
+<scenario>
+
+<counter>
+  <counterdef name="session-counter" init="0"> </counterdef>
+</counter>
+
+<init>
+   <send channel="channel-1">
+     <command-synchro name="CMD_INITSYNCHRO">
+     </command-synchro>
+   </send>
+   <receive channel="channel-1">
+     <command-synchro name="CMD_INITSYNCHRO">
+     </command-synchro>
+   </receive>
+</init>
+
+<traffic>
+   <send channel="channel-1">
+     <action>
+        <inc-counter name="session-counter"></inc-counter>
+        <set-value name="user-id-1" 
+                   format="$(session-counter)"></set-value>
+     </action>
+     <command-synchro name="CMD_CALLCREATE">
+     </command-synchro>
+     <action>
+       <store name="SESSION-ID" entity="user-id-1"></store> 
+     </action>
+   </send>
+   <receive channel="channel-1">
+     <command-synchro name="CMD_CALLCREATE">
+     </command-synchro>
+   </receive>
+</traffic>
+
+</scenario>]]></source>
+            </td>
+            <td>
+              <source><![CDATA[XML header
+
+Counters definition
+In this section are initialized the counters that will then 
+be used during the calls. For example here: we initialize the 
+counter that will be incremented every time a call is started.
+
+Beginning of the init scenario
+
+Send a CMD_INITSYNCHRO command-synchro
+
+
+
+Receive back a CMD_INITSYNCHRO command-synchro
+
+
+End of the init scenario.
+
+Beginning of the traffic scenario
+
+Performa actions before sending the next message:
+- increment the counter defined in the counter section.
+- set the user id value
+
+Send a CMD_CALLCREATE command-synchro
+
+
+Store the session id.
+
+
+
+Receive back a CMD_CALLCREATE command-synchro 
+
+
+End of traffic scenario
+
+End of scenario
+]]></source>
+            </td>
+          </tr>
+        </table>
+      </section>
+    </section>
+    <section id="config_generic">
+      <title>Generic configuration</title>
+      <p>The generic configuration file describes the network environment
+        as well as traffic parameters.</p>
+    </section>
+    <section>
+      <title>Sync protocol dictionary</title>
+          <section>
+            <title>Types</title>
+            <p>"types" section contains all types needed for the protocol. For synchro,
+            these are:</p>
+            <source><![CDATA[<types>
+  <typedef name="String" type="string" unit="octet"> </typedef>
+  <typedef name="Integer32" type="signed" size="4" unit="octet"> </typedef>
+</types>
+]]></source>
+          </section>
+          <section>
+            <title>Header</title>
+            <p>"header" section contains the description of message header.
+          For synchro, this is:</p>
+            <source><![CDATA[<header name="command-synchro" length="size" type="type">
+  <fielddef name="type" size="4" unit="octet"> </fielddef>
+  <fielddef name="size" size="4" unit="octet"> </fielddef>
+  <fielddef name="user-id-1" size="4" unit="octet"> </fielddef>
+  <fielddef name="user-id-2" size="4" unit="octet"> </fielddef>
+</header>
+]]></source>
+          </section>
+          <section>
+            <title>Body</title>
+            <p>"body" section contains the description of message body (which
+          naturally comes after the header). For synchro, this is: </p>
+            <source><![CDATA[<body>
+  <header name="parameter" length="parameter-length" type="parameter-code">
+     <fielddef name="parameter-code" size="4" unit="octet"> </fielddef>
+     <fielddef name="parameter-length" size="4" unit="octet"> </fielddef>
+  </header>
+</body>]]></source>
+          </section>
+          <section>
+            <title>Dictionary</title>
+            <p>"dictionary" section contains all possible parameters
+          and command-synchro. Here is a description for some examples:</p>
+            <source><![CDATA[<dictionary>
+  <parameter>
+    <define name="field-bin-1-data" type="String">
+      <setfield name="parameter-code" value="0x00"></setfield>
+    </define>
+    <define name="field-bin-2-data" type="String">
+      <setfield name="parameter-code" value="0x01"></setfield>
+    </define>
+    <define name="field-int-1-data" type="Integer32">
+      <setfield name="parameter-code" value="0x04"></setfield>
+    </define>
+    <define name="field-int-2-data" type="Integer32">
+      <setfield name="parameter-code" value="0x05"></setfield>
+    </define>
+  </parameter>
+
+  <command-synchro session-id="user-id-1" out-of-session-id="user-id-2">
+    <define name="CMD_INITSYNCHRO">
+      <setfield name="type" value="0x00"> </setfield>
+   </define>
+   <define name="CMD_ENDSYNCHRO">
+      <setfield name="type" value="0x01"> </setfield>
+   </define>
+   <define name="CMD_CALLCREATE">
+      <setfield name="type" value="0x02"> </setfield>
+   </define>
+  </command-synchro>
+
+</dictionary>
+]]></source>
+          </section>
+    </section>
+    <section id="prepostactions_XXXXX">
+      <title>Actions in scenario commands for XXXX</title>
+    </section>
+  </body>
+</document>

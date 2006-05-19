@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN"
+"http://forrest.apache.org/dtd/document-v20.dtd">
+<document> 
+  <header> 
+    <title>Seagull project</title>
+    <subtitle></subtitle>
+  </header>
+  <body> 
+    <section>
+      <title>Hosting on Sourceforge</title>
+      <p>Seagull is hosted on <a href="http://www.sourceforge.net/">Sourceforge</a>. Additional information like statistics on Seagull can be found from 
+      the <a href="ext:sourceforge_dev">Seagull's Souceforge project web page</a>.</p>
+    </section>    
+    <section>
+      <title>Source code</title>
+      <p>Seagull source code is Open Source, released under the terms of the GNU GPL license. Feel free to download it, look at it and, why not,
+      enhance Seagull, fix bugs and send your contributions back to the user community!</p>
+      <ul>
+        <li>Browse Seagull <a href="ext:sourceforge_svn">source code in SVN</a>.</li>
+        <li>Getting a copy - anonymously - of the latest source code: <code>svn co XXXXXXX</code></li>
+        <li>Getting a copy - as a registered developer - of the latest source code: <code>svn co XXXXXXX</code></li>
+      </ul>
+    </section>
+    <section>
+      <title>Mailing lists</title>
+      <p>Several mailing lists are available, so that you can get the latest news on the project or ask your questions:</p>
+        <ul>
+            <li>Seagull announce: new releases - general info are announced on this mailing list as well on Seagull users mailing list. XXX</li>
+            <li>Seagull users: where Seagull users meet and are asking for help. XXX</li>
+            <li>Seagull commits: get a notification each time the source code changes! XXX</li>
+        </ul>
+    </section>    
+  </body>
+</document>

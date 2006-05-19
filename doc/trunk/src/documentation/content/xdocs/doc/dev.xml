@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN" "http://forrest.apache.org/dtd/document-v20.dtd">
+<document>
+  <header>
+    <title>Seagull - Developer</title>
+  </header>
+  <body>
+    <section>
+      <title>Developer documentation</title>
+      <fixme author="Olivier">To write</fixme>
+    </section>
+  </body>
+</document>

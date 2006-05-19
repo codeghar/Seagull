@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN"
+"http://forrest.apache.org/dtd/document-v20.dtd">
+<document>
+  <header>
+    <title>Seagull: an Open Source Multi-protocol traffic generator</title>
+    <subtitle></subtitle>
+    <authors>
+      <person name="HP OpenCall Software" email="olivier.jacques@hp.com" />
+    </authors>
+  </header>
+  <body>
+    <section>
+      <title>Welcome to Seagull!</title>
+      <p>Seagull is a multi-protocol traffic generator test tool. Primary aimed at IMS protocols
+      (and thus being the perfect complement to 
+      <a href="http://sipp.sourceforge.net/">SIPp</a> for IMS testing), Seagull is a powerful
+      traffic generator for functional, load, endurance, stress and performance tests for almost
+      any kind of protocol.</p>
+      <p>Except for one protocol (TCAP), Seagull doesn't need an underlying software or platform to
+      work. Adding support in Seagull of new protocols that are handled through libraries or 
+      third party products is not a big task. Have a look at the <a href="doc/dev.html">developer page</a> for more info.</p>
+      <p>In addition, its openness allows to add the support of a brand new protocol in less than 2
+      hours - with no programming knowledge. For that, Seagull comes with several protocol families embedded in the source code:</p>
+      <ul>
+        <li>Binary/TLV (Diameter and many 3GPP and IETF protocols)</li>
+        <li>External library (TCAP, SCTP)</li>
+        <li>Text (XCAP, HTTP)</li>
+      </ul>
+      <table>
+          <tr>
+            <td>      <p>Protocols are then implemented on top of those protocol families using user editable XML
+      dictionaries. Those dictionaries describe how messages and parameters are encoded, allowing a
+      great flexibility.</p>
+      <p>A Seagull scenario - written in XML - describes the messages that are sent and received.
+      It also indicate the behavior to adopt in case a message is unexpected or a check on a
+      parameter fails.</p>
+</td>
+            <td><a href="images/seagull_principle.jpg"><img alt="Seagull principle" src="images/seagull_principle_small.jpg" width="204" /></a></td>
+          </tr>
+      </table>
+      <p>Entirely coded in C++, Seagull is optimized for performances.</p>
+      <p>Ready to install packages are available for HP-UX (PARisc and IPF/IA64), Linux and Win32
+      (Cygwin). Seagull can also be compiled from the source code.</p>
+    </section>
+    <section>
+      <title>Protocols currently supported</title>
+      <p>Seagull supports currently the following protocols:</p>
+      <ul>
+        <li>Diameter base ( 
+        <a href="http://www.ietf.org/rfc/rfc3588.txt">RFC 3588</a>) and any Diameter relating
+        application - IMS Cx, Dx, Ro, Rf, Sh over TCP or SCTP over IPv4 or IPv6.</li>
+        <li>TCAP ITU and ANSI and any protocol over TCAP (Camel, GSM MAP, IS41, Win, ...) either
+        over SS7 (E1/T1) or SIGTRAN. For that, it relies on 
+        <a href="http://www.hp.com/go/opencall/">HP OpenCall SS7</a>.</li>
+        <li>Radius (subset) over IPv4.</li>
+        <li>XCAP over HTTP over IPv4</li>
+        <li>HTTP over IPv4</li>
+      </ul>
+    </section>
+    <section>
+      <title>Features</title>
+      <p>Seagull has the following features:</p>
+      <ul>
+        <li>Multi-protocol traffic generator</li>
+        <li>Protocols of the same family are described in an XML, user editable, dictionary (messages, parameters)</li>
+        <li>Existing protocol families: Binary/TLV (Type, Length, Value), Raw binary, Text, external API (first implementation: HP OpenCall SS7)</li>
+        <li>Scenarios are described using XML files</li>
+        <li>Command line tool with text interface</li>
+        <li>Multi-threaded for performances and reliability</li>
+        <li>Dynamically adjustable call rate</li>
+        <li>Pause and restart of traffic</li>
+        <li>Smooth (no new calls then wait for ongoing calls to end) or brutal end</li>
+        <li>Scenario display with message counters</li>
+        <li>Scenarios have init (executed once), main (repeated for traffic) sections</li>
+        <li>Scenarios have default sections for defense in case of unexpected messages</li>
+        <li>A scenario can be mono (most cases) or multi-protocol</li>
+        <li>Message and parameters checking possible (disabled by default)</li>
+        <li>Multiple Seagull instances can be synchronized in the middle of scenario</li>
+        <li>Statistics: timer between two messages, call length, call rate, successful calls, failed calls (with reason)</li>
+        <li>Protocol decoding and hexadecimal dump</li>
+        <li>Trace files with or without timestamps (for performances and automation)</li>
+        <li>...</li>
+      </ul>
+    </section>
+    <section>
+      <title>Open Source</title>
+      <p>Seagull is a free and Open Source program, released under the terms of the GNU GPL v2
+      license.</p>
+      <p>It is a contribution that <a href="http://www.hp.com/go/opencall/">HP OpenCall Software</a> 
+      provides to the IMS - and protocol - community.</p>
+      <p>As such, there is no support provided for Seagull, but you can likely get
+      email-based support from the Seagull users community.</p>
+    </section>
+    <section>
+      <title>Sponsors</title>
+      <p>Seagull is sponsored by <a href="http://www.hp.com/go/opencall/">HP OpenCall Software</a>. In addition:</p>
+      <ul>
+        <li>Atos Origin provides supports and consultancy on Seagull</li>
+        <li>The <a href="https://www.comet-consortium.org/">COMET</a> consortium has participated 
+        for the support of XCAP and SIP protocols.</li>
+      </ul>
+    </section>
+    <section>
+      <title>Download</title>
+      <p>Don't wait any longer: 
+      <a href="ext:download">download Seagull</a>, install it and start to run tests now!</p>
+    </section>
+  </body>
+</document>

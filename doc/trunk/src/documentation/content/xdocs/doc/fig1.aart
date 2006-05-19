@@ -1,0 +1,25 @@
+/usr/local/share/diamgen
+     +--- config
+     |    base_cx.xml
+     |    conf.client.xml
+     |    conf.server.xml
+     +--- doc
+     |    diamgen-faq.pdf
+     |    diamgen-refdoc.pdf
+     +--- run
+     |    start_client.ksh
+     |    start_server.ksh
+     +--- scenario
+          sar-saa.client.xml
+          sar-saa.server.xml
+
+/usr/local/bin
+     diamgen
+     computestat.ksh
+     plotstat.ksh
+     startoctave_plot.ksh
+     startoctave_stat.ksh
+     csvextract
+     csvsplit
+     
+

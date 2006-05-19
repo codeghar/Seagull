@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN" "http://forrest.apache.org/dtd/document-v20.dtd">
+<document>
+  <header>
+    <title>Seagull - SIP protocol</title>
+  </header>
+  <body>
+    <section>
+      <title>SIP protocol details</title>
+      <fixme author="Olivier">To write</fixme>
+    </section>
+    <section>
+      <title>Getting started with SIP</title>
+      <section>
+        <title>First try</title>
+      </section>
+      <section>
+        <title>First try explained</title>
+      </section>
+    </section>
+    <section id="config_generic">
+      <title>Generic configuration</title>
+      <p>The generic configuration file describes the network environment
+        as well as traffic parameters.</p>
+    </section>
+    <section>
+      <title>XXXXX dictionary</title>
+    </section>
+    <section id="prepostactions_XXXXX">
+      <title>Actions in scenario commands for XXXX</title>
+    </section>
+  </body>
+</document>

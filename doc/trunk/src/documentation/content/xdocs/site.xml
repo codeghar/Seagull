@@ -1,0 +1,88 @@
+<?xml version="1.0"?>
+
+<!--
+Forrest site.xml
+
+This file contains an outline of the site's information content.  It is used to:
+- Generate the website menus (though these can be overridden - see docs)
+- Provide semantic, location-independent aliases for internal 'site:' URIs, eg
+<link href="site:changes"> links to changes.html (or ../changes.html if in
+  subdir).
+- Provide aliases for external URLs in the external-refs section.  Eg, <link
+  href="ext:cocoon"> links to http://xml.apache.org/cocoon/ 
+
+See http://xml.apache.org/forrest/linking.html for more info
+-->
+
+<site label="Seagull" href="" xmlns="http://apache.org/forrest/linkmap/1.0" tab="">
+
+  <project label="Project" tab="project" href="project/index.html">
+     <dev label='Sourceforge' href='ext:sourceforge_dev' />
+     <svn label='Source code' href='ext:sourceforge_svn' />
+     <ml label='Mailing list' href='ext:sourceforge_ml' />
+  </project>
+
+  <doc label="Documentation" tab="doc" href="doc/">
+     <core label='Core' href='core.html' />
+     <diameter label='Protocol: diameter' href='diameter.html' />
+     <octcap label='Protocol: tcap' href='octcap.html' />
+     <sip label='Protocol: sip' href='sip.html' />
+     <xcap label='Protocol: xcap' href='xcap.html' />
+     <http label='Protocol: http' href='http.html' />
+     <octcap label='Protocol: raw binary' href='rawbinary.html' />
+     <sync label='Protocol: sync' href='sync.html' />
+     <!--<mbi label='Protocol: mbi' href='mbi.html' />
+     <dcc label='Protocol: dcc' href='dcc.html' />-->
+     <faq label='FAQ' href='faq.html' />
+     <core label='Developer' href='dev.html' />
+  </doc>
+<!--
+  <all label="Whole site">
+    <all_site label="Whole Site HTML" href="wholesite.html"/>
+    <all_sitePDF label="Whole Site PDF" href="wholesite.pdf"/>
+  </all>
+-->
+  
+  <download label="Download" href="download/index.html" tab="download">
+     <cvs label='Stable release' href='ext:download_stable' />
+  </download>
+
+  <community label="Wiki" tab="wiki">
+     <cvs label='Wiki' href='ext:wiki' />
+  </community>
+  
+  <snapshots label="Snapshots" href="snapshots/" tab="snapshots">
+     <snaps label='Screenshots' href='index.html#snaps' />
+     <videos label='Videos' href='index.html#videos' />
+  </snapshots>
+
+
+  <external-refs>
+    <download_unstable href="">
+    </download_unstable>
+    <download_stable href="http://sourceforge.net/project/showfiles.php?group_id=163830">
+    </download_stable>
+    <download href="http://sourceforge.net/project/showfiles.php?group_id=163830">
+    </download>
+    <sourceforge_dev href="http://www.sourceforge.net/projects/gull/">
+    </sourceforge_dev>
+    <wiki href="http://gull.sourceforge.net/wiki/">
+    </wiki>
+    <sourceforge_home href="http://gull.sourceforge.net/">
+    </sourceforge_home>
+    <hpoc href="http://www.hp.com/go/opencall/">
+    </hpoc>
+    <sourceforge_svn href="http://sourceforge.net/svn/?group_id=163830">
+    </sourceforge_svn>
+    <sourceforge_ml href="http://lists.sourceforge.net/lists/listinfo/sipp-users">
+    </sourceforge_ml>
+    <xml.apache.org href="http://xml.apache.org/">
+      <forrest href="forrest/">
+        <validation href="validation.html"/>
+        <webapp href="your-project.html#webapp"/>
+        <document-v12 href="document-v12.html"/>
+      </forrest>
+      <cocoon href="cocoon/"/>
+    </xml.apache.org>
+  </external-refs>
+</site>

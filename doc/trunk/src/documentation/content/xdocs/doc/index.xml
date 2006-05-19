@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V1.2//EN" "http://apache.org/forrest/dtd/document-v12.dtd">
+<document>
+  <header>
+    <title>Seagull documentation</title>
+  </header>
+  <body>
+    <section>
+      <title>Seagull core Documentation</title>
+      <p>This is the documentation section. You can find the following documents here:</p>
+      <ul>
+        <li>
+          <link href="core.html">Core documentation</link>
+        </li>
+        <li>
+          <link href="faq.html">FAQ</link>
+        </li>
+      </ul>
+    </section>
+    <section>
+      <title>Seagull protocols documentation</title>
+      <p>In addition to the core documentation, the following is specific to each protocol:</p>
+      <ul>
+        <li>
+          <link href="diameter.html">Diameter protocol documentation</link>
+        </li>
+        <li>
+          <link href="octcap.html">TCAP protocol documentation</link>
+        </li>
+        <li>
+          <link href="xcap.html">XCAP protocol documentation</link>
+        </li>
+        <li>
+          <link href="sync.html">Synchronization protocol documentation</link>
+        </li>
+      </ul>
+    </section>
+    <section>
+      <title>Seagull developer documentation</title>
+      <p>In case you want to know more about Seagull and its architecture and/or 
+      plan on contributing, this documentation is for you:</p>
+      <ul>
+        <li>
+          <link href="dev.html">Developer documentation</link>
+        </li>
+      </ul>
+    </section>
+  </body>
+</document>

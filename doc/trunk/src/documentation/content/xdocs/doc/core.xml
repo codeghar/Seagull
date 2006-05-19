@@ -1,0 +1,2262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN" "http://forrest.apache.org/dtd/document-v20.dtd">
+<document>
+  <header>
+    <title>Seagull - Core</title>
+  </header>
+  <body>
+    <figure alt="" src="images/seagull_logo.jpg" width="250"/>
+    <section id="installation">
+      <title>Installation</title>
+      <section>
+        <title>Platforms supported</title>
+        <ul>
+          <li>Linux: Seagull supports Linux. It has been successfully tested with 
+        Debian, RedHat Advanced Server 2.1, RedHat Enterprise Linux 3.0, Suse 9.3 and Fedora core 3. It should be
+        no problem for Seagull to work on other Linux platforms by compiling Seagull from the sources.</li>
+          <li>HPUX 11i (PA-RISC and IA64): supported.</li>
+          <li>HPUX 11.23 (PA-RISC and IA64): supported.</li>
+          <li>Windows/cygwin: supported, only for IP-based protocols (for functional test and limited production test).</li>
+        </ul>
+        <note>
+	  As <a href="ext:hpoc">HP OpenCall SS7</a> is a pre-requisite for TCAP support in Seagull, an HP OpenCall SS7 compliant 
+	  platform must be selected.
+        </note>
+      </section>
+      <section id="octave">
+        <title>Installing Octave</title>
+        <p>Seagull relies on "<a href="http://www.octave.org/">Octave</a>", to analyze detailed statistics and
+        plotting ability.</p>
+        <note>Installing Octave is optional. It will not prevent Seagull to 
+        run properly. Statistics can also be computed from within Excel, 
+        but there are many limitations (mainly file size) by doing so.</note>
+        <p>You have 3 options to install Octave:</p>
+        <ul>
+          <li>You installed your system using CD/DVDs: locate the octave packages and install them.</li>
+          <li>Download Octave for your distribution (using urpmi or apt tools).</li>
+          <li>On a Windows PC, install "<a href="http://www.cygwin.com/">Cygwin</a>" 
+	  and install Octave during Cygwin installation.</li>
+        </ul>
+      </section>
+      <section>
+        <title>Compiling Seagull from source code</title>
+        <fixme author="Olivier">Complete this section.</fixme>
+        <p>If the binary package is not available on your platform or if you want
+        to modify Seagull source code to add you own features, you will need to
+        compile Seagull from the source code.</p>
+        <p>Decompress the source code tarball:</p>
+        <source>gunzip seagull-x.y.z.tar.gz
+tar -xvf seagull-x.y.z.tar</source>
+        <p>This will create a directory called <code>seagull</code>.
+        Go to this directory to compile seagull:</p>
+        <source>cd seagull
+./build.ksh</source>
+      </section>
+      <section>
+        <title>Installing Seagull</title>
+        <p>First, unzip and untar the Seagull archive:</p>
+        <source>seagull-[tool version]-[OS]-[OS release version].tar.gz
+        </source>
+        <p>Then, use the package installer of your platform:</p>
+        <ul>
+          <li>HPUX 11i/11.23: 
+            <source>swinstall -s /full_path_to_the_depot/seagull-core-[tool version]-[OS]-[OS release version]-[processor].depot</source>
+            <source>swinstall -s /full_path_to_the_depot/seagull-[protocol]-[tool version]-[OS]-[OS release version]-[processor].depot</source>
+          </li>
+          <li>Linux RedHat-new and Fedora core 3 install: 
+            <source>rpm -ivh seagull-core-[tool version]-[OS]-[OS release version]-[processor].rpm</source>
+            <source>rpm -ivh seagull-[protocol]-[tool version]-[OS]-[OS release version]-[processor].rpm</source>
+          </li>
+          <li>Linux Debian: 
+          <source>dpkg -i seagull-core-[tool version]-[OS]-[OS release version]-[processor].deb</source>
+            <source>dpkg -i seagull-[protocol]-[tool version]-[OS]-[OS release version]-[processor].deb</source>
+          </li>
+          <li>Cygwin: user auto-extractible executable under Windows. 
+          </li>
+        </ul>
+        <p class="pageBreakBefore">Once the installation is done, the following directories are available:</p>
+        <ul>
+          <li>/usr/local/share/seagull/seagull/doc directory contains the documentation for all the protocols.</li>
+          <li>/usr/local/share/seagull/[protocol]/doc directory contains protocol documentation.</li>
+          <li>/usr/local/share/seagull/[protocol]/config directory contains the 
+            XML configuration files, as described in the 
+            <a href="#config">"Configuration files" section</a>, and the dictionaries, 
+	    as described in the <a href="#config_dict">"Protocol dictionaries" section</a>.</li>
+          <li>/usr/local/share/seagull/[protocol]/logs directory is empty. It is meant 
+	  to contain execution log files.</li>
+          <li>/usr/local/share/seagull/[protocol]/run directory contains examples of shell 
+            scripts to run the client and server to execute your <a href="#config_scenario">scenarios</a>.</li>
+          <li>/usr/local/share/seagull/[protocol]/scenario directory contains the example scenarios.</li>
+        </ul>
+
+        <note> The files present in those directories are given as simple examples. 
+	It is highly recommended to not modify them, as <strong>they will be overwritten</strong> if you
+  upgrade Seagull. Instead, <strong>create your own environment</strong> by copying /usr/local/share/seagull/[protocol]/ 
+	directory tree to your home directory.</note>
+	
+        <p> The installation also creates the following files in the bin directory:</p>
+        <source>/usr/local/bin/
+     seagull
+     computestat.ksh
+     plotstat.ksh
+     startoctave_plot.ksh
+     startoctave_stat.ksh
+     csvextract
+     csvsplit
+     [library-files].so</source>
+        <p/>
+        <p>/usr/local/bin directory contains the binaries of Seagull. Make 
+            sure that this directory is in your user path by typing</p>
+        <source>ocadmin@myhost:~$ type seagull
+seagull is /usr/local/bin/seagull</source>
+        <p/>
+        <p>If Seagull can't be found, type:</p>
+        <source>export PATH=$PATH:/usr/local/bin</source>
+        <p/>
+      </section>
+      <section>
+        <title>Uninstalling Seagull</title>
+        <p>To remove Seagull from your system:</p>
+        <ul>
+          <li>On HPUX 11i/11.23, use swremove command.</li>
+          <li>On Linux with rpm packager
+            <ul>
+            <li>find the list of packages to remove: <source>rpm -aq | grep seagull</source>
+              </li>
+              <li>Remove all the packages given by the previous command: <source>rpm -e package-name</source>
+              </li>
+            </ul>
+          </li>
+          <li>On cygwin, use the Windows uninstaller.</li>
+        </ul>
+      </section>
+
+      <section>
+        <title>Upgrading Seagull</title>
+        <p>To upgrade from a previous version of Seagull:</p>
+        <ul>
+          <li>On HPUX 11i/11.23, follow uninstall procedure and then install procedure.</li>
+          <li>On Linux with rpm packager: 
+            <source>rpm -Uvh seagull-core-[tool version]-[OS]-[OS release version]-[processor].rpm</source>
+            <source>rpm -Uvh seagull-[protocol]-[tool version]-[OS]-[OS release version]-[processor].rpm</source>
+          </li>
+          <li>On cygwin, follow the install procedure.</li>
+          <li>On cygwin, follow the install procedure.</li>
+        </ul>
+      </section>
+    </section>
+    
+    <section>
+      <title>Using Seagull</title>
+      <section>
+        <title>Transport protocols and channels</title>
+        <p>Seagull messages are sent/received using a transport protocol. Several transport protocols can be used: TCP, UDP or SCTP,
+	 all three over IPv4 or IPv6. In addition, <a href="ext:hpoc">HP OpenCall SS7</a> can be used to provide TCAP over SS7 transport. 
+   See <a href="octcap.html">TCAP</a> documentation for more details.</p>
+        <p>You first have to define the transport to use. This is done in the <a href="#config_generic">generic configuration file</a> (see example below). 
+	 Then you can open channels for the transport that you have defined. You can open one or several
+	 channels. Each channel can be on the same or on different transports, and can use the same or
+	 a different protocol.</p>
+        <fixme author="Olivier">Add a drawing to explain.</fixme>
+        <p>A channel makes the link between a transport and a protocol.</p>
+        <note>Only one channel can be opened as server and it has to be opened as the FIRST channel.</note>
+        <p>Transport and channels are defined in the <a href="#config_generic">generic configuration file</a></p>
+        <p>Here are some examples:</p>
+        <ul>
+          <li>Example using IPv4:
+        <source><![CDATA[
+  <define entity="transport"
+    name="trans-ip-v4"
+    file="libtrans_ip.so"
+    create_function="create_cipio_instance"
+    delete_function="delete_cipio_instance"
+    init-args="type=tcp">
+  </define>
+
+  <define entity="channel"
+    name="channel-ip-1"
+    protocol="Protocol"
+    transport="trans-ip-v4"
+    open-args="mode=client;dest=192.168.0.13:3868">
+  </define>
+]]></source></li>
+          <li>Example using IPv6:
+        <source><![CDATA[
+  <define entity="transport"
+    name="trans-ip-v6"
+    file="libtrans_ip.so"
+    create_function="create_cipio_instance"
+    delete_function="delete_cipio_instance"
+    init-args="type=tcp">
+  </define>
+
+  <define entity="channel"
+    name="channel-ip-1"
+    protocol="Protocol"
+    transport="trans-ip-v6"
+    open-args="mode=client;dest=[fec0::5:20f:20ff:fefe:ea51]:3868">
+  </define>]]></source></li>
+  </ul>
+        <p/>
+        <p> The library (SCTP or IP) is defined in the config section of the server and of the client, using the "file" attribute.</p>
+        <p> The library chooses the version of IP to use thanks to the format of the IP address (with dots for IPv4, 
+	  with colons for IPv6).</p>
+        <p> The type of transport for IP can be UDP or TCP. This is specified with the "type" field of the init-args parameter
+	  for the transport.</p>
+      </section>
+
+      <section>
+        <title>Traffic shape</title>
+        <p>The traffic shape is a constant call rate traffic. To reach this fixed
+        call rate, a linear ramp is followed. In addition, some parameters
+        can be tuned for a more advanced control of the traffic. 
+        Refer to the <a href="#ref_traffic_param">traffic
+        parameters reference</a> for more information on those parameters.</p>
+        <p>
+          <img alt="Steady call rate" src="images/callrate.png"/>
+        </p>
+      </section>
+        <p class="pageBreakBefore"></p>
+        <section>
+          <title>Controlling Seagull</title>
+          <p>Here is the help screen, with the list of the useful keys. 
+	  To access it, press the "h" key at any time:</p>
+          <source><![CDATA[|-----------------------------------------------------------------------------|
+| Key: Description                                                            |
+|-----------------------------------------------------------------------------|
+|+ : Increase call rate by call-rate-scale (default 1)                        |
+|- : Decrease call rate by call-rate-scale (default 1)                        |
+|c : Command mode (format : set var value)                                    |
+|    set call-rate      50 : call-rate become 50 c/s                          |
+|    set call-rate-scale 5 : use ± key to increase/decrease call-rate by 5    |
+|q : Tool exit (forced when pressed two times)                                |
+|p : Pause traffic                                                            |
+|r : Resume traffic (after pause)                                             |
+|f : Force init scenario (switch to traffic)                                  |
+|d : Reset cumulative counters for each stat set in config file               |
+|a : activate/deactivate: percentage in Response time screen                  |
+|1 : Traffic screen                                                           |
+|2 : Response time screen                                                     |
+|h : Help screen                                                              |
+|3 : Protocol octcap-itu screen(s)                                            |
+|A : Scenario traffic stats                                                   |
+|B : Scenario default 0 stats                                                 |
+|C : Scenario default 1 stats                                                 |
+|D : Scenario default 2 stats                                                 |
+|E : Scenario default 3 stats                                                 |
+|--- Select a key ----------------------- Next screen : Press the same key ---|]]></source>
+          <p></p>
+          <p>Description of the key functions:</p>
+          <p></p>
+          <table id="ref_keys">
+            <caption>Control keys</caption>
+            <tr>
+              <th>Key</th>
+              <th>Short description</th>
+              <th>Long description</th>
+            </tr>
+            <tr>
+              <td>+</td>
+              <td>Increase the call rate</td>
+              <td>This key allows to increase the call rate from the call-rate-scale value. 
+              The default value of the call-rate-scale is 1.<br/>
+              Usable only in client mode. It has no effect in server mode.</td>
+            </tr>
+            <tr>
+              <td>-</td>
+              <td>Decrease the call rate</td>
+              <td>This key allows to decrease the call rate from the call-rate-scale value. 
+              The default value of the call-rate-scale is 1.<br/>
+              Usable only in client mode. It has no effect in server mode.</td>
+            </tr>
+            <tr>
+              <td>c</td>
+              <td>Command</td>
+              <td>This key allows to change any parameter in the configuration during traffic.<br/>
+	      For example:<br/>
+	      * press 'c', then 'set call-rate 10' to change the value of the call rate to 10.<br/>
+	      * press 'c', then 'set call-rate-scale 5' to change the value of the call-rate-scale to 5.<br/>
+              Usable only in client mode. It has no effect in server mode.</td>
+            </tr>
+            <tr>
+              <td>q</td>
+              <td>Stop the traffic and quit the tool</td>
+              <td>In <strong>server</strong> mode, Seagull will not accept any
+              new incoming call. Once all ongoing calls are finished, the
+              tool will exit.<br/>
+              In <strong>client</strong> mode, Seagull will not place any
+              new call. Once all ongoing calls are finished, Seagull will exit<br/>
+              Pressing the q/ctrl-C key a second time forces Seagull to quit, even if
+              all ongoing calls are not finished.</td>
+            </tr>
+            <tr>
+              <td>p</td>
+              <td>Pause the traffic</td>
+              <td>In <strong>server</strong> mode, Sagull will not accept any
+              new incoming call. Default scenarios will still be active.<br/>
+              In <strong>client</strong> mode, Seagull will not place any
+              new call. Ongoing calls are processed normally.<br/>
+                <strong>Note:</strong> Un-pausing the traffic can trigger a traffic burst
+              as Seagul will try to cope with the call-rate that has been set. For
+              a smooth restart, the 'r' key should be used.</td>
+            </tr>
+            <tr>
+              <td>r</td>
+              <td>Restart the traffic</td>
+              <td>Once the traffic is paused, restart will smoothly restart the 
+              traffic, to go back to the call rate asked.</td>
+            </tr>
+            <tr>
+              <td>f</td>
+              <td>Force without init</td>
+              <td>This key allows to jump directly to the "traffic" section
+              of a <a href="#config_scenario">scenario</a>, without waiting for the "init" section to be
+              completed.</td>
+            </tr>
+            <tr>
+              <td>d</td>
+              <td>Reset cumulative counters for each statistics set in config file</td>
+              <td>Reset the counters. This option is available only if log-stat, log-protocol, display-protocol 
+	      or display-scenario statistics options are set in the configuration file.</td>
+            </tr>
+            <tr>
+              <td>1</td>
+              <td>Display the main screen</td>
+              <td>Display the main screen with the general statistics. Press "1" 
+	      again to display the statistics per scenario.</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>Display the response time screen</td>
+              <td>The second column gives the percentage of the calls for each 
+	      response time range, if the percentages are activated (see 'a' key). 
+	      This screen is relevant only if you set the proper options in the 
+	      configuration files and if you set the start and stop of the timer 
+	      in the scenario (see the <a href="#statistics">statistics</a> chapter).</td>
+            </tr>
+            <tr>
+              <td>a</td>
+              <td>Activate/deactivate the percentage computation</td>
+              <td>This key activates or deactivates the computation of the percentages 
+	      of the response time screen, only if the log-stat is set in the 
+	      configuration file and if you set the start and stop of the timer 
+	      in the scenario (see the <a href="#statistics">statistics</a> chapter).</td>
+            </tr>
+            <tr>
+              <td>h</td>
+              <td>Show the help screen</td>
+              <td>Press on h to show the help screen. <br/>
+	      If you see "Next screen: press the same key", press h again to see the second help screen.</td>
+            </tr>
+            <tr>
+              <td>Numbers above or equal to 3</td>
+              <td>Show protocol statistics screen</td>
+              <td>If you asked for statistics at the protocol level, you can reach the corresponding screen by pressing the 
+	      corresponding number.<br/>
+	      3 is for the first protocol, 4 for the second one, 5 for the third one, and so on for all the protocols used.<br/>
+	      The possible values go from 3 to 0, so there are a maximum of 8 protocol statistics screens.</td>
+            </tr>
+            <tr>
+              <td>Uppercase letters (starting with A)</td>
+              <td>Show scenario section statistics</td>
+              <td>If you asked for statistics at the scenario level, you can reach the corresponding screen by pressing the 
+	      corresponding letter.<br/>
+	      A is for the first section in the scenario, B for the second one, C for the third one, 
+	      and so on for all the sections in your scenario used.<br/>
+	      The number of scenario section statistics screens is limited to 26.</td>
+            </tr>
+          </table>
+          <p>It is also possible to stop the traffic using POSIX signals. This
+          is especially useful when running Seagull in background mode 
+          (<code>-bg</code> option, see the <a href="#cli_help">command line help</a>). 
+	  <code>kill -SIGUSR1 pid</code> has the same effect as the 'q' key. You
+          can force the traffic to stop by issuing a second <code>kill -SIGUSR1 pid</code>.</p>
+        </section>
+        <section>
+          <title>Navigating through the screens</title>
+          <p>Here is the screen that you see when you launch Seagull:</p>
+          <source><![CDATA[|------------------------+---------------------------+-------------------------|
+| Start/Current Time     |       2005-12-14 10:04:11 |     2005-12-14 10:06:53 |
+|------------------------+---------------------------+-------------------------|
+|    Counter Name        |      Periodic value       |     Cumulative value    |
+|------------------------+---------------------------+-------------------------|
+| Elapsed Time           | 00:00:01:008              | 00:02:41:596            |
+| Call rate (/s)         |   75.397                  |   41.505                |
+|------------------------+---------------------------+-------------------------|
+| Incoming calls         |       76                  |     6707                |
+| Outgoing calls         |        0                  |        0                |
+| Msg Recv/s             |  149.802                  |   82.985                |
+| Msg Sent/s             |  149.802                  |   82.979                |
+| Unexpected msg         |        0                  |        0                |
+| Current calls          |        3                  |    0.019                |
+|------------------------+---------------------------+-------------------------|
+| Successful calls       |       75                  |     6704                |
+| Failed calls           |        0                  |        0                |
+| Refused calls          |        0                  |        0                |
+| Aborted calls          |        0                  |        0                |
+| Timeout calls          |        0                  |        0                |
+|------------------------+---------------------------+-------------------------|
+| Last Info              | Incomming traffic                                   |
+| Last Error             | No error                                            |
+|--- Next screen : Press key 1 ----------------------- [h]: Display help ------|]]></source>
+          <p></p>
+          <note>In order to see the screens clearly, you are advised to launch 
+	  Seagull in a terminal with at least the following geometry: 25 lines and 80 columns.</note>
+          <p>At the bottom left, there is an invitation to press 1. Pressing the 1 key 
+	  will get you to the following screen, that displays the number of successfull 
+	  occurences of each types of scenarios (init, traffic, default and abort):</p>
+          <p></p>
+          <source><![CDATA[|------------------------+---------------------------+-------------------------|
+| Success init calls     |        0                  |        0                |
+| Success traffic calls  |       76                  |    13125                |
+| Success default calls  |        0                  |        1                |
+| Success abort calls    |        0                  |        0                |
+|------------------------+---------------------------+-------------------------|
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|                                                                              |
+|--- Next screen : Press key 1 ----------------------- [h]: Display help ------|]]></source>
+          <p></p>
+          <p>Press 1 again to come back to the first screen.</p>
+          <p>You are also invited to press the h key to display the help screen:</p>
+          <p></p>
+          <source><![CDATA[|-----------------------------------------------------------------------------|
+| Key: Description                                                            |
+|-----------------------------------------------------------------------------|
+|+ : Increase call rate by call-rate-scale (default 1)                        |
+|- : Decrease call rate by call-rate-scale (default 1)                        |
+|c : Command mode (format : set var value)                                    |
+|    set call-rate      50 : call-rate become 50 c/s                          |
+|    set call-rate-scale 5 : use ± key to increase/decrease call-rate by 5    |
+|q : Tool exit (forced when pressed two times)                                |
+|p : Pause traffic                                                            |
+|r : Resume traffic (after pause)                                             |
+|f : Force init scenario (switch to traffic)                                  |
+|d : Reset cumulative counters for each stat set in config file               |
+|a : activate/deactivate: percentage in Response time screen                  |
+|1 : Traffic screen                                                           |
+|2 : Response time screen                                                     |
+|h : Help screen                                                              |
+|3 : Protocol octcap-itu screen(s)                                            |
+|A : Scenario traffic stats                                                   |
+|B : Scenario default 0 stats                                                 |
+|C : Scenario default 1 stats                                                 |
+|D : Scenario default 2 stats                                                 |
+|E : Scenario default 3 stats                                                 |
+|--- Select a key ----------------------- Next screen : Press the same key ---|]]></source>
+          <p></p>
+          <p>Notice that all the lines after "h : Help screen" are optional. 
+	  They only appear if you have set the protocol statistics on ("3 : Protocol octcap-itu screen(s)" 
+	  in our example) and the scenario statistics (lines from A to E in our example). 
+	  In case there are not enough space on the screen to display all the 
+	  optional lines, you have to press the h key again to display the end of 
+	  the help list:</p>
+          <p></p>
+          <source><![CDATA[|-----------------------------------------------------------------------------|
+| Key: Description                                                            |
+|-----------------------------------------------------------------------------|
+|H : Scenario default 6 stats                                                 |
+|I : Scenario default 7 stats                                                 |
+|J : Scenario default 8 stats                                                 |
+|K : Scenario default 9 stats                                                 |
+|                                                                             |
+|                                                                             |
+|                                                                             |
+|                                                                             |
+|                                                                             |
+|                                                                             |
+|                                                                             |
+|                                                                             |
+|                                                                             |
+|                                                                             |
+|                                                                             |
+|                                                                             |
+|                                                                             |
+|                                                                             |
+|                                                                             |
+|                                                                             |
+|--- Select a key ----------------------- Next screen : Press the same key ---|]]></source>
+          <p></p>
+          <p>Then press h again to come back to the main help screen.</p>
+          <p>All the screens in Seagull follow the same logic: if all the information 
+	  cannot be displayed on one screen you'll have to press the same key once again 
+	  to display the rest of the information.</p>
+        </section>
+      </section>
+      <section id="config_scenario">
+        <title>Seagull scenario</title>
+        <section>
+          <title>Scenario sections</title>
+          <p>A scenario describes the messages and their parameters exchanged
+          during traffic.  It contains several sections:</p>
+          <source><![CDATA[  <scenario>
+    <counter>
+    </counter>
+
+    <init>
+    </init>
+    
+    <default>
+    </default>
+  
+    <abort>
+    </abort>
+  
+    <traffic>
+    </traffic>
+  </scenario>]]></source>
+          <section id="scen_counter">
+            <title>Counter section</title>
+            <p>The <strong>counter</strong> section contains some variable initialization. 
+	    Those variables can then be used in other sections.  
+	    This can be in a server type or in a client type scenario.</p>
+            <p>The list of scenario commands that can be included in this section is 
+            described in the <a href="#ref_scenario_commands">scenario command section</a>.</p>
+          </section>
+          <section id="scen_init">
+            <title>Init section</title>
+            <p>The <strong>init</strong> section is executed once, at the time of the connection is setup
+            (before any traffic). This can be in a server type or in a client type scenario.</p>
+            <p>The list of scenario commands that can be included in this section is 
+            described in the <a href="#ref_scenario_commands">scenario command section</a>.</p>
+          </section>
+          <section id="scen_default">
+            <title>Default section</title>
+            <p>The <strong>default</strong> section is executed when an unexpected message (not listed 
+            in the traffic section) is received. This can be a server type or a client type scenario.</p>
+            <p>There can be as many default section as needed. Seagull will try to match the
+            message received against the first message of the default section.</p>
+            <p>The default section is generally used to create defense scenarios, so that
+            Seagull can react when stress situations from the system under test 
+            are encountered.</p>
+            <p>The list of scenario commands that can be included in this section is 
+            described in the <a href="#ref_scenario_commands">scenario command section</a>.</p>
+          </section>
+          <section id="scen_abort">
+            <title>Abort section</title>
+            <p>The <strong>abort</strong> section is executed to finish a call when something wrong
+            happened. The first command has to be a &lt;send&gt;</p>
+            <p>The list of scenario commands that can be included in this section is 
+            described in the <a href="#ref_scenario_commands">scenario command section</a>.</p>
+          </section>
+          <section id="scen_traffic">
+            <title>Traffic section</title>
+            <p>The <strong>traffic</strong> section is the main traffic. This can be in a server type 
+	    or in a client type scenario.</p>
+            <p>The list of scenario commands that can be included in this section is 
+            described in the <a href="#ref_scenario_commands">scenario command section</a>.</p>
+          </section>
+        </section>
+          <section id="scen_cmds">
+            <title>Actions in scenarios</title>
+              <p>The &lt;send&gt; and &lt;receive&gt; scenario commands can include &lt;action&gt; and
+              &lt;message&gt; section.</p>
+              <note>"message" depends on the protocol. This is "command" for Diameter, "primitive" for TCAP, ...</note>
+              <p>The &lt;action&gt; section can be placed before and/or after the &lt;message&gt; section.</p>
+              <p>Actions placed before the message (called 
+              "<strong>pre-actions</strong>") are executed just before the message is actually
+              sent or received. Actions placed after the message (called 
+              "<strong>post-actions</strong>") are executed just after the
+              message is sent or received. </p>
+              <p>There are many actions available. To name a few, you can increment <a href="#call_variables">call variables</a>, 
+              start or stop a timer, store parameter from an incoming message or re-inject it in an outgoing message,
+              do <a href="#control">controls</a> on the message or inject values from an external data file. Click 
+              <a href="#ref_actions">there to see the complete list</a>.</p>
+              <source><![CDATA[<send>
+  <action>    <!-- Pre-action  -->
+  </action>
+  <message>   <!-- Message     -->
+  </message>
+  <action>    <!-- Post-action -->
+  </action>
+</send>]]>
+              </source>
+              <p>For example, actions that can be placed <strong>before</strong> a message are actions
+              to increment a counter before sending the message:</p>
+              <source><![CDATA[   <send channel="channel-1">
+     <action>
+        <inc-counter name="session-counter"></inc-counter>
+        <set-value name="user-id-1" format="$(session-counter)"></set-value>
+     </action>
+     <message name="FOO_BAR">
+     </message>
+   </send>
+      ]]></source>
+              <p>For example, actions that can be placed <strong>after</strong> a message are actions to store
+              parameter values after the message has been received. Example:</p>
+              <source><![CDATA[   <receive channel="channel-1">
+     <message name="FOO_BAR">
+     </message>
+     <action>
+       <store name="SESSION-ID" entity="user-id-1"></store> 
+     </action>
+   </receive>]]></source>
+              <p>The list of <a href="#ref_actions">possible actions</a> is available 
+              in the reference section. All actions can be pre- or post-actions.</p>
+            </section>
+        <section id="call_variables">
+          <title>Call variables</title>
+          <p>In order to have dynamical scenarios, Seagull has "call variables".
+          Those variables are local to each call (each instance of the scenario).</p>
+          <p>Here is what is possible to do with call variables:</p>
+          <ul>
+            <li>Set a call variable by using the <a href="#action_set-value">set-value</a> action.</li>
+            <li>Increment a call variable within a call by using the <a href="#action_inc-var">inc-var</a> action.</li>
+            <li>Increment a call counter by using the <a href="#action_inc-counter">inc-counter</a> action. 
+	    A counter is a global variable.</li>
+            <li>Retrieve the value of a protocol entity by using the <a href="#action_store">store</a> action.</li>
+            <li>Put the value of a call variable in a protocol entity by using the <a href="#action_restore">restore</a> action.</li>
+            <li>In particular, this is the way how Diameter Hop-by-hop Id and End-To-End Id are handled.</li>
+          </ul>
+        </section>
+      </section>
+      <section id="control">
+        <title>Message and parameters control</title>
+        <p>Even if Seagull is aimed at traffic, load and stress testing, it is 
+        possible to check message and parameters during traffic.</p>
+        <note>The more controls you put, the less traffic Seagull can handle.</note>
+        <p>Several levels of control are available and described
+        in the following sections.</p>
+        <section>
+          <title>Enabling and disabling controls</title>
+          <p>Controls can be enabled at two different levels:</p>
+          <ul>
+            <li>Globally, in the <a href="#config_generic">generic configuration file</a>.</li>
+            <li>Globally, using <code><![CDATA[-msgcheck]]></code> parameter in the <a href="#cli_help">command line</a>.</li>
+            <li>Per message, in the <a href="#config_scenario">scenario</a> file, in a <a href="#scen_cmds">post-action</a> section of a message:
+            <source><![CDATA[<check-presence name="[FIELD_NAME]" behaviour="error"></check-presence>]]></source>
+            </li>
+          </ul>
+        </section>
+        <section>
+          <title>Behaviour when a check fails</title>
+          <p>You can specify the behaviour of Seagull for the different checks. 
+	  This behaviour can be at the check level or globally. 
+	  For the first case, you'll see examples in the following chapters. 
+	  Here are presented the ways to define global behaviour.
+	  </p>
+          <p>Define global "Warning" as the behaviour if the check fails in XML configuration file:</p>
+          <source><![CDATA[<define entity="traffic-param"
+  name="msg-check-behaviour"
+  value="W">
+</define>]]></source>
+          <p>Define global "Error and abort" as the behaviour if the check fails in XML configuration file:</p>
+          <source><![CDATA[<define entity="traffic-param"
+  name="msg-check-behaviour"
+  value="E">
+</define>]]></source>
+          <p>This parameter will be applied to the check if the behaviour attribute 
+	  is not specified for the check.</p>
+
+          <p>If the control is OK, the scenario goes on. If the control fails,
+        the behaviour can be:</p>
+          <ul>
+            <li>Log a <strong>warning</strong> and continue the call</li>
+            <li>Log an <strong>error</strong> and abort the call</li>
+          </ul>
+        </section>
+        <p class="pageBreakBefore"></p>
+        <section id="check_presence">
+          <title>Presence check</title>
+            <p>The goal of this control is to check for presence of parameters as described
+            in the scenario. There are two types of presence check:</p>
+            <ul>
+              <li><strong>Presence</strong>: Seagull checks that <strong>at least</strong> parameters
+                listed in the scenario are present in the message received. If additional
+                parameters are present, the call will still be OK. If expected parameters
+                are missing, the control fails.</li>
+              <li><strong>Additional</strong>: Seagull checks that <strong>all and only</strong> the parameters
+                listed in the scenario are present in the message received. If additional 
+                parameters are present, the call will be marked as failed. If expected
+                parameters are missing, the behaviour indicated is applied.</li>
+            </ul>
+            <p>The type of presence check is set in the <a href="#config_generic">generic configuration file</a>:</p>
+            <ul>
+              <li>To enable "Presence" check in the generic configuration file:
+              <source><![CDATA[<define entity="traffic-param"
+        name="msg-check-level"
+        value="P">
+      </define>]]></source>
+              </li>
+              <li>To enable "Additional" check in the generic configuration file:
+              <source><![CDATA[<define entity="traffic-param"
+        name="msg-check-level"
+        value="A">
+      </define>]]></source>
+              </li>
+            </ul>
+            <p>Example for Diameter protocol:</p>
+            <source><![CDATA[
+<receive channel="channel-1">
+  <command name="SAA">
+  </command>
+  <action>
+    <check-presence name="name_of_avp_to_check" behaviour="error"></check-presence>
+  </action>
+</receive>
+]]></source>
+          <note>"command" is specific to Diameter. It should be replaced by the appropriate keyword
+          depending on the protocol</note>
+          <warning>The check <strong>must be</strong> in the <a href="#scen_cmds">post-action</a> section
+          of the <![CDATA[<receive>]]> scenario command.</warning>
+        </section>
+        <section id="check_value">
+          <title>Parameter value check</title>
+          <p>Seagull can also perform checks on the value of the fields of a message 
+	  or the value on some header fields of a message.</p>
+          <p>Those checks are done in the scenarios.</p>
+          <note>The check is done against the value indicated in the scenario.</note>
+          <ul>
+            <li>Check the value of first message received: you check that the first 
+	  message (specified with "name") that you receive has the expected sub-entity 
+	  value (specified with "sub-entity"). This value is specified in your scenario, 
+	  in the receive section.
+	  <p></p>
+              <source><![CDATA[<!-- Diameter example-->
+<check-value name="Vendor-Specific-Application-Id" behaviour="error">
+</check-value>]]>
+	  </source>
+              <source><![CDATA[<!-- TCAP example-->
+<check-value name="TC_INVOKE" sub-entity="operation-code" behaviour="error"
+      instance="Client-1-data">
+</check-value>]]>
+	  </source>
+              <p></p>
+            </li>
+            <li>Check the value of a header field: you check that the field (specified with 
+	  "name") in the header of the message has the expected value, i.e. the 
+	  value specified in your configuration file.
+	  <p></p>
+              <source><![CDATA[<!-- Diameter example-->
+<check-value name="HbH" behaviour="error">
+</check-value>]]>
+	  </source>
+              <source><![CDATA[<!-- TCAP example-->
+<check-value name="d-address-pc" behaviour="error">
+</check-value>]]>
+	  </source>
+              <p></p>
+            </li>
+          </ul>
+        </section>
+        <section id="check_order">
+          <title>Message order check</title>
+          <note>Message order check is implemented for TCAP protocol only.</note>
+          <p>Seagull can also perform checks on the order in which the parameters in the messages 
+	  are received.</p>
+          <p>Those checks are done in the scenarios.</p>
+          <p>For TCAP case, you can check the order of reception of the components (eg TC_INVOKE), inside primitives (eg TC_BEGIN).</p>
+          <p>Example: check that the parameter (specified with "name") is received in second position.</p>
+          <source><![CDATA[<!-- TCAP example-->
+<check-order name="TC_INVOKE" behaviour="error" position="1">
+</check-order>]]>
+          </source>
+          <note> The position starts at zero. To check the second position, check 
+	  at position=1, and so on.</note>
+          <note>If you specify a position that is different than the number of 
+	  messages received an error is logged.</note>
+        </section>
+
+      </section>
+
+      <section>
+        <title>External data management</title>
+        <p>Seagull allows to inject external data into the messages:</p>
+        <figure alt="Example of external data injection" src="images/external_data.jpg" width="727"/>
+        <p> Those external data are defined into a separated file. This allows 
+	to have messages with fields that have different values for every call:</p>
+        <p>To use this feature, you need to specify those two parameters in the configuration file:</p>
+        <source><![CDATA[  <define entity="traffic-param"
+          name="external-data-file"
+          value="FULL_PATH/EXTERNAL_FILE.csv">
+  </define>
+
+  <define entity="traffic-param"
+          name="external-data-select"
+          value="sequential">
+  </define>]]></source>
+        <p/>
+        <p> The value of the "external-data-select" parameter can be <strong>"random"</strong> 
+	  or <strong>"sequential"</strong>. 
+	  In the first case, the new value is taken randomly from the external data file, 
+	  in the second it is taken in a sequential order (first line of external data file for first call, second line for second call...).</p>
+        <p>Here is an example of external data file: </p>
+        <source><![CDATA[ 
+"string";"string";"number";
+    
+# this is an example
+
+     "0472826017" ;  "0472826061" ; "10" ;
+     "0472826027" ;  "0472826062" ; "12" ;
+     "0472826037" ;  "0472826063" ; "14" ;
+     "0472826047" ;  "0472826064" ; "16" ;
+     "0472826057" ;  "0472826065" ; "18" ;
+     "0472826067" ;  "0472826066" ; "20" ;
+     "0472826077" ;  "0472826067" ; "22" ;
+
+
+// end of file
+]]></source>
+        <p/>
+        <p> Notice that the comments can be written using # or //. 
+	  Numeric values can be in decimal (for example: "10") or 
+	  hexadecimal (for example: "0xA2").</p>
+        <p> The first line with characters without the comment signs is the line 
+	  that defines the type of the data contained in this file. This line is 
+	  <strong>mandatory</strong>. This type must be one of the basic types of the tool: 
+	  string, number, signed, number64 or signed64.</p>
+        <p> On each line of data, you can access the data that you need with its index: the first data on the line is 
+	  field(0), the second one is field(1), and so on.</p>
+        <p>This index is used in the scenario to specify which data is used to fill in the specified field of the message.</p>
+        <p>You can specify also at which position in your buffer you start to inject the data ("begin" field), and
+	  until which position you inject it ("end" field).
+	  Be careful, when using the "begin" and "end" fields, the count starts at zero. 
+	  Here is an example from one client scenario:</p>
+        <source><![CDATA[<restore-from-external field="1" entity="FIELD_NAME"
+	   begin="1" end="3">
+	   </restore-from-external>]]></source>
+        <p>In this example, the data will be injected at the second position (0 is 
+	  the first one, so 1 is the second one) and until the third position. 
+	  So you inject 2 bytes of data: one at the second position and one at the third position.</p>
+        <p>The field FIELD_NAME must exist in the message, as defined in the dictionary. Its value in the current message 
+	  will be changed to the data of the second column (second because field="1").</p>
+        <note>When the size specified (difference between "begin" and "end") is larger than the injected buffer, 
+	  the buffer is injected in its full length from the "begin" position, and a warning is logged.</note>
+        <note>When the destination buffer is too short to reach the "begin" position (e.g. buffer with 2 numbers and "begin=5"), 
+	  zeros are added to the destination buffer so it reaches a size big enough to enable the injection of the buffer at 
+	  the "begin" position. A warning is logged.</note>
+      </section>
+      <p class="pageBreakBefore"></p>
+      <section id="statistics">
+        <title>Statistics</title>
+        <p>Statistics is an important part of a performance test tool. Seagull
+        has three different statistics set: <a href="#stats_global">global 
+        statistics</a>, <a href="#stats_responsetime">response time</a> statistics, 
+	<a href="#stats_protocol">protocol</a> and <a href="#stats_scenario">scenario</a>
+	statistics.</p>
+        <p>Statistics raw data are saved using 
+        <a href="http://en.wikipedia.org/wiki/Comma-separated_values">CSV</a> file format. 
+        This makes it easy to import the file in specialized applications, like
+        <a href="http://www.octave.org">Octave</a> or 
+        <a href="http://en.wikipedia.org/wiki/Microsoft_Excel">Microsoft Excel</a>
+        to analyse the results and create graphs out of the results.</p>
+        <p>A new line of statistics is dumped for every statistic period, allowing
+        to follow the statistics over time.</p>
+        <section id="stats_global">
+          <title>Global statistics</title>
+          <p>Global statistics are used to get global informations on the traffic. 
+          See <a href="#traffic_log_stat">config 
+          file reference</a> / log-stat-* parameters to activate those statistics.</p>
+          <p>Those statistics have many counters. Here is the list. Counters can have a (P) or (C) appended
+          to their name, meaning that the value is (C)umulative (from the beginning
+          of the traffic) or a (P)eriodic (for the stat period, specified by
+          <a href="#traffic_log_stat">log-stat-period</a> traffic-param).</p>
+          <ul>
+            <li>
+              <strong>StartTime</strong>: Start time of the traffic</li>
+            <li>
+              <strong>LastResetTime</strong>: Last time periodic counters have
+            been reseted</li>
+            <li>
+              <strong>CurrentTime</strong>: current time</li>
+            <li>
+              <strong>ElapsedTime</strong>: time elapsed</li>
+            <li>
+              <strong>Rate</strong>: number of calls per seconds</li>
+            <li>
+              <strong>IncomingCall</strong>: number of incoming calls</li>
+            <li>
+              <strong>OutgoingCall</strong>: number of outgoing calls</li>
+            <li>
+              <strong>MsgRecvPerS</strong>: number of messages received per second</li>
+            <li>
+              <strong>MsgSendPerS</strong>: number of messages sent per second</li>
+            <li>
+              <strong>UnexpectedMsg</strong>: number of unexpected messages</li>
+            <li>
+              <strong>CurrentCall</strong>: number of current (opened) calls</li>
+            <li>
+              <strong>InitSuccessfulCall</strong>: number of successful init scenarios</li>
+            <li>
+              <strong>TrafficSuccessfulCall</strong>: number of successful traffic scenarios</li>
+            <li>
+              <strong>DefaultSuccessfulCall</strong>: number of successful default scenarios</li>
+            <li>
+              <strong>AbortSuccessfulCall</strong>: number of successful abort scenarios</li>
+            <li>
+              <strong>FailedCall</strong>: number of failed calls</li>
+            <li>
+              <strong>FailedRefused</strong>: number of failed calls because they were refused</li>
+            <li>
+              <strong>FailedAborted</strong>: number of failed calls because they were aborted</li>
+            <li>
+              <strong>FailedTimeout</strong>: number of failed calls because they timed out</li>
+            <li>
+              <strong>ResponseTime</strong>: average response time</li>
+            <li>
+              <strong>ResponseTimeRepartition</strong>: response time repartition</li>
+          </ul>
+          <p>Here is an example of a global statistic file (some counters have been
+          removed):</p>
+          <source><![CDATA[StartTime;LastResetTime;CurrentTime;ElapsedTime(P);ElapsedTime(C);Rate(P);Rate(C);IncomingCall(P);IncomingCall(C);
+2004-12-02 11:11:01;2004-12-02 11:11:01;2004-12-02 11:11:01;00:00:00;00:00:00;111.111;111.111;0;0;
+2004-12-02 11:11:01;2004-12-02 11:11:05;2004-12-02 11:11:06;00:00:05;00:00:05;40.7837;40.9018;0;0;
+2004-12-02 11:11:01;2004-12-02 11:11:10;2004-12-02 11:11:11;00:00:05;00:00:10;50.9287;45.9128;0;0;
+2004-12-02 11:11:01;2004-12-02 11:11:15;2004-12-02 11:11:16;00:00:05;00:00:15;50.729;47.5145;0;0;
+2004-12-02 11:11:01;2004-12-02 11:11:20;2004-12-02 11:11:21;00:00:05;00:00:20;50.729;48.3179;0;0;
+2004-12-02 11:11:01;2004-12-02 11:11:25;2004-12-02 11:11:26;00:00:05;00:00:25;50.9287;48.838;0;0;
+2004-12-02 11:11:01;2004-12-02 11:11:30;2004-12-02 11:11:31;00:00:05;00:00:30;50.729;49.153;0;0;]]>
+          </source>
+        </section>
+        <section id="stats_responsetime">
+          <title>Response time statistics</title>
+          <p>While global statistics are used to monitor the traffic over time, 
+          response time statistics are meant to be used to measure time between 
+	  two messages. This is what is usually used in performance test campaigns.</p>
+          <figure alt="Diameter Response time timer" src="images/startstoptimer.png" width="608"/>
+          <note>To activate response time statistics,
+          you must specify the data-log parameters in the configuration file
+          <strong>AND</strong> set the timer in the scenario, which means to have a 
+          <a href="#action_start-timer"><![CDATA[<start-timer>]]></a> and
+          <a href="#action_stop-timer"><![CDATA[<stop-timer>]]></a> in the scenario
+          file.</note>
+          <p>The parameters to be set in the configuration file are the following:</p>
+          <ul>
+            <li>1) <a href="#data_log_period">data-log-period</a>
+              <p>This number specifies the time interval (in seconds) at which the 
+	    logs are dumped in file.<br/>
+	    Example: if set to 10, the logs are dumped every 10 seconds.</p>
+            </li>
+            <li>2) <a href="#data_log_number">data-log-number</a>
+              <p>This number specifies the interval in number of messages at which the 
+	    logs are dumped  in file.<br/>
+	    Example: if set to 500, the logs are dumped every 500 messages.</p>
+            </li>
+            <li>3) <a href="#data_log_file">data-log-file</a>
+              <p>It specifies the file in which the logs are dumped. Be careful: 
+	    if this is not set, no logs are available, even on the display screen !</p>
+            </li>
+            <li>4) <a href="#data_log_rtdistrib">data-log-rtdistrib</a>
+              <p>This number specifies the interval (in milliseconds !!) on which 
+	    the response times are counted. Here is example, with the value set to 2000:</p>
+              <figure alt="data-log-rtdistrib example" src="images/data-log-rtdistrib-example.jpg" width="708"/>
+            </li>
+          </ul>
+          <p>If options 1 and 2 are set at the same time, they are both active. 
+	  In this case, the logs are dumped every X seconds AND every Y messages.</p>
+          <p/>
+          <p>If you set the options 1, 2 and 3, you will get response time 
+	  statistic such as in this example:</p>
+          <source><![CDATA[time-ms;response-time-ms;
+2210.899902;2159.582000;
+3204.348877;2203.527000;
+4124.591064;2123.738000;
+5150.986084;2150.094000;
+6124.566895;2123.638000;
+7190.973877;2186.730000;
+8151.060059;2150.058000;
+9144.521973;2143.523000;
+10171.154053;2166.825000;
+11184.657959;2180.298000;
+12121.958984;2120.847000;
+13151.222900;2146.783000;
+14151.293945;2150.089000;
+15174.738037;2170.263000;
+16201.378906;2196.880000;
+17151.288086;2149.990000;]]></source>
+          <p>If you set the options 1, 2, 3 and 4, you will get response time 
+	  statistic such as in those examples:</p>
+          <source><![CDATA[Dump Periodic;
+1149;1;
+1156;4;
+1169;1;
+1196;1;
+1216;1;
+Dump Periodic;
+1140;1;
+1149;2;
+1156;4;
+1209;1;
+1216;2;
+
+....
+
+Dump Cumulative;
+1115;1;
+1116;1;
+1118;1;
+1119;1;
+1121;1;
+1123;2;
+1127;3;
+1128;1;
+1129;2;
+1130;12;
+1131;3;
+1132;3;
+1133;4;
+1135;1;
+1136;8;
+1137;11;
+1138;12;
+...
+]]></source>
+        </section>
+        <p class="pageBreakBefore"></p>
+        <section id="stats_protocol">
+          <title>Protocol statistics</title>
+          <p>Protocol statistics are used to get global information on the traffic for a specified protocol. 
+	  To activate protocol statistics, you must set the protocol parameters 
+	  in the configuration file. Those parameters are the following:</p>
+          <ul>
+            <li>1) <a href="#display-protocol-stat">display-protocol-stat</a>
+              <p>Set this parameter to true to enable the protocol statistics. 
+	    If it is not set to true, you will not get any protocol statistics, 
+	    even if the following parameters are set.</p>
+            </li>
+            <li>2) <a href="#log-protocol-stat-period">log-protocol-stat-period</a>
+              <p>This number specifies the interval in time (in seconds) at which the logs are dumped.<br/>
+	    Example: if set to 5, the logs are dumped every 5 seconds.</p>
+            </li>
+            <li>3) <a href="#log-protocol-stat-name">log-protocol-stat-name</a>
+              <p>It specifies the names of the protocols for which the statistics are set. 
+	    Put "all" to get statistics for all the protocols used. Otherwise, state 
+	    the names of the protocols separated by semi-colons.<br/>
+	    If you specify the names of several protocols and all, it will only consider 
+	    the "all" keyword" and display statistics for all the protocols.<br/>
+	    If you do not specify this parameter, you do not get any protocol statistics.
+	    </p>
+            </li>
+            <li>4) <a href="#log-protocol-stat-file">log-protocol-stat-file</a>
+              <p>It specifies the file in which the logs are dumped.</p>
+            </li>
+          </ul>
+          <p>If the display-protocol-stat parameter is set to true, but the 
+	  log-protocol-stat-period is set to zero, you will not get any statistics 
+	  displayed on screen. In this case, if you set the log-protocol-stat-file, 
+	  you will still see the statistics in the file, even though you do not see them on screen.</p>
+          <p>Here is an example of the protocol statistics screen that you get (example from a TCAP execution):</p>
+          <source><![CDATA[|--------------------------------+---------------------+-----------------------|
+|                                |  Periodic value     |   Cumulative value    |
+| primitive                      |     sent | received |      sent |  received |
+|--------------------------------+---------------------+-----------------------|
+| MGT                            |        0 |        0 |         0 |         0 |
+| NO_PRIMITIVE                   |        0 |        0 |         0 |         0 |
+| SCCP_N_COORD                   |        0 |        0 |         0 |         0 |
+| SCCP_N_COORD_RES               |        0 |        0 |         0 |         0 |
+| SCCP_PC_STATUS                 |        0 |        0 |         0 |         0 |
+| SCCP_USER_STATUS               |        0 |        0 |         0 |         1 |
+| SWITCH_DONE                    |        0 |        0 |         0 |         0 |
+| SWITCH_STARTED                 |        0 |        0 |         0 |         0 |
+| TC_BEGIN                       |        0 |       77 |         0 |     18280 |
+| TC_CONTINUE                    |       77 |       77 |     18280 |     18277 |
+| TC_END                         |       76 |        0 |     18276 |         0 |
+| TC_NOTICE                      |        0 |        0 |         0 |         0 |
+| TC_P_ABORT                     |        0 |        0 |         0 |         0 |
+| TC_UNI                         |        0 |        0 |         0 |         0 |
+| TC_U_ABORT                     |        0 |        0 |         0 |         0 |
+|                                |                     |                       |
+|                                |                     |                       |
+|                                |                     |                       |
+|                                |                     |                       |
+|----------------------------------------- Next screen : Press the same key ---|]]></source>
+
+        </section>
+        <section id="stats_scenario">
+          <title>Scenario statistics</title>
+          <p>Scenario statistics are used to get information on each type of scenarios 
+	  that exist in your scenario file. Those can be: init, traffic, default and abort scenarios. 
+	  To activate scenario statistics, you must set the following parameter 
+	  to true in the configuration file: <a href="#display-scenario-stat">display-scenario-stat</a>
+          </p>
+          <p>Here is an example of the scenario statistics screen that you get 
+	  (example from traffic scenario in a TCAP execution):</p>
+          <source><![CDATA[|--------------------------+-------------------------+-------------------------|
+|                          | Messages   | Retrans    | Timeout    | Unexp.     |
+|             TC_BEGIN <-- |      20702 |          0 |          0 |          0 |
+|          TC_CONTINUE --> |      20702 |          0 |          0 |          0 |
+|          TC_CONTINUE <-- |      20699 |          0 |          0 |          0 |
+|               TC_END --> |      20699 |          0 |          0 |          0 |
+|                          |                         |                         |
+|                          |                         |                         |
+|                          |                         |                         |
+|                          |                         |                         |
+|                          |                         |                         |
+|                          |                         |                         |
+|                          |                         |                         |
+|                          |                         |                         |
+|                          |                         |                         |
+|                          |                         |                         |
+|                          |                         |                         |
+|                          |                         |                         |
+|                          |                         |                         |
+|                          |                         |                         |
+|                          |                         |                         |
+|                          |                         |                         |
+|                          |                         |                         |
+|--------------------------+-------------------------+-------------------------|
+]]></source>
+          <warning>The scenario statistics are only displayed on screen, no logs are 
+	dumped to file.</warning>
+        </section>
+        <section>
+          <title>Getting statistics out of response time raw data</title>
+          <p>Once you have the raw statistics data, you can use a variety
+          of tools coming with Seagull to analyse the datas and get various
+          statistics out of it: Number of values, minimum value, maximum value, 
+          average value, variance, standard deviation and N-th percentile.</p>
+          <p>A schema that summarizes the various tools:</p>
+          <figure alt="Statistics principle" src="images/statistics.png" width="923" />
+          <ul>
+            <li>
+              <strong>csvsplit</strong> is used to create a reduced CSV file 
+            from the raw CSV data. csvsplit combines two features:
+            <ul>
+              <li>Sample raw CSV data with taking one measure out of "r"</li>
+                <li>Suppress the beginning of raw CSV data to remove unwanted
+              "startup" data</li>
+              </ul>
+              <p>Usage:</p>
+              <source><![CDATA[$ csvsplit
+Syntax : csvsplit <in csv file> <out csv file>
+         [-skip n] skip the n first values (default 0)
+         [-ratio r] let 1 out of r value (default 10)]]></source>
+              <p></p>
+            </li>
+            <li>
+              <strong>computestat.ksh</strong> is used to compute the statistics 
+            from CSV data. computestat.ksh relies on <a href="#octave">Octave</a>
+            to compute reliable statistical results.
+            <p>Usage:</p>
+              <source><![CDATA[$ computestat.ksh -help
+Command line syntax of /usr/local/bin/computestat.ksh - options
+-in <file name>             : input file (default file.csv)
+-out <file name>            : output file (default file.save)
+-nth <percentile>           : nth percentile calculus (default 95)
+-help                       : display the command line syntax]]></source>
+              <p>The output of computestat.ksh is a text file like the following:</p>
+              <source><![CDATA[[Using file        : client-rtt.2004-12-02.11:11:01.016.csv.y]
+[number values     : 23136]
+[minimum value     : 1.267000]
+[maximum value     : 29.074000]
+[average value     : 3.321995]
+[variance          : 0.803202]
+[standard deviation: 0.896216]
+[95th percentile   : 5.410000]]]></source>
+              <p></p>
+            </li>
+            <li>
+              <strong>plotstat.ksh</strong> is used to create graphics out of 
+            CSV data. plotstat.ksh relies also on <a href="#octave">Octave</a>
+            to create <a href="http://en.wikipedia.org/wiki/Png">PNG</a> graphical files.
+            <p>Usage:</p>
+              <source><![CDATA[$ plotstat.ksh -help
+Command line syntax of /usr/local/bin/plotstat.ksh - options
+-in <file name>             : input file (default file.csv)
+-out <file name>            : output file (default file.png)
+-stat <file name>           : input stat file name (default no file)]]></source>
+              <p class="page">If you specify a statistic results file that has been computed
+          with computestat.ksh through the -stat option, then two additional
+          plots will be drawn: one line for the average time and one line for
+          the percentile.</p>
+              <p class="pageBreakBefore"></p>
+              <p>Here is an example of the output of plotstat.ksh:</p>
+              <figure alt="plotstat.ksh output" src="images/plotstat.png" width="640"/>
+            </li>
+          </ul>
+        </section>
+      </section>
+      <p class="pageBreakBefore"></p>
+      <section>
+        <title>Logs and traces</title>
+        <p>The logging feature of Seagull has several logging levels
+        that can be combined (exept A and N that are exclusive):</p>
+        <ul>
+          <li>
+            <strong>E</strong>-Errors
+            <ul>
+              <li>Syntax error in config or scenario files</li>
+              <li>Unable to open a file</li>
+            </ul>
+          </li>
+          <li>
+            <strong>W</strong>-Warnings - non blocking errors
+            <ul>
+              <li>No init scenario</li>
+              <li>No more call context availables</li>
+            </ul>
+          </li>
+          <li>
+            <strong>T</strong>-Traffic events
+            <ul>
+              <li>Unexpected messages</li>
+              <li>Refused calls</li>
+              <li>Incorrect state</li>
+            </ul>
+          </li>
+          <li>
+            <strong>M</strong>-Messages (decoded messages)</li>
+          <li>
+            <strong>B</strong>-Buffer (hex dumps)</li>
+          <li>
+            <strong>A</strong>-All</li>
+          <li>
+            <strong>N</strong>-None</li>
+        </ul>
+        <p>The log level is specified  <a href="#cli_help">command line</a>, using <code>-llevel</code>
+        option. Example: <code>-llevel EWT</code> will log Errors, Warnings and Traffic
+        events.</p>
+        <note>By default, all log entries are time-stamped. This is costly in terms
+        of CPU time for the test tool. If you want to disable log time-stamps,
+        use the "<code>-notimelog</code>" command line option when launching the
+        tool.</note>
+      </section>
+    <section id="config">
+      <title>Configuration files</title>
+      <p>There are 3 different configuration files:</p>
+      <ul>
+        <li>
+          <a href="#config_generic">Generic</a> configuration file - describing traffic and network parameters</li>
+        <li>
+          <a href="#config_dict">Protocol dictionary</a> configuration file - rarely to be edited </li>
+        <li>
+          <a href="#config_scenario">Scenario</a> file - description of the message exchanges</li>
+      </ul>
+      <figure alt="Config files" src="images/conf_files.png" width="424"/>
+      <p/>
+      <section id="config_generic">
+        <title>Generic configuration</title>
+        <p>The generic configuration file describes the network environment
+        as well as traffic parameters.</p>
+        <anchor id="cfg_transport"/>
+        <p>The network environment is described through "<a href="#ref_transport">transport channel 
+        entities</a>". The transport entity is then used as an attribute of <a href="#cmd_send"><code>send</code>
+          </a> and
+        <a href="#cmd_send"><code>receive</code>
+          </a> scenario commands, as well as during the 
+        opening of the transport channel (see below). </p>
+        <p></p>
+        <source>
+<![CDATA[<!-- Synchro example -->
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<configuration name="Simple IP Server Conf">
+
+<define entity="transport"
+    name="trans-ip-v4"
+    file="libtrans_ip.so"
+    create_function="create_cipio_instance"
+    delete_function="delete_cipio_instance"
+    init-args="type=tcp">
+  </define>
+<!-- Then you specify the opening of the channel, on the transport previously described. -->
+
+<!-- For a server listening to port 15000 on interface "192.168.0.13", it will look like this: -->
+
+<define entity="channel"
+    name="channel-1"
+    protocol="command-synchro-v1"
+    transport="trans-ip-v4"
+    open-args="mode=server;source=192.168.0.13:15000">
+  </define>
+
+<!-- For a client sending messages to port 15000 on interface "192.168.0.13", it will look like this: -->
+<define entity="channel"
+    name="channel-1"
+    protocol="command-synchro-v1"
+    transport="trans-ip-v4"
+    open-args="mode=client;dest=192.168.0.13:15000">
+</define>]]>
+	</source>
+        <p>You can also specify <a href="#ref_traffic_param">traffic parameters</a>
+        in the configuration file, like the call rate, the name of the statistic
+        file, ....</p>
+        <source><![CDATA[  <define entity="traffic-param"
+          name="call-rate"
+          value="10">
+  </define>	
+  <define entity="traffic-param"
+          name="display-period"
+          value="1">
+  </define>
+
+  <define entity="traffic-param"
+          name="log-stat-period"
+          value="5">
+  </define>
+
+  <define entity="traffic-param"
+          name="log-stat-file"
+          value="../logs/client-stat.csv">
+  </define>
+]]></source>
+      </section>
+      <section id="config_dict">
+        <title>Protocol dictionary</title>
+        <p>In order for Seagull to be versatile enough, messages and parameters of protocols
+        are described in an XML dictionary.</p>
+        <p>To specify the dictionary, use the -dico option in the command line:</p>
+        <source> -dico ../config/[dictionary-name].xml </source>
+        <p>To be able to create a multi-protocol scenario, you can specify several dictionaries:</p>
+        <source> -dico ../config/[dictionary_1-name].xml ../config/[dictionary_2-name].xml</source>
+        <p>A dictionary contains several XML sections: types, header, body, dictionary:</p>
+          <section>
+            <title>Types</title>
+            <p>"types" section contains all types needed for the protocol. An example of 
+            the Types section for Diameter protocol is available <a href="diameter.html#Types">there</a>.</p>
+          </section>
+          <section>
+            <title>Header</title>
+            <p>"header" section contains the description of message header. An example of 
+            the Types section for Diameter protocol is available <a href="diameter.html#Header">there</a>.</p>
+          </section>
+          <section>
+            <title>Body</title>
+            <p>"body" section contains the description of message body (which
+          naturally comes after the header). An example of 
+            the Types section for Diameter protocol is available <a href="diameter.html#Body">there</a>.</p>
+          </section>
+          <section>
+            <title>Dictionary</title>
+            <p>"dictionary" section contains all possible parameters
+          and command-synchro. An example of 
+            the Types section for Diameter protocol is available <a href="diameter.html#Dictionary">there</a>.</p>
+          </section>
+      </section>
+    </section>
+    <section id="support">
+      <title>Getting support</title>
+      <p>For support on Seagull, please send your questions on Seagull users mailing list: 
+      <a href="mailto:gull-users@lists.souceforge.net">gull-users@lists.souceforge.net</a>.
+      You will likely get support from Seagull users.
+      </p>
+    </section>
+    <section>
+      <title>Reference</title>
+      <p>This section is the reference for all values and parameters of Seagull.</p>
+      <section id="config_generic_ref">
+        <title>Generic configuration reference</title>
+        <section id="transport_config">
+          <title>Transport configuration</title>
+          <p>The following table is a list of transport channel parameters, that can be present in
+        the <a href="#config_generic">generic configuration file</a>.</p>
+          <anchor id="ref_transport"/>
+          <table>
+            <caption>List of transport channel parameters (transport entity)</caption>
+            <tr>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Recommended value</th>
+            </tr>
+            <tr>
+              <td>name</td>
+              <td>Name of the transport entity. Any string without spaces.</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>file</td>
+              <td>Shared library to be used for transport.</td>
+              <td>Value is "libtrans_ip.so" for TCP, "libtrans_extsctp.so" for SCTP (this one is 
+	    based on an external SCTP library) and "libtrans_octcap32.so" for TCAP.</td>
+            </tr>
+            <tr>
+              <td>create_function</td>
+              <td>Function used to create a transport instance</td>
+              <td>Value is "create_cipio_instance" for IP-based protocols 
+	    and "create_ctransoctcap32_instance" for TCAP.</td>
+            </tr>
+            <tr>
+              <td>delete_function</td>
+              <td>Function used to delete a transport instance</td>
+              <td>Value is "delete_cipio_instance" for IP-based protocols 
+	    and "delete_ctransoctcap32_instance" for TCAP. </td>
+            </tr>
+            <tr>
+              <td>init-args</td>
+              <td>Arguments to be passed to the transport library. The arguments are 
+	    separated by semi-colons.</td>
+              <td>For IP-based protocols, the only possible value is "type=tcp".<br/>
+	    For TCAP, the possible parameters are the following:<br/>
+	    - flavour (possible values: WBB, AAA, WAA, ABB)<br/>
+	    - path to the reference library (optional)<br/>
+	    - reference library (optional)</td>
+            </tr>
+          </table>
+          <p></p>
+          <table id="ref_channel">
+            <caption>List of channel parameters (channel entity)</caption>
+            <tr>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Recommended value</th>
+            </tr>
+            <tr>
+              <td>name</td>
+              <td>Name of the transport entity. Any string without spaces.</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>protocol</td>
+              <td>Protocol to be used for this channel.</td>
+              <td>The value must correspond to one of the protocol name defined in a dictionary.</td>
+            </tr>
+            <tr>
+              <td>transport</td>
+              <td>Transport to be used for this channel</td>
+              <td>The value must correspond to one transport defined previously.</td>
+            </tr>
+            <tr>
+              <td>open-args</td>
+              <td>Arguments to specify connexion parameters.<br/>
+	    For IP-based protocols, it specifies the mode (client or server), the address and the port.<br/>
+	    For TCAP, it specifies the parameters of the TCAP connexion to the stack.</td>
+              <td>Example of value for a client for a IP-based protocol: 
+	    "mode=<strong>client</strong>;<strong>dest</strong>=127.0.0.1:3868"<br/>
+	    Example of value for a server for a IP-based protocol: 
+	    "mode=<strong>server</strong>;<strong>source</strong>=127.0.0.1:3868"<br/>
+	    Example for TCAP: "class=SS7_Stack_2;ossn=20;application=2;instance=2".</td>
+            </tr>
+          </table>
+        </section>
+        <section id="generic_config">
+          <title>Generic configuration</title>
+          <p>This table is a list of traffic parameters, that can be present in
+        the <a href="#config_generic">generic configuration file</a>.</p>
+          <anchor id="ref_traffic_param"/>
+          <table>
+            <caption>List of traffic parameters (<strong>traffic-param</strong> entity)</caption>
+            <tr>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Recommended value</th>
+              <th>Example</th>
+            </tr>
+            <tr>
+              <td>call-rate</td>
+              <td>Specify the call-rate in a number of calls per seconds. Only applicable 
+	    to the client side.</td>
+              <td>-</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param"
+            name="call-rate"
+            value="500">]]></code> Indicates that Seagull will start with 
+            a steady call rate of 500 calls per seconds.</td>
+            </tr>
+            <tr>
+              <td>display-period</td>
+              <td>Define the refresh rate of on-screen information. 0 means that
+            on-screen information is not displayed. See also display-protocol-stat 
+	    and display-scenario-stat to set statistics.</td>
+              <td>1</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param"
+            name="display-period"
+            value="1">]]></code> Refreshes the screen every one second.</td>
+            </tr>
+            <tr>
+              <td>
+                <anchor id="traffic_log_stat"/>log-stat-period</td>
+              <td>log-stat-period is the periodicity, in seconds, of statistics dump in 
+            the statistic file (log-stat-file parameter).</td>
+              <td>60</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param"
+            name="log-stat-period"
+            value="60">]]></code>: a new line in the statistic file is created
+            every 60 seconds.</td>
+            </tr>
+            <tr>
+              <td>log-stat-file</td>
+              <td>The name of the statistic log file. The date is inserted between
+            the name and the extension. <strong>WARNING</strong>: both log-stat-period and log-stat-file
+            must be present for statistics to be activated.</td>
+              <td>-</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param"
+            name="log-stat-file"
+            value="client-stat.csv">]]></code>: the statistics are saved in 
+            client-stat.2004-10-13.13:23:01.120.csv file.</td>
+            </tr>
+            <tr>
+              <td>
+                <anchor id="data_log_file"/>data-log-file</td>
+              <td>The name of the response time data file. The date is inserted between
+            the name and the extension. <strong>WARNING</strong>: you need to specify a file in order
+            to activate the response time statistics.</td>
+              <td>-</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param"
+            name="data-log-file"
+            value="client-rtt.csv">]]></code>: the response time statistics are saved in 
+            the file you specified.</td>
+            </tr>
+            <tr>
+              <td>
+                <anchor id="data_log_period"/>data-log-period</td>
+              <td>The response time data is saved every n second period.
+            If value is 0, then the <a href="#data_log_number">data-log-number</a> 
+            traffic-param is used.</td>
+              <td>1</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param"
+            name="data-log-period"
+            value="10">]]></code>: the response time statistics are saved in 
+            the file every 10 seconds (default is 1 second).</td>
+            </tr>
+            <tr>
+              <td>
+                <anchor id="data_log_number"/>data-log-number</td>
+              <td>The response time data is saved every m numbers of data.
+            This ensure that memory usage does not get too high.</td>
+              <td>200</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param"
+            name="data-log-number"
+            value="500">]]></code>: the response time statistics are saved in 
+            every 500 measures (default is 200 measures).</td>
+            </tr>
+            <tr>
+              <td>
+                <anchor id="data_log_rtdistrib"/>data-log-rtdistrib</td>
+              <td>Defines the value of the interval on which the messages are sampled. 
+	    This value is in milliseconds.</td>
+              <td>-</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param"
+   name="data-log-rtdistrib"
+   value="2000">
+  </define>]]></code>
+              </td>
+            </tr>
+            <tr>
+              <td>response-time-repartition</td>
+              <td>The intervals in which the response time measures are going to be 
+            spreaded.</td>
+              <td>-</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param"
+            name="response-time-repartition"
+            value="25,50,75,100,125,150,200,250,300,350">]]></code>
+              </td>
+            </tr>
+            <tr>
+              <td>log-file</td>
+              <td>The base name of the log file. The date is inserted between
+            the name and the extension.</td>
+              <td>-</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param"
+            name="log-file"
+            value="client.log">]]></code>: the logs are saved in client.2004-10-13.13:23:01.120.log log file.</td>
+            </tr>
+            <tr>
+              <td>
+                <anchor id="display-protocol-stat"/>display-protocol-stat</td>
+              <td>Enable (true) / disable (false) the protocol statistics. 
+	    If you set this parameter to false, you do not get any protocol statistics 
+	    neither on screen nor dumped to file.</td>
+              <td>true</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param"
+   name="display-protocol-stat"
+   value="true">
+  </define>]]></code>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <anchor id="log-protocol-stat-period"/>log-protocol-stat-period</td>
+              <td>Specify the interval in seconds at which the logs are dumped.<br/>
+	    Example: if set to 5, the logs are dumped every 5 seconds.<br/>
+	    If you only want the logs dumped to file and you do not want information 
+	    displayed on screen, set this value to 0.</td>
+              <td>-</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param"
+   name="log-protocol-stat-period"
+   value="5">
+  </define>]]></code>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <anchor id="log-protocol-stat-name"/>log-protocol-stat-name</td>
+              <td>Specify the names of the protocols for which the statistics are set. 
+	    Put "all" to get statistics for all the protocols used. Otherwise, state 
+	    the names of the protocols separated by semi-colons.<br/>
+	    If you specify the names of several protocols and all, it will only consider 
+	    the "all" keyword" and display statistics for all the protocols.<br/>
+	    If you do not specify this parameter, you do not get any protocol statistics.</td>
+              <td>all</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param"
+   name="log-protocol-stat-name"
+   value="all">
+  </define>]]></code>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <anchor id="log-protocol-stat-file"/>log-protocol-stat-file</td>
+              <td>Specify the file in which the protocol logs are dumped. 
+	    The name of the protocol and the time and date are added to the filename 
+	    to make it unique.</td>
+              <td>-</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param"
+   name="log-protocol-stat-file"
+   value="../logs/server-protocol-stat.csv">
+  </define>]]></code>
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <anchor id="display-scenario-stat"/>display-scenario-stat</td>
+              <td>Enable (true) / disable (false) the scenario statistics. Remember 
+	    that the scenario statistics are only displayed on screen, and not 
+	    dumped to file.</td>
+              <td>true</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param"
+   name="display-scenario-stat"
+   value="true">
+  </define>]]></code>
+              </td>
+            </tr>
+            <tr>
+              <td>number-calls</td>
+              <td>Number of calls to be done. Once the number of calls is reached,
+            no new calls are placed (note that some additional calls can be
+            placed, but no less).</td>
+              <td>-</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param"
+            name="number-calls"
+            value="1000">]]></code>: Place at least 1000 calls.</td>
+            </tr>
+            <tr>
+              <td>call-timeout-ms</td>
+              <td>call-timeout-ms defines a timer after which, if the scenario is 
+            stuck, the call will be closed and marked as failed. 0 means that this
+            feature is de-activated.</td>
+              <td>0</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param" name="call-timeout-ms" value="30000"> </define>]]></code> 
+            specifies that a call that is stuck for more than 30s will
+            be terminated.</td>
+            </tr>
+            <tr>
+              <td>msg-check-level</td>
+              <td>Type of message check. Possible values are "P" (Presence check) and
+            "A" (Additional field check). The default value is "P".</td>
+              <td>-</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param" name="msg-check-level" value="P"> </define>]]></code> checks that at least all parameters listed in the scenario
+            are present.</td>
+            </tr>
+            <tr>
+              <td>msg-check-behaviour</td>
+              <td>Behaviour in case of message check fails. Possible values are "E" (log error and abort call) and
+            "W" (log warning and continue call). The default value is "W".</td>
+              <td>-</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param" name="msg-check-behaviour" value="E"> </define>]]></code>
+              </td>
+            </tr>
+            <tr>
+              <td>burst-limit (tuning)</td>
+              <td>The burst limit corresponds to the number of new calls
+            that Seagull can place in a period of one second. This is used to smooth
+            the load at the beginning of a traffic or when traffic resumes.</td>
+              <td>50</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param"
+            name="burst-limit"
+            value="50">]]></code> Indicates that Seagull will not place more than
+            50 new calls per seconds.</td>
+            </tr>
+            <tr>
+              <td>max-send (tuning)</td>
+              <td>max-send corresponds to the number of messages that can be sent
+            in one scheduling loop.
+	    NB: in future versions of the tool, this value will not be accessible anymore. It will be computed from the call rate
+	    and the scenarii.</td>
+              <td>(call rate) * nb_send_per_scene</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param"
+            name="max-send"
+            value="250">]]></code>
+              </td>
+            </tr>
+            <tr>
+              <td>max-receive (tuning)</td>
+              <td>max-receive corresponds to the number of messages that can be received
+            in one scheduling loop.
+	    NB: in future versions of the tool, this value will not be accessible anymore. It will be computed from the call rate
+	    and the scenarii.</td>
+              <td>at least (call rate) * nb_recv_per_scene</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param"
+            name="max-receive"
+            value="250">]]></code>
+              </td>
+            </tr>
+            <tr>
+              <td>select-timeout-ms (tuning)</td>
+              <td>Defines the value of the timer set when listening to the system, 
+	    waiting for the messages. Counter in milliseconds.<br/>
+	    Be careful, the lower the value, the more CPU time will used.</td>
+              <td>1000</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param"
+            name="select-timeout-ms"
+            value="1000">]]></code>
+              </td>
+            </tr>
+            <tr>
+              <td>max-simultaneous-calls (tuning)</td>
+              <td>max-simultaneous-calls is the maximum number of simultaneous calls that can
+            be placed by the tool.</td>
+              <td>(Duration of a call * call rate)* 1.2</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param"
+            name="max-simultaneous-calls"
+            value="1000">
+            </define>]]></code>
+              </td>
+            </tr>
+            <tr>
+              <td>external-data-file</td>
+              <td>File from which the data are taken for the external data management.</td>
+              <td>external_data.csv</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param"
+   name="external-data-file"
+   value="external_data.csv">
+  </define>]]></code>
+              </td>
+            </tr>
+            <tr>
+              <td>external-data-select</td>
+              <td>Defines the way the data are extracted from the external data file. Value can be sequential or random.</td>
+              <td>sequential</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param"
+   name="external-data-select"
+   value="sequential">
+  </define>]]></code>
+              </td>
+            </tr>
+          </table>
+        </section>
+      </section>
+      <section id="scenario_ref">
+        <title>Scenario reference</title>
+        <p>This section is the reference for Seagull scenarios.</p>
+        <p>This table is the list of commands that can be used in 
+        <a href="#config_scenario">scenarios</a>
+        with their attributes.</p>
+        <anchor id="ref_scenario_commands"/>
+        <table>
+          <caption>List of scenario commands with their attributes</caption>
+          <tr>
+            <th>Command</th>
+            <th>Attribute(s)</th>
+            <th>Description</th>
+            <th>Example</th>
+          </tr>
+          <tr>
+            <th>
+              <anchor id="cmd_send"/>
+              <strong>&lt;send&gt;</strong>
+            </th>
+            <th></th>
+            <th>
+              <strong>Send a message on a transport channel</strong>
+            </th>
+            <th></th>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>channel</td>
+            <td>Refers to "transport-channel" entities, as defined in the  
+            <a href="#config_generic">generic configuration file</a>.
+            </td>
+            <td>
+              <code>channel="trans-ip-v4"</code>: Use trans-ip-v4 channel.</td>
+          </tr>
+          <tr>
+            <th>
+              <anchor id="cmd_receive"/>
+              <strong>&lt;receive&gt;</strong>
+            </th>
+            <th></th>
+            <th>
+              <strong>Receive a message on a transport channel</strong>
+            </th>
+            <th></th>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>channel</td>
+            <td>Refers to "transport-channel" entities, as defined in the  
+            <a href="#config_generic">generic configuration file</a>.
+            </td>
+            <td>
+              <code>channel="trans-ip-v4"</code>: Use trans-ip-v4 channel.</td>
+          </tr>
+          <tr>
+            <th>
+              <anchor id="cmd_wait"/>
+              <strong>&lt;wait-ms&gt;</strong>
+            </th>
+            <th></th>
+            <th>
+              <strong>Wait a number of milliseconds before continuing</strong>
+            </th>
+            <th>&nbsp;</th>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>value</td>
+            <td>Number of milliseconds to wait for.</td>
+            <td>
+              <code><![CDATA[<wait-ms value="2000"></wait-ms>]]></code>: wait
+            for 2 seconds</td>
+          </tr>
+          <tr>
+            <th>
+              <anchor id="counterdef"/>
+              <strong>&lt;counterdef&gt;</strong>
+            </th>
+            <th></th>
+            <th>
+              <strong>Define a counter</strong>
+            </th>
+            <th>&nbsp;</th>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>name</td>
+            <td>Name of the counter</td>
+            <td>
+              <code><![CDATA[name="client-id-counter"]]></code>
+            </td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>init</td>
+            <td>Initial value of the counter</td>
+            <td>
+              <code><![CDATA[init="1"]]></code>
+            </td>
+          </tr>
+	  <!-- WHAT IS THE PURPOSE OF END COMMAND?
+          <tr>
+            <th>
+              <anchor id="cmd_end"/>
+              <strong>&lt;end&gt;</strong>
+            </th>
+            <th>-</th>
+            <th>-</th>
+            <th>-</th>
+          </tr>
+          -->
+        </table>
+        <p class="pageBreakBefore">This table is the list of <a href="#scen_cmds">actions</a> that can be used in 
+        &lt;send&gt; or &lt;receive&gt; commands.</p>
+        <anchor id="ref_actions"/>
+        <table>
+          <caption>List of actions</caption>
+          <tr>
+            <th>Action</th>
+            <th>Attribute(s)</th>
+            <th>Description</th>
+            <th>Example</th>
+          </tr>
+          <tr>
+            <th>
+              <anchor id="action_close"/>
+              <strong>&lt;close&gt;</strong>
+            </th>
+            <th>&nbsp;</th>
+            <th>Close the transport channel</th>
+            <th>
+              <code><![CDATA[<close name="channel-1"></close>]]></code>
+            </th>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>name</td>
+            <td>Name of the channel to be closed.</td>
+            <td>channel-1</td>
+          </tr>
+          <tr>
+            <th>
+              <anchor id="action_store"/>
+              <strong>&lt;store&gt;</strong>
+            </th>
+            <th>&nbsp;</th>
+            <th>Store the value of a protocol entity in a call variable</th>
+            <th>
+              <code><![CDATA[<store name="sid" entity="Session-Id"> </store>]]></code>
+            </th>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>name</td>
+            <td>Name of the call variable where to store the protocol entity.</td>
+            <td>sid</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>entity</td>
+            <td>Name of the protocol entity to store. It can be any protocol entity (body or header).</td>
+            <td>Session-Id</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>instance</td>
+            <td>Instance identifier of the component to be stored.</td>
+            <td>instance="InitialDP-data"</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>sub-entity</td>
+            <td>Identifier of parameter of the component to be stored.</td>
+            <td>sub-entity="operation-code"</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>begin</td>
+            <td>Position from which we start to get the data. Be careful, the 
+	    count for the positions start at zero. Example for the second position:</td>
+            <td>begin="1"</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>end</td>
+            <td>Position at which we stop to get the data. Be careful, the 
+	    count for the positions start at zero, and the last piece of data 
+	    injected is at end position minus one.</td>
+            <td>end="9"</td>
+          </tr>
+          <tr>
+            <th>
+              <anchor id="action_restore"/>
+              <strong>&lt;restore&gt;</strong>
+            </th>
+            <th>&nbsp;</th>
+            <th>Restore the value of a call variable in a protocol entity (reverse operation of "store")</th>
+            <th>
+              <code><![CDATA[<restore name="sid" entity="Session-Id"></restore>]]></code>
+            </th>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>name</td>
+            <td>Name of the call variable where to restore from.</td>
+            <td>sid</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>entity</td>
+            <td>Name of the protocol entity to restore to.</td>
+            <td>Session-Id</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>instance</td>
+            <td>Instance identifier of the component to be restored.</td>
+            <td>instance="InitialDP-data"</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>sub-entity</td>
+            <td>Identifier of parameter of the component to be restored.</td>
+            <td>sub-entity="operation-code"</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>begin</td>
+            <td>Position at which we start to inject the data. Be careful, the 
+	    count for the positions start at zero. Example for the second position:</td>
+            <td>begin="1"</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>end</td>
+            <td>Position at which we stop to inject the data. Be careful, the 
+	    count for the positions start at zero, and the last piece of data 
+	    injected is at end position minus one.</td>
+            <td>end="9"</td>
+          </tr>
+          <tr>
+            <th>
+              <anchor id="action_start-timer"/>
+              <strong>&lt;start-timer&gt;</strong>
+            </th>
+            <th>&nbsp;</th>
+            <th>Start the timer for <a href="#stats_responsetime">response time statistics</a>
+            </th>
+            <th>-</th>
+          </tr>
+          <tr>
+            <th>
+              <anchor id="action_stop-timer"/>
+              <strong>&lt;stop-timer&gt;</strong>
+            </th>
+            <th>&nbsp;</th>
+            <th>Stop the timer for <a href="#stats_responsetime">response time statistics</a>
+            </th>
+            <th>-</th>
+          </tr>
+          <tr>
+            <th>
+              <anchor id="action_set-value"/>
+              <strong>&lt;set-value&gt;</strong>
+            </th>
+            <th>-</th>
+            <th>Set the value of a protocol entity given a format</th>
+            <th>
+              <code><![CDATA[<set-value name="Session-Id" format=".;1096298391;$(session-counter)"> </set-value>]]></code>
+            </th>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>name</td>
+            <td>Name of the protocol entity to set</td>
+            <td>"Session-Id" set the value of Session-Id parameter</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>format</td>
+            <td>The format is a string that can contains call variables (identified by $(varname)).</td>
+            <td>".;1096298391;$(session-counter)": fixed string with a variable part (value of "session-counter" call variable)</td>
+          </tr>
+          <tr>
+            <th>
+              <anchor id="action_inc-counter"/>
+              <strong>&lt;inc-counter&gt;</strong>
+            </th>
+            <th>&nbsp;</th>
+            <th>Increment a global counter</th>
+            <th>
+              <code><![CDATA[<inc-counter name="HbH-counter"> </inc-counter>]]></code>
+            </th>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>name</td>
+            <td>Name of the call variable to increment</td>
+            <td>"HbH-counter" increment the value of HbH-counter by 1</td>
+          </tr>
+          <tr>
+            <th>
+              <anchor id="action_inc-var"/>
+              <strong>&lt;inc-var&gt;</strong>
+            </th>
+            <th>&nbsp;</th>
+            <th>Increment a variable of a call</th>
+            <th>
+              <code><![CDATA[<inc-var name="INVOKE-ID"> </inc-var>]]></code>
+            </th>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>name</td>
+            <td>Name of the call variable to increment</td>
+            <td>"INVOKE-ID" increment the value of INVOKE-ID by 1</td>
+          </tr>
+          <tr>
+            <th>
+              <anchor id="check-presence"/>
+              <strong>&lt;check-presence&gt;</strong>
+            </th>
+            <th>&nbsp;</th>
+            <th>
+              <a href="#control">Check</a> that a protocol entity is present</th>
+            <th>
+              <code><![CDATA[<check-presence name="[FIELD_NAME]" behaviour="error"></check-presence>]]></code>
+            </th>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>name</td>
+            <td>Name of the protocol entity to check</td>
+            <td>name="bar" for bar field</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>behaviour</td>
+            <td>Behaviour to adopt in case the protocol entity is missing. Can be "error" or "warning"</td>
+            <td>behaviour="error"</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>instance</td>
+            <td>Instance identifier of the component to be checked.</td>
+            <td>instance="InitialDP-data"</td>
+          </tr>
+          <tr>
+            <th>
+              <anchor id="check-value"/>
+              <strong>&lt;check-value&gt;</strong>
+            </th>
+            <th>&nbsp;</th>
+            <th>
+              <a href="#control">Check</a> the value of a header field or of a 
+	      message paramater</th>
+            <th>
+              <code><![CDATA[<check-value name="[FIELD_NAME]" behaviour="error"></check-value>]]></code>
+            </th>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>name</td>
+            <td>Name of the protocol entity to check</td>
+            <td>name="bar" for bar field</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>behaviour</td>
+            <td>Behaviour to adopt in case the value is not the one expexted. 
+	    Can be "error" or "warning"</td>
+            <td>behaviour="error"</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>instance</td>
+            <td>Instance identifier of the component to be checked.</td>
+            <td>instance="InitialDP-data"</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>sub-entity</td>
+            <td>Identifier of parameter of the component to be checked.</td>
+            <td>sub-entity="operation-code"</td>
+          </tr>
+          <tr>
+            <th>
+              <anchor id="check-order"/>
+              <strong>&lt;check-order&gt;</strong>
+            </th>
+            <th>&nbsp;</th>
+            <th>
+              <a href="#control">Check</a> the type of message receveid at a position 
+	      specified</th>
+            <th>
+              <code><![CDATA[<check-order name="[FIELD_NAME]" behaviour="error" 
+	      position="[X]"> </check-order>]]></code>
+            </th>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>name</td>
+            <td>Name of the message to check</td>
+            <td>name="bar" for bar message</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>behaviour</td>
+            <td>Behaviour to adopt in case the position is not the one expected. 
+	    Can be "error" or "warning"</td>
+            <td>behaviour="error"</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>position</td>
+            <td>Position at which the message is awaited. Be careful: positions start at 0.</td>
+            <td>position="0"</td>
+          </tr>
+          <tr>
+            <th>
+              <anchor id="restore-from-external"/>
+              <strong>&lt;restore-from-external&gt;</strong>
+            </th>
+            <th>&nbsp;</th>
+            <th>
+              Modify the value of a field with data coming from a file</th>
+            <th>
+              <code><![CDATA[<restore-from-external field="1" entity="Volume_requested"> </restore-from-external>]]></code>
+            </th>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>field</td>
+            <td>The number of the data field used, in the data file</td>
+            <td>field="0" for the first field</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>entity</td>
+            <td>The field of the message to which is assigned the new value</td>
+            <td>entity="Volume_requested"</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>sub-entity</td>
+            <td>Identifier of component parameter in which we insert some data.</td>
+            <td>sub-entity="operation-data"</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>instance</td>
+            <td>Instance identifier of the component to be checked.</td>
+            <td>instance="InitialDP-data"</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>begin</td>
+            <td>Position at which we start to inject the data. Be careful, the 
+	    count for the positions start at zero. Example for the second position:</td>
+            <td>begin="1"</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>end</td>
+            <td>Position at which we stop to inject the data. Be careful, the 
+	    count for the positions start at zero, and the last piece of data 
+	    injected is at end position minus one.</td>
+            <td>end="9"</td>
+          </tr>
+        </table>
+      </section>
+      <!--
+      <section id="config_dict_ref">
+        <title>Protocol Dictionary reference</title>
+        <p></p>
+      </section>  -->
+      <section id="cli_help">
+        <title>Command line arguments</title>
+        <source><![CDATA[$ seagull -help
+seagull Command syntax
+ -conf <configuration file name>
+ -scen <scenario file name>
+ -dico <protocol dictionary file name> can be used more than once
+[ -log <logging file name> ]
+[ -llevel <logging level mask> ] levels:
+          M: msg,     B: buffer,   E: error,
+          W: warning, N: no error, T: traffic error,
+          A: all.     Default E
+[ -help  ] display syntax command line
+[ -bg  ] background mode
+[ -notimelog  ] no time stamp on the log (default time stamp)
+[ -msgcheck  ] check the field of the messages received (default no check)]]></source>
+      </section>
+    </section>
+  </body>
+</document>
