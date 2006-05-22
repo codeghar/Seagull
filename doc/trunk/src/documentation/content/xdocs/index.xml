@@ -81,7 +81,7 @@
         <li>...</li>
       </ul>
       <p>Better than a thousand words, see Seagull flying:</p>
-      <p><movie src="http://gull.sf.net/doc/seagull_01.flv" width="494" height="366" autostart="false"/></p>
+      <p><movie src="http://gull.sf.net/doc/seagull_01.flv" width="494" height="386" autostart="false"/></p>
     </section>
     <section>
       <title>Open Source</title>
