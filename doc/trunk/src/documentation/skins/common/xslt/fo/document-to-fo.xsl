@@ -423,11 +423,6 @@
         </xsl:choose>
       </xsl:attribute>
 
-      <xsl:if test="$numbersections = 'true' and number($level) &lt; $numbering-max-depth+1">
-        <xsl:number format="1.1.1.1.1.1.1" count="section" level="multiple"/>
-        <xsl:text>. </xsl:text>
-      </xsl:if>
-
       <!-- For sections 4  or more nestings deep, indent instead of number -->
       <xsl:if test="number($level) &gt; $numbering-max-depth+1">
         <xsl:attribute name="start-indent">

@@ -308,6 +308,7 @@ if (VERSION > 3) {
               <xsl:if test="contains($config/toc/@with-numbers,'true')">
                 <xsl:number count="tocitem" format="1.1.1.1.1.1.1" level="multiple" />
               </xsl:if>
+              <xsl:text>. </xsl:text>
               <xsl:value-of select="@title"/>
             </a>
             <xsl:if test="@level&lt;//skinconfig/toc/@max-depth+1">

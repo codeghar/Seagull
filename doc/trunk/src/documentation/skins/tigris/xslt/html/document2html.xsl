@@ -133,13 +133,13 @@ and tabs (tab2menu.xsl) to generate the final HTML.
     <xsl:choose>
       <xsl:when test="$level=1">
        <div class="h3">
-        <h3><xsl:value-of select="title"/></h3>
+        <h3><xsl:number count="section" format="1.1.1.1.1.1.1" level="multiple" />. <xsl:value-of select="title"/></h3>
         <xsl:apply-templates/>
       </div>
       </xsl:when>
       <xsl:when test="$level=2">
        <div class="h4">
-        <h4><xsl:value-of select="title"/></h4>
+        <h4><xsl:number count="section" format="1.1.1.1.1.1.1" level="multiple" />. <xsl:value-of select="title"/></h4>
         <xsl:apply-templates select="*[not(self::title)]"/>
       </div>
 
@@ -153,13 +153,13 @@ and tabs (tab2menu.xsl) to generate the final HTML.
         </div>
       </xsl:when>
       <xsl:when test="$level=3">
-        <h4><xsl:value-of select="title"/></h4>
+        <h4><xsl:number count="section" format="1.1.1.1.1.1.1" level="multiple" />. <xsl:value-of select="title"/></h4>
         <xsl:apply-templates select="*[not(self::title)]"/>
 
       </xsl:when>
 
       <xsl:otherwise>
-        <h5><xsl:value-of select="title"/></h5>
+        <h5><xsl:number count="section" format="1.1.1.1.1.1.1" level="multiple" />. <xsl:value-of select="title"/></h5>
         <xsl:apply-templates select="*[not(self::title)]"/>
       </xsl:otherwise>
     </xsl:choose>
