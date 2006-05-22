@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN"
-"http://forrest.apache.org/dtd/document-v20.dtd">
+<!--<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN"
+"http://forrest.apache.org/dtd/document-v20.dtd">-->
+<!DOCTYPE document SYSTEM "document-v20-custom.dtd">
 <document>
   <header>
     <title>Seagull: an Open Source Multi-protocol traffic generator</title>
@@ -17,9 +18,6 @@
       <a href="http://sipp.sourceforge.net/">SIPp</a> for IMS testing), Seagull is a powerful
       traffic generator for functional, load, endurance, stress and performance tests for almost
       any kind of protocol.</p>
-      <p>Except for one protocol (TCAP), Seagull doesn't need an underlying software or platform to
-      work. Adding support in Seagull of new protocols that are handled through libraries or 
-      third party products is not a big task. Have a look at the <a href="doc/dev.html">developer page</a> for more info.</p>
       <p>In addition, its openness allows to add the support of a brand new protocol in less than 2
       hours - with no programming knowledge. For that, Seagull comes with several protocol families embedded in the source code:</p>
       <ul>
@@ -82,6 +80,8 @@
         <li>Trace files with or without timestamps (for performances and automation)</li>
         <li>...</li>
       </ul>
+      <p>Better than a thousand words, see Seagull flying:</p>
+      <p><movie src="http://gull.sf.net/doc/seagull_01.flv" width="612" height="390" autostart="false"/></p>
     </section>
     <section>
       <title>Open Source</title>

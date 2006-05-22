@@ -239,6 +239,16 @@ Section handling
     </span>
   </xsl:template>
 
+  <!-- Add SWF flash movie support in forrest -->
+  <xsl:template match="movie">
+    <xsl:apply-templates select="@id"/>
+    <object type="application/x-shockwave-flash" width="{@width}" height="{@height}" 
+      wmode="transparent" data="http://gull.sf.net/flvplayer.swf?file={@src}">
+      <param name="movie" value="http://gull.sf.net/flvplayer.swf?file={@src}" />
+      <param name="wmode" value="transparent" />
+    </object>
+  </xsl:template>
+  
   <xsl:template match="figure">
     <xsl:apply-templates select="@id"/>
     
