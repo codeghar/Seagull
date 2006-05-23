@@ -34,7 +34,7 @@
       It also indicate the behavior to adopt in case a message is unexpected or a check on a
       parameter fails.</p>
 </td>
-            <td><a href="images/seagull_principle.jpg"><img alt="Seagull principle" src="images/seagull_principle_small.jpg" width="204" /></a></td>
+            <td><a href="images/seagull_principle.jpg"><img alt="Seagull principle" src="images/seagull_principle_small.jpg" width="200" /></a></td>
           </tr>
       </table>
       <p>Entirely coded in C++, Seagull is optimized for performances.</p>
