@@ -1,39 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE faqs PUBLIC "-//APACHE//DTD FAQ V1.2//EN" "http://apache.org/forrest/dtd/faq-v12.dtd">
+<!DOCTYPE faqs PUBLIC "-//APACHE//DTD FAQ V2.0//EN" "http://forrest.apache.org/dtd/faq-v20.dtd">
 
-<faqs title="Frequently Asked Questions">
+<faqs>
+  <title>Frequently Asked Questions</title>
 
-  <part id="usingseagull">
-    <title>Using Seagull</title>
-    <faq id="faq1">
+  <faqsection id="usage">
+    <title>Seagull Usage</title>
+    <faq id="faq001">
       <question>
-        This is a question
+        What does the channel represent in the config file?
       </question>
       <answer>
         <p>
-          This is an answer</p>
-       </answer>
-    </faq>
-    <!-- More faqs or parts here -->
-  </part>
-  <part id="docs">
-    <title>Documentation</title>
-    <faq id="forrest">
-      <question>
-        How can I help write documentation?
-      </question>
-      <answer>
-        <p>
-          This project uses <link href="ext:forrest">Apache Forrest</link> to
-          generate documentation from XML.  Please download a copy of Forrest,
-          which can be used to <link
-            href="ext:forrest/validation">validate</link>, <link
-            href="ext:forrest/webapp">develop</link> and render a project site.
+          The channel that you configure in the config file is then used in the scenario. If you configured "channel-1" in your config file, you will use "<![CDATA[<send channel="channel-1">]]>" in your scenario.
         </p>
-        <p>Documentation sources (XML files) are available on request (ojacques@users.sourceforge.net).</p>
+      </answer>
+    </faq>
+    <faq id="faq002">
+      <question>
+        How do we define random holding times?
+      </question>
+      <answer>
+        <p>
+          This is not possible. You will have to run several Seagull in parallel for that. I will see what we can do for a future release.
+        </p>
+      </answer>
+    </faq>
+    <faq id="faq003">
+      <question>
+        How does Seagull work - in 3 lines?
+      </question>
+      <answer>
+          	<ul>
+            <li>A traffic scenario (sequence of send/receive/wait-ms) is defined.</li>
+            <li>The traffic scenario is multiplied, following the "call-rate" instruction. 100 calls/second call rate will start 100 parallel scenarios for each second.</li>
+            <li>Other kind of scenarios (init, default, abort) can also be defined. Those scenarios are not "multiplied" following the call rate. See doc for more details on those.</li>
+            </ul>
+      </answer>
+    </faq>
+    <faq id="faq004">
+      <question>
+       What happens if a call is stuck?
+      </question>
+      <answer>
+          	<p>By default, the call will be stuck forever. You activate the call-timeout to instruct Seagull to close "hang" calls.
+            If a call is active beyond the call-timeout-ms value, the call will time out and Seagull will close the call by using the <![CDATA[<abort>]]> section
+            of the scenario if it exists.</p>
+      </answer>
+    </faq>
+    <faq id="faq005">
+      <question>
+       Is Seagull stable?
+      </question>
+      <answer>
+          	<p>Yes, Seagull runs and runs. Judge for yourself:</p>
+            <img alt="Seagull 1,000,000 calls" src="images/seagull_1000000.jpg"/>
       </answer>
     </faq>
     <!-- More faqs or parts here -->
-  </part>
+  </faqsection>
   <!-- More faqs or parts here -->
 </faqs>
+
+

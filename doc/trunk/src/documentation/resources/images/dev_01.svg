@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://web.resource.org/cc/"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://inkscape.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="744.09448819"
+   height="1052.3622047"
+   id="svg2"
+   sodipodi:version="0.32"
+   inkscape:version="0.43"
+   sodipodi:docbase="C:\Documents and Settings\olja\My Documents\Test-Infra\tools\Seagull\SVN\doc\trunk\src\documentation\resources\images"
+   sodipodi:docname="dev_01.svg">
+  <defs
+     id="defs4">
+    <marker
+       inkscape:stockid="Arrow1Lstart"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Lstart"
+       style="overflow:visible">
+      <path
+         id="path4214"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;marker-start:none"
+         transform="scale(0.8)" />
+    </marker>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="1.4"
+     inkscape:cx="375"
+     inkscape:cy="808.01088"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     inkscape:window-width="1280"
+     inkscape:window-height="908"
+     inkscape:window-x="-4"
+     inkscape:window-y="-4" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="opacity:0.98098857;color:#000000;fill:#819afd;fill-opacity:1;fill-rule:nonzero;stroke:#364854;stroke-width:1.35899949;stroke-linecap:butt;stroke-linejoin:miter;marker:none;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.46938776;visibility:visible;display:inline;overflow:visible"
+       id="rect1307"
+       width="423.85083"
+       height="104.37263"
+       x="197.80846"
+       y="75.533012"
+       rx="15.714285"
+       ry="15.714287" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot2184"
+       style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Black"
+       transform="translate(340,-8.543539e-6)"><flowRegion
+         id="flowRegion2186"><rect
+           id="rect2188"
+           width="488.57144"
+           height="124.28571"
+           x="94.285713"
+           y="80.933609"
+           style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Black" /></flowRegion><flowPara
+         id="flowPara2190">module: protocol-frame</flowPara></flowRoot>    <rect
+       style="opacity:0.98098857;color:#000000;fill:#b4fd81;fill-opacity:1;fill-rule:nonzero;stroke:#364854;stroke-width:1.24805892;stroke-linecap:butt;stroke-linejoin:miter;marker:none;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.46938776;visibility:visible;display:inline;overflow:visible"
+       id="rect1309"
+       width="426.19617"
+       height="93.0681"
+       x="198.33055"
+       y="212.61369"
+       rx="15.714291"
+       ry="15.71428" />
+    <g
+       id="g3116"
+       transform="translate(30.30458,-1.010153)">
+      <rect
+         ry="15.714286"
+         rx="15.714285"
+         y="85.366516"
+         x="190.79478"
+         height="32.142857"
+         width="175.71428"
+         id="rect2228"
+         style="opacity:0.98098857;color:#000000;fill:#fdef81;fill-opacity:1;fill-rule:nonzero;stroke:#364854;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;marker:none;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.46938776;visibility:visible;display:inline;overflow:visible" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text2200"
+         y="103.79075"
+         x="210.71429"
+         style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Black"
+         xml:space="preserve"><tspan
+           id="tspan2204"
+           y="103.79075"
+           x="210.71429"
+           sodipodi:role="line">C_ProtocolFrame (virtual)</tspan></text>
+    </g>
+    <g
+       id="g3121"
+       transform="translate(28.78936,8.081219)">
+      <rect
+         ry="15.714286"
+         rx="15.714285"
+         y="130.18391"
+         x="183.49387"
+         height="32.142857"
+         width="197.68753"
+         id="rect3103"
+         style="opacity:0.98098857;color:#000000;fill:#fdef81;fill-opacity:1;fill-rule:nonzero;stroke:#364854;stroke-width:2.12136841;stroke-linecap:butt;stroke-linejoin:miter;marker:none;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.46938776;visibility:visible;display:inline;overflow:visible" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text2208"
+         y="148.79074"
+         x="199.28572"
+         style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Black"
+         xml:space="preserve"><tspan
+           id="tspan2212"
+           y="148.79074"
+           x="199.28572"
+           sodipodi:role="line">C_ProtocolBinaryFrame (virtual)</tspan></text>
+    </g>
+    <g
+       id="g3152"
+       transform="translate(7.142857,7.142857)">
+      <rect
+         ry="15.714286"
+         rx="15.714285"
+         y="249.55777"
+         x="217.74225"
+         height="32.142857"
+         width="175.71428"
+         id="rect3109"
+         style="opacity:0.98098857;color:#000000;fill:#fdef81;fill-opacity:1;fill-rule:nonzero;stroke:#364854;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;marker:none;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.46938776;visibility:visible;display:inline;overflow:visible" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text2216"
+         y="269.50504"
+         x="254.28572"
+         style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Black"
+         xml:space="preserve"><tspan
+           y="269.50504"
+           x="254.28572"
+           id="tspan2218"
+           sodipodi:role="line">C_protocolBinary</tspan></text>
+    </g>
+    <g
+       id="g3161">
+      <rect
+         ry="15.714286"
+         rx="15.714285"
+         y="258.23944"
+         x="440.73471"
+         height="32.142857"
+         width="175.71428"
+         id="rect3107"
+         style="opacity:0.98098857;color:#000000;fill:#fdef81;fill-opacity:1;fill-rule:nonzero;stroke:#364854;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;marker:none;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.46938776;visibility:visible;display:inline;overflow:visible" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text2220"
+         y="276.37863"
+         x="479.11343"
+         style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Black"
+         xml:space="preserve"><tspan
+           id="tspan2222"
+           y="276.37863"
+           x="479.11343"
+           sodipodi:role="line">C_MessageBinary</tspan></text>
+    </g>
+    <g
+       id="g3111"
+       transform="translate(-0.505076,-8.586297)">
+      <rect
+         ry="15.714286"
+         rx="15.714285"
+         y="122.60778"
+         x="437.92728"
+         height="32.142857"
+         width="175.71428"
+         id="rect3105"
+         style="opacity:0.98098857;color:#000000;fill:#fdef81;fill-opacity:1;fill-rule:nonzero;stroke:#364854;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;marker:none;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.46938776;visibility:visible;display:inline;overflow:visible" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text2224"
+         y="140.66437"
+         x="454.15527"
+         style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Black"
+         xml:space="preserve"><tspan
+           id="tspan2226"
+           y="140.66437"
+           x="454.15527"
+           sodipodi:role="line">C_MessageFrame (virtual)</tspan></text>
+    </g>
+    <path
+       style="fill:none;fill-opacity:0.75;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#Arrow1Lstart)"
+       d="M 309.64384,117.49922 L 310.43721,137.20445"
+       id="path3126"
+       inkscape:connector-type="polyline"
+       inkscape:connection-start="#g3116"
+       inkscape:connection-end="#g3121" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3140"
+       style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Black"
+       transform="translate(341.2164,135.7675)"><flowRegion
+         id="flowRegion3142"><rect
+           id="rect3144"
+           width="488.57144"
+           height="124.28571"
+           x="94.285713"
+           y="80.933609"
+           style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Black" /></flowRegion><flowPara
+         id="flowPara3146">module: protocol-binary</flowPara></flowRoot>    <path
+       style="fill:none;fill-opacity:0.75;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#Arrow1Lstart)"
+       d="M 311.36064,171.46867 L 312.50942,255.70063"
+       id="path3157"
+       inkscape:connector-type="polyline"
+       inkscape:connection-start="#g3121"
+       inkscape:connection-end="#g3152" />
+    <path
+       style="fill:none;fill-opacity:0.75;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#Arrow1Lstart)"
+       d="M 525.67145,147.16434 L 528.19974,257.23944"
+       id="path3166"
+       inkscape:connector-type="polyline"
+       inkscape:connection-start="#g3111"
+       inkscape:connection-end="#g3161" />
+  </g>
+</svg>

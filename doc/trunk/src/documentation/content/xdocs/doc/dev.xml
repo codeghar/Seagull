@@ -7,7 +7,88 @@
   <body>
     <section>
       <title>Developer documentation</title>
-      <fixme author="Olivier">To write</fixme>
+      <p>The purpose of this documentation is to explain Seagull interns. It is a summary to help developers make their way through Seagull and not
+      intended to be a definitive developer documentation.</p>
+    </section>
+    <section>
+      <title>Main modules</title>
+      <ul>
+        <li><strong>generator-core</strong>: core of Seagull. Contains the main functions.</li>
+        <li><strong>generator-model</strong>: internal model of Seagull to manage protocols, channels and transports.</li>
+        <li><strong>generator-scenario</strong>: model for the scenario</li>
+        <li><strong>generator-traffic</strong>: traffic model. Management of the call context, of the read/write on transport channel, of the execution of the calls.</li>
+        <li><strong>protocol-data</strong>: definition of generic data used by the generator</li>
+        <li><strong>protocol-frame</strong>: virtual definition of a protocol and its messages. It contains the only objects that will be used by the generator</li>
+        <li><strong>transport-frame</strong>: generic definition of a transport</li>
+      </ul>
+    </section>
+    <section>
+      <title>Other modules</title>
+      <ul>
+        <li><strong>common</strong>: contains all the .h files to adapt some system includes to the target compilation platform</li>
+        <li><strong>data-log</strong>: deals with response time logs (csv file)</li>
+        <li><strong>exe-env</strong>: execution environment for each protocol</li>
+        <li><strong>external-data</strong>: manage external data files, to insert data into scenario messages during the call</li>
+        <li><strong>generator-common</strong>: utils for the tool (buffer management, id, ...) </li>
+        <li><strong>library-trans-extsctp</strong>: SCTP transport library; daughter class of C_Transport</li>
+        <li><strong>library-trans-ip</strong>: IP v4 &amp; v6 transport transport; daughter class of C_Transport</li>
+        <li><strong>protocol-binary</strong>: binary protocol definition (e.g. Diameter); daughter class of C_ProtocolBinaryFrame, C_MessageFrame </li>
+        <li><strong>statistics</strong>: stats management</li>
+        <li><strong>xml-parser</strong>: parsing the xml files (dictionary, scenario and configuration file)</li>
+      </ul>
+    </section>
+    <section>
+      <title>Main objects</title>
+      <ul>
+        <li><strong>C_Generator</strong> (module generator-core): Main object</li>
+        <li><strong>C_ReadControl</strong> (module generator-traffic)</li>
+        <li><strong>C_CallControl</strong> (module generator-traffic): Objects for the execution of the scenario</li>
+        <li>Protocol objects: <br/><br/><img alt="Protocol objects " src="images/dev_01.jpg"></img></li>
+        <li><strong>C_ProtocolControl</strong> (module generator-model): The only object that knows about the non-virtual message and protocol objects.</li>
+      </ul>
+    </section>
+    <section>
+      <title>Threads</title>
+      <p>There are 5 threads in Seagull:</p>
+      <ul>
+        <li>One thread that handles the whole traffic,</li>
+        <li>One thread for the keyboard,</li>
+        <li>One thread for the tool display,</li>
+        <li>One thread for the logs,</li>
+        <li>One thread for the statistics.</li>
+      </ul>
+      <p>They are handled in generator-core module</p>
+    </section>
+    <section>
+      <title>Protocol and messages</title>
+      <ul>
+        <li>To implement a text protocol, you need to create a new implementation of C_ProtocolFrame and C_MessageFrame like C_ProtocolBinary and C_MessageBinary</li>
+        <li>In those classes, you implement the management of the XML tags and the protocol definition</li>
+        <li>You need to add them in C_ProtocolControl to be instantiated by the tool</li>
+      </ul>
+    </section>
+    <section>
+      <title>XML parsing</title>
+      <ul>
+        <li>Handled in module xml-parser</li>
+        <li>XML files are parsed by C_XmlParser</li>
+        <li>XML data are represented as a tree of elements (based on stl types): <code><![CDATA[(<TAG (FIELD=“VALUE”)*> <\TAG>)*]]></code></li>
+        <li>Useful functions in C_XmlData allows to get the name of a tag, retrieve the value of a field or the list (stl) of element under one element.</li>
+      </ul>
+    </section>
+    <section>
+      <title>Channel creation</title>
+      <ul>
+        <li>C_TransIP (module library-trans-ip) implements the transport, based on virtual object C_Transport (module transport-frame)</li>
+        <li>Done/Declared in conf file.</li>
+        <li>Channel = link between one protocol and one transport, with an open command for the transport</li>
+      </ul>
+    </section>
+    <section>
+      <title>Multi-channel policy</title>
+      <p>Automatic session based: possible to open several channels (using same or different protocols), but only the first channel used can be server.</p>
     </section>
   </body>
 </document>
+
+
