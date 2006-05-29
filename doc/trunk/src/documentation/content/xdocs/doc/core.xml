@@ -157,7 +157,7 @@ seagull is /usr/local/bin/seagull</source>
 	 Then you can open channels for the transport that you have defined. You can open one or several
 	 channels. Each channel can be on the same or on different transports, and can use the same or
 	 a different protocol.</p>
-        <img src="images/channels.jpg" alt="Channels and protocols"/>
+        <p><img src="images/channels.jpg" alt="Channels and protocols"/></p>
         <p>A channel makes the link between a transport and a protocol.</p>
         <note>Only one channel can be opened as server and it has to be opened as the FIRST channel.</note>
         <p>Transport and channels are defined in the <a href="#config_generic">generic configuration file</a>
