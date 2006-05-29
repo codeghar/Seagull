@@ -6,6 +6,11 @@
   </header>
   <body>
     <section>
+      <title>XXX protocol details</title>
+      <p>The implementation of XXXX in Seagull conforms to XXXXX.
+      Blah blah.</p>
+    </section>
+    <section>
       <title>Getting started with XXX</title>
       <section>
         <title>First try</title>

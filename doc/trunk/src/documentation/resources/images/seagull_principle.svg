@@ -15,9 +15,9 @@
    inkscape:version="0.43"
    sodipodi:docbase="C:\Documents and Settings\olja\My Documents\Test-Infra\tools\Seagull\SVN\doc\trunk\src\documentation\resources\images"
    sodipodi:docname="seagull_principle.svg"
-   inkscape:export-filename="C:\Documents and Settings\olja\My Documents\Test-Infra\tools\Seagull\SVN\doc\trunk\src\documentation\resources\images\dev_01.jpg"
-   inkscape:export-xdpi="105.13483"
-   inkscape:export-ydpi="105.13483">
+   inkscape:export-filename="C:\Documents and Settings\olja\My Documents\Test-Infra\tools\Seagull\SVN\doc\trunk\src\documentation\resources\images\seagull_principle_small.jpg"
+   inkscape:export-xdpi="45.790001"
+   inkscape:export-ydpi="45.790001">
   <defs
      id="defs4">
     <marker
@@ -43,11 +43,11 @@
      inkscape:pageshadow="2"
      inkscape:zoom="1.4"
      inkscape:cx="375"
-     inkscape:cy="865.15374"
+     inkscape:cy="812.45382"
      inkscape:document-units="px"
-     inkscape:current-layer="layer1"
-     inkscape:window-width="1280"
-     inkscape:window-height="908"
+     inkscape:current-layer="g1400"
+     inkscape:window-width="1028"
+     inkscape:window-height="746"
      inkscape:window-x="-4"
      inkscape:window-y="-4"
      showgrid="true" />
@@ -145,52 +145,57 @@
            sodipodi:role="line">Configuration</tspan></text>
     </g>
     <g
-       id="g2695"
-       transform="translate(-22.16246,-83.56294)">
-      <rect
-         ry="15.714286"
-         rx="15.714285"
-         y="257.41492"
-         x="248.0546"
-         height="32.142857"
-         width="105.08957"
-         id="rect3109"
-         style="opacity:0.98098857;color:#000000;fill:#fdef81;fill-opacity:1;fill-rule:nonzero;stroke:#364854;stroke-width:1.5467006;stroke-linecap:butt;stroke-linejoin:miter;marker:none;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.46938776;visibility:visible;display:inline;overflow:visible" />
-      <text
-         sodipodi:linespacing="125%"
-         id="text2216"
-         y="276.64789"
-         x="261.42859"
-         style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Black"
-         xml:space="preserve"><tspan
-           y="276.64789"
-           x="261.42859"
-           id="tspan2218"
-           sodipodi:role="line">User interface</tspan></text>
-    </g>
-    <g
        id="g2705"
        transform="translate(4.980387,-78.56294)">
-      <rect
-         ry="15.714286"
-         rx="15.714285"
-         y="253.95372"
-         x="462.56406"
-         height="32.142857"
-         width="120.62701"
-         id="rect3107"
-         style="opacity:0.98098857;color:#000000;fill:#fdef81;fill-opacity:1;fill-rule:nonzero;stroke:#364854;stroke-width:1.65710008;stroke-linecap:butt;stroke-linejoin:miter;marker:none;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.46938776;visibility:visible;display:inline;overflow:visible" />
-      <text
-         sodipodi:linespacing="125%"
-         id="text2220"
-         y="273.52148"
-         x="475.54199"
-         style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Black"
-         xml:space="preserve"><tspan
-           id="tspan2222"
-           y="273.52148"
+      <g
+         id="g1384">
+        <rect
+           style="opacity:0.98098857;color:#000000;fill:#fdef81;fill-opacity:1;fill-rule:nonzero;stroke:#364854;stroke-width:1.65710008;stroke-linecap:butt;stroke-linejoin:miter;marker:none;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.46938776;visibility:visible;display:inline;overflow:visible"
+           id="rect3107"
+           width="120.62701"
+           height="32.142857"
+           x="462.56406"
+           y="253.95372"
+           rx="15.714285"
+           ry="15.714286" />
+        <text
+           xml:space="preserve"
+           style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Black"
            x="475.54199"
-           sodipodi:role="line">Tracing / logging</tspan></text>
+           y="273.52148"
+           id="text2220"
+           sodipodi:linespacing="125%"><tspan
+             sodipodi:role="line"
+             x="475.54199"
+             y="273.52148"
+             id="tspan2222">Tracing / logging</tspan></text>
+      </g>
+      <g
+         id="g1400">
+        <g
+           id="g1405">
+          <rect
+             ry="15.714286"
+             rx="15.714285"
+             y="301.95374"
+             x="462.56406"
+             height="32.142857"
+             width="120.62701"
+             id="rect1391"
+             style="opacity:0.98098857;color:#000000;fill:#fdef81;fill-opacity:1;fill-rule:nonzero;stroke:#364854;stroke-width:1.65710008;stroke-linecap:butt;stroke-linejoin:miter;marker:none;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.46938776;visibility:visible;display:inline;overflow:visible" />
+          <text
+             sodipodi:linespacing="125%"
+             id="text1393"
+             y="321.52148"
+             x="483.54199"
+             style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Black"
+             xml:space="preserve"><tspan
+               id="tspan1395"
+               y="321.52148"
+               x="483.54199"
+               sodipodi:role="line">External data</tspan></text>
+        </g>
+      </g>
     </g>
     <g
        id="g3647"
@@ -278,7 +283,7 @@
     </g>
     <g
        id="g2715"
-       transform="translate(-147.1625,-101.4201)">
+       transform="translate(-149.1625,-101.4201)">
       <rect
          ry="15.714286"
          rx="15.714285"
@@ -302,7 +307,7 @@
     </g>
     <g
        id="g2720"
-       transform="translate(-22.16246,-149.2772)">
+       transform="translate(-270.1753,-198.2981)">
       <rect
          ry="15.714286"
          rx="15.714285"

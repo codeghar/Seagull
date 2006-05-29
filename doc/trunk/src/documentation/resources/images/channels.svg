@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://web.resource.org/cc/"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://inkscape.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="744.09448819"
+   height="1052.3622047"
+   id="svg2"
+   sodipodi:version="0.32"
+   inkscape:version="0.43"
+   sodipodi:docbase="C:\Documents and Settings\olja\My Documents\Test-Infra\tools\Seagull\SVN\doc\trunk\src\documentation\resources\images"
+   sodipodi:docname="channels.svg"
+   inkscape:export-filename="C:\Documents and Settings\olja\My Documents\Test-Infra\tools\Seagull\SVN\doc\trunk\src\documentation\resources\images\channels.jpg"
+   inkscape:export-xdpi="94.424576"
+   inkscape:export-ydpi="94.424576">
+  <defs
+     id="defs4">
+    <marker
+       inkscape:stockid="Arrow1Lstart"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Lstart"
+       style="overflow:visible">
+      <path
+         id="path4214"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1.0pt;marker-start:none"
+         transform="scale(0.8)" />
+    </marker>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="2.3574124"
+     inkscape:cx="267.63092"
+     inkscape:cy="893.44117"
+     inkscape:document-units="px"
+     inkscape:current-layer="layer1"
+     inkscape:window-width="1024"
+     inkscape:window-height="742"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     showgrid="true" />
+  <metadata
+     id="metadata7">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <rect
+       style="opacity:0.98098857;color:#000000;fill:#fdef81;fill-opacity:1;fill-rule:nonzero;stroke:#364854;stroke-width:1.24425817;stroke-linecap:butt;stroke-linejoin:miter;marker:none;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.46938776;visibility:visible;display:inline;overflow:visible"
+       id="rect1309"
+       width="219.53421"
+       height="179.58041"
+       x="238.10097"
+       y="68.176979"
+       rx="15.71429"
+       ry="15.714278" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3140"
+       style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Black"
+       transform="translate(143.4736,-30.04118)"><flowRegion
+         id="flowRegion3142"><rect
+           id="rect3144"
+           width="488.57144"
+           height="124.28571"
+           x="94.285713"
+           y="80.933609"
+           style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Black" /></flowRegion><flowPara
+         id="flowPara3146">Scenario</flowPara></flowRoot>    <rect
+       style="opacity:0.98098857;color:#000000;fill:#819afd;fill-opacity:1;fill-rule:nonzero;stroke:#364854;stroke-width:2.06289887;stroke-linecap:butt;stroke-linejoin:miter;marker:none;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.46938776;visibility:visible;display:inline;overflow:visible"
+       id="rect2689"
+       width="186.94029"
+       height="32.142857"
+       x="250.99155"
+       y="80.13549"
+       rx="15.714286"
+       ry="15.714286" />
+    <text
+       xml:space="preserve"
+       style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Black"
+       x="260.21246"
+       y="98.654167"
+       id="text2691"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan2693"
+         x="260.21246"
+         y="98.654167">&lt;send channel=&quot;channel-1&quot;&gt;</tspan></text>
+    <rect
+       style="opacity:0.98098857;color:#000000;fill:#fdef81;fill-opacity:1;fill-rule:nonzero;stroke:#364854;stroke-width:0.98820174;stroke-linecap:butt;stroke-linejoin:miter;marker:none;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.46938776;visibility:visible;display:inline;overflow:visible"
+       id="rect2725"
+       width="132.14198"
+       height="177.01555"
+       x="77.494728"
+       y="72.419487"
+       rx="15.714286"
+       ry="15.714289" />
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot2184"
+       style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Black"
+       transform="translate(-16.30176,-27.04118)"><flowRegion
+         id="flowRegion2186"><rect
+           id="rect2188"
+           width="488.57144"
+           height="124.28571"
+           x="94.285713"
+           y="80.933609"
+           style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Black" /></flowRegion><flowPara
+         id="flowPara2190">XML config</flowPara></flowRoot>    <g
+       id="g18907"
+       transform="translate(-1.81691,21.63377)">
+      <rect
+         ry="15.714286"
+         rx="15.714285"
+         y="75.82531"
+         x="93.498337"
+         height="32.142857"
+         width="101.55833"
+         id="rect2228"
+         style="opacity:0.98098857;color:#000000;fill:#819afd;fill-opacity:1;fill-rule:nonzero;stroke:#364854;stroke-width:1.52049232;stroke-linecap:butt;stroke-linejoin:miter;marker:none;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.46938776;visibility:visible;display:inline;overflow:visible" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text2200"
+         y="94.249535"
+         x="113.83987"
+         style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Black"
+         xml:space="preserve"><tspan
+           id="tspan2204"
+           y="94.249535"
+           x="113.83987"
+           sodipodi:role="line">channel-1</tspan></text>
+    </g>
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3608"
+       style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Black"
+       transform="translate(8.206916,61.59554)"><flowRegion
+         id="flowRegion3610"><rect
+           id="rect3612"
+           width="488.57144"
+           height="124.28571"
+           x="94.285713"
+           y="80.933609"
+           style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Black" /></flowRegion><flowPara
+         id="flowPara3614">Protocol-2</flowPara></flowRoot>    <g
+       id="g18917">
+      <rect
+         ry="15.714286"
+         rx="15.714285"
+         y="205.12247"
+         x="94.188835"
+         height="32.142857"
+         width="101.55833"
+         id="rect1387"
+         style="opacity:0.98098857;color:#000000;fill:#b4fd81;fill-opacity:1;fill-rule:nonzero;stroke:#364854;stroke-width:1.52049232;stroke-linecap:butt;stroke-linejoin:miter;marker:none;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.46938776;visibility:visible;display:inline;overflow:visible" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text1389"
+         y="223.54669"
+         x="114.53037"
+         style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Black"
+         xml:space="preserve"><tspan
+           id="tspan1391"
+           y="223.54669"
+           x="114.53037"
+           sodipodi:role="line">channel-3</tspan></text>
+    </g>
+    <g
+       id="g18912">
+      <rect
+         ry="15.714286"
+         rx="15.714285"
+         y="162.45908"
+         x="93.22084"
+         height="32.142857"
+         width="101.55833"
+         id="rect1395"
+         style="opacity:0.98098857;color:#000000;fill:#fdc381;fill-opacity:1;fill-rule:nonzero;stroke:#364854;stroke-width:1.52049232;stroke-linecap:butt;stroke-linejoin:miter;marker:none;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.46938776;visibility:visible;display:inline;overflow:visible" />
+      <text
+         sodipodi:linespacing="125%"
+         id="text1397"
+         y="180.8833"
+         x="113.56238"
+         style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Black"
+         xml:space="preserve"><tspan
+           id="tspan1399"
+           y="180.8833"
+           x="113.56238"
+           sodipodi:role="line">channel-2</tspan></text>
+    </g>
+    <rect
+       style="opacity:0.98098857;color:#000000;fill:#819afd;fill-opacity:1;fill-rule:nonzero;stroke:#364854;stroke-width:2.06412721;stroke-linecap:butt;stroke-linejoin:miter;marker:none;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.46938776;visibility:visible;display:inline;overflow:visible"
+       id="rect15389"
+       width="187.16299"
+       height="32.142857"
+       x="251.76756"
+       y="121.12378"
+       rx="15.714286"
+       ry="15.714286" />
+    <text
+       xml:space="preserve"
+       style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Black"
+       x="260.98721"
+       y="139.64246"
+       id="text15391"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan15393"
+         x="260.98721"
+         y="139.64246">&lt;receive channel=&quot;channel-1&quot;&gt;</tspan></text>
+    <rect
+       style="opacity:0.98098857;color:#000000;fill:#fdc381;fill-opacity:1;fill-rule:nonzero;stroke:#364854;stroke-width:2.06412721;stroke-linecap:butt;stroke-linejoin:miter;marker:none;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.46938776;visibility:visible;display:inline;overflow:visible"
+       id="rect15395"
+       width="187.16299"
+       height="32.142857"
+       x="251.2579"
+       y="162.18726"
+       rx="15.714286"
+       ry="15.714286" />
+    <text
+       xml:space="preserve"
+       style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Black"
+       x="260.47754"
+       y="180.70593"
+       id="text15397"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan15399"
+         x="260.47754"
+         y="180.70593">&lt;receive channel=&quot;channel-2&quot;&gt;</tspan></text>
+    <rect
+       style="opacity:0.98098857;color:#000000;fill:#b4fd81;fill-opacity:1;fill-rule:nonzero;stroke:#364854;stroke-width:2.06412721;stroke-linecap:butt;stroke-linejoin:miter;marker:none;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:0.46938776;visibility:visible;display:inline;overflow:visible"
+       id="rect15401"
+       width="187.16299"
+       height="32.142857"
+       x="251.03206"
+       y="203.12378"
+       rx="15.714286"
+       ry="15.714286" />
+    <text
+       xml:space="preserve"
+       style="font-size:10px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Arial Black"
+       x="260.25174"
+       y="221.64246"
+       id="text15403"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan15405"
+         x="260.25174"
+         y="221.64246">&lt;send channel=&quot;channel-3&quot;&gt;</tspan></text>
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot18899"
+       style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Black"
+       transform="translate(8.545898,-4.041176)"><flowRegion
+         id="flowRegion18901"><rect
+           id="rect18903"
+           width="488.57144"
+           height="124.28571"
+           x="94.285713"
+           y="80.933609"
+           style="font-size:14px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;font-family:Arial Black" /></flowRegion><flowPara
+         id="flowPara18905">Protocol-1</flowPara></flowRoot>  </g>
+</svg>

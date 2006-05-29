@@ -6,9 +6,19 @@
   </header>
   <body>
     <section>
-      <title>Getting started with XXX</title>
+      <title>XCAP protocol details</title>
+      <p>The implementation of XCAP in Seagull conforms to <a href="http://www.jdrosen.net/papers/draft-ietf-simple-xcap-11.txt">draft-ietf-simple-xcap-11.txt</a> 
+      (see also <a href="http://www.jdrosen.net/simple_acap.html">http://www.jdrosen.net/simple_acap.html</a>).
+      XCAP being a text payload (transported by HTTP), Seagull does not really describe 
+      the XCAP protocol in its dictionary. Instead, XCAP messages and parameters
+      are described using "CDATA" XML tags which gives a great flexibility
+      to add messages and parameters in the scenarios.</p>
+    </section>
+    <section>
+      <title>Getting started with XCAP</title>
       <section>
         <title>First try</title>
+        <fixme author="Olivier">Complete this section</fixme>
       </section>
       <section>
         <title>First try explained</title>
@@ -20,10 +30,10 @@
         as well as traffic parameters.</p>
     </section>
     <section>
-      <title>XXXXX dictionary</title>
+      <title>XCAP dictionary</title>
     </section>
-    <section id="prepostactions_XXXXX">
-      <title>Actions in scenario commands for XXXX</title>
+    <section id="prepostactions_XCAP">
+      <title>Actions in scenario commands for XCAP</title>
     </section>
   </body>
 </document>
