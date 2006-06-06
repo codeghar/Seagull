@@ -1,0 +1,75 @@
+<!--
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+ (c)Copyright 2006 Hewlett-Packard Development Company, LP.
+
+-->
+
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<scenario>
+
+<traffic>
+   <send channel="channel-1">
+   <action>
+     <!-- open a socket for each call -->
+     <open args="mode=client;dest=127.0.0.1:8080"></open>
+   </action>
+     <message>
+     <!-- header -->
+     <! [ CDATA[GET  http://xcap.example.com/address-book/users/petri/adbook1/address-book/entry/street/@paved  HTTP/1.1]]>
+     <!-- body --> 
+     <![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+              <list name="close-friends">
+                <entry uri="sip:joe@example.com">
+                    <display-name>Joe Smith</display-name>
+                </entry>
+                <entry uri="sip:nancy@example.com">
+                    <display-name>Nancy Gross</display-name>
+                </entry>
+                <entry uri="sip:petri@example.com">
+                    <display-name>Petri Aukia</display-name>
+                </entry>
+             </list>]]>
+     </message>
+   </send>
+
+   <receive channel="channel-1">
+    <message>
+     <!-- header -->
+     <![CDATA[HTTP/1.1 200 OK
+              Content-Type: application/xml-attribute-value
+              Content-Length: 4]]>
+     <!-- body --> 
+     <![CDATA[true]]>
+    </message>
+
+   <action>
+     <!-- close the socket -->
+     <close></close>
+   </action>
+   </receive>
+</traffic>
+
+</scenario>
+
+
+
+
+
+
+
+
+

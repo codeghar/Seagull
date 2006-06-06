@@ -1,0 +1,1125 @@
+/*
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * (c)Copyright 2006 Hewlett-Packard Development Company, LP.
+ *
+ */
+
+#include "dlfcn_t.hpp"
+#include "iostream_t.hpp"
+#include "Utils.hpp"
+
+#ifdef _ITU_STANDARD
+#include "C_TCAPMsgBuildContextITU.hpp"
+#else 
+#include "C_TCAPMsgBuildContextANSI.hpp"
+#endif
+
+static const char* _Tcap_routing_type_name_table[] = {
+   "DPC_SSN",
+   "SSN",
+   "GT" };
+
+static const tc_address_type _Tcap_routing_type_table[] = {
+  DPC_SSN,
+  SSN,
+  GT } ;
+
+static const int _Tcap_routing_type_supported = 3 ;
+
+static const char* _Tc_gt_indicator_name_table[] = {
+   "tc_no_gt",
+   "tc_gt_type1",
+   "tc_gt_type2",
+   "tc_gt_type3",
+   "tc_gt_type4"};
+
+static const tc_gt_indicator _Tc_gt_indicator_table[] = {
+   tc_no_gt,
+   tc_gt_type1,
+   tc_gt_type2,
+   tc_gt_type3,
+   tc_gt_type4 };
+
+static const int _Tc_gt_indicator_supported = 5 ;
+
+
+static const char* _Tc_gt_translation_name_table[] = {
+   "tc_t_unused",
+   "tc_t_internetwork",
+   "tc_t_networkspecific"};
+
+static const tc_translation _Tc_gt_translation_table[] = {
+   tc_t_unused,
+   tc_t_internetwork,
+   tc_t_networkspecific};
+
+static const int _Tc_gt_translation_supported = 3 ;
+
+static const char* _Tc_gt_numbering_name_table[] = {
+   "tc_unknown_num",
+   "tc_num_isdn",
+   "tc_num_userdata",
+   "tc_num_telex",
+   "tc_num_maritime_mobile",
+   "tc_land_mobile",
+   "tc_isdn_mobile"};
+
+static const tc_numbering_plan _Tc_gt_numbering_table[] = {
+   tc_unknown_num,
+   tc_num_isdn,
+   tc_num_userdata,
+   tc_num_telex,
+   tc_num_maritime_mobile,
+   tc_land_mobile,
+   tc_isdn_mobile};
+
+static const int _Tc_gt_numbering_supported = 7 ;
+
+
+static const char* _Tc_gt_nature_name_table[] = {
+   "tc_subscriber_nb",
+   "tc_national_nb",
+   "tc_international_nb"};
+
+
+static const tc_address_nature _Tc_gt_nature_table[] = {
+   tc_subscriber_nb,
+   tc_national_nb,
+   tc_international_nb};
+
+static const int _Tc_gt_nature_supported = 3 ;
+
+#ifdef _ANSI_STANDARD
+static const char* _Tc_parameter_type_name_table[] = {
+   "SET_TYPE",
+   "SEQUENCE_TYPE"};
+
+static const tc_parm_type _Tc_parameter_type_table[] = {
+   SET_TYPE,
+   SEQUENCE_TYPE};
+
+static const int _Tc_parameter_type_supported = 2 ;
+#endif
+
+static const char* _Stack_Header = 
+#ifdef _ITU_STANDARD
+"StackITU"
+#else 
+"StackANSI"
+#endif
+;
+
+#define LOG_ERROR(m) { \
+ char L_err [100] ; \
+ snprintf(L_err, 100, (m)) ; \
+(*m_log_error)(L_err); \
+}
+
+#define LOG_ERROR_P1(m,P1) { \
+ char L_err [100] ; \
+ snprintf(L_err, 100, (m), (P1)) ; \
+(*m_log_error)(L_err); \
+}
+
+#define LOG_ERROR_P2(m,P1,P2) { \
+ char L_err [100] ; \
+ snprintf(L_err, 100, (m), (P1),(P2)) ; \
+(*m_log_error)(L_err); \
+}
+
+#define LOG_ERROR_P3(m,P1,P2,P3) { \
+ char L_err [100] ; \
+ snprintf(L_err, 100, (m), (P1),(P2),(P3)) ; \
+(*m_log_error)(L_err); \
+}
+
+
+#define LOG_ALL(m) { \
+ char L_msg [100] ; \
+ snprintf(L_msg, 100, (m)) ; \
+(*m_log_info)(L_msg); \
+}
+
+#define LOG_ALL_P1(m,P1) { \
+ char L_msg [100] ; \
+ snprintf(L_msg, 100, (m), (P1)) ; \
+(*m_log_info)(L_msg); \
+}
+
+#define LOG_ALL_P2(m,P1,P2) { \
+ char L_msg [100] ; \
+ snprintf(L_msg, 100, (m), (P1),(P2)) ; \
+(*m_log_info)(L_msg); \
+}
+
+
+C_TcapStackNoFlavour::C_TcapStackNoFlavour(char *P_library_name) 
+: C_TcapStack(P_library_name) {
+  int L_i ;
+
+  m_channel_id    = -1   ;
+  m_d_gt          = NULL ;
+  m_o_gt          = NULL ;
+
+  m_num_cnx_active = CNX_ARRAY_MAX_SIZE ;
+  NEW_TABLE(m_cnx_active,
+	    int,
+	    CNX_ARRAY_MAX_SIZE);
+  NEW_TABLE(m_cnx_state,
+	    T_CnxState,
+	    CNX_ARRAY_MAX_SIZE);
+  for(L_i=0; L_i < CNX_ARRAY_MAX_SIZE; L_i++) {
+    m_cnx_state[L_i] = E_CNX_UNKNOWN ;
+  }
+  
+  NEW_VAR(m_recv_data_list, T_RecvDataList());
+}
+
+C_TcapStackNoFlavour::~C_TcapStackNoFlavour() {
+  m_channel_id = -1 ;
+
+  FREE_TABLE(m_o_gt);
+  FREE_TABLE(m_d_gt);
+
+  DELETE_TABLE(m_cnx_active);
+  DELETE_TABLE(m_cnx_state);
+  if (!m_recv_data_list->empty()) {
+    m_recv_data_list->erase(m_recv_data_list->begin(),
+			    m_recv_data_list->end());
+  }
+  DELETE_VAR(m_recv_data_list);
+}
+
+int C_TcapStackNoFlavour::config (T_pConfigValueList P_config_param_list) {
+  int                           L_ret = 0       ;
+  T_ConfigValueList::iterator   L_config_it     ;
+
+  if (!P_config_param_list->empty()) {
+    for (L_config_it = P_config_param_list->begin() ;
+	 L_config_it != P_config_param_list->end();
+	 L_config_it++) {
+      L_ret = analyze_config(*L_config_it) ;
+      if (L_ret != 0) break ;
+    }
+  }
+
+  return (L_ret);
+}
+
+
+int C_TcapStackNoFlavour::analyze_config(T_ConfigValue& P_config) {
+  int                           L_ret = 0       ;
+  
+  if (strcmp(P_config.m_name, (char *)"orig-routing-type") == 0) {
+    L_ret = set_orig_routing_type(P_config.m_value) ;
+  } else if (strcmp(P_config.m_name, (char *)"dest-routing-type") == 0) {
+    L_ret = set_dest_routing_type(P_config.m_value) ;
+  } else if (strcmp(P_config.m_name, (char *)"orig-gt") == 0) {
+    L_ret = set_orig_gt(P_config.m_value) ;
+  } else if (strcmp(P_config.m_name, (char *)"dest-gt") == 0) {
+    L_ret = set_dest_gt(P_config.m_value) ;
+  } else if (strcmp(P_config.m_name, (char *)"orig-gt-indicator") == 0) {
+    L_ret = set_orig_gt_indicator(P_config.m_value) ;
+  } else if (strcmp(P_config.m_name, (char *)"dest-gt-indicator") == 0) {
+    L_ret = set_dest_gt_indicator(P_config.m_value) ;
+  } else if (strcmp(P_config.m_name, (char *)"orig-gt-translation") == 0) {
+    L_ret = set_orig_gt_translation(P_config.m_value) ;
+  } else if (strcmp(P_config.m_name, (char *)"dest-gt-translation") == 0) {
+    L_ret = set_dest_gt_translation(P_config.m_value) ;
+  } else if (strcmp(P_config.m_name, (char *)"orig-gt-numbering") == 0) {
+    L_ret = set_orig_gt_numbering(P_config.m_value) ;
+  } else if (strcmp(P_config.m_name, (char *)"dest-gt-numbering") == 0) {
+    L_ret = set_dest_gt_numbering(P_config.m_value) ;
+  } else if (strcmp(P_config.m_name, (char *)"orig-gt-nature") == 0) {
+    L_ret = set_orig_gt_nature(P_config.m_value) ;
+  } else if (strcmp(P_config.m_name, (char *)"dest-gt-nature") == 0) {
+    L_ret = set_dest_gt_nature(P_config.m_value) ;
+  }
+#ifdef _ANSI_STANDARD
+  else if (strcmp(P_config.m_name, (char *)"parameter-type-set") == 0) {
+    L_ret = set_parameter_type(P_config.m_value) ;
+  }
+#endif // _ANSI_STANDARD
+  
+  return (L_ret);
+
+}
+
+int C_TcapStackNoFlavour::init(T_logFunction P_logError, 
+			       T_logFunction P_logInfo) {
+
+  int   L_ret = 0 ;
+  void *L_lib_handle ;
+
+  m_log_error = P_logError ;
+  m_log_info = P_logInfo   ;
+
+  L_lib_handle = dlopen(m_library_name, RTLD_LAZY);
+  if (L_lib_handle == NULL) {
+    LOG_ERROR_P2("Unable to open library [%s] error [%s]",m_library_name, dlerror());
+    L_ret = -1;
+  } else {
+
+    m_stack_fct.m_open =
+      (T_TCAP_stack_open) dlsym(L_lib_handle, "TCX_open");
+    if (m_stack_fct.m_open == NULL) {
+      LOG_ERROR_P1("Error [%s]",dlerror());
+
+      L_ret = -1 ;
+    }
+
+    if (L_ret != -1) {
+      m_stack_fct.m_close =
+	(T_TCAP_stack_close) dlsym(L_lib_handle, "TCX_close");
+      if (m_stack_fct.m_close == NULL) {
+
+	LOG_ERROR_P1("Error [%s]",dlerror());
+
+	L_ret = -1 ;
+      }
+    }
+    if (L_ret != -1) {
+      m_stack_fct.m_send =
+	(T_TCAP_stack_send) dlsym(L_lib_handle, "TCX_send");
+      if (m_stack_fct.m_send == NULL) {
+	LOG_ERROR_P1("Error [%s]",dlerror());
+
+	L_ret = -1 ;
+      }
+    }
+    if (L_ret != -1) {
+      m_stack_fct.m_recv =
+	(T_TCAP_stack_recv) dlsym(L_lib_handle, "TCX_recv");
+      if (m_stack_fct.m_recv == NULL) {
+	LOG_ERROR_P1("Error [%s]",dlerror());
+
+	L_ret = -1 ;
+      }
+    }
+    if (L_ret != -1) {
+      m_stack_fct.m_control =
+	(T_TCAP_stack_control) dlsym(L_lib_handle, "TCX_control");
+      if (m_stack_fct.m_control == NULL) {
+
+        m_stack_fct.m_control =
+          (T_TCAP_stack_control) dlsym(L_lib_handle, "TC_control");
+        if (m_stack_fct.m_control == NULL) {
+          LOG_ERROR_P1("Error [%s]",dlerror());
+          L_ret = -1 ;
+        }
+
+      }
+    }
+    if (L_ret != -1) {
+      m_stack_fct.m_cnx_handler =
+	(T_TCAP_stack_cnx_handler) dlsym(L_lib_handle, "TCX_cnx_handler");
+      if (m_stack_fct.m_cnx_handler == NULL) {
+
+        m_stack_fct.m_cnx_handler =
+          (T_TCAP_stack_cnx_handler) dlsym(L_lib_handle, "TC_cnx_handler");
+        if (m_stack_fct.m_cnx_handler == NULL) {
+          LOG_ERROR_P1("Error [%s]",dlerror());
+          L_ret = -1 ;
+        }
+
+      }
+    }
+    if (L_ret != -1) {
+      m_stack_fct.m_select_mask =
+	(T_TCAP_stack_select_mask) dlsym(L_lib_handle, "TCX_select_mask");
+      if (m_stack_fct.m_select_mask == NULL) {
+
+        m_stack_fct.m_select_mask =
+          (T_TCAP_stack_select_mask) dlsym(L_lib_handle, "TC_select_mask");
+        if (m_stack_fct.m_select_mask == NULL) {
+          LOG_ERROR_P1("Error [%s]",dlerror());
+          L_ret = -1 ;
+        }
+
+      }
+    }
+    if (L_ret != -1) {
+      m_stack_fct.m_errno =
+	(T_TCAP_stack_errno) dlsym(L_lib_handle, "tc_errno");
+      if (m_stack_fct.m_errno == NULL) {
+	LOG_ERROR_P1("Error [%s]",dlerror());
+
+	L_ret = -1 ;
+      }
+    }
+    if (L_ret != -1) {
+      m_stack_fct.m_error_text =
+	(T_TCAP_stack_error_text) dlsym(L_lib_handle, "tc_error_text");
+      if (m_stack_fct.m_error_text == NULL) {
+	LOG_ERROR_P1("Error [%s]",dlerror());
+
+	L_ret = -1 ;
+      }
+    }
+
+    if (L_ret != -1) {
+      m_stack_fct.m_alloc_buffer =
+	(T_TCAP_stack_alloc_buffer) dlsym(L_lib_handle, "TCX_alloc_buffer");
+      if (m_stack_fct.m_alloc_buffer == NULL) {
+	LOG_ERROR_P1("Error [%s]",dlerror());
+
+	L_ret = -1 ;
+      }
+    }
+    if (L_ret != -1) {
+      m_stack_fct.m_free_buffer =
+	(T_TCAP_stack_free_buffer) dlsym(L_lib_handle, "TCX_free_buffer");
+      if (m_stack_fct.m_free_buffer == NULL) {
+	LOG_ERROR_P1("Error [%s]",dlerror());
+
+	L_ret = -1 ;
+      }
+    }
+    if (L_ret != -1) {
+      m_stack_fct.m_alloc_component =
+	(T_TCAP_stack_alloc_component) dlsym(L_lib_handle, "TCX_alloc_component");
+      if (m_stack_fct.m_alloc_component == NULL) {
+	LOG_ERROR_P1("Error [%s]",dlerror());
+
+
+	L_ret = -1 ;
+      }
+    }
+    if (L_ret != -1) {
+      m_stack_fct.m_free_components =
+	(T_TCAP_stack_free_components) dlsym(L_lib_handle, "TCX_free_components");
+      if (m_stack_fct.m_free_components == NULL) {
+	LOG_ERROR_P1("Error [%s]",dlerror());
+
+	L_ret = -1 ;
+      }
+    }
+    if (L_ret != -1) {
+      m_stack_fct.m_flush_components =
+	(T_TCAP_stack_flush_components) dlsym(L_lib_handle, "TCX_flush_components");
+      if (m_stack_fct.m_flush_components == NULL) {
+	LOG_ERROR_P1("Error [%s]",dlerror());
+
+	L_ret = -1 ;
+      }
+    }
+    if (L_ret != -1) {
+      m_stack_fct.m_put_component =
+	(T_TCAP_stack_put_component) dlsym(L_lib_handle, "TCX_put_component");
+      if (m_stack_fct.m_put_component == NULL) {
+	LOG_ERROR_P1("Error [%s]",dlerror());
+
+	L_ret = -1 ;
+      }
+    }
+    if (L_ret != -1) {
+      m_stack_fct.m_get_component =
+	(T_TCAP_stack_get_component) dlsym(L_lib_handle, "TCX_get_component");
+      if (m_stack_fct.m_get_component == NULL) {
+	LOG_ERROR_P1("Error [%s]",dlerror());
+	L_ret = -1 ;
+      }
+    }
+
+  }
+  
+  return (L_ret);
+}
+
+int C_TcapStackNoFlavour::open (int P_channel_id, char *P_class, int P_appl, 
+				int P_inst, int P_ossn, C_ProtocolExternalFrame *P_protocol) {
+
+  int L_ret = 0 ;
+  tcx_application_info L_application_info;
+
+  m_channel_id = P_channel_id ;
+
+  L_application_info.mode = TCX_CNX_OVERWRITE ;
+  L_application_info.application_id = P_appl ;
+  L_application_info.instance_id = P_inst ;
+
+  L_ret = m_stack_fct.m_open (P_class, 
+			      TCX_TCAP_STD,
+			      P_ossn,
+			      TC_YES,
+			      TC_YES,
+			      &L_application_info,
+			      (tcx_sccp_service_enum)
+#ifdef _ITU_STANDARD
+			      TCX_SCCP_SERVICE_ITU_WB
+#else
+			      TCX_SCCP_SERVICE_REGULAR
+#endif
+			      ,NULL) ;
+
+  if (L_ret == -1) {
+
+    LOG_ERROR_P3("%s Error while connecting TCAP process %d [%s]",
+		 (char*)_Stack_Header,
+		 *m_stack_fct.m_errno,
+		 m_stack_fct.m_error_text[(*m_stack_fct.m_errno)]);
+    
+    return (L_ret);
+    
+  } else {
+    
+    if (m_stack_fct.m_control(L_ret, NULL, 
+			      OUT_BUFFER_DONT_BLOCK, NULL) == -1){
+      
+      LOG_ERROR_P3("%s Control error %d [%s]",
+		(char*)_Stack_Header,
+		*m_stack_fct.m_errno,
+		m_stack_fct.m_error_text[(*m_stack_fct.m_errno)]);
+
+
+      
+      L_ret = -1 ;
+      return (L_ret);
+    }
+  }
+
+  m_protocol = P_protocol ;
+  m_context_factory = m_protocol->get_factory();
+  C_TCAPMsgBuildContextNoFlavour::set_stack(this,m_log_error, m_log_info);
+  m_response = L_ret ;
+  return (L_ret) ;
+
+}
+
+int C_TcapStackNoFlavour::close (int P_cnx) {
+  return (m_stack_fct.m_close(P_cnx));
+}
+
+int C_TcapStackNoFlavour::pre_select (int               P_n, 
+				      fd_set            *P_readfds,  
+				      fd_set            *P_writefds,
+				      fd_set            *P_exceptfds, 
+				      struct timeval    *P_timeout) {
+  struct timeval  *L_timerOut = NULL ;
+
+  L_timerOut = P_timeout ;
+  return(m_stack_fct.m_select_mask(P_n,
+				   P_readfds,  
+				   P_writefds,
+				   P_exceptfds, 
+				   &L_timerOut));
+
+}
+
+int C_TcapStackNoFlavour::post_select (int                  P_n, 
+				       fd_set              *P_readfds,  
+				       fd_set              *P_writefds,
+				       fd_set              *P_exceptfds, 
+				       T_pC_TransportEvent  P_eventTable,
+				       size_t              *P_nb){
+
+  int                  L_ret       ;
+  int                  L_i         ;
+  C_TransportEvent     L_event     ;
+  int                  L_nb_event  ;
+  int                  L_recv_ret  ;
+
+  m_num_cnx_active = CNX_ARRAY_MAX_SIZE ;
+  L_nb_event = 0 ;
+  L_ret = m_stack_fct.m_cnx_handler (P_n,
+				     P_readfds,  
+				     P_writefds,
+				     P_exceptfds,
+				     &m_num_cnx_active,
+				     m_cnx_active);
+
+  if (L_ret != -1) {
+    if (m_num_cnx_active > 0) {
+      for (L_i = 0 ; L_i < m_num_cnx_active ; L_i++) {
+	L_event.no_event() ;
+	L_event.m_channel_id = m_channel_id ;
+	L_event.m_id = m_cnx_active[L_i] ;
+	switch (m_cnx_state[L_i]) {
+	case E_CNX_UNKNOWN:
+	  m_cnx_state[L_i] = E_CNX_OPEN ;
+	  L_event.m_type = C_TransportEvent::E_TRANS_OPEN ;
+	  P_eventTable[L_nb_event] = L_event ;
+	  L_nb_event ++ ;
+	case E_CNX_OPEN:
+	  L_recv_ret = event_handler(&L_event);
+	  if (L_recv_ret > 0) {
+	    P_eventTable[L_nb_event] = L_event ;
+	    L_nb_event ++ ;
+	  }
+	  break ;
+	default:
+	  break ;
+	}
+
+      }
+    }
+  }
+
+  *P_nb = L_nb_event ;
+  return (L_ret) ;
+}
+
+
+int C_TcapStackNoFlavour::event_handler (C_TransportEvent *P_evt) {
+
+  int                 L_ret  = 0     ;
+  int                 L_recv = 0     ;
+  int                 L_more=0;
+
+  T_pRecvData         L_data ;
+  struct timeval      L_recv_time ;
+
+  do {
+    if (L_more == 0) { gettimeofday(&L_recv_time,NULL); }
+    L_data = create_recv_data();
+    L_recv = m_stack_fct.m_recv(P_evt->m_id,
+				&L_data->m_time,
+				L_data->m_primitive,
+				L_data->m_components,
+				&L_more);
+    L_data->m_time = L_recv_time ;
+    if (L_recv == 0) { delete_recv_data(&L_data); break ; }
+    if (L_recv > 0) {
+      // compose message frame
+      L_ret++;
+      P_evt->m_type = C_TransportEvent::E_TRANS_RECEIVED ;  
+      m_recv_data_list->push_back(L_data);
+    } else {
+      if ((*m_stack_fct.m_errno) != 13) {
+	LOG_ERROR_P2("TCAP receipt error %d error [%s]",
+		     *m_stack_fct.m_errno,
+		     m_stack_fct.m_error_text[*m_stack_fct.m_errno]);
+
+
+	delete_recv_data(&L_data);
+	L_ret = -1 ;
+      }
+      break ;
+    }
+  } while (L_more) ;
+
+  return (L_ret);
+}
+
+C_TcapStackNoFlavour::T_pRecvData C_TcapStackNoFlavour::create_recv_data() {
+  T_pRecvData L_data ;
+  ALLOC_VAR(L_data, T_pRecvData, sizeof(T_RecvData));
+  ALLOC_VAR(L_data->m_primitive,
+	    tcx_primitive*,
+	    sizeof(tcx_primitive));
+  ALLOC_VAR(L_data->m_components,
+	    tcx_component**,
+	    sizeof(tcx_component*));
+  *(L_data->m_components) = NULL ;
+  return (L_data);
+}
+
+void C_TcapStackNoFlavour::delete_recv_data(C_TcapStackNoFlavour::T_pRecvData *P_data) {
+  T_pRecvData L_data = *P_data ;
+  FREE_VAR(L_data->m_primitive);
+  FREE_VAR(L_data->m_components);
+  FREE_VAR(L_data);
+  *P_data = NULL ;
+}
+
+bool C_TcapStackNoFlavour::get_message(int P_id, 
+				       T_pReceiveMsgContext P_ctxt) {
+  bool        L_ret = false ;
+  T_pRecvData L_data = NULL ;
+
+  C_TCAPMsgBuildContextNoFlavour* L_context ;  //WARNING !!! flavour dep
+
+
+  if (!m_recv_data_list->empty()) {
+    L_data = *(m_recv_data_list->begin());
+    m_recv_data_list->erase(m_recv_data_list->begin());
+
+    P_ctxt->m_channel = m_channel_id ;
+    P_ctxt->m_response = m_response ;
+    P_ctxt->m_time = L_data->m_time ; // to be checked L_data->time_recv_msg
+    //   L_context = m_context_factory->create_context();
+    NEW_VAR(L_context, C_TCAPMsgBuildContextNoFlavour()); 
+    L_context->set_received_data(P_id,
+				 L_data->m_primitive,
+				 L_data->m_components,
+				 &(L_data->m_time));
+    m_protocol->from_external((C_MsgBuildContext*)L_context, P_ctxt);
+
+    // temporary
+    m_protocol->log_message((char*)"recv", P_ctxt->m_msg);
+
+    DELETE_VAR(L_context);
+
+
+    FREE_VAR(L_data->m_components);
+    FREE_VAR(L_data);
+    L_ret = true ;
+
+    // something to call from stack to delete primitive/component
+  }
+  return (L_ret);
+}
+
+int  C_TcapStackNoFlavour::send_message(int P_id, 
+					C_MessageFrame *P_msg) {
+
+  int L_ret = 0 ;
+
+  C_TCAPMsgBuildContextNoFlavour* L_context ;  //WARNING !!! flavour dep
+
+  NEW_VAR(L_context, C_TCAPMsgBuildContextNoFlavour()); 
+
+  m_protocol->to_external(L_context, P_msg);
+  
+  // temporary
+  m_protocol->log_message((char*)"send", P_msg);
+
+  L_ret = m_stack_fct.m_send (P_id, // check value ?
+			      L_context->get_time_ref(),
+			      L_context->get_primitive_ref(),
+			      *(L_context->get_component_ref()));
+  
+  if (L_ret == -1) {
+    LOG_ERROR_P2("Error sending TCAP message tc_errno = %d error [%s]",
+		 *m_stack_fct.m_errno,
+		 m_stack_fct.m_error_text[*m_stack_fct.m_errno]);
+
+    L_context->delete_component(NULL);
+  } 
+
+  DELETE_VAR(L_context); // => delete the primitive field of the context
+  
+
+  return (L_ret);
+}
+
+
+int C_TcapStackNoFlavour::set_orig_routing_type (char *P_data) {
+
+   char *L_value = NULL;
+   int   L_ret   = 0   ;
+   int   L_i       ;
+
+   L_value = P_data;
+
+   if (L_value == NULL) {
+     LOG_ERROR("Error in configuration-parameters: orig-routing-type is null");
+     L_ret = -1 ;
+     return (L_ret);
+   }
+
+   for (L_i=0; L_i < _Tcap_routing_type_supported; L_i++) {
+     if (strcmp(_Tcap_routing_type_name_table[L_i],
+		L_value) == 0) {
+       m_o_routing_type = _Tcap_routing_type_table[L_i];
+       L_ret = 1 ;
+       break ;
+     }
+   }
+
+
+   L_ret = (L_ret == 1) ? 0 : -1 ;
+
+   if (L_ret == -1) {
+     LOG_ERROR("Error in configuration-parameters: orig-routing-type is incorrect");
+   }
+
+   return (L_ret);
+}
+
+int C_TcapStackNoFlavour::set_dest_routing_type (char *P_data) {
+
+   char *L_value = NULL;
+   int   L_ret   = 0   ;
+   int   L_i       ;
+
+   L_value = P_data;
+
+   if (L_value == NULL) {
+     LOG_ERROR("Error in configuration-parameters: dest-routing-type is null");
+     L_ret = -1 ;
+     return (L_ret);
+   }
+
+   for (L_i=0; L_i < _Tcap_routing_type_supported; L_i++) {
+     if (strcmp(_Tcap_routing_type_name_table[L_i],
+		L_value) == 0) {
+       m_d_routing_type = _Tcap_routing_type_table[L_i];
+       L_ret = 1 ;
+       break ;
+     }
+   }
+
+   L_ret = (L_ret == 1) ? 0 : -1 ;
+
+   if (L_ret == -1) {
+     LOG_ERROR("Error in configuration-parameters: dest-routing-type is incorrect");
+   }
+
+
+   return (L_ret);
+}
+
+
+int C_TcapStackNoFlavour::set_orig_gt (char *P_data) {
+
+   char *L_value = NULL;
+   int   L_ret   = 0  ;
+
+   L_value = P_data;
+
+   if (L_value != NULL) {
+     ALLOC_TABLE(m_o_gt, char*, sizeof(char), strlen(P_data)+1);
+     strcpy(m_o_gt,P_data);
+   } else {
+     LOG_ERROR("Error in configuration-parameters: orig_gt is incorrect");
+     L_ret = -1 ;
+   }
+
+   return (L_ret);
+}
+
+int C_TcapStackNoFlavour::set_dest_gt (char *P_data) {
+
+   char *L_value = NULL;
+   int   L_ret   = 0  ;
+
+   L_value = P_data;
+   if (L_value != NULL) {
+     ALLOC_TABLE(m_d_gt, char*, sizeof(char), strlen(P_data)+1);
+     strcpy(m_d_gt,P_data);
+   } else {
+     LOG_ERROR("Error in configuration-parameters: dest_gt is incorrect");
+     L_ret = -1 ;
+   }
+
+   return (L_ret);
+}
+
+
+T_TCAP_stack_fct*  C_TcapStackNoFlavour::get_fct() {
+   return(&m_stack_fct);
+}
+
+int C_TcapStackNoFlavour::set_orig_gt_indicator (char *P_data) {
+
+   char *L_value = NULL;
+   int   L_ret   = 0   ;
+   int   L_i       ;
+
+   L_value = P_data;
+
+   if (L_value == NULL) {
+     LOG_ERROR("Error in configuration-parameters: orig-gt-indicator is null");
+     L_ret = -1 ;
+     return (L_ret);
+   }
+   
+
+   for (L_i=0; L_i < _Tc_gt_indicator_supported; L_i++) {
+     if (strcmp(_Tc_gt_indicator_name_table[L_i],
+		L_value) == 0) {
+       m_o_gt_indicator = _Tc_gt_indicator_table[L_i];
+       L_ret = 1 ;
+       break ;
+     }
+   }
+
+   L_ret = (L_ret == 1) ? 0 : -1 ;
+
+   if (L_ret == -1) {
+     LOG_ERROR("Error in configuration-parameters: orig-gt-indicator is incorrect");
+   }
+
+   return (L_ret);
+}
+
+int C_TcapStackNoFlavour::set_dest_gt_indicator (char *P_data) {
+
+   char *L_value = NULL;
+   int   L_ret   = 0   ;
+   int   L_i       ;
+
+   L_value = P_data;
+   
+   if (L_value == NULL) {
+     LOG_ERROR("Error in configuration-parameters: dest-gt-indicator is null");
+     L_ret = -1 ;
+     return (L_ret);
+   }
+
+   for (L_i=0; L_i < _Tc_gt_indicator_supported; L_i++) {
+     if (strcmp(_Tc_gt_indicator_name_table[L_i],
+		L_value) == 0) {
+       m_d_gt_indicator = _Tc_gt_indicator_table[L_i];
+       L_ret = 1 ;
+       break ;
+     }
+   }
+
+   L_ret = (L_ret == 1) ? 0 : -1 ;
+
+   if (L_ret == -1) {
+     LOG_ERROR("Error in configuration-parameters: dest-gt-indicator is incorrect");
+   }
+
+   return (L_ret);
+}
+
+int C_TcapStackNoFlavour::set_orig_gt_translation (char *P_data) {
+
+   char *L_value = NULL;
+   int   L_ret   = 0   ;
+   int   L_i       ;
+
+   L_value = P_data;
+
+   if (L_value == NULL) {
+     LOG_ERROR("Error in configuration-parameters: orig-gt-translation is null");
+     L_ret = -1 ;
+     return (L_ret);
+   }
+
+   for (L_i=0; L_i < _Tc_gt_translation_supported; L_i++) {
+     if (strcmp(_Tc_gt_translation_name_table[L_i],
+		L_value) == 0) {
+       m_o_gt_translation = _Tc_gt_translation_table[L_i];
+       L_ret = 1 ;
+       break ;
+     }
+   }
+
+   L_ret = (L_ret == 1) ? 0 : -1 ;
+
+   if (L_ret == -1) {
+     LOG_ERROR("Error in configuration-parameters: orig-gt-translation is incorrect");
+   }
+
+   return (L_ret);
+}
+
+int C_TcapStackNoFlavour::set_dest_gt_translation (char *P_data) {
+
+   char *L_value = NULL;
+   int   L_ret   = 0   ;
+   int   L_i       ;
+
+   L_value = P_data;
+
+   if (L_value == NULL) {
+     LOG_ERROR("Error in configuration-parameters: dest-gt-translation is null");
+     L_ret = -1 ;
+     return (L_ret);
+   }
+
+   for (L_i=0; L_i < _Tc_gt_translation_supported; L_i++) {
+     if (strcmp(_Tc_gt_translation_name_table[L_i],
+		L_value) == 0) {
+       m_d_gt_translation = _Tc_gt_translation_table[L_i];
+       L_ret = 1 ;
+       break ;
+     }
+   }
+
+   L_ret = (L_ret == 1) ? 0 : -1 ;
+
+   if (L_ret == -1) {
+     LOG_ERROR("Error in configuration-parameters: dest-gt-translation is incorrect");
+   }
+
+
+   return (L_ret);
+}
+
+
+int C_TcapStackNoFlavour::set_orig_gt_numbering (char *P_data) {
+
+   char *L_value = NULL;
+   int   L_ret   = 0   ;
+   int   L_i       ;
+
+   L_value = P_data;
+
+   if (L_value == NULL) {
+     LOG_ERROR("Error in configuration-parameters: orig-gt-numbering is null");
+     L_ret = -1 ;
+     return (L_ret);
+   }
+
+
+   for (L_i=0; L_i < _Tc_gt_numbering_supported; L_i++) {
+     if (strcmp(_Tc_gt_numbering_name_table[L_i],
+		L_value) == 0) {
+       m_o_gt_numbering_plan = _Tc_gt_numbering_table[L_i];
+       L_ret = 1 ;
+       break ;
+     }
+   }
+
+   L_ret = (L_ret == 1) ? 0 : -1 ;
+
+   if (L_ret == -1) {
+     LOG_ERROR("Error in configuration-parameters: orig-gt-numbering is incorrect");
+   }
+
+
+   return (L_ret);
+}
+
+int C_TcapStackNoFlavour::set_dest_gt_numbering (char *P_data) {
+
+   char *L_value = NULL;
+   int   L_ret   = 0   ;
+   int   L_i       ;
+
+   L_value = P_data;
+
+   if (L_value == NULL) {
+     LOG_ERROR("Error in configuration-parameters: dest-gt-numbering is null");
+     L_ret = -1 ;
+     return (L_ret);
+   }
+
+   for (L_i=0; L_i < _Tc_gt_numbering_supported; L_i++) {
+     if (strcmp(_Tc_gt_numbering_name_table[L_i],
+		L_value) == 0) {
+       m_d_gt_numbering_plan = _Tc_gt_numbering_table[L_i];
+       L_ret = 1 ;
+       break ;
+     }
+   }
+
+   L_ret = (L_ret == 1) ? 0 : -1 ;
+
+   if (L_ret == -1) {
+     LOG_ERROR("Error in configuration-parameters: dest-gt-numbering is incorrect");
+   }
+
+   return (L_ret);
+}
+
+
+int C_TcapStackNoFlavour::set_orig_gt_nature (char *P_data) {
+
+   char *L_value = NULL;
+   int   L_ret   = 0   ;
+   int   L_i       ;
+
+   L_value = P_data;
+
+   if (L_value == NULL) {
+     LOG_ERROR("Error in configuration-parameters: orig-gt-nature is null");
+     L_ret = -1 ;
+     return (L_ret);
+   }
+   
+   for (L_i=0; L_i < _Tc_gt_nature_supported; L_i++) {
+     if (strcmp(_Tc_gt_nature_name_table[L_i],
+		L_value) == 0) {
+       m_o_gt_nature = _Tc_gt_nature_table[L_i];
+       L_ret = 1 ;
+       break ;
+     }
+   }
+
+   L_ret = (L_ret == 1) ? 0 : -1 ;
+
+   if (L_ret == -1) {
+     LOG_ERROR("Error in configuration-parameters: orig-gt-nature is incorrect");
+   }
+
+   return (L_ret);
+}
+
+int C_TcapStackNoFlavour::set_dest_gt_nature (char *P_data) {
+
+   char *L_value = NULL;
+   int   L_ret   = 0   ;
+   int   L_i       ;
+
+   L_value = P_data;
+
+   if (L_value == NULL) {
+     LOG_ERROR("Error in configuration-parameters: dest-gt-nature is null");
+     L_ret = -1 ;
+     return (L_ret);
+   }
+
+
+   for (L_i=0; L_i < _Tc_gt_nature_supported; L_i++) {
+     if (strcmp(_Tc_gt_nature_name_table[L_i],
+		L_value) == 0) {
+       m_d_gt_nature = _Tc_gt_nature_table[L_i];
+       L_ret = 1 ;
+       break ;
+     }
+   }
+
+   L_ret = (L_ret == 1) ? 0 : -1 ;
+
+   if (L_ret == -1) {
+     LOG_ERROR("Error in configuration-parameters: dest-gt-nature is incorrect");
+   }
+
+   return (L_ret);
+}
+
+
+
+#ifdef _ANSI_STANDARD
+int C_TcapStackNoFlavour::set_parameter_type (char *P_data) {
+
+   int   L_ret   = 0   ;
+   char *L_value = NULL;
+
+
+   L_value = P_data;
+
+   if (L_value == NULL) {
+     LOG_ERROR("Error in configuration-parameters: parameter-type-set is null");
+     L_ret = -1 ;
+     return (L_ret);
+   }
+
+   int   L_i       ;
+   for (L_i=0; L_i < _Tc_parameter_type_supported; L_i++) {
+     if (strcmp(_Tc_parameter_type_name_table[L_i],
+		L_value) == 0) {
+       m_parameter_type = _Tc_parameter_type_table[L_i];
+       L_ret = 1 ;
+       break ;
+     }
+   }
+
+   L_ret = (L_ret == 1) ? 0 : -1 ;
+
+   if (L_ret == -1) {
+     LOG_ERROR("Error in configuration-parameters: parameter-type-set is incorrect");
+   }
+
+   return (L_ret);
+}
+
+#endif // _ANSI_STANDARD
+
+
+
+
+
+
+
+
+

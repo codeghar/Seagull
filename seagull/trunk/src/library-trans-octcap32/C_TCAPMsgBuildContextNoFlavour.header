@@ -1,0 +1,184 @@
+/*
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * (c)Copyright 2006 Hewlett-Packard Development Company, LP.
+ *
+ */
+
+#include "tcap_stack_t.hpp"
+
+#include "C_MsgBuildContext.hpp"
+#include "C_Transport.hpp"
+
+class C_TcapStackNoFlavour ;
+class C_TCAPMsgBuildContextNoFlavour : public C_MsgBuildContext {
+public:
+
+  typedef bool (C_TCAPMsgBuildContextNoFlavour::* T_TCAPFunction) 
+							(T_pValueData);
+
+  typedef bool (C_TCAPMsgBuildContextNoFlavour::* T_TCAPStringFunction) 
+							(char**,T_pValueData);
+
+           C_TCAPMsgBuildContextNoFlavour();
+  virtual ~C_TCAPMsgBuildContextNoFlavour();
+
+  void init_from_external();
+  void init_to_external();
+
+  bool create_primitive (T_pValueData P_data) ;
+  bool delete_primitive (T_pValueData P_data) ;
+  bool create_component (T_pValueData P_data) ;
+  bool delete_component (T_pValueData P_data) ;
+  bool add_component (T_pValueData P_data) ;
+  bool get_component (T_pValueData P_data) ;
+  bool get_primitive_type (T_pValueData P_data) ;
+  bool get_primitive_d_address_pc (T_pValueData P_data) ;
+  bool get_primitive_o_address_pc (T_pValueData P_data) ;
+  bool get_primitive_uid (T_pValueData P_data) ;
+  bool get_primitive_pid (T_pValueData P_data) ;
+  bool get_component_type (T_pValueData P_data) ;
+  bool get_component_class (T_pValueData P_data) ;
+  bool get_component_timeout (T_pValueData P_data) ;
+  bool get_component_code (T_pValueData P_data) ;
+  bool get_component_data (T_pValueData P_data) ;
+  bool set_primitive_type (T_pValueData P_data) ;
+  bool set_primitive_d_address_pc (T_pValueData P_data) ;
+  bool set_primitive_o_address_pc (T_pValueData P_data) ;
+  bool set_primitive_uid (T_pValueData P_data) ;
+  bool set_primitive_pid (T_pValueData P_data) ;
+  bool set_component_type (T_pValueData P_data) ;
+  bool set_component_class (T_pValueData P_data) ;
+  bool set_component_timeout (T_pValueData P_data) ;
+  bool set_component_code (T_pValueData P_data) ;
+  bool set_component_data (T_pValueData P_data) ;
+
+  void set_received_data (int             P_id,
+			  tcx_primitive  *P_prim,
+			  tcx_component **P_comp,
+			  struct timeval *P_time);
+  bool get_primitive_d_address_ssn (T_pValueData P_data) ;
+  bool get_primitive_o_address_ssn (T_pValueData P_data) ;
+  bool set_primitive_d_address_ssn (T_pValueData P_data) ;
+  bool set_primitive_o_address_ssn (T_pValueData P_data) ;
+
+  bool set_component_invoke_id(T_pValueData P_data);
+  bool get_component_invoke_id(T_pValueData P_data);
+
+  bool check_pid_presence(T_pValueData P_data);
+
+
+  bool get_component_error_code(T_pValueData P_data) ;
+  bool set_component_error_code(T_pValueData P_data) ;
+  bool get_component_problem_code_identifier(T_pValueData P_data) ;
+  bool set_component_problem_code_identifier(T_pValueData P_data) ;
+  bool get_component_problem_code(T_pValueData P_data) ;
+  bool set_component_problem_code(T_pValueData P_data) ;
+
+#ifdef _ANSI_STANDARD
+  bool get_component_correlation_id(T_pValueData P_data) ;
+  bool set_component_correlation_id(T_pValueData P_data) ;
+#endif
+
+  bool set_primitive_p_abort_cause(T_pValueData P_data) ;
+  bool get_primitive_p_abort_cause(T_pValueData P_data) ;  
+  bool set_primitive_u_abort_cause(T_pValueData P_data) ;
+  bool get_primitive_u_abort_cause(T_pValueData P_data) ;
+
+  bool set_primitive_report_cause(T_pValueData P_data) ;
+  bool get_primitive_report_cause(T_pValueData P_data) ;
+
+  bool set_primitive_appl_context_name(T_pValueData P_data) ;
+  bool get_primitive_appl_context_name(T_pValueData P_data) ;
+
+  bool set_primitive_user_info(T_pValueData P_data) ;
+  bool get_primitive_user_info(T_pValueData P_data) ;
+
+  bool set_primitive_abort_reason(T_pValueData P_data) ;
+  bool get_primitive_abort_reason(T_pValueData P_data) ;
+
+  bool set_component_parameter_type(T_pValueData P_data) ;
+  bool get_component_parameter_type(T_pValueData P_data) ;
+
+  bool set_primitive_termination(T_pValueData P_data) ;
+  bool get_primitive_termination(T_pValueData P_data) ;
+
+
+  bool primitive_termination_to_string(char **P_string, T_pValueData P_data);
+  bool primitive_termination_from_string(char **P_string, T_pValueData P_data);
+
+  bool primitive_report_cause_to_string(char **P_string, T_pValueData P_data);
+  bool primitive_report_cause_from_string(char **P_string, T_pValueData P_data);
+
+
+  bool primitive_p_abort_cause_to_string(char **P_string, T_pValueData P_data);
+  bool primitive_p_abort_cause_from_string(char **P_string, T_pValueData P_data);
+
+  bool primitive_dlg_abort_reason_to_string(char **P_string, T_pValueData P_data);
+  bool primitive_dlg_abort_reason_from_string(char **P_string, T_pValueData P_data);
+
+
+  bool component_problem_code_to_string(char **P_string, T_pValueData P_data);
+  bool component_problem_code_from_string(char **P_string, T_pValueData P_data);
+  bool component_pb_code_identifier_to_string(char **P_string, T_pValueData P_data);
+  bool component_pb_code_identifier_from_string(char **P_string, T_pValueData P_data);
+#ifdef _ANSI_STANDARD
+  bool component_parameter_type_to_string(char **P_string, T_pValueData P_data);
+  bool component_parameter_type_from_string(char **P_string, T_pValueData P_data);
+#endif // _ANSI_STANDARD
+
+
+  bool set_component_operation_code_tag(T_pValueData P_data) ;
+  bool get_component_operation_code_tag(T_pValueData P_data) ;
+
+
+  bool component_operation_code_tag_to_string(char **P_string, T_pValueData P_data);
+  bool component_operation_code_tag_from_string (char **P_string, T_pValueData P_data);
+
+
+  tcx_primitive*  get_primitive_ref();
+  tcx_component** get_component_ref();
+  struct timeval *get_time_ref();
+
+  static void set_stack (C_TcapStackNoFlavour *P_stack,
+			 T_logFunction P_logError, 
+			 T_logFunction P_logInfo);
+  static void set_gt_mode_source();
+  static void set_gt_mode_destination();
+
+protected:
+private:
+
+
+  static T_pTCAP_stack_fct m_stack_fct ;
+  static C_TcapStackNoFlavour *m_stack ;
+
+  static bool m_gt_mode_source ;
+  static bool m_gt_mode_destination ;
+
+  tcx_primitive  *m_primitive      ;
+  tcx_component  *m_component      ;
+  struct timeval  m_time           ;
+  int             m_cnx_id         ;
+
+  tcx_component  *m_component_current ;
+  tcx_component  *m_component_next    ;
+
+  static T_logFunction m_log_error, m_log_info ;
+
+} ;
+
+
+

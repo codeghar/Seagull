@@ -1,0 +1,155 @@
+//
+//  This program is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 2 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//
+// (c)Copyright 2006 Hewlett-Packard Development Company, LP.
+//
+//
+
+Seagull Revision History
+------------------------
+
+2006-04-03: Version 1.3.0 
+- Development   : Joseph Bannino, Alexandre Ajjan
+- Documentation : 
+- New functionnality :
+  - New protocol family: text
+  - Add a new text protocol: XCAP
+  - Add a new feature
+    <define entity="traffic-param" name="call-open-timeout-ms" value="5000"></define>
+  - Add version number in seagull
+  - ticket 228 : add behavior "ignore" for scenario
+  - ticket 230 : new feature no timestamp in the name of log to use this, add
+   in your configuration file this line :
+   <define entity="traffic-param" name="files-no-timestamp" value="true"></define>
+  - ticket 231 : new feature timeout occurs seagull send a abort.  
+    In your configuration file add 
+    <define entity="traffic-param" name="call-timeout-behaviour-abort" value="true"></define>
+    and in your scenario file add your scenario abort.
+  - ticket 242 : new feature disable the check-value check-order and check-presence actions of a scenario
+    <define entity="traffic-param" name="execute-check-action" value="false"></define>
+  - ticket 243 : new feature a check (value, order or presence) fails : what is seagull doing ?
+   <check-presence name="uid" behaviour="abort"></check-presence>
+  - ticket 250 : add check-value function for protocol binary in seagull
+ 
+- Bug fixed:
+  - ticket 227 : core when create message
+  - ticket 236 : about response-time-repartition
+  - ticket 238 : about core when use external-data 
+  - ticket 244 : seagull hang at exit
+- Known bug:
+   none
+
+2006-03-08: Version 1.2.4
+- Development   : Joseph Bannino, Alexandre Ajjan
+- Documentation : Laurent Sicard
+- New functionnality :
+  - Add a new protocol radius
+  - TCAP   : Support of TCAP based protocols using OCSS7 product API (2.2 API)
+    Note 1 : the name of library has changed it is now libtrans_octcap.so
+    Note 2 : you must use the shared library installed on your platform; currently this library is libSS7util.sl
+    Note 3 : for create_function/delete_function you must use create_ctransoctcap32_instance/delete_ctransoctcap32_instance
+             in the next version the name will become create_ctransoctcap_instance/delete_ctransoctcap_instance.
+    Example: list of transport channel parameters,
+             that can be present in the generic configuration file :
+      <define entity="transport"
+       name="trans-octcap"
+       file="libtrans_octcap.so"
+       create_function="create_ctransoctcap32_instance"
+       delete_function="delete_ctransoctcap32_instance"
+       init-args="flavour=WBB;path=/opt/HP-AIN/SS7_WBB/sharedlib;library=libSS7util.sl">
+      </define>
+- Bug fixed:
+  - Seagull 1.2.2 Diameter message length issue
+- Known bug:
+   none
+
+
+2006-02-03: Version 1.2.2 
+- Development   : Joseph Bannino, Alexandre Ajjan
+- Documentation : Laurent Sicard
+- New functionnality :
+  - Add protocol binary body not interpreted.
+  - Add new attributes in set-value action.
+    Example : 
+        fill-size="12"   ; determine the size of your buffer.         
+        fill-pattern="0" ; completed your buffer by 0 until the buffer size 
+                           reaches 12.
+  - Add <start-length></start-length> part in dictionnary for
+    binary protocol with body not interpreted for length message computation.
+  - Dynamic change of display-period with keyboard command.
+    Example : if the parameter display-period in your configuration is 
+              greate than 0.
+              set display-period X ; where X > 0 
+                 ==> Set to X the statistics report frequency on screen.
+- Bug fixed:
+  - Failure of seagull incoherent state (wait and receive)
+  - seagull GPRS : Failure send a message of seagull
+  - Periodic response time issue
+- Known bug:
+   none
+
+2006-01-16: Version 1.2.0
+- Development   : Laurent Sicard, Joseph Bannino, Alexandre Ajjan
+- Documentation : Thomas Grandgenevre, Olivier Jacques
+- New functionnality :
+  - TCAP: Support of TCAP based protocols using OCSS7 product API (3.x API)
+  - Diameter: 64 bits integer support
+  - Diameter: multi-level nested AVPs
+  - Generic: target: support of HPUX 11.23/IPF (in addition to Linux (RHEL3, 
+             RHEL4, Debian, Suse 9) and HPUX/PARisc)
+  - Generic: target: support of Windows / Cygwin for IP based protocols
+  - Generic: new synchronization protocol to synchronize Seagull scenarios with 
+             any other tool - like EMAP.
+  - Generic: new actions: check-presence, check-value, check-order to check 
+             parameter presence, value or order
+  - Generic: protocol oriented statistics (display only)
+  - Generic: call timeout: close the call if no activity on a call 
+             (configurable)
+  - Generic: default scenarios can set the verdict of a call
+  - Generic: detailed decoding of unexpected messages and associated protocol 
+             errors
+  - Generic: new help screen to summarize available keys
+  - Generic: response time repartition percentage display
+  - Generic: provisioning of parameters in the configuration file, retrieved in 
+             the scenario file
+- Bug fixed :
+   none
+- Known bug:
+   none
+
+
+2005-06-06: Version 1.1.0  
+- Development   : Joseph Bannino, Alexandre Ajjan
+- Documentation : Thomas Grandgenevre, Olivier Jacques, Laurent Sicard 
+- New functionnality :
+  - The way the transports and the channels are declared
+    has been modified in this version of the tool !
+  - The counters are moved from the dictionary to the
+    scenario file .
+- Bug fixed :
+  - Support of multiple sessions in one scenario.
+- Known bug:
+   none
+
+
+2005-04-14: Version 1.0.0 
+- Development   : Joseph Bannino, Alexandre Ajjan
+- Documentation : Thomas Grandgenevre, Olivier Jacques, Laurent Sicard 
+- New functionnality :
+  - Initial release
+- bug fixed :
+   none
+- Known bug:
+   none

@@ -1,0 +1,391 @@
+/*
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * (c)Copyright 2006 Hewlett-Packard Development Company, LP.
+ *
+ */
+
+#include "Utils.hpp"
+
+
+C_TCAPMsgBuildContextFactoryNoFlavour
+::C_TCAPMsgBuildContextFactoryNoFlavour ()
+  : C_MsgBuildContextFactory() {
+
+    T_FctBuildDataList  L_list ;
+    T_FctStringDataList L_list_s ;
+
+    add_build_function (&L_list, (char*)"create_primitive", 
+			&C_TCAPMsgBuildContextNoFlavour::create_primitive) ;
+    add_build_function (&L_list, (char*)"delete_primitive", 
+			&C_TCAPMsgBuildContextNoFlavour::delete_primitive) ;
+    add_build_function (&L_list, (char*)"create_component", 
+			&C_TCAPMsgBuildContextNoFlavour::create_component) ;
+    add_build_function (&L_list, (char*)"delete_component", 
+			&C_TCAPMsgBuildContextNoFlavour::delete_component) ;
+    add_build_function (&L_list, (char*)"add_component", 
+			&C_TCAPMsgBuildContextNoFlavour::add_component) ;
+    add_build_function (&L_list, (char*)"get_component", 
+			&C_TCAPMsgBuildContextNoFlavour::get_component) ;
+    add_build_function (&L_list, (char*)"get_primitive_type", 
+			&C_TCAPMsgBuildContextNoFlavour::get_primitive_type) ;
+    add_build_function (&L_list, (char*)"get_primitive_d_address_pc", 
+			&C_TCAPMsgBuildContextNoFlavour::get_primitive_d_address_pc) ;
+    add_build_function (&L_list, (char*)"get_primitive_o_address_pc", 
+			&C_TCAPMsgBuildContextNoFlavour::get_primitive_o_address_pc) ;
+    add_build_function (&L_list, (char*)"get_primitive_uid", 
+			&C_TCAPMsgBuildContextNoFlavour::get_primitive_uid) ;
+    add_build_function (&L_list, (char*)"get_primitive_pid", 
+			&C_TCAPMsgBuildContextNoFlavour::get_primitive_pid) ;
+    add_build_function (&L_list, (char*)"get_component_type", 
+			&C_TCAPMsgBuildContextNoFlavour::get_component_type) ;
+    add_build_function (&L_list, (char*)"get_component_class", 
+			&C_TCAPMsgBuildContextNoFlavour::get_component_class) ;
+    add_build_function (&L_list, (char*)"get_component_timeout", 
+			&C_TCAPMsgBuildContextNoFlavour::get_component_timeout) ;
+    add_build_function (&L_list, (char*)"get_component_code", 
+			&C_TCAPMsgBuildContextNoFlavour::get_component_code) ;
+    add_build_function (&L_list, (char*)"get_component_data", 
+			&C_TCAPMsgBuildContextNoFlavour::get_component_data) ;
+    add_build_function (&L_list, (char*)"set_primitive_type", 
+			&C_TCAPMsgBuildContextNoFlavour::set_primitive_type) ;
+    add_build_function (&L_list, (char*)"set_primitive_d_address_pc", 
+			&C_TCAPMsgBuildContextNoFlavour::set_primitive_d_address_pc) ;
+    add_build_function (&L_list, (char*)"set_primitive_o_address_pc", 
+			&C_TCAPMsgBuildContextNoFlavour::set_primitive_o_address_pc) ;
+    add_build_function (&L_list, (char*)"set_primitive_uid", 
+			&C_TCAPMsgBuildContextNoFlavour::set_primitive_uid) ;
+    add_build_function (&L_list, (char*)"set_primitive_pid", 
+			&C_TCAPMsgBuildContextNoFlavour::set_primitive_pid) ;
+    add_build_function (&L_list, (char*)"set_component_type", 
+			&C_TCAPMsgBuildContextNoFlavour::set_component_type) ;
+    add_build_function (&L_list, (char*)"set_component_class", 
+			&C_TCAPMsgBuildContextNoFlavour::set_component_class) ;
+    add_build_function (&L_list, (char*)"set_component_timeout", 
+			&C_TCAPMsgBuildContextNoFlavour::set_component_timeout) ;
+    add_build_function (&L_list, (char*)"set_component_code", 
+			&C_TCAPMsgBuildContextNoFlavour::set_component_code) ;
+    add_build_function (&L_list, (char*)"set_component_data", 
+			&C_TCAPMsgBuildContextNoFlavour::set_component_data) ;
+    add_build_function (&L_list, (char*)"get_primitive_d_address_ssn", 
+			&C_TCAPMsgBuildContextNoFlavour::get_primitive_d_address_ssn) ;
+    add_build_function (&L_list, (char*)"get_primitive_o_address_ssn", 
+			&C_TCAPMsgBuildContextNoFlavour::get_primitive_o_address_ssn) ;
+    add_build_function (&L_list, (char*)"set_primitive_d_address_ssn", 
+			&C_TCAPMsgBuildContextNoFlavour::set_primitive_d_address_ssn) ;
+    add_build_function (&L_list, (char*)"set_primitive_o_address_ssn", 
+			&C_TCAPMsgBuildContextNoFlavour::set_primitive_o_address_ssn) ;
+    add_build_function (&L_list, (char*)"check_pid_presence", 
+			&C_TCAPMsgBuildContextNoFlavour::check_pid_presence) ;
+    add_build_function (&L_list, (char*)"get_component_invoke_id", 
+			&C_TCAPMsgBuildContextNoFlavour::get_component_invoke_id) ;
+    add_build_function (&L_list, (char*)"set_component_invoke_id", 
+			&C_TCAPMsgBuildContextNoFlavour::set_component_invoke_id) ;
+    add_build_function (&L_list, (char*)"get_component_error_code", 
+			&C_TCAPMsgBuildContextNoFlavour::get_component_error_code) ;
+    add_build_function (&L_list, (char*)"set_component_error_code", 
+			&C_TCAPMsgBuildContextNoFlavour::set_component_error_code) ;
+    add_build_function (&L_list, (char*)"get_component_problem_code_identifier", 
+			&C_TCAPMsgBuildContextNoFlavour::get_component_problem_code_identifier) ;
+    add_build_function (&L_list, (char*)"set_component_problem_code_identifier", 
+			&C_TCAPMsgBuildContextNoFlavour::set_component_problem_code_identifier) ;
+    add_build_function (&L_list, (char*)"get_component_problem_code", 
+			&C_TCAPMsgBuildContextNoFlavour::get_component_problem_code) ;
+    add_build_function (&L_list, (char*)"set_component_problem_code", 
+			&C_TCAPMsgBuildContextNoFlavour::set_component_problem_code) ;
+#ifdef _ANSI_STANDARD
+    add_build_function (&L_list, (char*)"get_component_correlation_id", 
+			&C_TCAPMsgBuildContextNoFlavour::get_component_correlation_id) ;
+    add_build_function (&L_list, (char*)"set_component_correlation_id", 
+			&C_TCAPMsgBuildContextNoFlavour::set_component_correlation_id) ;
+#endif
+
+    add_build_function (&L_list, (char*)"set_primitive_p_abort_cause",
+			&C_TCAPMsgBuildContextNoFlavour::set_primitive_p_abort_cause) ;
+    add_build_function (&L_list, (char*)"get_primitive_p_abort_cause",
+			&C_TCAPMsgBuildContextNoFlavour::get_primitive_p_abort_cause) ;
+    add_build_function (&L_list, (char*)"set_primitive_u_abort_cause",
+			&C_TCAPMsgBuildContextNoFlavour::set_primitive_u_abort_cause) ;
+    add_build_function (&L_list, (char*)"get_primitive_u_abort_cause",
+			&C_TCAPMsgBuildContextNoFlavour::get_primitive_u_abort_cause) ;
+
+
+    add_build_function (&L_list, (char*)"set_primitive_report_cause",
+			&C_TCAPMsgBuildContextNoFlavour::set_primitive_report_cause) ;
+    add_build_function (&L_list, (char*)"get_primitive_report_cause",
+			&C_TCAPMsgBuildContextNoFlavour::get_primitive_report_cause) ;
+
+    add_build_function (&L_list, (char*)"set_primitive_appl_context_name",
+			&C_TCAPMsgBuildContextNoFlavour::set_primitive_appl_context_name) ;
+    add_build_function (&L_list, (char*)"get_primitive_appl_context_name",
+			&C_TCAPMsgBuildContextNoFlavour::get_primitive_appl_context_name) ;
+
+    add_build_function (&L_list, (char*)"set_primitive_user_info",
+			&C_TCAPMsgBuildContextNoFlavour::set_primitive_user_info) ;
+
+    add_build_function (&L_list, (char*)"get_primitive_user_info",
+			&C_TCAPMsgBuildContextNoFlavour::get_primitive_user_info) ;
+
+    add_build_function (&L_list, (char*)"set_primitive_abort_reason",
+			&C_TCAPMsgBuildContextNoFlavour::set_primitive_abort_reason) ;
+
+    add_build_function (&L_list, (char*)"get_primitive_abort_reason",
+			&C_TCAPMsgBuildContextNoFlavour::get_primitive_abort_reason) ;
+
+
+    add_build_function (&L_list, (char*)"set_primitive_termination",
+			&C_TCAPMsgBuildContextNoFlavour::set_primitive_termination) ;
+
+    add_build_function (&L_list, (char*)"get_primitive_termination",
+			&C_TCAPMsgBuildContextNoFlavour::get_primitive_termination) ;
+
+
+    add_build_function (&L_list, (char*)"set_component_operation_code_tag",
+			&C_TCAPMsgBuildContextNoFlavour::set_component_operation_code_tag) ;
+    add_build_function (&L_list, (char*)"get_component_operation_code_tag",
+			&C_TCAPMsgBuildContextNoFlavour::get_component_operation_code_tag) ;
+
+    add_string_function (&L_list_s, (char*)"component_operation_code_tag_to_string",
+			 &C_TCAPMsgBuildContextNoFlavour::component_operation_code_tag_to_string);
+    add_string_function (&L_list_s, (char*)"component_operation_code_tag_from_string",
+			 &C_TCAPMsgBuildContextNoFlavour::component_operation_code_tag_from_string);
+
+
+
+    add_string_function (&L_list_s, (char*)"primitive_termination_to_string",
+			 &C_TCAPMsgBuildContextNoFlavour::primitive_termination_to_string);
+    add_string_function (&L_list_s, (char*)"primitive_termination_from_string",
+			 &C_TCAPMsgBuildContextNoFlavour::primitive_termination_from_string);
+    add_string_function (&L_list_s, (char*)"primitive_report_cause_to_string",
+			 &C_TCAPMsgBuildContextNoFlavour::primitive_report_cause_to_string);
+    add_string_function (&L_list_s, (char*)"primitive_report_cause_from_string",
+			 &C_TCAPMsgBuildContextNoFlavour::primitive_report_cause_from_string);
+    add_string_function (&L_list_s, (char*)"primitive_p_abort_cause_to_string",
+			 &C_TCAPMsgBuildContextNoFlavour::primitive_p_abort_cause_to_string);
+    add_string_function (&L_list_s, (char*)"primitive_p_abort_cause_from_string",
+			 &C_TCAPMsgBuildContextNoFlavour::primitive_p_abort_cause_from_string);
+
+
+    add_string_function (&L_list_s, (char*)"primitive_dlg_abort_reason_to_string",
+			 &C_TCAPMsgBuildContextNoFlavour::primitive_dlg_abort_reason_to_string);
+    add_string_function (&L_list_s, (char*)"primitive_dlg_abort_reason_from_string",
+			 &C_TCAPMsgBuildContextNoFlavour::primitive_dlg_abort_reason_from_string);
+
+
+    add_string_function (&L_list_s, (char*)"component_problem_code_to_string",
+			 &C_TCAPMsgBuildContextNoFlavour::component_problem_code_to_string);
+    add_string_function (&L_list_s, (char*)"component_problem_code_from_string",
+			 &C_TCAPMsgBuildContextNoFlavour::component_problem_code_from_string);
+
+    add_string_function (&L_list_s, (char*)"component_pb_code_identifier_to_string",
+			 &C_TCAPMsgBuildContextNoFlavour::component_pb_code_identifier_to_string);
+    add_string_function (&L_list_s, (char*)"component_pb_code_identifier_from_string",
+			 &C_TCAPMsgBuildContextNoFlavour::component_pb_code_identifier_from_string);
+
+#ifdef _ANSI_STANDARD
+    add_build_function (&L_list, (char*)"set_component_parameter_type",
+			&C_TCAPMsgBuildContextNoFlavour::set_component_parameter_type) ;
+    add_build_function (&L_list, (char*)"get_component_parameter_type",
+			&C_TCAPMsgBuildContextNoFlavour::get_component_parameter_type) ;
+
+    add_string_function (&L_list_s, (char*)"component_parameter_type_to_string",
+			 &C_TCAPMsgBuildContextNoFlavour::component_parameter_type_to_string);
+    add_string_function (&L_list_s, (char*)"component_parameter_type_from_string",
+			 &C_TCAPMsgBuildContextNoFlavour::component_parameter_type_from_string);
+
+#endif // _ANSI_STANDARD
+
+    create_table (&L_list, &L_list_s);
+
+}
+
+C_TCAPMsgBuildContextFactoryNoFlavour::~C_TCAPMsgBuildContextFactoryNoFlavour() {
+  DELETE_TABLE(m_fct);
+  DELETE_TABLE(m_retrieve_function_table);
+  DELETE_TABLE(m_fct_string);
+  DELETE_TABLE(m_retrieve_string_function_table);
+}
+
+C_MsgBuildContext* C_TCAPMsgBuildContextFactoryNoFlavour::create_context() {
+  C_TCAPMsgBuildContextNoFlavour *L_ctxt ;
+  NEW_VAR(L_ctxt, C_TCAPMsgBuildContextNoFlavour());
+  return (L_ctxt);
+}
+
+C_MsgBuildContext::T_ContextFunction C_TCAPMsgBuildContextFactoryNoFlavour::get_function (char *P_name) {
+  C_MsgBuildContext::T_ContextFunction L_fct = NULL;
+
+  int L_function = 0 ;
+  for (L_function = 0; L_function < m_nb_functions; L_function++) {
+    if (strcmp(P_name, m_retrieve_function_table [L_function]) == 0) {
+      L_fct = (C_MsgBuildContext::T_ContextFunction)m_fct[L_function] ;
+      break ;
+    }
+  }
+  return (L_fct);
+}
+
+C_MsgBuildContext::T_ContextStringFunction 
+C_TCAPMsgBuildContextFactoryNoFlavour::get_string_function (char *P_name) {
+  C_MsgBuildContext::T_ContextStringFunction L_fct = NULL;
+
+  int L_function = 0 ;
+  for (L_function = 0; L_function < m_nb_string_functions; L_function++) {
+    if (strcmp(P_name, m_retrieve_string_function_table [L_function]) == 0) {
+      L_fct = (C_MsgBuildContext::T_ContextStringFunction)m_fct_string[L_function] ;
+      break ;
+    }
+  }
+  return (L_fct);
+}
+
+
+
+void C_TCAPMsgBuildContextFactoryNoFlavour::delete_context(C_MsgBuildContext** P_ctxt) {
+  C_TCAPMsgBuildContextNoFlavour *L_ctxt 
+    = dynamic_cast<C_TCAPMsgBuildContextNoFlavour*>(*P_ctxt) ;
+  DELETE_VAR(L_ctxt) ;
+  *P_ctxt = NULL ;
+}
+
+
+void C_TCAPMsgBuildContextFactoryNoFlavour::add_build_function
+(C_TCAPMsgBuildContextFactoryNoFlavour::T_pFctBuildDataList P_list,
+ char *P_name,
+ C_TCAPMsgBuildContextNoFlavour::T_TCAPFunction P_fct) {
+
+  T_FctBuildData L_data ;
+
+  L_data.m_fct = P_fct ;
+  L_data.m_name = P_name ;
+
+  P_list -> push_back(L_data);
+  
+}
+
+
+void C_TCAPMsgBuildContextFactoryNoFlavour::add_string_function
+(C_TCAPMsgBuildContextFactoryNoFlavour::T_pFctStringDataList P_list,
+ char *P_name,
+ C_TCAPMsgBuildContextNoFlavour::T_TCAPStringFunction P_fct) {
+
+  T_FctStringData L_data ;
+
+  L_data.m_fct = P_fct ;
+  L_data.m_name = P_name ;
+
+  P_list -> push_back(L_data);
+  
+}
+
+
+void C_TCAPMsgBuildContextFactoryNoFlavour::create_table 
+(C_TCAPMsgBuildContextFactoryNoFlavour::T_pFctBuildDataList P_list,
+ C_TCAPMsgBuildContextFactoryNoFlavour::T_pFctStringDataList P_list_string) {
+
+  T_FctBuildDataList::iterator  L_it ;
+  T_FctStringDataList::iterator L_it_s ;
+  int                           L_i = 0 ;
+
+  if (P_list != NULL) {
+   
+    if (!P_list->empty()) {
+      m_nb_functions = P_list->size();
+      
+      NEW_TABLE(m_fct, 
+		C_TCAPMsgBuildContextNoFlavour::T_TCAPFunction, 
+		m_nb_functions);
+      NEW_TABLE(m_retrieve_function_table, 
+		char*,
+		m_nb_functions);
+      
+      for(L_it = P_list->begin();
+	  L_it != P_list->end();
+	  L_it++) {
+	
+	m_retrieve_function_table[L_i] = L_it -> m_name ;
+	m_fct[L_i] = L_it -> m_fct ;
+	L_i ++ ;
+	
+      }
+
+      P_list->erase(P_list->begin(), P_list->end());
+      
+    }
+
+  }
+
+  if (P_list_string != NULL) {
+   
+
+    if (!P_list_string->empty()) {
+
+      L_i = 0 ;
+      m_nb_string_functions = P_list_string->size();
+      
+      NEW_TABLE(m_fct_string, 
+		C_TCAPMsgBuildContextNoFlavour::T_TCAPStringFunction, 
+		m_nb_string_functions);
+      NEW_TABLE(m_retrieve_string_function_table, 
+		char*,
+		m_nb_string_functions);
+      
+      for(L_it_s = P_list_string->begin();
+	  L_it_s != P_list_string->end();
+	  L_it_s++) {
+	
+	m_retrieve_string_function_table[L_i] = L_it_s -> m_name ;
+	m_fct_string[L_i] = L_it_s -> m_fct ;
+	L_i ++ ;
+	
+      }
+
+      P_list_string->erase(P_list_string->begin(), P_list_string->end());
+      
+    }
+
+  }
+
+
+}
+
+C_MsgBuildContextFactory* create_tcap_noflavour_msg_context_factory () {
+  C_TCAPMsgBuildContextFactoryNoFlavour* L_factory ;
+  NEW_VAR(L_factory, C_TCAPMsgBuildContextFactoryNoFlavour());
+  return (L_factory);
+}
+
+void delete_tcap_noflavour_msg_context_factory 
+          (C_MsgBuildContextFactory** P_factory) {
+  C_TCAPMsgBuildContextFactoryNoFlavour* L_factory
+    = dynamic_cast<C_TCAPMsgBuildContextFactoryNoFlavour*> (*P_factory);
+  DELETE_VAR(L_factory);
+  *P_factory = NULL ;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

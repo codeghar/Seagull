@@ -1,0 +1,1509 @@
+/*
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * (c)Copyright 2006 Hewlett-Packard Development Company, LP.
+ *
+ */
+
+#include "Utils.hpp"
+
+#ifdef _ITU_STANDARD
+#include "C_TcapStackITU.hpp"
+#else 
+#include "C_TcapStackANSI.hpp"
+#endif
+
+#define LOG_ERROR(m) { \
+ char L_err [100] ; \
+ snprintf(L_err, 100, (m)) ; \
+(*m_log_error)(L_err); \
+}
+
+#define LOG_ERROR_P1(m,P1) { \
+ char L_err [100] ; \
+ snprintf(L_err, 100, (m), (P1)) ; \
+(*m_log_error)(L_err); \
+}
+
+#define LOG_ERROR_P2(m,P1,P2) { \
+ char L_err [100] ; \
+ snprintf(L_err, 100, (m), (P1),(P2)) ; \
+(*m_log_error)(L_err); \
+}
+
+
+#define LOG_ALL(m) { \
+ char L_msg [100] ; \
+ snprintf(L_msg, 100, (m)) ; \
+(*m_log_info)(L_msg); \
+}
+
+#define LOG_ALL_P1(m,P1) { \
+ char L_msg [100] ; \
+ snprintf(L_msg, 100, (m), (P1)) ; \
+(*m_log_info)(L_msg); \
+}
+
+#define LOG_ALL_P2(m,P1,P2) { \
+ char L_msg [100] ; \
+ snprintf(L_msg, 100, (m), (P1),(P2)) ; \
+(*m_log_info)(L_msg); \
+}
+
+
+
+T_pTCAP_stack_fct C_TCAPMsgBuildContextNoFlavour::m_stack_fct = NULL;
+C_TcapStackNoFlavour *C_TCAPMsgBuildContextNoFlavour::m_stack = NULL ;
+
+T_logFunction C_TCAPMsgBuildContextNoFlavour::m_log_error =  NULL ;
+T_logFunction C_TCAPMsgBuildContextNoFlavour::m_log_info  = NULL ;
+
+
+void C_TCAPMsgBuildContextNoFlavour::set_stack 
+(C_TcapStackNoFlavour *P_stack, T_logFunction P_logError, 
+ T_logFunction P_logInfo) {
+  m_stack = P_stack ;
+  m_stack_fct = m_stack->get_fct();
+  m_log_error =  P_logError ;
+  m_log_info  = P_logInfo;
+}
+
+
+C_TCAPMsgBuildContextNoFlavour::C_TCAPMsgBuildContextNoFlavour ()
+  : C_MsgBuildContext () {
+  m_primitive = NULL ;
+  m_component = NULL ;
+  m_component_current = NULL ;
+  m_component_next = NULL ;
+}
+
+// To remove begin
+bool C_TCAPMsgBuildContextNoFlavour::m_gt_mode_source = false ;
+bool C_TCAPMsgBuildContextNoFlavour::m_gt_mode_destination = true ;
+void C_TCAPMsgBuildContextNoFlavour::set_gt_mode_source() {
+  m_gt_mode_source = true ;
+}
+void C_TCAPMsgBuildContextNoFlavour::set_gt_mode_destination() {
+  m_gt_mode_destination = true ;
+}
+// To remove end
+
+C_TCAPMsgBuildContextNoFlavour::~C_TCAPMsgBuildContextNoFlavour () {
+  FREE_VAR(m_primitive);
+}
+
+void C_TCAPMsgBuildContextNoFlavour::set_received_data
+(int             P_cnx_id,
+ tcx_primitive  *P_prim,
+ tcx_component **P_comp,
+ struct timeval *P_time) {
+  m_primitive =  P_prim ;
+  m_component = *P_comp ;
+  m_time      = *P_time ;
+  m_cnx_id    = P_cnx_id ;
+}
+
+void C_TCAPMsgBuildContextNoFlavour::init_from_external() {
+  m_component_next = m_component ;
+}
+
+void C_TCAPMsgBuildContextNoFlavour::init_to_external() {
+  TC_P_SCE_QUALITY(m_primitive).use_default_values= TC_NO;
+  TC_P_SCE_QUALITY(m_primitive).sccp_return_option= TC_YES;
+  TC_P_SCE_QUALITY(m_primitive).sccp_service_class= TCX_SCCP_CLASS1;
+
+  TC_P_O_ADDR(m_primitive).type     =   m_stack->m_o_routing_type;
+
+  if (m_stack->m_o_routing_type == GT) {
+    /* Filling in destination global title structure.                     */
+    TC_P_O_ADDR(m_primitive).gt.routeOnGt     = TC_YES;              
+    TC_P_O_ADDR(m_primitive).gt.gtIndicator   = m_stack->m_o_gt_indicator;         
+    TC_P_O_ADDR(m_primitive).gt.translation   = m_stack->m_o_gt_translation;         
+    TC_P_O_ADDR(m_primitive).gt.numbering     = m_stack->m_o_gt_numbering_plan;      
+    if (strlen(m_stack->m_o_gt)%2) /* Odd number of digits. */
+      TC_P_O_ADDR(m_primitive).gt.encoding    = tc_bcd_odd;          
+    else /* Even number of digits. */
+      TC_P_O_ADDR(m_primitive).gt.encoding    = tc_bcd_even;         
+    TC_P_O_ADDR(m_primitive).gt.nature        = m_stack->m_o_gt_nature;    
+    strcpy(TC_P_O_ADDR(m_primitive).gt.digit,m_stack->m_o_gt);
+  }
+
+  TC_P_D_ADDR(m_primitive).type     =   m_stack->m_d_routing_type;
+  if (m_stack->m_d_routing_type == GT) {
+    /* Filling in destination global title structure.                     */
+    TC_P_D_ADDR(m_primitive).gt.routeOnGt     = TC_YES;              
+    TC_P_D_ADDR(m_primitive).gt.gtIndicator   = m_stack->m_d_gt_indicator ;
+    TC_P_D_ADDR(m_primitive).gt.translation   = m_stack->m_d_gt_translation;         
+    TC_P_D_ADDR(m_primitive).gt.numbering     = m_stack->m_d_gt_numbering_plan;      
+    if (strlen(m_stack->m_d_gt)%2) /* Odd number of digits. */
+      TC_P_D_ADDR(m_primitive).gt.encoding    = tc_bcd_odd;          
+    else /* Even number of digits. */
+      TC_P_D_ADDR(m_primitive).gt.encoding    = tc_bcd_even;         
+    TC_P_D_ADDR(m_primitive).gt.nature        = m_stack->m_d_gt_nature;    
+    strcpy(TC_P_D_ADDR(m_primitive).gt.digit,m_stack->m_d_gt);
+  }
+  
+
+#ifdef _ITU_STANDARD
+  TC_P_DLG_INFO_PRESENT(m_primitive)  = TC_NO ;	
+#endif
+
+}
+
+
+bool C_TCAPMsgBuildContextNoFlavour::create_primitive (T_pValueData P_data) {
+  ALLOC_VAR(m_primitive,
+	    tcx_primitive*,
+	    sizeof(tcx_primitive));
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::delete_primitive (T_pValueData P_data) {
+  FREE_VAR(m_primitive);
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::create_component (T_pValueData P_data) {
+  (*(m_stack_fct->m_alloc_component))(&m_component_current,1);
+  m_component_current->next_component = NULL ;
+
+#ifdef _ITU_STANDARD
+  m_component_current->linked_id     = -1;
+#endif
+
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::delete_component (T_pValueData P_data) {
+  (*(m_stack_fct->m_free_components))(m_component);
+  m_component = NULL ;
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::add_component (T_pValueData P_data) {
+  if (m_component == NULL) { 
+    m_component = m_component_current ;
+  } else {
+    m_component_next->next_component = m_component_current ;
+  }
+  m_component_next = m_component_current ;
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::get_component (T_pValueData P_data) {
+  
+  bool L_ret = false ;
+
+  m_component_current = m_component_next ;
+  L_ret = (m_component_current != NULL) ? true : false ;
+  if (L_ret) {
+    m_component_next = m_component_current->next_component ;
+  }
+  return(L_ret);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::get_primitive_d_address_ssn (T_pValueData P_data) {
+  P_data->m_value.m_val_number = TC_P_D_ADDR(m_primitive).ssn ;
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::get_primitive_o_address_ssn (T_pValueData P_data) {
+  P_data->m_value.m_val_number = TC_P_O_ADDR(m_primitive).ssn ;
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::get_primitive_type (T_pValueData P_data) {
+  P_data->m_value.m_val_number = TC_P_TYPE(m_primitive) ;
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::get_primitive_d_address_pc (T_pValueData P_data) {
+  if (TC_P_TYPE(m_primitive) != SCCP_USER_STATUS) {
+    P_data->m_value.m_val_number = TC_P_D_ADDR(m_primitive).pc_value ;
+  } else {
+    P_data->m_value.m_val_number = TC_P_ASSPC(m_primitive) ;
+  return(false);
+  }
+  return(true);
+}
+
+
+
+//  L_dest = TC_P_ASSPC(&L_tstPrim) ;
+//  L_ssn  = TC_P_AFFSSN(&L_tstPrim) ;
+//  L_status = TC_P_USER_STATUS(&L_tstPrim) ;
+//  if ( L_status == 0 )
+//    printf(
+//  	 "RECEIPT SCCP_USER_STATUS: PC=%d, SSN=%d InService\n",
+//                       L_dest , L_ssn );
+//  else if ( L_status == 1 )
+//    printf(
+//  	 "RECEIPT SCCP_USER_STATUS: PC=%d, SSN=%d OutOfService\n",
+//  	 L_dest , L_ssn );
+//  else
+//  printf(
+//         "RECEIPT SCCP_USER_STATUS: PC=%d, SSN=%d UNKNOWN state\n",
+//         L_dest , L_ssn );
+
+
+bool C_TCAPMsgBuildContextNoFlavour::get_primitive_o_address_pc (T_pValueData P_data) {
+  P_data->m_value.m_val_number = TC_P_O_ADDR(m_primitive).pc_value ;
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::get_primitive_uid (T_pValueData P_data) {
+  P_data->m_value.m_val_number = TC_P_USER_ID(m_primitive);
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::get_primitive_pid (T_pValueData P_data) {
+  P_data->m_value.m_val_number = TC_P_PROVIDER_ID(m_primitive) ;
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::get_component_type (T_pValueData P_data) {
+
+  P_data->m_value.m_val_number = m_component_current->c_type ;
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::get_component_class (T_pValueData P_data) {
+  P_data->m_value.m_val_number = m_component_current->op_class ;
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::get_component_timeout (T_pValueData P_data) {
+
+  double L_timeout = 0.0;
+
+  if (m_component_current->timer.tv_sec != -1 ) {
+    L_timeout = ((double)m_component_current->timer.tv_sec * 1000.0) 
+      + ((double)m_component_current->timer.tv_usec / 1000.0);
+  }
+ 
+  P_data->m_value.m_val_number = (unsigned long) L_timeout ;
+
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::get_component_code (T_pValueData P_data) {
+
+#ifdef _ITU_STANDARD
+  unsigned int        L_opValue=0;
+  int                 L_indice;
+
+
+  // case TC_INVOKE, TC_RESULT_NL and TC_RESULT_L
+
+  if (m_component_current->operation.length > 0) {
+    /* Getting operation number                               */
+    L_opValue = 0;
+    for (L_indice=0;
+	 L_indice<m_component_current->operation.length;
+	 L_indice++)
+      {
+	L_opValue = (L_opValue<<8)+
+	  (unsigned int)
+	  (m_component_current->operation.datas[L_indice]);
+      }
+    P_data->m_value.m_val_number = L_opValue;  
+  } else {
+    LOG_ERROR("RECEIPT INVOKE/RESULT No operation code");
+    P_data->m_value.m_val_number = 0 ;
+    return(false);
+  }
+  
+
+#else
+
+  if (m_component_current->c_type == TC_INVOKE_L  ||
+      m_component_current->c_type == TC_INVOKE_NL ) {
+    /* Store operation code */
+    P_data->m_value.m_val_number = (m_component_current->operation.op_family & 0xff);
+    P_data->m_value.m_val_number = P_data->m_value.m_val_number << 8 ;
+    P_data->m_value.m_val_number = P_data->m_value.m_val_number |
+      (m_component_current->operation.op_specifier & 0xff);
+  }
+
+  if ( m_component_current->c_type == TC_RESULT_L  ||
+      m_component_current->c_type == TC_RESULT_NL ) {
+    // in this case the message contains only the correlation id 
+    // to retrieve the operation code, search the last TC_INVOKE_L
+    // sent in the scenario
+  }
+
+  
+#endif
+
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::get_component_data (T_pValueData P_data) {
+  bool                L_ret = true       ;
+  bool                L_found = false    ;
+  tcx_buffer         *L_buffer_ptr       ;
+
+#ifdef _ITU_STANDARD
+
+  if (m_component_current->c_type == TC_RESULT_L || 
+      m_component_current->c_type == TC_INVOKE   ||
+      m_component_current->c_type == TC_RESULT_NL) {
+    if (m_component_current->operation.length > 0) {
+      L_found = true ;
+    } else {
+      LOG_ERROR("No operation data");
+      P_data->m_type = E_TYPE_STRING ;
+      P_data->m_value.m_val_binary.m_size = 0 ;
+      P_data->m_value.m_val_binary.m_value = NULL ;
+
+      return (false) ;
+    }
+  }
+
+  if (m_component_current->c_type == TC_U_ERROR) {
+    if (m_component_current->error.length > 0) {
+      L_found = true ;
+    } else {
+      LOG_ERROR("No operation data");
+
+      P_data->m_type = E_TYPE_STRING ;
+      P_data->m_value.m_val_binary.m_size = 0 ;
+      P_data->m_value.m_val_binary.m_value = NULL ;
+      return (false) ;
+    }
+  }
+
+#else
+  if (m_component_current->c_type == TC_INVOKE_L  ||
+      m_component_current->c_type == TC_INVOKE_NL ||
+      m_component_current->c_type == TC_U_ERROR ) {
+    L_found = true ;
+  }
+
+
+#endif
+
+  if (L_found == true) {
+    L_buffer_ptr = m_component_current->parameter;
+    
+    // TO DO
+    if (L_buffer_ptr->actual_length<=4096) {
+      P_data->m_type = E_TYPE_STRING ;
+      
+      ALLOC_TABLE(P_data->m_value.m_val_binary.m_value,
+		  unsigned char*,
+		  sizeof(unsigned char),
+		  L_buffer_ptr->actual_length);
+      
+      P_data->m_value.m_val_binary.m_size = L_buffer_ptr->actual_length ;
+      
+      memcpy(P_data->m_value.m_val_binary.m_value,
+	     L_buffer_ptr->bufferp,
+	     L_buffer_ptr->actual_length) ;
+      
+    } else {
+
+      LOG_ERROR("ERROR Buffer length exceeded");
+
+      P_data->m_type = E_TYPE_STRING ;
+      P_data->m_value.m_val_binary.m_size = 0 ;
+      P_data->m_value.m_val_binary.m_value = NULL ;
+
+      return (false);
+    }
+  } else {
+
+    LOG_ERROR("No operation data");
+
+    P_data->m_type = E_TYPE_STRING ;
+    P_data->m_value.m_val_binary.m_size = 0 ;
+    P_data->m_value.m_val_binary.m_value = NULL ;
+  }
+
+  
+  return(L_ret);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::get_component_invoke_id(T_pValueData P_data) {
+  P_data->m_value.m_val_number = m_component_current->invoke_id ;
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::get_component_error_code(T_pValueData P_data) {
+#ifdef _ITU_STANDARD
+  unsigned int        L_opValue=0;
+  int                 L_indice;
+
+
+  if (m_component_current->error.length > 0) {
+    /* Getting error number                                   */
+    L_opValue = 0;  /* Reset of L_opValue                     */
+    for( L_indice=0;
+	 L_indice<m_component_current->error.length;
+	   L_indice++) {
+      L_opValue= (L_opValue<<8)+
+	(unsigned int)
+	(m_component_current->error.datas[L_indice]);
+    }   /* endfor(L_indice=0;                                 */
+    P_data->m_value.m_val_number = L_opValue;  
+  } else {
+    LOG_ERROR("No error code");
+    P_data->m_value.m_val_number = 0;
+    return(false);
+  }
+#else
+  if (m_component_current->c_type == TC_U_ERROR ) {
+    P_data->m_value.m_val_number = m_component_current->error.code ;
+  }
+#endif
+  
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::get_component_problem_code_identifier(T_pValueData P_data) {
+  P_data->m_value.m_val_number = m_component_current->problem_code.identifier  ;
+  return(true);
+}
+
+
+bool C_TCAPMsgBuildContextNoFlavour::get_component_problem_code(T_pValueData P_data) {
+  P_data->m_value.m_val_number = m_component_current->problem_code.code  ;
+  return(true);
+}
+
+#ifdef _ANSI_STANDARD
+bool C_TCAPMsgBuildContextNoFlavour::get_component_correlation_id(T_pValueData P_data) {
+  P_data->m_value.m_val_number = m_component_current->correlation_id;
+  return(true);
+}
+#endif 
+
+bool C_TCAPMsgBuildContextNoFlavour::set_primitive_termination (T_pValueData P_data) {
+
+  bool L_ret = true ;
+
+  switch (P_data->m_value.m_val_number) {
+  case 0:
+    TC_P_TERMINATION(m_primitive) = BASIC ;
+    break ;
+  case 1:
+    TC_P_TERMINATION(m_primitive) = PREARRANGED ;
+    break ;
+  default:
+    L_ret = false ;
+    break ;
+  }
+
+  return (L_ret);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::get_primitive_termination (T_pValueData P_data) {
+
+  bool L_ret = true ;
+
+  switch (TC_P_TERMINATION(m_primitive)) {
+  case BASIC:
+    P_data->m_value.m_val_number = 0 ;
+    break ;
+  case PREARRANGED:
+    P_data->m_value.m_val_number = 1 ;
+    break ;
+  default:
+    L_ret = false ;
+    break ;
+  }
+
+  return (L_ret);
+}
+
+
+
+bool C_TCAPMsgBuildContextNoFlavour::set_primitive_type (T_pValueData P_data) {
+
+  TC_P_TYPE(m_primitive) = (tc_primitive_type) P_data->m_value.m_val_number ;
+  
+#ifdef _ITU_STANDARD
+  if (  !(  (TC_P_TYPE(m_primitive)==TC_BEGIN)
+	    ||(TC_P_TYPE(m_primitive) ==TC_UNI ))) {
+    TC_P_O_ADDR(m_primitive).type    = NO_TC_ADDRESS ;
+  }
+#endif
+
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::set_primitive_d_address_pc (T_pValueData P_data) {
+
+  TC_P_D_ADDR(m_primitive).pc_value = P_data->m_value.m_val_number ;
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::set_primitive_o_address_pc (T_pValueData P_data) {
+  TC_P_O_ADDR(m_primitive).pc_value =  P_data->m_value.m_val_number ;
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::set_primitive_uid (T_pValueData P_data) {
+  TC_P_USER_ID(m_primitive) = (tc_primitive_type) P_data->m_value.m_val_number ;
+  
+  TC_P_SCE_QUALITY(m_primitive).sccp_sequence_control 
+    = (unsigned char) ((tc_primitive_type)P_data->m_value.m_val_number & 0x00ff) ;
+  if ( TC_P_SCE_QUALITY(m_primitive).sccp_sequence_control == 0 ) {
+    TC_P_SCE_QUALITY(m_primitive).sccp_sequence_control = 1 ;
+  }
+  
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::set_primitive_pid (T_pValueData P_data) {
+  TC_P_PROVIDER_ID(m_primitive) = P_data->m_value.m_val_number ;
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::set_component_type (T_pValueData P_data) {
+  m_component_current->c_type   = (tc_component_type)P_data->m_value.m_val_number ;
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::set_component_class (T_pValueData P_data) {
+  m_component_current->op_class   = P_data->m_value.m_val_number ;
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::set_component_timeout (T_pValueData P_data) {
+
+  double L_timeout ;
+
+  L_timeout = ((double)P_data->m_value.m_val_number / 1000.0) ;
+  m_component_current->timer.tv_sec  = (long int) L_timeout ;
+  m_component_current->timer.tv_usec  = 0;
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::set_component_code (T_pValueData P_data) {
+
+  unsigned long L_val_number = P_data->m_value.m_val_number ;
+#ifdef _ITU_STANDARD
+  int    L_indice;
+  char   L_code_oper_tmp[10]; 
+  int    L_indDe=10;
+
+  
+  //    m_component_current->operation.tag = LOCAL_TYPE ;
+
+    L_indDe=10;
+    L_indice=0;
+    do                                    /* beginwhile(L_tstOperation)      */
+      {
+	L_indDe--;
+	L_code_oper_tmp[L_indDe] = (char)(L_val_number & 0xFF);
+	L_val_number = (L_val_number >>8); 
+	L_indice += 1;
+      } while(L_val_number);
+
+    if (L_code_oper_tmp[L_indDe] & 0x80)   /* testing sign bit. If set        */
+      {                                   /* an octet in front. It can occur */
+	L_indDe--;                        /* if L_indice<4                   */
+	L_code_oper_tmp[L_indDe] = 0x00;
+	L_indice += 1;
+      }
+
+    m_component_current->operation.length = L_indice;
+    memcpy(&(m_component_current->operation.datas[0]),
+	   &L_code_oper_tmp[L_indDe],L_indice);
+    
+    //  }
+#else
+
+//    if (m_component_current->c_type == TC_INVOKE_L) {
+//      // TO DO check presence private code
+//      //    m_component_current->operation.tag = NATIONAL ;
+//      m_component_current->operation.tag = m_stack->m_operation_code_id;
+//    } else {
+//      m_component_current->operation.tag = NATIONAL ;
+//    }
+
+    m_component_current->operation.op_family = 
+      (unsigned char) (( L_val_number >> 8 ) & 0xff ) ;
+    m_component_current->operation.op_specifier=
+      (unsigned char) ( L_val_number & 0xff ) ;
+
+
+#endif
+
+  return(true);
+}
+
+
+
+bool C_TCAPMsgBuildContextNoFlavour::set_component_operation_code_tag (T_pValueData P_data) {
+  m_component_current->operation.tag = (
+#ifdef _ANSI_STANDARD
+    tc_type
+#else
+    tc_tag
+#endif
+    ) P_data->m_value.m_val_number ;
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::get_component_operation_code_tag (T_pValueData P_data) {
+
+  P_data->m_value.m_val_number = m_component_current->operation.tag ;
+  return(true);
+}
+
+
+bool C_TCAPMsgBuildContextNoFlavour::set_component_data (T_pValueData P_data) {
+
+  tcx_buffer       *L_buffer_ptr = NULL ;
+
+#ifdef _ANSI_STANDARD
+  if (m_component_current->c_type == TC_U_REJECT) {
+    m_component_current->parameter = NULL;
+    return(true);
+  }
+
+  if (P_data->m_value.m_val_binary.m_size == 0 ) {
+    P_data->m_value.m_val_binary.m_size = 8 ;
+  }
+#else
+ 
+  if (m_component_current->c_type == TC_U_REJECT) {
+     return(true);
+  }
+
+
+  if (P_data->m_value.m_val_binary.m_size == 0 ) {
+    if (m_component_current->c_type == TC_RESULT_L || 
+        m_component_current->c_type == TC_RESULT_NL ) {    
+      m_component_current->operation.length = 0;
+    }
+    return(true);
+  }
+#endif
+
+  if ((*(m_stack_fct->m_alloc_buffer))(&L_buffer_ptr,P_data->m_value.m_val_binary.m_size) == -1) {
+
+    LOG_ERROR_P1("Error in TCX_alloc_component [%d]",((*(m_stack_fct->m_errno))));
+
+    if ((*(m_stack_fct->m_free_components))(m_component_current) == -1) {
+      LOG_ERROR("ERROR while freeing the component");
+    }
+    m_component_current = NULL ;
+    return (false) ;
+  }
+
+  L_buffer_ptr->actual_length = P_data->m_value.m_val_binary.m_size;
+  if (P_data->m_value.m_val_binary.m_value != NULL) {
+    memcpy(L_buffer_ptr->bufferp,
+	   P_data->m_value.m_val_binary.m_value,P_data->m_value.m_val_binary.m_size);
+  }
+
+  m_component_current->parameter = L_buffer_ptr;
+  
+  return(true);
+}
+
+
+bool C_TCAPMsgBuildContextNoFlavour::set_primitive_d_address_ssn (T_pValueData P_data) {
+  TC_P_D_ADDR(m_primitive).ssn = P_data->m_value.m_val_number  ;
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::set_primitive_o_address_ssn (T_pValueData P_data) {
+  TC_P_O_ADDR(m_primitive).ssn = P_data->m_value.m_val_number ;
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::check_pid_presence(T_pValueData P_data) {
+  return(true);
+}
+
+
+bool C_TCAPMsgBuildContextNoFlavour::set_component_invoke_id(T_pValueData P_data) {
+#ifdef _ITU_STANDARD
+   m_component_current->invoke_id = P_data->m_value.m_val_number ; 
+#else
+  if (m_component_current->c_type == TC_INVOKE_L  ||
+      m_component_current->c_type == TC_INVOKE_NL ) {
+    m_component_current->invoke_id = P_data->m_value.m_val_number ;
+  } else {
+    m_component_current->invoke_id = -1 ;
+  }
+#endif
+
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::set_component_error_code(T_pValueData P_data) {
+
+unsigned long L_val_number = P_data->m_value.m_val_number ;	
+#ifdef _ITU_STANDARD
+  int    L_indice;
+  char   L_code_oper_tmp[10]; 
+  int    L_indDe=10;
+
+  if (m_component_current->c_type == TC_U_ERROR ) {
+    m_component_current->error.tag = LOCAL_TYPE ;
+
+    L_indDe=10;
+    L_indice=0;
+    do                  /* beginwhile(L_tstOperation)                  */
+      {
+	L_indDe--;
+	L_code_oper_tmp[L_indDe] = (char)(L_val_number & 0xFF);
+	L_val_number = (L_val_number>>8);
+	L_indice += 1;
+      } while(L_val_number);
+    if (L_code_oper_tmp[L_indDe] & 0x80)   /* testing sign bit. If set    */
+      {                  /* an octet in front. It can occur              */
+	L_indDe--;         /* if L_indice<4                             */
+	L_code_oper_tmp[L_indDe] = 0x00;
+	L_indice += 1;
+      }                   /* endif(L_tstOperTmp[L_indDe]&0x80            */
+    m_component_current->error.length=L_indice;
+    memcpy(&(m_component_current->error.datas[0]),
+	   &L_code_oper_tmp[L_indDe],L_indice);
+  }
+
+#else
+  if (m_component_current->c_type == TC_U_ERROR ) {
+    m_component_current->error.tag  = NATIONAL ;
+    m_component_current->error.code = (unsigned char) L_val_number ;
+  } 
+#endif
+
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::set_component_problem_code_identifier(T_pValueData P_data) {
+  m_component_current->problem_code.identifier = (tc_pb_identifier) P_data->m_value.m_val_number ;
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::set_component_problem_code(T_pValueData P_data) {
+  m_component_current->problem_code.code = (tc_pb_code )P_data->m_value.m_val_number ;
+  return(true);
+}
+
+
+#ifdef _ANSI_STANDARD
+bool C_TCAPMsgBuildContextNoFlavour::set_component_correlation_id(T_pValueData P_data) {
+
+//  if (m_component_current->c_type != TC_INVOKE_L ) {
+    m_component_current->correlation_id = P_data->m_value.m_val_signed ;
+//  } 
+
+// else {
+//    m_component_current->correlation_id = -1 ;
+//  }
+
+
+  return(true);
+}
+#endif
+
+tcx_primitive*  C_TCAPMsgBuildContextNoFlavour::get_primitive_ref() {
+  return(m_primitive);
+}
+
+tcx_component** C_TCAPMsgBuildContextNoFlavour::get_component_ref() {
+  return(&m_component);
+}
+
+struct timeval * C_TCAPMsgBuildContextNoFlavour::get_time_ref() {
+  return(&m_time);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::set_primitive_p_abort_cause(T_pValueData P_data) {
+  TC_P_PABORT(m_primitive) = (tc_p_abort_cause)P_data->m_value.m_val_number ;
+  return(true) ;
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::get_primitive_p_abort_cause(T_pValueData P_data) {
+  P_data->m_value.m_val_number = TC_P_PABORT(m_primitive);
+  return(true) ;
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::set_primitive_u_abort_cause(T_pValueData P_data) {
+  TC_P_UABORT(m_primitive).length = 0 ;
+  return(true) ;
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::get_primitive_u_abort_cause(T_pValueData P_data) {
+
+  int L_size  ;
+  L_size = TC_P_UABORT(m_primitive).length ;
+  
+  if (L_size > 0) {
+
+    P_data->m_type = E_TYPE_STRING ;
+    ALLOC_TABLE(P_data->m_value.m_val_binary.m_value,
+		unsigned char*,
+		sizeof(unsigned char),
+		L_size);
+
+    P_data->m_value.m_val_binary.m_size = L_size ;
+    
+    memcpy(P_data->m_value.m_val_binary.m_value,
+	   TC_P_UABORT(m_primitive).datas,
+	   L_size) ;
+    
+    // TO DO destroy m_value ????
+  } else {
+    LOG_ERROR("abort cause is not specified");
+  }
+
+  return(true) ;
+}
+
+
+bool C_TCAPMsgBuildContextNoFlavour::set_primitive_report_cause(T_pValueData P_data) {
+  TC_P_REPORT(m_primitive) = (tcx_transport_return_reason) P_data->m_value.m_val_number ;
+  return(true) ;
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::get_primitive_report_cause(T_pValueData P_data) {
+  P_data->m_value.m_val_number = TC_P_REPORT(m_primitive);
+  return(true) ;
+}
+
+
+bool C_TCAPMsgBuildContextNoFlavour::get_primitive_appl_context_name(T_pValueData P_data) {
+#ifdef _ITU_STANDARD
+  if (TC_P_DLG_INFO_PRESENT(m_primitive) == TC_YES) {
+    int                  L_size          ;
+
+    L_size = TC_P_DLG_PORTION_APP_CONTEXT(m_primitive).length ;    
+
+    if (L_size != 0) {
+      P_data->m_type = E_TYPE_STRING ;      
+      ALLOC_TABLE(P_data->m_value.m_val_binary.m_value,
+		  unsigned char*,
+		  sizeof(unsigned char),
+		  L_size);
+
+      memcpy(P_data->m_value.m_val_binary.m_value,
+	     TC_P_DLG_PORTION_APP_CONTEXT(m_primitive).data,
+	     L_size) ;
+
+      P_data->m_value.m_val_binary.m_size = L_size ;
+
+
+    } else {
+      P_data->m_type = E_TYPE_STRING ;
+      P_data->m_value.m_val_binary.m_size = 0 ;
+      P_data->m_value.m_val_binary.m_value = NULL ;
+    }
+  } else {
+    P_data->m_type = E_TYPE_STRING ;
+    P_data->m_value.m_val_binary.m_size = 0 ;
+    P_data->m_value.m_val_binary.m_value = NULL ;
+  }	
+#endif
+
+  
+  return(true) ;
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::set_primitive_appl_context_name(T_pValueData P_data) {
+#ifdef _ITU_STANDARD
+  if (P_data->m_value.m_val_binary.m_size  != 0 ) {
+    TC_P_DLG_PORTION_APP_CONTEXT(m_primitive).length = 
+      P_data->m_value.m_val_binary.m_size;
+    
+    memcpy(TC_P_DLG_PORTION_APP_CONTEXT(m_primitive).data,
+	   P_data->m_value.m_val_binary.m_value,
+	   P_data->m_value.m_val_binary.m_size);
+    
+    TC_P_DLG_INFO_PRESENT(m_primitive) = TC_YES ;
+  } else {
+    TC_P_DLG_PORTION_APP_CONTEXT(m_primitive).length = 0 ;
+  }
+  
+#endif
+
+  return(true) ;
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::get_primitive_user_info(T_pValueData P_data) {
+
+#ifdef _ITU_STANDARD
+  if (TC_P_DLG_INFO_PRESENT(m_primitive) == TC_YES) {
+    int                  L_size          ;
+
+    L_size = TC_P_DLG_PORTION_USER_INFO(m_primitive).length ;    
+    if (L_size != 0) {
+      P_data->m_type = E_TYPE_STRING ;      
+
+      ALLOC_TABLE(P_data->m_value.m_val_binary.m_value,
+		  unsigned char*,
+		  sizeof(unsigned char),
+		  L_size);
+
+      
+      memcpy(P_data->m_value.m_val_binary.m_value,
+	     TC_P_DLG_PORTION_USER_INFO(m_primitive).data,
+	     L_size) ;
+
+      P_data->m_value.m_val_binary.m_size = L_size ;
+
+
+    } else {
+      P_data->m_type = E_TYPE_STRING ;
+      P_data->m_value.m_val_binary.m_size = 0 ;
+      P_data->m_value.m_val_binary.m_value = NULL ;
+    }
+  } else {
+    P_data->m_type = E_TYPE_STRING ;
+    P_data->m_value.m_val_binary.m_size = 0 ;
+    P_data->m_value.m_val_binary.m_value = NULL ;
+  }	
+#endif
+
+  return(true) ;
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::set_primitive_user_info(T_pValueData P_data) {
+
+#ifdef _ITU_STANDARD
+  if (P_data->m_value.m_val_binary.m_size  != 0 ) {
+    TC_P_DLG_PORTION_USER_INFO(m_primitive).length = 
+      P_data->m_value.m_val_binary.m_size;
+    
+    memcpy(TC_P_DLG_PORTION_USER_INFO(m_primitive).data,
+	   P_data->m_value.m_val_binary.m_value,
+	   P_data->m_value.m_val_binary.m_size);
+    
+    TC_P_DLG_INFO_PRESENT(m_primitive) = TC_YES ;
+  } else {
+    TC_P_DLG_PORTION_USER_INFO(m_primitive).length = 0 ;
+  }
+
+#endif
+
+  return(true) ;
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::get_primitive_abort_reason(T_pValueData P_data) {
+#ifdef _ITU_STANDARD
+  if (TC_P_DLG_INFO_PRESENT(m_primitive) == TC_YES) {
+    P_data->m_value.m_val_number = TC_P_DLG_PORTION_ABORT_REASON(m_primitive);
+  } else {
+    P_data->m_value.m_val_number = 2 ;
+  }
+#endif
+  return(true) ;
+}
+
+
+bool C_TCAPMsgBuildContextNoFlavour::set_primitive_abort_reason(T_pValueData P_data) {
+  return(true) ;
+}
+
+
+
+bool C_TCAPMsgBuildContextNoFlavour::primitive_termination_to_string (char **P_string, 
+								      T_pValueData P_data) {
+  static char* L_termination_name[2] = { 
+    (char*)"BASIC", 
+    (char*)"PREARRANGED" } ;
+  int L_ret = true ;
+  
+  if (P_data->m_value.m_val_number < 2) {
+    (*P_string) = L_termination_name[P_data->m_value.m_val_number] ;
+  } else {
+    L_ret = false ;
+  }
+  return (L_ret);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::primitive_termination_from_string (char **P_string, 
+									T_pValueData P_data) {
+  static char* L_termination_name[2] = { 
+    (char*)"BASIC", 
+    (char*)"PREARRANGED" } ;
+  int  L_i = 0 ;
+  bool L_ret = false ; 
+  
+  for (L_i = 0 ; L_i < 2 ; L_i ++) {
+    if (strcmp((*P_string), L_termination_name[L_i]) == 0) {
+      P_data->m_value.m_val_number = L_i ;
+      L_ret = true ;
+      break ;
+    }
+  }
+  return (L_ret);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::primitive_report_cause_to_string (char **P_string, 
+								       T_pValueData P_data) {		
+  static char* L_report_name[8] = {
+    (char*)"TC_NOTRANSLATION_NATURE",
+    (char*)"TC_NOTRANSLATION_SPECIFIC",
+    (char*)"TC_SUBSYSTEM_CONGESTION",
+    (char*)"TC_SUBSYSTEM_FAILURE",
+    (char*)"TC_UNEQUIPPED_USER",
+    (char*)"TC_NETWORK_FAILURE",
+    (char*)"TC_NETWORK_CONGESTION",
+    (char*)"TC_UNQUALIFIED"} ;
+  
+
+  int L_ret = true ;
+  
+  if (P_data->m_value.m_val_number < 8) {
+    (*P_string) = L_report_name[P_data->m_value.m_val_number] ;
+  } else {
+    L_ret = false ;
+  }
+  return (L_ret);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::primitive_report_cause_from_string (char **P_string, 
+									T_pValueData P_data) {
+
+  static char* L_report_name[8] = {
+    (char*)"TC_NOTRANSLATION_NATURE",
+    (char*)"TC_NOTRANSLATION_SPECIFIC",
+    (char*)"TC_SUBSYSTEM_CONGESTION",
+    (char*)"TC_SUBSYSTEM_FAILURE",
+    (char*)"TC_UNEQUIPPED_USER",
+    (char*)"TC_NETWORK_FAILURE",
+    (char*)"TC_NETWORK_CONGESTION",
+    (char*)"TC_UNQUALIFIED"} ;
+
+  int  L_i = 0 ;
+  bool L_ret = false ; 
+  
+  for (L_i = 0 ; L_i < 8 ; L_i ++) {
+    if (strcmp((*P_string), L_report_name[L_i]) == 0) {
+      P_data->m_value.m_val_number = L_i ;
+      L_ret = true ;
+      break ;
+    }
+  }
+  return (L_ret);
+}
+
+
+
+bool C_TCAPMsgBuildContextNoFlavour::primitive_p_abort_cause_to_string (char **P_string, 
+									T_pValueData P_data) {		
+
+  int L_size ;
+#ifdef _ITU_STANDARD
+  static char* L_p_abort_name[7] = {
+    (char*)"TC_UNRECOG_MSG_TYPE",
+    (char*)"TC_UNRECOG_TRANSACTION_ID",
+    (char*)"TC_BAD_FMT_TRANS_PORTION",
+    (char*)"TC_INCORRECT_TRANS_PORTION",
+    (char*)"TC_RESOURCE_LIMITATION" ,
+    (char*)"TC_ABNORMAL_DIALOGUE",
+    (char*)"TC_NO_COMMON_DIALOGUE_PORTION"};
+  L_size = 7 ;
+#else
+  static char* L_p_abort_name[6] = {
+
+    (char*)"TC_UNRECOG_PKG_TYPE",
+    (char*)"TC_INCORRECT_TRANS_PORTION",
+    (char*)"TC_BAD_STRUCTURED_TRANS_PORTION",
+    (char*)"TC_UNRECOG_TRANSACTION_ID",
+    (char*)"TC_PERM_TO_RELEASE_PROBLEM",
+    (char*)"TC_RESOURCE_UNAVAILABLE" };
+  L_size = 6 ;
+#endif
+
+  int L_ret = true ;
+  
+  if ((int) P_data->m_value.m_val_number < L_size) {
+    (*P_string) = L_p_abort_name[P_data->m_value.m_val_number] ;
+  } else {
+    L_ret = false ;
+  }
+  return (L_ret);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::primitive_p_abort_cause_from_string (char **P_string, 
+									T_pValueData P_data) {
+
+  int L_size ;
+#ifdef _ITU_STANDARD
+  static char* L_p_abort_name[7] = {
+    (char*)"TC_UNRECOG_MSG_TYPE",
+    (char*)"TC_UNRECOG_TRANSACTION_ID",
+    (char*)"TC_BAD_FMT_TRANS_PORTION",
+    (char*)"TC_INCORRECT_TRANS_PORTION",
+    (char*)"TC_RESOURCE_LIMITATION" ,
+    (char*)"TC_ABNORMAL_DIALOGUE",
+    (char*)"TC_NO_COMMON_DIALOGUE_PORTION"};
+  L_size = 7 ;
+#else
+  static char* L_p_abort_name[6] = {
+
+    (char*)"TC_UNRECOG_PKG_TYPE",
+    (char*)"TC_INCORRECT_TRANS_PORTION",
+    (char*)"TC_BAD_STRUCTURED_TRANS_PORTION",
+    (char*)"TC_UNRECOG_TRANSACTION_ID",
+    (char*)"TC_PERM_TO_RELEASE_PROBLEM",
+    (char*)"TC_RESOURCE_UNAVAILABLE" };
+  L_size = 6 ;
+#endif
+
+  int  L_i = 0 ;
+  bool L_ret = false ; 
+  
+  for (L_i = 0 ; L_i < L_size ; L_i ++) {
+    if (strcmp((*P_string), L_p_abort_name[L_i]) == 0) {
+      P_data->m_value.m_val_number = L_i ;
+      L_ret = true ;
+      break ;
+    }
+  }
+  return (L_ret);
+}
+
+
+bool C_TCAPMsgBuildContextNoFlavour::component_problem_code_to_string (char **P_string, 
+								       T_pValueData P_data) {		
+
+  int L_size ;
+#ifdef _ITU_STANDARD
+  static char* L_problem_code_name[16] = {
+    (char*)"UNRECOG_COMPONENT",
+    (char*)"MISTYPED_COMPONENT",
+    (char*)"BADLY_STRUCTURED_COMPONENT",
+    (char*)"DUPLICATE_INVOKE_ID",
+    (char*)"UNRECOGNIZED_OPERATION",
+    (char*)"MISTYPED_PARAMETER",
+    (char*)"RESOURCE_LIMITATION",
+    (char*)"INITIATING_RELEASE",
+    (char*)"UNRECOGNIZED_LINKED_ID",
+    (char*)"LINKED_RESPONSE_UNEXPECTED",
+    (char*)"UNEXPECTED_LINKED_OPERATION",
+    (char*)"UNRECOGNIZED_INVOKE_ID",
+    (char*)"RETURN_RESULT_UNEXPECTED",
+    (char*)"RETURN_ERROR_UNEXPECTED",
+    (char*)"UNRECOGNIZED_ERROR",
+    (char*)"UNEXPECTED_ERROR"} ;
+  L_size = 16 ;
+  
+#else
+  static char* L_problem_code_name[15] = {
+    (char*)"UNRECOG_COMPONENT",
+    (char*)"INCORRECT_COMPONENT_PORTION",
+    (char*)"BADLY_STRUCTURED_COMPONENT_PORTION",
+    (char*)"DUPLICATE_INVOKE_ID",
+    (char*)"UNRECOGNIZED_OPERATION_CODE",
+    (char*)"INCORRECT_PARAMETER",
+    (char*)"UNRECOGNIZED_CORRELATION_ID",
+    (char*)"UNEXPECTED_RETURN_RESULT",
+    (char*)"UNEXPECTED_RETURN_ERROR",
+    (char*)"UNRECOGNIZED_ERROR",
+    (char*)"UNEXPECTED_ERROR",
+    (char*)"UNRECOGNIZED_PACKAGE_TYPE",
+    (char*)"INCORRECT_TRANSACTION_PORTION",
+    (char*)"BADLY_STRUCTURED_TRANSACTION_PORTION",
+    (char*)"UNRECOGNIZED_TRANSACTION_ID"} ;
+  L_size = 15 ;
+  
+#endif
+
+  int L_ret = true ;
+  
+  if ((int) P_data->m_value.m_val_number < L_size) {
+    (*P_string) = L_problem_code_name[P_data->m_value.m_val_number] ;
+  } else {
+    L_ret = false ;
+  }
+  return (L_ret);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::component_problem_code_from_string (char **P_string, 
+								       T_pValueData P_data) {
+
+  int L_size ;
+#ifdef _ITU_STANDARD
+  static char* L_problem_code_name[16] = {
+    (char*)"UNRECOG_COMPONENT",
+    (char*)"MISTYPED_COMPONENT",
+    (char*)"BADLY_STRUCTURED_COMPONENT",
+    (char*)"DUPLICATE_INVOKE_ID",
+    (char*)"UNRECOGNIZED_OPERATION",
+    (char*)"MISTYPED_PARAMETER",
+    (char*)"RESOURCE_LIMITATION",
+    (char*)"INITIATING_RELEASE",
+    (char*)"UNRECOGNIZED_LINKED_ID",
+    (char*)"LINKED_RESPONSE_UNEXPECTED",
+    (char*)"UNEXPECTED_LINKED_OPERATION",
+    (char*)"UNRECOGNIZED_INVOKE_ID",
+    (char*)"RETURN_RESULT_UNEXPECTED",
+    (char*)"RETURN_ERROR_UNEXPECTED",
+    (char*)"UNRECOGNIZED_ERROR",
+    (char*)"UNEXPECTED_ERROR"} ;
+  L_size = 16 ;
+  
+#else
+  static char* L_problem_code_name[15] = {
+    (char*)"UNRECOG_COMPONENT",
+    (char*)"INCORRECT_COMPONENT_PORTION",
+    (char*)"BADLY_STRUCTURED_COMPONENT_PORTION",
+    (char*)"DUPLICATE_INVOKE_ID",
+    (char*)"UNRECOGNIZED_OPERATION_CODE",
+    (char*)"INCORRECT_PARAMETER",
+    (char*)"UNRECOGNIZED_CORRELATION_ID",
+    (char*)"UNEXPECTED_RETURN_RESULT",
+    (char*)"UNEXPECTED_RETURN_ERROR",
+    (char*)"UNRECOGNIZED_ERROR",
+    (char*)"UNEXPECTED_ERROR",
+    (char*)"UNRECOGNIZED_PACKAGE_TYPE",
+    (char*)"INCORRECT_TRANSACTION_PORTION",
+    (char*)"BADLY_STRUCTURED_TRANSACTION_PORTION",
+    (char*)"UNRECOGNIZED_TRANSACTION_ID"} ;
+  L_size = 15 ;
+  
+  
+#endif
+
+  int  L_i = 0 ;
+  bool L_ret = false ; 
+  
+  for (L_i = 0 ; L_i < L_size ; L_i ++) {
+    if (strcmp((*P_string), L_problem_code_name[L_i]) == 0) {
+      P_data->m_value.m_val_number = L_i ;
+      L_ret = true ;
+      break ;
+    }
+  }
+  return (L_ret);
+}
+
+
+bool C_TCAPMsgBuildContextNoFlavour::component_pb_code_identifier_to_string (char **P_string, 
+									     T_pValueData P_data) {
+
+  int L_size ;
+#ifdef _ITU_STANDARD
+  static char* L_pb_code_identifier_name[4] = {
+    (char*)"GENERAL",
+    (char*)"INVOKE",
+    (char*)"RETURN_RESULT",
+    (char*)"RETURN_ERROR"};
+  L_size = 4 ;
+#else
+  static char* L_pb_code_identifier_name[5] = {
+    (char*)"GENERAL",
+    (char*)"INVOKE",
+    (char*)"RETURN_RESULT",
+    (char*)"RETURN_ERROR",
+    (char*)"TRANSACTION_PORTION"};
+  L_size = 5 ;
+#endif
+
+  int L_ret = true ;
+  
+  if ((int) P_data->m_value.m_val_number < L_size) {
+    (*P_string) = L_pb_code_identifier_name[P_data->m_value.m_val_number] ;
+  } else {
+    L_ret = false ;
+  }
+  return (L_ret);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::component_pb_code_identifier_from_string (char **P_string, 
+									       T_pValueData P_data) {
+
+  int L_size ;
+#ifdef _ITU_STANDARD
+  static char* L_pb_code_identifier_name[4] = {
+    (char*)"GENERAL",
+    (char*)"INVOKE",
+    (char*)"RETURN_RESULT",
+    (char*)"RETURN_ERROR"};
+  L_size = 4 ;
+#else
+  static char* L_pb_code_identifier_name[5] = {
+    (char*)"GENERAL",
+    (char*)"INVOKE",
+    (char*)"RETURN_RESULT",
+    (char*)"RETURN_ERROR",
+    (char*)"TRANSACTION_PORTION"};
+  L_size = 5 ;
+#endif
+
+  int  L_i = 0 ;
+  bool L_ret = false ; 
+  
+  for (L_i = 0 ; L_i < L_size ; L_i ++) {
+    if (strcmp((*P_string), L_pb_code_identifier_name[L_i]) == 0) {
+      P_data->m_value.m_val_number = L_i ;
+      L_ret = true ;
+      break ;
+    }
+  }
+  return (L_ret);
+}
+
+
+bool C_TCAPMsgBuildContextNoFlavour::primitive_dlg_abort_reason_to_string (char **P_string, 
+									   T_pValueData P_data) {
+  int L_ret = true ;
+#ifdef _ITU_STANDARD
+  static char* L_dlg_abort_name[3] = {
+    (char*)"AC_name_not_supported",
+    (char*)"user_specific",
+    (char*)"NO" };
+
+  
+  if (P_data->m_value.m_val_number < 3) {
+    (*P_string) = L_dlg_abort_name[P_data->m_value.m_val_number] ;
+  } else {
+    L_ret = false ;
+  }
+#endif
+  return (L_ret);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::primitive_dlg_abort_reason_from_string (char **P_string, 
+									     T_pValueData P_data) {
+
+  bool L_ret = false ; 
+#ifdef _ITU_STANDARD
+  static char* L_dlg_abort_name[3] = {
+    (char*)"AC_name_not_supported",
+    (char*)"user_specific",
+    (char*)"NO" };
+
+  int  L_i = 0 ;
+  
+  for (L_i = 0 ; L_i < 3 ; L_i ++) {
+    if (strcmp((*P_string), L_dlg_abort_name[L_i]) == 0) {
+      P_data->m_value.m_val_number = L_i ;
+      L_ret = true ;
+      break ;
+    }
+  }
+#endif
+  return (L_ret);
+}
+
+
+
+#ifdef _ANSI_STANDARD
+bool C_TCAPMsgBuildContextNoFlavour::set_component_parameter_type(T_pValueData P_data) {
+  m_component_current->parameter_type = (tc_parm_type)P_data->m_value.m_val_number ;
+  
+  return(true) ;
+}
+bool C_TCAPMsgBuildContextNoFlavour::get_component_parameter_type(T_pValueData P_data) {
+  P_data->m_value.m_val_number = m_component_current->parameter_type;  
+  return(true) ;
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::component_parameter_type_to_string (char **P_string, 
+								      T_pValueData P_data) {
+  static char* L_parameter_type[3] = { 
+    (char*)"SET_TYPE", 
+    (char*)"SEQUENCE_TYPE",
+    (char*)"NOT_SET"} ;
+  int L_ret = true ;
+  
+  if (P_data->m_value.m_val_number < 2) {
+    (*P_string) = L_parameter_type[P_data->m_value.m_val_number] ;
+  } else {
+    (*P_string) = L_parameter_type[2] ;
+    //    L_ret = false ;
+  }
+  return (L_ret);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::component_parameter_type_from_string (char **P_string, 
+									T_pValueData P_data) {
+  static char* L_parameter_type[2] = { 
+    (char*)"SET_TYPE", 
+    (char*)"SEQUENCE_TYPE" } ;
+  int  L_i = 0 ;
+  bool L_ret = false ; 
+  
+  for (L_i = 0 ; L_i < 2 ; L_i ++) {
+    if (strcmp((*P_string), L_parameter_type[L_i]) == 0) {
+      P_data->m_value.m_val_number = L_i ;
+      L_ret = true ;
+      break ;
+    }
+  }
+  return (L_ret);
+}
+#endif // _ANSI_STANDARD
+
+
+bool C_TCAPMsgBuildContextNoFlavour::component_operation_code_tag_to_string (char **P_string, 
+								      T_pValueData P_data) {
+
+  int L_ret = true ;
+  char* L_operation_code_tag_name[2] = { 
+
+#ifdef _ITU_STANDARD
+    (char*)"LOCAL_TYPE", 
+    (char*)"GLOBAL_TYPE"
+#else
+    (char*)"NATIONAL", 
+    (char*)"PRIVATE" 
+    
+#endif 
+  };
+
+  
+  if (P_data->m_value.m_val_number < 2) {
+    (*P_string) = L_operation_code_tag_name[P_data->m_value.m_val_number] ;
+  } else {
+    L_ret = false ;
+  }
+  return (L_ret);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::component_operation_code_tag_from_string (char **P_string, 
+									       T_pValueData P_data) {
+  char* L_operation_code_tag_name[2] = { 
+
+#ifdef _ITU_STANDARD
+    (char*)"LOCAL_TYPE", 
+    (char*)"GLOBAL_TYPE"
+#else
+    (char*)"NATIONAL", 
+    (char*)"PRIVATE" 
+    
+#endif 
+  };
+  int  L_i = 0 ;
+  bool L_ret = false ; 
+  
+  for (L_i = 0 ; L_i < 2 ; L_i ++) {
+    if (strcmp((*P_string), L_operation_code_tag_name[L_i]) == 0) {
+      P_data->m_value.m_val_number = L_i ;
+      L_ret = true ;
+      break ;
+    }
+  }
+  return (L_ret);
+}
+
+
+
+
+
+
+
+
