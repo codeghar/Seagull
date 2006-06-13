@@ -1080,11 +1080,11 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
                   -1 : atoi(L_regexp->find_value((char*)"line")) ;
               
 
-                std::cerr << " L_regexp_data->m_expr " << L_regexp_data->m_expr
-                          << " L_regexp_data->m_nb_match " << L_regexp_data->m_nb_match
-                          << " L_regexp_data->m_sub_match " << L_regexp_data->m_sub_match
-                          << " L_regexp_data->m_line " << L_regexp_data->m_line 
-                          << std::endl;
+                // std::cerr << " L_regexp_data->m_expr " << L_regexp_data->m_expr
+                //          << " L_regexp_data->m_nb_match " << L_regexp_data->m_nb_match
+                //          << " L_regexp_data->m_sub_match " << L_regexp_data->m_sub_match
+                //          << " L_regexp_data->m_line " << L_regexp_data->m_line 
+                //          << std::endl;
               
                 NEW_VAR(L_cRegExp, C_RegExp(L_regexp_data->m_expr, 
                                             &L_error_comp,
