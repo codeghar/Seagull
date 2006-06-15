@@ -2257,8 +2257,14 @@ int  C_ProtocolBinary::set_body_value(int          P_id,
 	      << P_value << "]");
 	L_ret = -1 ;
       } else {
-        GEN_DEBUG(1, " P_res->m_value.m_val_binary.m_value = " << (void*)(P_res->m_value.m_val_binary.m_value));
+        GEN_DEBUG(1, " P_res->m_value.m_val_binary.m_value = " 
+                  << (void*)(P_res->m_value.m_val_binary.m_value));
+
+        if (P_del != NULL) {
         *P_del = true;
+         }
+
+        // *P_del = true;
 	P_res->m_value.m_val_binary.m_size= L_res_size ;
       }
       
@@ -2274,8 +2280,8 @@ int  C_ProtocolBinary::set_body_value(int          P_id,
   case E_TYPE_GROUPED:
     GEN_DEBUG(1, " E_TYPE_GROUPED");
     if (P_nb == 0) {
-      GEN_ERROR(E_GEN_FATAL_ERROR, "Sub type grouped not implemented");
-      L_ret = -1 ;
+      P_res->m_value.m_val_number = 0 ;
+      P_res->m_sub_val = NULL ;
     } else {
       P_res->m_value.m_val_number = P_nb ;
       ALLOC_TABLE(P_res->m_sub_val, 
@@ -2404,6 +2410,7 @@ int  C_ProtocolBinary::set_body_sub_value(int          P_index,
   GEN_DEBUG(1, " P_index: " << P_index);
   GEN_DEBUG(1, " P_id:    " << P_id);
 
+
   L_res = &(P_res -> m_sub_val[P_index]) ;
   L_ret = set_body_value(P_id, P_value, 0, L_res) ;
 
@@ -2450,12 +2457,16 @@ void C_ProtocolBinary::set_body_value(T_pBodyValue P_res, T_pBodyValue P_val) {
     break;
   case E_TYPE_GROUPED:
     P_res->m_value.m_val_number = P_val->m_value.m_val_number ;
+    if (P_res->m_value.m_val_number != 0 ) {
     ALLOC_TABLE(P_res->m_sub_val,
 		T_pBodyValue,
 		sizeof(T_BodyValue),
 		P_res->m_value.m_val_number);
     for (L_i = 0 ; L_i < P_res->m_value.m_val_number; L_i++) {
       set_body_value(&(P_res->m_sub_val[L_i]), &(P_val->m_sub_val[L_i]));
+    }
+    } else {
+      P_res->m_sub_val = NULL ;
     }
     break ;
   case E_TYPE_NUMBER_64 :
@@ -2495,6 +2506,7 @@ void C_ProtocolBinary::delete_body_value(T_pBodyValue P_res) {
   case E_TYPE_GROUPED :
     GEN_DEBUG(1, "C_ProtocolBinary::delete_body_value() Grouped nb: " 
                  << (int)P_res->m_value.m_val_number);
+    if (P_res->m_value.m_val_number != 0 ) {
 
     for (L_i = 0 ; L_i < (int)P_res->m_value.m_val_number; L_i++) {
       delete_body_value(&(P_res->m_sub_val[L_i])) ;
@@ -2503,6 +2515,7 @@ void C_ProtocolBinary::delete_body_value(T_pBodyValue P_res) {
     }
     FREE_TABLE (P_res->m_sub_val);
     P_res->m_value.m_val_number=0 ;
+    }
     break ;
   default:
     break ;
@@ -2531,6 +2544,8 @@ void C_ProtocolBinary::reset_grouped_body_value(T_pBodyValue P_res) {
     GEN_DEBUG(1, "C_ProtocolBinary::reset_grouped_body_value() Grouped nb: " 
                  << (int)P_res->m_value.m_val_number);
 
+    if (P_res->m_value.m_val_number != 0 ){
+
     for (L_i = 0 ; L_i < (int)P_res->m_value.m_val_number; L_i++) {
       reset_grouped_body_value(&(P_res->m_sub_val[L_i])) ;
       GEN_DEBUG(1, "C_ProtocolBinary::reset_grouped_body_value() Grouped nb id: " 
@@ -2538,6 +2553,7 @@ void C_ProtocolBinary::reset_grouped_body_value(T_pBodyValue P_res) {
     }
     FREE_TABLE (P_res->m_sub_val);
     P_res->m_value.m_val_number=0 ;
+    }
     break ;
   default:
     break ;
@@ -2962,33 +2978,33 @@ int C_ProtocolBinary::decode_body(unsigned char *P_buf,
 	  P_valDec[L_nbValDec].m_id = L_body_value_id ;
 	  // P_valDec[L_nbValDec].m_value.m_val_number = 50 ;
 
-
 	  int L_val_nb = 50;
 
 	  L_ret = decode_body(L_ptr, 
 			      (size_t)L_data_size, 
 			      L_body_val, 
-			      // (int*)&(P_valDec[L_nbValDec].m_value.m_val_number),
 			      &L_val_nb,
 			      P_headerId) ;
 	  if (L_ret == 0) {
 	    GEN_DEBUG(1, "  allocated nb values: " << L_val_nb 
 			 << " on grouped value (" << L_nbValDec << ")" );
 
-	    P_valDec[L_nbValDec].m_value.m_val_number = L_val_nb ;
 
+	    P_valDec[L_nbValDec].m_value.m_val_number = L_val_nb ;
+            if (L_val_nb > 0){
 	    ALLOC_TABLE(P_valDec[L_nbValDec].m_sub_val,
 			T_pBodyValue,
 			sizeof(T_BodyValue),
 			L_val_nb);
-
 	    for (L_i = 0 ; L_i < (unsigned int) L_val_nb; L_i++) {
 	      set_body_value(&(P_valDec[L_nbValDec].m_sub_val[L_i]), 
 			     &(L_body_val[L_i]));
 	    }
-
 	    // Now do not forget to clean L_body_val
             reset_body_values(L_val_nb, L_body_val);
+            } else {
+              P_valDec[L_nbValDec].m_sub_val = NULL ;
+            }
 
 	    L_nbValDec++;
 	    
@@ -3593,6 +3609,7 @@ C_ProtocolFrame::T_MsgError C_ProtocolBinary::encode_body (int            P_nbVa
     case E_TYPE_GROUPED:
       GEN_DEBUG(1, "C_ProtocolBinary::encode_body()  with grouped value " );
 
+      L_sub_size = *P_size - L_total_size ;
 
       L_sub_size = *P_size - L_total_size ;
 
@@ -3893,6 +3910,7 @@ void C_ProtocolBinary::set_body_values (int P_nb,
       break ;
     case E_TYPE_GROUPED:
       P_dest[L_i].m_value.m_val_number = P_orig[L_i].m_value.m_val_number ;
+      if (P_orig[L_i].m_value.m_val_number > 0) {
       ALLOC_TABLE(P_dest[L_i].m_sub_val,
 		  T_pBodyValue,
 		  sizeof(T_BodyValue),
@@ -3900,6 +3918,9 @@ void C_ProtocolBinary::set_body_values (int P_nb,
       set_body_values(P_dest[L_i].m_value.m_val_number,
 		      P_dest[L_i].m_sub_val,
 		      P_orig[L_i].m_sub_val);
+      } else {
+        P_dest[L_i].m_sub_val = NULL ;
+      }
       break ;
     default:
       GEN_FATAL(E_GEN_FATAL_ERROR, "Unsupported body type value");
@@ -4588,7 +4609,6 @@ C_MessageFrame* C_ProtocolBinary::decode_message(unsigned char *P_buffer,
   return (L_msg);
 }
 
-// C_ProtocolBinaryFrame::T_pMsgError
 C_ProtocolFrame::T_MsgError 
 C_ProtocolBinary::encode_message(C_MessageFrame *P_msg,
 				 unsigned char  *P_buffer,
@@ -4761,6 +4781,7 @@ C_MessageFrame* C_ProtocolBinary::create_new_message(void                *P_xml,
 	        GEN_DEBUG(1, "C_ProtocolBinary::create_new_message() " 
 			     << L_bodyName << " is  grouped element" );
 
+
                 if (process_grouped_type(L_bodyData, L_body_val_id, 
 				         &L_bodyVal) != 0) {
 		  GEN_ERROR(E_GEN_FATAL_ERROR,
@@ -4769,6 +4790,7 @@ C_MessageFrame* C_ProtocolBinary::create_new_message(void                *P_xml,
 		  L_msgOk = false ;
 		  break ;
 		}
+
 
                 // Add the grouped value in message
 		L_msg->set_body_value(&L_bodyVal);
@@ -5009,6 +5031,8 @@ int C_ProtocolBinary::process_grouped_type(C_XmlData *P_bodyData,
 //  GEN_DEBUG(1, "C_ProtocolBinary::process_grouped_type() Body Value pt  : " 
 //			     << P_pBodyVal );
 
+
+
   // Retrieve the grouped value list
   L_listGroupedVal = P_bodyData -> get_sub_data() ;
 
@@ -5020,7 +5044,7 @@ int C_ProtocolBinary::process_grouped_type(C_XmlData *P_bodyData,
 			<< L_nb_groupedVal );
 
     // Add the grouped type in the body value structure
-    set_body_value(P_body_grouped_val_id,
+    L_nRet = set_body_value(P_body_grouped_val_id,
 		   NULL,
 		   L_nb_groupedVal,
 		   P_pBodyVal);

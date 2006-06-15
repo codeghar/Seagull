@@ -361,11 +361,11 @@ void C_MessageBinary::encode (unsigned char* P_buffer,
   GEN_DEBUG(1, "C_MessageBinary::encode() start ");
 
   L_size_all = 0 ;
+  L_size_header = *P_size ;
 
   C_ProtocolFrame::T_MsgError L_error = C_ProtocolFrame::E_MSG_OK ;
 
   L_size_buffer = *P_size ;
-
 
   // start with header
   m_protocol->encode_header
