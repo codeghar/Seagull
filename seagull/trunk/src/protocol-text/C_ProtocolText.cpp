@@ -214,11 +214,11 @@ int C_ProtocolText::set_body_method() {
             set_body_decode_method(L_i,
                                    L_def_method_it->m_method,
                                    &C_MessageText::DecodeBodyWithContentLength,
-                                                  (void*)(L_it->second)->m_id);
+                                                  (void*)&((L_it->second)->m_id));
             set_encode_method(L_i,
                               L_def_method_it->m_method,
                               &C_MessageText::EncodeWithContentLength,
-                              (void*)(L_it->second)->m_id);
+                              (void*)&((L_it->second)->m_id));
           }
           break ;
         case E_BODY_METHOD_PARSE:
@@ -1845,7 +1845,7 @@ void C_ProtocolText::set_body_decode_method (int                     P_index,
   m_methods[P_index]->m_decode = P_method ;
   switch (P_type) {
   case E_BODY_METHOD_LENGTH:
-    (m_methods[P_index]->m_param_decode).m_id = (int) P_param ;
+    (m_methods[P_index]->m_param_decode).m_id =  *((int*)P_param) ;
     break ;
   case E_BODY_METHOD_PARSE:
     (m_methods[P_index]->m_param_decode).m_parser = (T_ParserFunction) P_param ;
@@ -1866,7 +1866,7 @@ void C_ProtocolText::set_encode_method (int                 P_index,
   m_methods[P_index]->m_encode = P_method ;
   switch (P_type) {
   case E_BODY_METHOD_LENGTH:
-    (m_methods[P_index]->m_param_encode).m_id = (int) P_param ;
+    (m_methods[P_index]->m_param_encode).m_id =  *((int*)P_param) ;
     break ;
   case E_BODY_METHOD_PARSE:
     (m_methods[P_index]->m_param_encode).m_parser = (T_ParserFunction) P_param ;
