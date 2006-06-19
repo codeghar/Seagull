@@ -494,6 +494,17 @@ seagull is /usr/local/bin/seagull</source>
           <p>The default section is generally used to create defense scenarios, so that
             Seagull can react when stress situations from the system under test 
             are encountered.</p>
+          <p>By default, Seagull will count "default" scenario sections as successful calls. You can
+          choose to count them as failed calls or simply ignore them. To do so, you need to add a 
+          "<code>behaviour</code>" attribute to the
+          default section. Values of the behaviour attribute can be either "ignore" or "failed". Example:</p>
+          <source><![CDATA[<default behaviour="ignore">
+  <receive channel="channel-1">
+    <primitive name="SCCP_USER_STATUS">
+    </primitive>
+  </receive>
+</default>]]></source>
+          <p></p>
           <p>The list of scenario commands that can be included in this section is 
             described in the <a href="#ref_scenario_commands">scenario command section</a>.</p>
         </section>
