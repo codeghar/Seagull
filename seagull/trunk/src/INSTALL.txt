@@ -21,8 +21,11 @@ To compile Seagull from the source:
 - Edit build.conf to fit your needs (default should be OK)
 - run "./build.ksh -target clean"
 - run "./build.ksh -target all"
-- Seagull binaries are in bin/: copy all in /usr/local/bin/
+- Seagull binaries are in build-x.y.z/: copy all of them in /usr/local/bin/
 - Add /usr/local/bin in your PATH environment variable 
   (eg. export "PATH=$PATH:/usr/local/bin")
 - Execution environment are in exe-env/XXX-env/, XXX being the protocol
+- Go in one execution environment, then "cd run", then start a server script
+  in a terminal session and a client script in another terminal session
+- Seagull is running!
 - From there, follow the documentation: http://gull.sourceforge.net/
