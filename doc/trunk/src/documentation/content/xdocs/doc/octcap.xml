@@ -16,6 +16,14 @@
       for each of those.</p>
     </section>
     <section>
+      <title>Compiling Seagull with OCTCAP support</title>
+      <p>By default, OCTCAP support is disabled when compiling Seagull. 
+			To enable OCTCAP support, you must uncomment the "HP OC TCAP transport library" 
+			section in build.conf file and recompile Seagull.</p>
+			<p>Also OCTCAP include files must be present on the system on which 
+			Seagull is compiled. It is advised to compile Seagull on the OCSS7 platform.</p>
+    </section>
+    <section>
       <title>Getting started with TCAP</title>
       <section>
         <title>First try</title>
@@ -635,10 +643,12 @@ End of scenario
 	 This dynamic library is delivered with Seagull. It will call function 
 	 from the correct library. To find the final library, it will use the 
 	 parameters set in the init-args field. In init-args, you can specify the following parameters:</p>
-	 <p>* flavour,</p>
-	 <p>* path (to the final library file),</p>
-	 <p>* library (name of the final library file).</p>
-	 <p>Only the flavour parameter is mandatory.</p>
+	 <ul>
+	 		 <li>flavour (possible values: WBB and AAA)</li>
+	 		 <li>path to the OCSS7's libSS7util.sl shared library (not necessary for OCSS7 >= 3.x - /opt/HP-AIN/SS7_WBB/sharedlib for OCSS7 2.2)</li>
+	 		 <li>library (name of the libSS7util shared library) - libSS7util.sl by default</li>
+	 </ul>
+	 <p>Only the flavour parameter is mandatory for OCTCAP.</p>
 	 <p/>
 	 <p>Then you can open one channel for the transport that you have defined.</p>
 	 <note>You can open only one TCAP channel !</note>
@@ -650,7 +660,7 @@ End of scenario
 	    <source><![CDATA[Example for ITU:
   <define entity="transport"
     name="trans-octcap"
-    file="libtrans_octcap32.so"
+    file="libtrans_octcap.so"
     create_function="create_ctransoctcap32_instance"
     delete_function="delete_ctransoctcap32_instance"
     init-args="flavour=WBB">
