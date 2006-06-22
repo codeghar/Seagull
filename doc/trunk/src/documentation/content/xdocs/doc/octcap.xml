@@ -20,7 +20,7 @@
       <p>By default, OCTCAP support is disabled when compiling Seagull. 
 			To enable OCTCAP support, you must uncomment the "HP OC TCAP transport library" 
 			section in build.conf file and recompile Seagull.</p>
-			<p>Also OCTCAP include files must be present on the system on which 
+			<p>In addition, OCTCAP include files must be present on the system on which 
 			Seagull is compiled. It is advised to compile Seagull on the OCSS7 platform.</p>
     </section>
     <section>
