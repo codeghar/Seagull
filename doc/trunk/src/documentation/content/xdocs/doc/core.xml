@@ -1270,13 +1270,59 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
       </section>
       <section id="config_dict">
         <title>Protocol dictionary</title>
-        <p>In order for Seagull to be versatile enough, messages and parameters of protocols
-        are described in an XML dictionary.</p>
+        <p>In Seagull, messages and parameters of protocols
+        are described in an XML dictionary. This allow a great flexibility to 
+        add new messages or parameters. You can create as many dictionary as you want
+        for example for specific flavor or version of a protocol.</p>
         <p>To specify the dictionary, use the -dico option in the command line:</p>
         <source> -dico ../config/[dictionary-name].xml </source>
         <p>To be able to create a multi-protocol scenario, you can specify several dictionaries:</p>
         <source> -dico ../config/[dictionary_1-name].xml ../config/[dictionary_2-name].xml</source>
-        <p>A dictionary contains several XML sections: types, header, body, dictionary:</p>
+        <p>A dictionary contains several XML sections: protocol, types, header, body, dictionary:</p>
+        <section>
+          <title>Protocol</title>
+          <p>"protocol": this is the top level section. Depending on the protocol, 
+          some attributes can be configured there:</p>
+          <ul>
+            <li>Common for all protocols
+              <ul>
+              <li><strong>name</strong>: a name used to identify the protocol in the config file</li>
+              <li><strong>type</strong>: can be "binary" (like Diameter), "binary-body-not-interpreted", "external-library" (like OCTCAP) or "text" (like XCAP or H248 text)</li>
+              <li><strong>use-transport-library</strong>: "trans-ip" (TCP or UDP), "trans-extsctp" for SCTP, "trans-octcap" for OCTCAP.</li>
+              </ul>
+            </li>
+            <li>binary type
+              <ul>
+              <li><strong>padding</strong> (optional): padding to be used for message length. A padding of 4 will make sure that the message size is a multiple of 4 octets.</li>
+              <li><strong>length</strong> (optional): by default, Seagull will include the headers to compute the message length. 
+              By putting length="header-excluded", Seagull will not include the headers to compute the message length.</li>
+              </ul>
+            </li>
+            <li>text type
+              <ul>
+              <li><strong>filter</strong>: specify a filter to be used when reading the XML scenario before sending it. 
+              Used to remove heading and trailing spaces or tabs, add additional CR/LF, ....
+              Example: "lib=libparser_h248.so;function=filter_h248"</li>
+              <li><strong>field-separator</strong>: specify the text sequence to be appended for each line in the XML scenario. 
+              Example: field-separator="\r\n" will replace the end of line of the scenario with "\r\n".</li>
+              <li><strong>body-separator</strong>: text sequence to be added between headers and body section. 
+              Example: body-separator="\r\n" for XCAP, body-separator="{" for H248 text.</li>
+              </ul>
+            </li>
+            <li>external-library type
+              <ul>
+              <li><strong>context-factory-constructor</strong>: to be completed</li> 
+              <li><strong>context-factory-destructor</strong>: to be completed</li> 
+              </ul>
+            </li>
+            <li>binary-body-not-interpreted type
+              <ul>
+              <li></li>
+              </ul>
+            </li>
+          </ul>
+          <fixme author="Olivier">Add context-factory explanations</fixme>
+        </section>
         <section>
           <title>Types</title>
           <p>"types" section contains all types needed for the protocol. An example of 
@@ -1286,6 +1332,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
           <title>Header</title>
           <p>"header" section contains the description of message header. An example of 
             the Types section for Diameter protocol is available <a href="diameter.html#Header">there</a>.</p>
+          <fixme author="Olivier">Add text / fielddef explanations (regexp for reception, format for construction)</fixme>
         </section>
         <section>
           <title>Body</title>
@@ -1294,10 +1341,32 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             the Types section for Diameter protocol is available <a href="diameter.html#Body">there</a>.</p>
         </section>
         <section>
+          <title>body-method</title>
+          <p>"body-method" section contains the methods to be used to parse the body. It is composed of several
+          "def-method" sections.</p>
+          <ul>
+            <li><strong>name</strong>: name of the body-method (can be anything)</li>
+            <li><strong>method</strong>: can be "length" (length of the body to be parsed is indicated in a parameter - see param) 
+            or "parser"</li>
+            <li><strong>param</strong>: for "length" method: specify the parameter to be used to indicate body length 
+            (example: param=Content-Length).
+            For "parser" method, indicate the library to be used as well as the function to be used 
+            (example: for XCAP: "lib=libparser_xml.so;function=parse_xml", for H248: "lib=libparser_h248.so;function=parse_h248"</li>
+          </ul>
+          <p>Example:</p>
+          <fixme author="Olivier">Add body-method example</fixme>
+        </section>
+        <section>
           <title>Dictionary</title>
-          <p>"dictionary" section contains all possible parameters
-          and command-synchro. An example of 
-            the Types section for Diameter protocol is available <a href="diameter.html#Dictionary">there</a>.</p>
+          <p>"dictionary" section contains all possible messages and parameters.</p>
+          <p>In addition, several attributes are available:</p>
+            <ul>
+            <li><strong>session-method</strong>: can be "field" (a session or "call" is identified
+            with a protocol field) or "open-id" (a session or "call" is identified with
+            the open id (eg a socket id in case of HTTP))</li>
+            <li><strong>session-id (optional)</strong>: only for "field" session-method: the field to be used to identify the session</li>
+            <li><strong>out-of-session-id (optional)</strong>: only for "field" session-method: the field to be used in backup of session-id</li>
+            </ul>
         </section>
       </section>
     </section>
