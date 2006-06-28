@@ -574,7 +574,7 @@ bool C_ExternalDataControl::analyze_data (char*P_line) {
 		  << "signed value = " << L_signed_value);
 	L_value->m_value.m_val_signed = L_signed_value ;
       } else {
-	GEN_ERROR(E_GEN_FATAL_ERROR, "empty field for number expected"
+	GEN_ERROR(E_GEN_FATAL_ERROR, "Field empty where number value was expected"
 		  << " in file ["
 		  << m_file_name << "]");
 	L_ret = false ;
@@ -606,7 +606,7 @@ bool C_ExternalDataControl::analyze_data (char*P_line) {
 		  << "unsigned value =" << L_unsigned_value);
 	L_value->m_value.m_val_number = L_unsigned_value ;
       } else {
-	GEN_ERROR(E_GEN_FATAL_ERROR, "empty field for number expected"
+	GEN_ERROR(E_GEN_FATAL_ERROR, "Field empty where number value was expected"
 		  << " in file ["
 		  << m_file_name << "]");
       }

@@ -373,7 +373,7 @@ T_ValueData valueFromString (char *P_value, T_TypeType P_type, int &P_result) {
 	L_value.m_value.m_val_signed = L_signed_value ;
       }
     } else {
-      GEN_ERROR(E_GEN_FATAL_ERROR, "empty field for number expected");
+      GEN_ERROR(E_GEN_FATAL_ERROR, "Field empty where a signed number is expected");
       P_result = -1 ;
     }
   } 
@@ -402,7 +402,7 @@ T_ValueData valueFromString (char *P_value, T_TypeType P_type, int &P_result) {
 	L_value.m_value.m_val_number = L_unsigned_value ;
       }
     } else {
-      GEN_ERROR(E_GEN_FATAL_ERROR, "empty field for number expected");
+      GEN_ERROR(E_GEN_FATAL_ERROR, "Field empty where a number is expected");
       P_result = -1 ; 
     }
   }
@@ -474,7 +474,7 @@ T_ValueData valueFromString (char *P_value, T_TypeType P_type, int &P_result) {
 	L_value.m_value.m_val_signed_64 = L_signed_value ;
       }
     } else {
-      GEN_ERROR(E_GEN_FATAL_ERROR, "empty field for number64 expected");
+      GEN_ERROR(E_GEN_FATAL_ERROR, "Field empty where a signed number64 is expected");
       P_result = -1 ;
     }
   } 
@@ -503,7 +503,7 @@ T_ValueData valueFromString (char *P_value, T_TypeType P_type, int &P_result) {
 	L_value.m_value.m_val_number_64 = L_unsigned_value ;
       }
     } else {
-      GEN_ERROR(E_GEN_FATAL_ERROR, "empty field for number64 expected");
+      GEN_ERROR(E_GEN_FATAL_ERROR, "Field empty where a number64 is expected");
       P_result = -1 ; 
     }
   }
