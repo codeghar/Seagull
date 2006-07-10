@@ -26,6 +26,8 @@
 
 <protocol name="xcap-protocol" 
           type="text"
+          filter="lib=libparser_xml.so;function=filter_xml"
+          field-separator="\r\n"
           body-separator="\r\n">
 
 <configuration-parameters>

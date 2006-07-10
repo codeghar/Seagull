@@ -340,6 +340,12 @@ T_SockAddrStorage* C_SocketListen::get_source_address() {
   return(&(m_source_addr_info->m_addr));
 }
 
+// UDP
+T_SocketType C_SocketListen::get_trans_type() {
+  return(m_type);
+}
+// UDP
+
 C_SocketServer::C_SocketServer(C_SocketListen *P_listen, 
 			       int P_channel_id,
                                size_t P_read_buf_size,
@@ -347,6 +353,15 @@ C_SocketServer::C_SocketServer(C_SocketListen *P_listen,
   : C_SocketWithData(P_channel_id, P_read_buf_size, P_segm_buf_size) {
   SOCKET_DEBUG(0, "C_SocketServer::C_SocketServer() id=" << m_socket_id);
   m_listen_sock = P_listen ;
+  // UDP 
+  m_type = m_listen_sock->get_trans_type();
+  if (m_type == E_SOCKET_UDP_MODE) {
+    // std::cerr << "m_socket_id before " << m_socket_id << std::endl;
+    m_socket_id = m_listen_sock->get_id();
+    // std::cerr << "m_socket_id " << m_socket_id << std::endl;
+  }
+  // UDP
+  // std::cerr << "m_type " << m_type << std::endl;
 }
 
 C_SocketServer::~C_SocketServer() {
@@ -361,12 +376,17 @@ int C_SocketServer::_open(size_t P_buffer_size,
 
   SOCKET_DEBUG(0, "C_SocketServer::_open()");
 
+  // UDP
+  if (m_type == E_SOCKET_TCP_MODE) {
+
   L_size = SOCKADDR_IN_SIZE(m_listen_sock->get_source_address());
   memset(&m_accepted_addr, 0, L_size);
 
   m_socket_id = call_accept (m_listen_sock->get_id(), 
 			     (sockaddr *)(void *)&m_accepted_addr,
 			     &L_size);
+  
+  } // UDP
 
   m_protocol = P_protocol ;
 
@@ -412,6 +432,9 @@ int C_SocketClient::_open(T_pOpenStatus  P_status,
 
   if (L_rc == 0) {
     set_properties() ;
+    // UDP
+  if (m_type == E_SOCKET_TCP_MODE) {
+
     L_rc = call_connect (m_socket_id, 
 		    (struct sockaddr*)(void*)&(m_remote_addr_info->m_addr),
 		    SOCKADDR_IN_SIZE(&(m_remote_addr_info->m_addr))) ;
@@ -431,6 +454,15 @@ int C_SocketClient::_open(T_pOpenStatus  P_status,
       m_state = E_SOCKET_STATE_READY ;
       *P_status = E_OPEN_OK ;
     }
+  } else {
+    
+    // UDP
+    // bind
+       m_state = E_SOCKET_STATE_READY ;
+       *P_status = E_OPEN_OK ;
+  }
+  // UDP
+
   }
   return (L_rc);
 }
@@ -507,6 +539,7 @@ C_Socket* C_SocketWithData::process_fd_set (fd_set* P_rSet,
 
     if (FD_ISSET(m_socket_id, P_rSet)) {
       L_rc = call_read(m_socket_id, L_buf, m_read_buf_size);
+      // UDP
       if (L_rc <= 0) {
 	SOCKET_DEBUG(0, "C_SocketWithData::process_fd_set() CLOSED");
 	P_event->m_type = C_TransportEvent::E_TRANS_CLOSED ;

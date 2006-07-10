@@ -27,6 +27,8 @@
 #include "ProtocolData.hpp"
 #include "dlfcn_t.hpp"
 #include "ParserFrame.hpp"
+#include "FilterFrame.hpp"
+
 #include <regex.h>
 
 
@@ -43,8 +45,11 @@ C_ProtocolText::C_ProtocolText() : C_ProtocolTextFrame() {
   m_message_decode_map->clear();
 
   m_body_separator              = NULL ;
-
   m_body_separator_size         = 0    ;
+
+  m_field_separator             = NULL ;
+  m_field_separator_size        = 0    ;
+
   m_message_type_field_id       = -1   ;
   m_session_id_id               = -1   ;
   m_session_method              = &C_MessageText::getSessionFromField ;
@@ -52,15 +57,12 @@ C_ProtocolText::C_ProtocolText() : C_ProtocolTextFrame() {
   m_nb_methods                  = 0    ;
   m_methods                     = NULL ; 
 
-
   m_nb_fields_desc_table        = 0    ;
 
   NEW_VAR (m_message_name_list, T_NameAndIdList()) ;
-
-  // m_names_table             = NULL    ;
   m_names_fields            = NULL    ;
-
   m_def_method_list         = NULL    ;  
+  m_filter_function         = NULL    ;
 
 }
 
@@ -69,9 +71,12 @@ void  C_ProtocolText::analyze_data( C_XmlData            *P_def,
                                     T_pConfigValueList    P_config_value_list,
                                     T_pContructorResult   P_res) {
 
-  T_ConstructorResult  L_res = E_CONSTRUCTOR_OK ;
+  T_ConstructorResult  L_res               = E_CONSTRUCTOR_OK ;
 
-  char        *L_body_separator    = NULL ;
+  char                *L_body_separator    = NULL             ;
+  char                *L_field_separator   = NULL             ;
+  char                *L_filter_method     = NULL             ;
+
 
   GEN_DEBUG(1, "C_ProtocolText::C_ProtocolText() start");
 
@@ -102,6 +107,50 @@ void  C_ProtocolText::analyze_data( C_XmlData            *P_def,
       }
 
       if (L_res == E_CONSTRUCTOR_OK) {
+        // field-separator
+        L_field_separator = P_def->find_value((char *)"field-separator");
+        if (L_field_separator == NULL) {
+          GEN_ERROR(E_GEN_FATAL_ERROR, 
+                    "No field separator for protocol definition");
+          L_res = E_CONSTRUCTOR_KO ;
+        } else {
+          // std::cerr << "L_field_separator " << strlen(L_field_separator)
+          //          << std::endl;
+          if (strlen(L_field_separator) != 0) {
+            set_field_separator(L_field_separator);
+          }
+        }
+      }
+
+      if (L_res == E_CONSTRUCTOR_OK) {
+        m_field_body_separator_size = m_body_separator_size + m_field_separator_size ;
+        if (m_field_body_separator_size != 0 ) {
+          ALLOC_TABLE(m_field_body_separator, 
+                      char*, 
+                      sizeof(char), 
+                      (m_field_body_separator_size+1));
+
+          if (m_field_separator_size != 0 ) {
+            strcat(m_field_body_separator, m_field_separator);
+          }
+
+          if (m_body_separator_size != 0) {
+            strcat(m_field_body_separator, m_body_separator);
+          }
+        }
+      }
+  
+
+      if (L_res == E_CONSTRUCTOR_OK) {
+        // filter method
+        L_filter_method = P_def->find_value((char *)"filter");
+        if (L_filter_method != NULL) {
+          L_res =  (set_filter_method (L_filter_method) == 0) 
+            ? E_CONSTRUCTOR_OK : E_CONSTRUCTOR_KO ;
+        }
+      }
+
+      if (L_res == E_CONSTRUCTOR_OK) {
         *P_res = (xml_interpretor(P_def,P_name,P_config_value_list) == 0) 
           ? E_CONSTRUCTOR_OK : E_CONSTRUCTOR_KO ;
         if (*P_res == E_CONSTRUCTOR_OK) {
@@ -122,6 +171,49 @@ void  C_ProtocolText::analyze_data( C_XmlData            *P_def,
 
 }
 
+int C_ProtocolText::set_filter_method (char *P_filter_method) {
+  int                         L_ret          = 0             ;
+  char                       *L_lib_name     = NULL          ;
+  char                       *L_fun_name     = NULL          ;
+  void                       *L_library_handle               ; 
+  void                       *L_function                     ;
+
+  L_lib_name = find_text_value(P_filter_method,(char*)"lib")  ;
+  if (L_lib_name == NULL ) {
+    GEN_ERROR(E_GEN_FATAL_ERROR,
+	      "no name for the library for the filter (lib=...)");
+    L_ret = -1;
+  } else {
+    L_library_handle = dlopen(L_lib_name, RTLD_LAZY);
+    if (L_library_handle == NULL) {
+      GEN_ERROR(E_GEN_FATAL_ERROR, 
+                "Unable to open library file [" 
+                << L_lib_name
+                << "] error [" << dlerror() << "]");
+      L_ret = -1 ;
+    }
+  }
+
+  L_fun_name = find_text_value(P_filter_method,(char*)"function") ;
+  if (L_fun_name == NULL ) {
+    GEN_ERROR(E_GEN_FATAL_ERROR,
+	      "no name for the function for the parser (function=...)");
+    L_ret = -1;
+  } else {
+    if (L_library_handle) { 
+      L_function = dlsym(L_library_handle, L_fun_name);
+      if (L_function == NULL) {
+        GEN_ERROR(E_GEN_FATAL_ERROR, "Error [" << dlerror() << "]");
+        L_ret = -1 ;
+      } else {
+        m_filter_function = (T_FilterFunction) L_function ;
+      }
+    }
+  }
+
+  return (L_ret);
+
+}
 
 int C_ProtocolText::analyze_body_method_param (int  P_index,
                                                char *P_body_method_param) {
@@ -214,7 +306,7 @@ int C_ProtocolText::set_body_method() {
             set_body_decode_method(L_i,
                                    L_def_method_it->m_method,
                                    &C_MessageText::DecodeBodyWithContentLength,
-                                                  (void*)&((L_it->second)->m_id));
+                                   (void*)&((L_it->second)->m_id));
             set_encode_method(L_i,
                               L_def_method_it->m_method,
                               &C_MessageText::EncodeWithContentLength,
@@ -331,6 +423,17 @@ C_ProtocolText::~C_ProtocolText() {
 
   m_body_separator              = NULL ;
   m_body_separator_size         = 0    ;
+  m_field_separator             = NULL ;
+  m_field_separator_size        = 0    ;
+
+  m_field_body_separator        = NULL ;
+  m_field_body_separator_size   = 0    ;
+
+  if (m_field_body_separator_size != 0 ) {
+    FREE_TABLE(m_field_body_separator)   ;
+    m_field_body_separator_size   = 0    ;
+  }
+
   m_message_type_field_id       = -1   ;
   m_session_id_id               = -1   ;
   m_session_method              = &C_MessageText::getSessionFromField ;
@@ -358,7 +461,7 @@ C_ProtocolText::~C_ProtocolText() {
   DELETE_VAR(m_stats);
 
 
-  if(!m_def_method_list -> empty()) {
+  if((m_def_method_list) && (!m_def_method_list -> empty())) {
     m_def_method_list -> erase (m_def_method_list->begin(), m_def_method_list->end());
   }
   DELETE_VAR (m_def_method_list) ;
@@ -375,6 +478,10 @@ C_MessageFrame* C_ProtocolText::decode_message(unsigned char *P_buffer,
   int                              L_msg_id          ;
 
   L_msg = (C_MessageText*)create_new_message(NULL);
+
+
+  //  std::cerr << "decode_message L_size    *** " << *P_size << std::endl; 
+
 
   (*P_size) = L_msg -> decode (P_buffer, *P_size, P_error);
 
@@ -397,7 +504,7 @@ C_MessageFrame* C_ProtocolText::decode_message(unsigned char *P_buffer,
     break ;
   default:
     GEN_ERROR(E_GEN_FATAL_ERROR, 
-  	      "Unrecognized message received") ;
+  	      "==> Unrecognized message received") ;
     DELETE_VAR(L_msg);
     break ;
   }
@@ -1381,6 +1488,7 @@ int   C_ProtocolText::set_field_value(C_MessageText *P_msg,
     L_field_desc = m_fields_desc_table[P_id] ;
     
     L_string_value = P_msg->get_text_value(L_field_desc->m_header_body) ;
+
     for (L_regexp_it = (L_field_desc->m_reg_exp_lst)->begin();
          L_regexp_it != (L_field_desc->m_reg_exp_lst)->end();
          L_regexp_it++) {
@@ -1421,9 +1529,11 @@ int   C_ProtocolText::set_field_value(C_MessageText *P_msg,
     }
 
     if (L_ret != -1) {
-      P_msg->set_text_value(L_field_desc->m_header_body,P_value,L_start,L_end);
+      L_ret = P_msg->set_text_value(L_field_desc->m_header_body,P_value,L_start,L_end);
     }
   }
+
+  FREE_TABLE(L_string_value);
 
   GEN_DEBUG(1, "C_ProtocolText::set_field_value() end");  
   return (L_ret);
@@ -1433,15 +1543,21 @@ char* C_ProtocolText::get_field_value(C_MessageText *P_msg,
                                       int P_id,
                                       C_RegExp  *P_regexp_data) {
 
-  char                      *L_value      = NULL ;
-  T_pFieldDesc               L_field_desc = NULL ;
+  char                      *L_value        = NULL ;
+  T_pFieldDesc               L_field_desc   = NULL ;
+  char                      *L_string_value = NULL ;
 
   GEN_DEBUG(1, "C_ProtocolText::get_field_value() start");  
 
   if (P_id <= (m_nb_body_fields + m_nb_header_fields)) {
     L_field_desc = m_fields_desc_table[P_id] ;
-    L_value = P_regexp_data->execute(P_msg->get_text_value(L_field_desc->m_header_body));
+    L_string_value = P_msg->get_text_value(L_field_desc->m_header_body) ;
+    if (L_string_value != NULL ) {
+      L_value = P_regexp_data->execute(L_string_value);
+    }
   }
+
+  FREE_TABLE(L_string_value);
 
   GEN_DEBUG(1, "C_ProtocolText::get_field_value() end");  
 
@@ -1452,10 +1568,13 @@ char* C_ProtocolText::get_field_value(C_MessageText *P_msg,
 
 char* C_ProtocolText::get_field_value(C_MessageText *P_msg, int P_id) {
 
-  char                      *L_value      = NULL ;
-  T_pFieldDesc               L_field_desc = NULL ;
-  T_RegExpLst::iterator      L_regexp_it         ; 
-  C_RegExp*                  L_cRegExp    = NULL ; 
+  char                      *L_value         = NULL ;
+  T_pFieldDesc               L_field_desc    = NULL ;
+  T_RegExpLst::iterator      L_regexp_it            ; 
+  C_RegExp*                  L_cRegExp       = NULL ; 
+  char                       *L_string_value = NULL ;
+
+
 
   GEN_DEBUG(1, "C_ProtocolText::get_field_value() start");  
 
@@ -1465,9 +1584,13 @@ char* C_ProtocolText::get_field_value(C_MessageText *P_msg, int P_id) {
          L_regexp_it != (L_field_desc->m_reg_exp_lst)->end();
          L_regexp_it++) {
       L_cRegExp = *L_regexp_it ;
-      L_value = L_cRegExp->execute(P_msg->get_text_value(L_field_desc->m_header_body));
 
-      if (L_value != NULL) break ;
+      L_string_value = P_msg->get_text_value(L_field_desc->m_header_body) ;
+      if (L_string_value != NULL ) {
+        L_value = L_cRegExp->execute(L_string_value);
+        FREE_TABLE(L_string_value);
+        if (L_value != NULL) break ;
+      }
     }
   }
 
@@ -1481,11 +1604,12 @@ char* C_ProtocolText::get_field_value_to_check(C_MessageText *P_msg,
                                                int P_id,
                                                int *P_size) {
 
-  char                          *L_value      = NULL ;
-  T_pFieldDesc                   L_field_desc = NULL ;
-  T_RegExpLst::iterator          L_regexp_it         ; 
-  C_RegExp*                      L_cRegExp    = NULL ;
-  int                            L_size       = -1   ;
+  char                          *L_value        = NULL ;
+  T_pFieldDesc                   L_field_desc   = NULL ;
+  T_RegExpLst::iterator          L_regexp_it           ; 
+  C_RegExp*                      L_cRegExp      = NULL ;
+  int                            L_size         = -1   ;
+  char                          *L_string_value = NULL ;
 
   GEN_DEBUG(1, "C_ProtocolText::get_field_value_to_check() start");  
 
@@ -1496,8 +1620,11 @@ char* C_ProtocolText::get_field_value_to_check(C_MessageText *P_msg,
          L_regexp_it++) {
       L_cRegExp = *L_regexp_it ;
 
-      L_value = L_cRegExp->execute(P_msg->get_text_value(L_field_desc->m_header_body),
+      L_string_value = P_msg->get_text_value(L_field_desc->m_header_body) ;
+      L_value = L_cRegExp->execute(L_string_value,
                                    &L_size);
+
+      FREE_TABLE(L_string_value);
       if (L_value != NULL) {
         *P_size = L_size ;
         break ;
@@ -1751,11 +1878,17 @@ C_MessageText* C_ProtocolText::create(C_ProtocolText *P_protocol,
 
   if (P_header != NULL) {
 
-    L_buffer_header = format_buffer(P_header);
+    if (m_filter_function) {
+      L_buffer_header = (*m_filter_function)(P_header);
+    } else {
+      L_buffer_header = P_header ;
+    }
     if (L_buffer_header == NULL) {
       L_result = -1 ;
     } else {
-      *L_value_header = valueFromString(L_buffer_header, E_TYPE_STRING , L_result);
+      // std::cerr << "L_buffer_header " << L_buffer_header << std::endl;
+      *L_value_header = valueFromString(L_buffer_header, 
+                                        E_TYPE_STRING , L_result);
     }
   }
 
@@ -1770,10 +1903,16 @@ C_MessageText* C_ProtocolText::create(C_ProtocolText *P_protocol,
   L_value_body->m_value.m_val_binary.m_size = 0 ;
   L_value_body->m_value.m_val_binary.m_value = NULL ;
   if (P_body != NULL) {
-    L_buffer_body = format_buffer(P_body);
+
+    if (m_filter_function) {
+      L_buffer_body = (*m_filter_function)(P_body);
+    } else {
+      L_buffer_body = P_body ;
+    }
     if (L_buffer_body == NULL) {
       L_result = -1 ;
     } else {
+      // std::cerr << "L_buffer_body " << L_buffer_body << std::endl;
       *L_value_body = valueFromString(L_buffer_body, E_TYPE_STRING , L_result);
     }
   }
@@ -1808,6 +1947,12 @@ void C_ProtocolText::set_body_separator (char*  P_body_separator) {
   m_body_separator = P_body_separator ;
   m_body_separator_size = strlen(m_body_separator);
 }
+
+void C_ProtocolText::set_field_separator (char*  P_field_separator) {
+  m_field_separator = P_field_separator ;
+  m_field_separator_size = strlen(m_field_separator);
+}
+
 
 void C_ProtocolText::set_message_type_field_id (int P_id) {
   m_message_type_field_id = P_id ;
@@ -1888,166 +2033,8 @@ void C_ProtocolText::use_open_id () {
   m_session_method = &C_MessageText::getSessionFromOpenId ;
 }
 
-char* C_ProtocolText::skip_blank(char    *P_ptr, 
-                                 char    *P_buffer, 
-                                 size_t   P_size_buffer,
-                                 size_t  *P_size) {
-
-  char     *L_blank_ptr    = NULL     ;
-  char     *L_new_ptr      = P_ptr    ;
 
 
-  L_blank_ptr = P_ptr ;
-  while (((L_blank_ptr) && (L_blank_ptr < (P_buffer + P_size_buffer))) &&
-         ((*L_blank_ptr == ' ') ||
-          (*L_blank_ptr == '\t'))) { L_blank_ptr++ ; }
-  if (L_blank_ptr != P_ptr) {
-    *(P_size) = (L_blank_ptr - P_ptr) ;
-    L_new_ptr = L_blank_ptr ;
-  }
-
-  return (L_new_ptr) ;
-}
-
-
-char * C_ProtocolText::format_buffer(char* P_buffer) {
-
-  size_t    L_size         = 0        ;
-
-  size_t    L_size_buffer  = 0        ;
-  size_t    L_size_end     = 0        ;
-  
-  char     *L_pos          = NULL     ;
-  char     *L_ptr          = P_buffer ;
-
-  char     *L_result       = NULL     ;
-  char     *L_new          = NULL     ;
-
-  bool      L_skip_blank   = true     ;
-  size_t    L_size_blank   = 0        ;
-
-
-  if ((P_buffer != NULL) && 
-      ((L_size_buffer = strlen(P_buffer)) > 0 )) {
-
-    L_size_end = L_size_buffer ;
-
-    ALLOC_TABLE(L_result, 
-		char*, 
-		sizeof(char), 
-		(2*L_size_buffer));
-    
-
-    if ((strchr(L_ptr,'\n')) == NULL) {
-
-      L_new = L_result ;
-      L_size = L_size_buffer ;
-
-      // skip blank
-      if (L_skip_blank) {
-        L_ptr = skip_blank(L_ptr,P_buffer, L_size_buffer, &L_size_blank) ;
-        L_size -= L_size_blank ;
-      }
-
-      memcpy(L_new, L_ptr, L_size);
-      L_new += (L_size - 1) ;
-      if (*L_new != '\r') {
-        L_new += 1 ;
-        *L_new = '\r' ;
-      }
-      L_new += 2 ;
-      *L_new = '\0' ;
-      *(L_new-1) = '\n' ;
-
-    } else {
-      // if '\n' exists
-
-      while(   (L_ptr) 
-            && (L_pos = strchr(L_ptr,'\n')) != NULL) {
-
-        L_size_blank = 0 ;
-        // L_size : from start to '\n' not included
-	L_size = L_pos - L_ptr ;
-        // skip blank
-        if (L_skip_blank) {
-
-          L_ptr = skip_blank(L_ptr,P_buffer, L_size_buffer, &L_size_blank) ;
-          L_size -= L_size_blank ;
-          L_size_end -= L_size_blank ;
-
-        }
-
-        if (L_new == NULL) { L_new = L_result ; } else { L_new += 1 ; }
-	memcpy(L_new, L_ptr, L_size);
-	L_new += (L_size - 1) ;
-        // test end needed ? for L_ptr
-        if ((L_pos + 1) <= (P_buffer+L_size_buffer)) { 
-          L_ptr = L_pos + 1 ; 
-        } else { 
-          L_ptr = NULL ; 
-        }
-
-        L_size_end -= (L_size + 1) ;
-
-        if (*L_new != '\r') {
-          L_new += 1 ;
-          *(L_new) = '\r' ;
-        }
-        L_new += 1 ;
-        *(L_new) = '\n' ;
-
-      } // while
-
-        
-      // ctrl the end of buffer
-      if (L_size_end > 0) {
-
-        L_size = L_size_end ;
-
-        // skip blank
-        if (L_skip_blank) {
-
-          L_ptr = skip_blank(L_ptr,P_buffer, L_size_buffer, &L_size_blank) ;
-          L_size -= L_size_blank ;
-        }
-
-        if (L_size) {
-          L_new +=1 ;
-
-          memcpy(L_new, L_ptr, L_size);
-          L_new += (L_size-1) ;
-        
-          if (*L_new != '\r') {
-            L_new += 1 ;
-            *(L_new) = '\r' ;
-          }
-          L_new += 2 ;
-          *L_new = '\0' ;
-          *(L_new-1) = '\n' ;
-        } else {
-          // add final '\0' 
-          L_new += 1 ;
-          *L_new = '\0' ;
-        }
-      } else {
-        // add final '\0' 
-        L_new += 1 ;
-        *L_new = '\0' ;
-        
-      }
-    }
-  }
-
-  if (L_result != NULL) {
-    L_ptr = L_result ;
-    while ((L_ptr = strstr(L_ptr, "\r\n\r\n")) != NULL ) {
-      memmove(L_ptr+2, L_ptr+4, strlen(L_ptr+4));
-      L_ptr += 2 ;
-    }
-  }
-
-  return (L_result);
-}
 
 
 

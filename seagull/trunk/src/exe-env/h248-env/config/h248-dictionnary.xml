@@ -1,0 +1,113 @@
+<!--
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+ (c)Copyright 2006 Hewlett-Packard Development Company, LP.
+
+-->
+
+<!-- h248/megaco-dictionnary definition         -->
+<!-- text protocol definition                   -->
+<!-- seagull configuration file set             -->
+
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<protocol name="h248-text" 
+          type="text"
+          filter="lib=libparser_h248.so;function=filter_h248"
+          field-separator=""
+          body-separator="{">
+
+<configuration-parameters>
+</configuration-parameters>
+
+<types>
+</types>
+
+
+<body-method>
+
+   <defmethod name="body-to-be-parsed"
+              method="parser"
+              param="lib=libparser_h248.so;function=parse_h248">
+   </defmethod>
+
+</body-method>
+
+
+<header name="message"
+        type="type">
+   <fielddef name="type">
+     <regexp name="message-header-1" 
+             expr="[[:space:]]*MEGACO\/1[[:space:]]*[[]([^]]+)[]][:]{0,1}[0-9]*[[:space:]]*([^ ]+)[[:space:]]*[=][[:space:]]*([0-9]*)[[:space:]]*"
+             nbexpr="4"
+             subexpr="2"> 
+     </regexp>
+     <regexp name="message-header-2" 
+             expr="[[:space:]]*[!]\/1[[:space:]]*[[]([^]]+)[]][:]{0,1}[0-9]*[[:space:]]*([^ ]+)[[:space:]]*[=][[:space:]]*([0-9]*)[[:space:]]*"
+             nbexpr="4"
+             subexpr="2"> 
+     </regexp>
+   </fielddef>
+
+   <fielddef name="transaction-id">
+     <regexp name="trans-id"
+             expr="[Tt][Rr][Aa][Nn][Ss][Aa][Cc][Tt][Ii][Oo][Nn][[:space:]]*[=][[:space:]]*([0-9]+)"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+     <regexp name="reply-id"
+             expr="[Rr][Ee][Pp][Ll][Yy][[:space:]]*[=][[:space:]]*([0-9]+)"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+
+</header>
+
+<body name="data" type="data-type">
+   <fielddef name="add-id">
+     <regexp name="add-id"
+             expr="[Aa][Dd][Dd][  ]*[=][  ]*([!-}]*)[[:space:]]*[{]"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+
+</body>
+
+
+<dictionary session-method="field" 
+            session-id="transaction-id" 
+            out-of-session-id="transaction-id">
+
+<!--
+<dictionary session-method="open-id">
+-->
+
+  <message name="Transaction"></message>
+  <message name="Reply"></message>
+
+</dictionary>
+
+</protocol>
+
+
+
+
+
+
+
+

@@ -17,20 +17,20 @@
  *
  */
 
-#ifndef _PARSER_HPP_
-#define _PARSER_HPP_
+#ifndef _PARSER_H248_HPP_
+#define _PARSER_H248_HPP_
 
 #include "C_ProtocolFrame.hpp"
 
 
-extern "C" C_ProtocolFrame::T_MsgError parse_xml (char   *P_buf,
-                                                  size_t *P_size,
-                                                  char   *P_buf_header,
-                                                  size_t  P_size_header);
+extern "C" C_ProtocolFrame::T_MsgError parse_h248 (char   *P_buf,
+                                                   size_t *P_size,
+                                                   char   *P_buf_header,
+                                                   size_t  P_size_header);
 
 
-extern "C" char * filter_xml(char* P_buffer) ;
+extern "C" char * filter_h248(char* P_buffer) ;
 
 
-#endif // _PARSER_HPP_
+#endif // _PARSER_H248_HPP_
 

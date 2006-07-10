@@ -145,6 +145,9 @@ public:
 			   size_t          P_size_buf,
 			   struct timeval *P_time) ;
   T_SockAddrStorage * get_source_address () ;
+  // UDP
+  T_SocketType        get_trans_type() ;        ;
+  
   
 protected:
   

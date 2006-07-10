@@ -33,6 +33,7 @@
 
 #include "C_ContextFrame.hpp"
 #include "ParserFrame.hpp"
+#include "FilterFrame.hpp"
 
 class C_MessageText ;
 
@@ -213,6 +214,7 @@ private:
   int analyze_sessions_id_from_xml (C_XmlData *P_def) ;
 
   int analyze_body_method_param (int P_index, char *P_body_method_param);
+  int set_filter_method (char *P_filter_method) ;
   char* find_text_value (char *P_buf, char *P_field);
 
   int analyze_body_method_from_xml (C_XmlData *P_data, 
@@ -233,10 +235,6 @@ private:
   T_pFieldDesc check_field(T_pFieldDef P_field_def, bool P_header);
 
   int new_id () ;
-
-  char* format_buffer(char *P_buffer) ;
-
-  char* skip_blank(char *P_ptr, char*P_buffer, size_t P_size_buffer, size_t *P_size) ;
 
 
   char                            *m_header_name              ;
@@ -281,11 +279,19 @@ private:
   char                            *m_body_separator            ;
   size_t                           m_body_separator_size       ;
 
+  char                            *m_field_separator           ;
+  size_t                           m_field_separator_size      ;
+
+  char                            *m_field_body_separator      ;
+  size_t                           m_field_body_separator_size ;
+
+
   int                              m_message_type_field_id     ;
   int                              m_session_id_id             ;
 
   T_SessionMethod                  m_session_method            ;
 
+  T_FilterFunction                 m_filter_function           ;
 
   typedef union _union_param {
     int                 m_id ;
@@ -303,6 +309,7 @@ private:
   int                m_nb_methods ;
 
   void set_body_separator (char*  P_body_separator) ;
+  void set_field_separator (char*  P_field_separator) ;
   void set_message_type_field_id (int P_id) ;
   void set_session_id_id (int  P_id) ;
   void use_open_id () ;

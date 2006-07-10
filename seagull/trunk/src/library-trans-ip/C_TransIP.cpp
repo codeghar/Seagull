@@ -339,6 +339,8 @@ size_t C_TransIP::send_buffer (int             P_id,
 
   GEN_DEBUG(0, "C_TransIP::send_buffer() id OK");
 
+  // UDP
+
   if ((L_rc = call_send(P_id, P_data, P_size, 0) < 0)) {
     GEN_ERROR(0, "send failed [" << L_rc << "] [" << strerror(errno) << "]");
     switch (errno) {
@@ -483,6 +485,7 @@ int C_TransIP::open (int              P_channel_id,
     C_SocketListen *L_Socket ;
 
     NEW_VAR(L_Socket, C_SocketListen(m_trans_type, P_Addr, P_channel_id, m_read_buffer_size, m_decode_buffer_size));
+    // std::cerr << "m_trans_type " << m_trans_type << std::endl;
     L_rc = L_Socket->_open(m_buffer_size, P_protocol) ;
     if (L_rc == 0) {
       L_socket_created = L_Socket ;
@@ -498,6 +501,8 @@ int C_TransIP::open (int              P_channel_id,
     C_SocketClient *L_Socket ;
 
     NEW_VAR(L_Socket, C_SocketClient(m_trans_type, P_Addr, P_channel_id, m_read_buffer_size, m_decode_buffer_size));
+
+    // std::cerr << "m_trans_type Client" << m_trans_type << std::endl;
     L_rc = L_Socket->_open(P_status, m_buffer_size, P_protocol) ;
     if (L_rc == 0) {
       L_socket_created = L_Socket ;
@@ -946,7 +951,9 @@ void C_TransIP::decode_from_protocol (C_Socket *P_socket) {
 
     L_protocol->log_buffer((char*)"received", L_data, L_data_size);
 
+
     L_session_buf = L_decode -> get_buffer(L_data, &L_data_size);
+
 
     L_current_data = L_session_buf ;
     L_tmp_size = L_data_size ;
@@ -995,7 +1002,7 @@ void C_TransIP::decode_from_protocol (C_Socket *P_socket) {
 	  // TO BE DONE : 
 	  // more complex synchronization algorithm !!!!!
 	  GEN_ERROR(E_GEN_FATAL_ERROR, 
-		    "Unrecognized message received") ;
+		    "*** Unrecognized message received ***") ;
 	  L_decode->reset_buffer() ;
 	  L_data_size = 0 ;
 	  L_ret = 0 ;

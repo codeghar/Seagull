@@ -4582,7 +4582,9 @@ C_MessageFrame* C_ProtocolBinary::decode_message(unsigned char *P_buffer,
   size_t           L_size = *P_size ;
 
   //  NEW_VAR(L_msg, C_MessageBinary(this));
-    L_msg=(C_MessageBinary*)create_new_message(NULL);
+  L_msg=(C_MessageBinary*)create_new_message(NULL);
+
+  // std::cerr << "L_size    " << L_size << std::endl; 
 
   (*P_size) = L_msg -> decode(P_buffer, L_size, P_error);
   // C_ProtocolBinaryFrame::E_MSG_OK:
@@ -4600,10 +4602,6 @@ C_MessageFrame* C_ProtocolBinary::decode_message(unsigned char *P_buffer,
 	      "Unrecognized message received") ;
     DELETE_VAR(L_msg);
     break ;
-  }
-
-  //  if ((*P_error) != C_ProtocolBinaryFrame::E_MSG_OK) 
-  if ((*P_error) != C_ProtocolFrame::E_MSG_OK) {
   }
 
   return (L_msg);

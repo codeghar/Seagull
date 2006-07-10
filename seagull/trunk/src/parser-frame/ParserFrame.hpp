@@ -23,6 +23,8 @@
 #include "C_ProtocolFrame.hpp"
 
 typedef C_ProtocolFrame::T_MsgError (*T_ParserFunction) (char   *P_buf,
-                                                         size_t *P_siz);
+                                                         size_t *P_siz,
+                                                         char   *P_buf_header,
+                                                         size_t  P_size_header);
 
 #endif // _PARSER_FRAME_

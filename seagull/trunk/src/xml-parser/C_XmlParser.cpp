@@ -134,8 +134,12 @@ void C_XmlParser::add_sub_xml_data () {
 
 void C_XmlParser::init () {
   GEN_DEBUG(1, "C_XmlParser::init() start");
-  m_lex_string_value = (char*) malloc (1024) ;
-  m_lex_max_string_size = 1024 ;
+
+  // m_lex_string_value = (char*) malloc (1024) ;
+  // m_lex_max_string_size = 1024 ;
+
+  m_lex_string_value = (char*) malloc (2048) ;
+  m_lex_max_string_size = 2048 ;
   NEW_VAR(m_pXmldata, C_XmlData((char*)""));
   GEN_DEBUG(1, "C_XmlParser::init() end");
 }

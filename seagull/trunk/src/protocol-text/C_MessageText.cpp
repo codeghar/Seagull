@@ -29,17 +29,21 @@
 #include "ReceiveMsgContext.h"
 #include "C_CallContext.hpp"
 
-#define m_body_separator_size       m_protocol->m_body_separator_size
-#define m_body_separator            m_protocol->m_body_separator
-#define m_message_type_field_id     m_protocol->m_message_type_field_id
-#define m_session_id_id             m_protocol->m_session_id_id
-#define m_session_method            m_protocol->m_session_method
+#define m_body_separator_size           m_protocol->m_body_separator_size
+#define m_body_separator                m_protocol->m_body_separator
+#define m_message_type_field_id         m_protocol->m_message_type_field_id
+#define m_session_id_id                 m_protocol->m_session_id_id
+#define m_session_method                m_protocol->m_session_method
+#define m_field_separator_size          m_protocol->m_field_separator_size
+#define m_field_separator               m_protocol->m_field_separator
 
+#define m_field_body_separator_size     m_protocol->m_field_body_separator_size
+#define m_field_body_separator          m_protocol->m_field_body_separator
 
-#define m_names_fields              m_protocol->m_names_fields
+#define m_names_fields                  m_protocol->m_names_fields
 
-#define m_methods                   m_protocol->m_methods
-#define m_nb_methods                m_protocol->m_nb_methods
+#define m_methods                       m_protocol->m_methods
+#define m_nb_methods                    m_protocol->m_nb_methods
 
 
 C_ProtocolFrame::T_MsgError C_MessageText::EncodeWithContentLength (int P_index) {
@@ -92,9 +96,12 @@ C_ProtocolFrame::T_MsgError C_MessageText::DecodeBodyWithParser (int P_index,
   size_t                      L_size_body = *P_size ;
 
   // std::cerr << "DecodeBodyWithParser start "  << std::endl;
-  // std::cerr << "L_size_body is " << L_size_body << std::endl;
+  // std::cerr << "DecodeBodyWithParser L_size_body is " << L_size_body << std::endl;
 
-  L_error = (*(((m_methods[P_index])->m_param_decode).m_parser))(P_ptr, P_size);
+  L_error = (*(((m_methods[P_index])->m_param_decode).m_parser))(P_ptr, 
+                                                                 P_size,
+                                                                 (char *)m_header->m_value.m_val_binary.m_value,
+                                                                 (size_t)m_header->m_value.m_val_binary.m_size);
   if (L_error == C_ProtocolFrame::E_MSG_OK) {
     L_size_body -= *P_size ;
     ALLOC_VAR(m_body, T_pValueData, sizeof(T_ValueData));
@@ -194,6 +201,9 @@ C_MessageText::C_MessageText(C_ProtocolText *P_protocol,
   GEN_DEBUG(1, "C_MessageText::C_MessageText() start");
   m_protocol = P_protocol ;
 
+  m_session_id = NULL     ;
+
+
   m_header   = P_header   ;
   m_body     = P_body     ;
 
@@ -205,8 +215,10 @@ C_MessageText::C_MessageText(C_ProtocolText *P_protocol,
     m_id = -1 ;
   } else {
     // decode id
+    // std::cerr << "L_message_type    " << L_message_type << std::endl;
     m_id = m_protocol->get_message_id(L_message_type);
     *P_id = m_id ;
+    // std::cerr << "m_id " << m_id << std::endl;
   }
   FREE_TABLE(L_message_type);
   GEN_DEBUG(1, "C_MessageText::C_MessageText() end");
@@ -227,13 +239,18 @@ int C_MessageText::set_text_value(bool P_header_body, T_pValueData P_value,
   int            L_delta_data_size = 0 ;
   int            L_new_size = 0 ;
 
+  // std::cerr << "m_size "   << P_value->m_value.m_val_binary.m_size << std::endl;
+
   if (L_data) {
     // TO DO
     if (P_value->m_type == E_TYPE_STRING) {
 
       if (L_old_data_size != (int)P_value->m_value.m_val_binary.m_size) { 
         L_delta_data_size = P_value->m_value.m_val_binary.m_size - L_old_data_size ;
+
+        // std::cerr << "L_delta_data_size " << L_delta_data_size << std::endl;
         L_new_size = L_data->m_value.m_val_binary.m_size + L_delta_data_size ;
+        // std::cerr << "L_new_size " << L_new_size << std::endl;
         if (L_new_size > 0) {
           ALLOC_TABLE(L_new_value,
                       unsigned char*,
@@ -250,7 +267,7 @@ int C_MessageText::set_text_value(bool P_header_body, T_pValueData P_value,
         } else {
           L_ret = -1 ;
         }
-      } 
+      }
       if (L_ret == 0) {
         memcpy(L_new_value+P_start,
                P_value->m_value.m_val_binary.m_value,
@@ -264,6 +281,8 @@ int C_MessageText::set_text_value(bool P_header_body, T_pValueData P_value,
     L_ret = -1 ;
   }
 
+  // std::cerr << "L_ret " << L_ret << std::endl;
+
   GEN_DEBUG(1, "C_MessageText::set_text_value() end");
   return (L_ret);
 }
@@ -271,12 +290,24 @@ int C_MessageText::set_text_value(bool P_header_body, T_pValueData P_value,
 
 char* C_MessageText::get_text_value(bool P_header_body) {
 
-  T_pValueData L_value ;
+  T_pValueData     L_value                   ;
+  char            *L_result       = NULL     ;
+
   GEN_DEBUG(1, "C_MessageText::get_text_value() start");
 
   L_value = (P_header_body == true) ? m_header : m_body ;
-  return ((L_value != NULL) ? (char*)L_value->m_value.m_val_binary.m_value
-          : NULL);
+
+  if (L_value != NULL) {
+    ALLOC_TABLE(L_result, 
+                char*, 
+                sizeof(char), 
+                (L_value->m_value.m_val_binary.m_size+1));
+    memcpy(L_result, 
+           (char*)L_value->m_value.m_val_binary.m_value,
+           L_value->m_value.m_val_binary.m_size) ;
+    L_result[L_value->m_value.m_val_binary.m_size] = 0 ;
+  } 
+  return (L_result) ;
 }
 
 
@@ -740,7 +771,7 @@ unsigned long C_MessageText::decode(unsigned char               *P_buf,
   if (memcmp((P_buf + (P_siz - m_body_separator_size)),
              m_body_separator,
              m_body_separator_size) == 0) {
-
+    
     ALLOC_TABLE(L_buf, unsigned char*, sizeof(unsigned char), P_siz +1);
     memcpy(L_buf, P_buf, P_siz);
     L_buf[P_siz] = 0 ;
@@ -752,11 +783,8 @@ unsigned long C_MessageText::decode(unsigned char               *P_buf,
 
   L_wbuf = (L_buf == NULL) ? P_buf : L_buf ;
 
-  // find separator
-  L_ptr = strstr((char*)L_wbuf,
-                 (char*)"\r\n\r\n");
-
-  //                  (char*)m_body_separator);
+  // find body separator
+  L_ptr = strstr((char*)L_wbuf, m_field_body_separator);
 
   if (L_ptr != NULL) {
 
@@ -764,8 +792,8 @@ unsigned long C_MessageText::decode(unsigned char               *P_buf,
     m_header->m_type = E_TYPE_STRING;
     L_header_size_decoded = ((unsigned char*)L_ptr - L_wbuf) ;
 
-    // temporary add the \r\n 
-    L_header_size_decoded += 2 ;
+    //    L_header_size_decoded += m_body_separator_size ;
+    L_header_size_decoded += m_field_separator_size ;
 
     m_header->m_value.m_val_binary.m_size = L_header_size_decoded ;
     ALLOC_TABLE(m_header->m_value.m_val_binary.m_value,
@@ -779,19 +807,15 @@ unsigned long C_MessageText::decode(unsigned char               *P_buf,
 
     L_remaining -= L_header_size_decoded ;
     L_remaining -= m_body_separator_size ;
-    //L_remaining -= (2*m_body_separator_size) ;
 
-
-    //L_ptr += m_body_separator_size ;
-    //L_ptr += (2*m_body_separator_size) ;
 
     // temporary
-    L_ptr += 4 ; // \r\n\r\n
+    // L_ptr += 4 ; // \r\n\r\n
+    L_ptr += m_field_body_separator_size ; // \r\n\r\n
 
     if (!L_buf) { P_buf[(P_siz-1)] = L_char ; }
 
     while (L_index < m_nb_methods) {
-      //      std::cerr << "L_remaining = " << L_remaining << std::endl ;
       (*P_error)  =  ((this)->*((m_methods[L_index])->m_decode))(L_index, L_ptr, &L_remaining) ;
       if ((*P_error) == C_ProtocolFrame::E_MSG_OK) break ;
       L_index ++ ;
@@ -814,13 +838,16 @@ unsigned long C_MessageText::decode(unsigned char               *P_buf,
     case C_ProtocolFrame::E_MSG_ERROR_DECODING:
       break ;
     case C_ProtocolFrame::E_MSG_ERROR_DECODING_SIZE_LESS:
+      L_remaining += L_header_size_decoded ;
+      L_remaining += m_body_separator_size ;
       break ;
     default:
       break ;
     }
 
   } else {
-    *P_error = C_ProtocolFrame::E_MSG_ERROR_DECODING_SIZE_LESS  ;
+    *P_error = C_ProtocolFrame::E_MSG_ERROR_DECODING_SIZE_LESS ;
+    if (!L_buf) { P_buf[(P_siz-1)] = L_char ; }
   }
 
 
