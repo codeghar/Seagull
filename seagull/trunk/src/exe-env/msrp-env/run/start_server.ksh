@@ -20,5 +20,5 @@
 
 export LD_LIBRARY_PATH=/usr/local/bin
 
-seagull -conf ../config/conf.server.xml -dico ../config/mrsp-dictionnary.xml -scen ../scenario/server.xml -log ../logs/server.log -llevel ET
+seagull -conf ../config/conf.server.xml -dico ../config/msrp-dictionnary.xml -scen ../scenario/server.xml -log ../logs/server.log -llevel ET
 
