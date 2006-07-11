@@ -644,7 +644,8 @@ End of scenario
 	 from the correct library. To find the final library, it will use the 
 	 parameters set in the init-args field. In init-args, you can specify the following parameters:</p>
 	 <ul>
-	 		 <li>flavour (possible values: WBB and AAA)</li>
+	 		 <li>flavour (possible values: WBB, WAA for ITU (sccp_service_kind is set to TCX_SCCP_SERVICE_ITU_WB) and AAA, ABB 
+       for ANSI (sccp_service_kind is set to TCX_SCCP_SERVICE_REGULAR))</li>
 	 		 <li>path to the OCSS7's libSS7util.sl shared library (not necessary for OCSS7 >= 3.x - /opt/HP-AIN/SS7_WBB/sharedlib for OCSS7 2.2)</li>
 	 		 <li>library (name of the libSS7util shared library) - libSS7util.sl by default</li>
 	 </ul>
