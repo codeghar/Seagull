@@ -96,7 +96,8 @@ char* C_RegExp::execute(char *P_buffer) {
   
 
   if (L_buffer) {
-    L_error = regexec(&m_internalRegExp, L_buffer, MAX_MATCH, L_pmatch, REG_EXTENDED | REG_NEWLINE);
+    // L_error = regexec(&m_internalRegExp, L_buffer, MAX_MATCH, L_pmatch, REG_EXTENDED | REG_NEWLINE);
+    L_error = regexec(&m_internalRegExp, L_buffer, MAX_MATCH, L_pmatch, REG_EXTENDED);
     if (L_error == 0) {
       for(L_i=0; L_i < MAX_MATCH; L_i++) {
         if(L_pmatch[L_i].rm_eo == -1) break ;
@@ -157,8 +158,8 @@ int C_RegExp::execute(char* P_buffer, int *P_start, int *P_end) {
   
 
   if (L_buffer) {
-    L_error = regexec(&m_internalRegExp, L_buffer, 
-                      MAX_MATCH, L_pmatch, REG_EXTENDED | REG_NEWLINE);
+    // L_error = regexec(&m_internalRegExp, L_buffer, MAX_MATCH, L_pmatch, REG_EXTENDED | REG_NEWLINE);
+    L_error = regexec(&m_internalRegExp, L_buffer, MAX_MATCH, L_pmatch, REG_EXTENDED);
     if (L_error == 0) {
       for(L_i=0; L_i < MAX_MATCH; L_i++) {
         if(L_pmatch[L_i].rm_eo == -1) break ;
@@ -214,7 +215,8 @@ char* C_RegExp::execute(char* P_buffer, int *P_size) {
   }
   
   if (L_buffer) {
-    L_error = regexec(&m_internalRegExp, L_buffer, MAX_MATCH, L_pmatch, REG_EXTENDED | REG_NEWLINE);
+    // L_error = regexec(&m_internalRegExp, L_buffer, MAX_MATCH, L_pmatch, REG_EXTENDED | REG_NEWLINE);
+    L_error = regexec(&m_internalRegExp, L_buffer, MAX_MATCH, L_pmatch, REG_EXTENDED);
     if (L_error == 0) {
       for(L_i=0; L_i < MAX_MATCH; L_i++) {
         if(L_pmatch[L_i].rm_eo == -1) break ;
