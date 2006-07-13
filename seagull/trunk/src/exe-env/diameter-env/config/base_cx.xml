@@ -33,6 +33,7 @@
 </types>
 
 <header name="command" length="msg-length" type="cmd-code">
+  <start-length></start-length> 
   <fielddef name="protocol-version" size="1" unit="octet"></fielddef>
   <fielddef name="msg-length" size="3" unit="octet"> </fielddef>
   <fielddef name="flags" size="1" unit="octet"> </fielddef>
