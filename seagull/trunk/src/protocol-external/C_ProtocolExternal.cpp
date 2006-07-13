@@ -3027,7 +3027,7 @@ char* C_ProtocolExternal::is_variable(char* P_varibleString) {
       ALLOC_TABLE(L_value,
   		  char*, 
   		  sizeof(char),
-  		  L_value_size);
+  		  L_value_size+1);
       memcpy(L_value, L_search, L_value_size);
       L_value[L_value_size] = 0 ;
     }    
