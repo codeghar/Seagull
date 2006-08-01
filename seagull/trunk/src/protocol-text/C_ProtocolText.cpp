@@ -139,6 +139,7 @@ void  C_ProtocolText::analyze_data( C_XmlData            *P_def,
           if (m_body_separator_size != 0) {
             strcat(m_field_body_separator, m_body_separator);
           }
+
         }
       }
   

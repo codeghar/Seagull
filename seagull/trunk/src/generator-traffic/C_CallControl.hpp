@@ -38,6 +38,7 @@
 #include "list_t.hpp"
 #include "map_t.hpp"
 
+
 #include "gen_operation_t.hpp"
 
 #include "ProtocolData.hpp"
@@ -60,7 +61,7 @@ public:
 		   T_pCallContext> T_CallMap, *T_pCallMap ;
 
   typedef map_t<int, T_pCallContext> T_SuspendMap, *T_pSuspendMap ;
-  
+
    C_CallControl(C_GeneratorConfig    *P_config, 
 		 T_pC_ScenarioControl  P_scenControl,
 		 C_ChannelControl     *P_channel_ctrl);
@@ -131,6 +132,13 @@ protected:
 
   unsigned long        m_open_timeout_ms ;
 
+  unsigned long          m_max_retrans                    ;
+  unsigned long          m_retrans_enabled                ;
+  C_CallContext::T_pRetransContextList  *m_retrans_context_list           ;
+
+  unsigned long         *m_retrans_delay_values           ;
+  size_t                 m_nb_retrans_delay_values        ;
+  
   // TaskController related methods
   T_GeneratorError TaskProcedure();
   T_GeneratorError InitProcedure();
@@ -151,6 +159,12 @@ protected:
   void stopServer () ;
 
   T_exeCode execute_scenario_cmd (T_pCallContext P_callContext, bool P_resume=false) ;
+
+  void messageRetransControl () ;
+  T_exeCode execute_scenario_cmd_retrans (int P_index, T_pCallContext  P_callContext);
+  void insert_retrans_list(T_pCallContext  P_callContext) ;
+
+  void stopRetrans (T_pCallContext P_callContext) ;
 
   void makeCallContextAvailable (T_pCallContext *P_pCallCxt) ;
   T_pCallContext  makeCallContextUnavailable (C_Scenario *P_scen);

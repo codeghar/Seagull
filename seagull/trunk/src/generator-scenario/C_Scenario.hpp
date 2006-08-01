@@ -170,6 +170,10 @@ typedef struct _xml_cmd_scenario {
   T_pCmdAction         m_pre_act_table  ;
   T_pCmdAction         m_post_act_table ;
 
+  unsigned long        m_retrans_delay  ;
+  unsigned long        m_retrans_index  ;
+  unsigned long        m_retrans_delay_index  ;
+
 }  T_cmd_scenario,
   *T_pCmd_scenario ;
 
@@ -184,6 +188,7 @@ public:
 	     C_ExternalDataControl *P_external_data_control,
 	     T_exeCode              P_exe_code,	     
 	     char                  *P_behaviour,
+             bool                   P_retrans_enabled,
 	     unsigned int           P_check_mask     = 0, 
 	     T_CheckBehaviour       P_checkBehaviour 
 	     = E_CHECK_BEHAVIOUR_WARNING
@@ -198,7 +203,9 @@ public:
 		   int                 P_channel_id,
 		   T_pC_MessageFrame   P_msg,
 		   int                 P_nb_pre_action,
-		   T_pCmdAction        P_pre_act_table);
+		   T_pCmdAction        P_pre_act_table,
+                   unsigned long       P_retrans_delay);
+
 
   // define post actions for the last command added
   size_t define_post_actions (int          P_nb_post_action,
@@ -212,8 +219,13 @@ public:
 
   bool check_msg_received (T_pReceiveMsgContext P_rcvMsg) ;
 
-  T_exeCode          execute_cmd (T_pCallContext P_callCtxt, bool P_resume);
+  T_exeCode          execute_cmd (T_pCallContext P_callCtxt, 
+                                  bool P_resume);
+
   T_CallContextState first_state();
+
+  T_exeCode          execute_cmd_retrans (int P_index, T_pCallContext P_callCtxt);
+  void update_retrans_delay_cmd (size_t P_nb, unsigned long *P_table) ;
 
   void update_wait_cmd (size_t P_nb, unsigned long *P_table) ;
 
@@ -227,6 +239,10 @@ public:
   void delete_stats () ;
 
   T_exeCode    get_exe_end_code()  ;
+
+  int                  get_nb_retrans();
+
+  T_pCmd_scenario      get_commands() ;
 
   friend class C_ScenarioStats ;
 
@@ -263,8 +279,17 @@ private:
 
   T_BehaviourScenario m_behaviour ;
 
+  bool                  m_retrans_enabled  ;
+  int                   m_nb_retrans            ;
+
 } ;
 
 typedef C_Scenario *T_pC_Scenario ;
 
 #endif // _C_SCENARIO_H
+
+
+
+
+
+

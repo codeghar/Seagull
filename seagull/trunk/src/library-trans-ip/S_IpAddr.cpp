@@ -33,10 +33,19 @@ void  clear_IpAddr(T_pIpAddr P_IpAddr) {
     P_IpAddr->m_umode = E_IP_USAGE_MODE_UNKNOWN ;
     P_IpAddr->m_buffer_size = DEFAULT_IP_BUFFER_SIZE ;
     P_IpAddr->m_open = NULL ;
+
+
     P_IpAddr->m_value = NULL ;
     P_IpAddr->m_port = -1 ;
     P_IpAddr->m_ip = NULL ;
-    memset(&(P_IpAddr->m_addr), 0, sizeof(T_SockAddrStorage));  ;
+    memset(&(P_IpAddr->m_addr), 0, sizeof(T_SockAddrStorage));
+
+    P_IpAddr->m_open_src = NULL ;
+    P_IpAddr->m_value_src = NULL ;
+    P_IpAddr->m_port_src = -1 ;
+    P_IpAddr->m_ip_src = NULL ;
+    memset(&(P_IpAddr->m_addr_src), 0, sizeof(T_SockAddrStorage));
+
   }
 }
 
@@ -47,11 +56,18 @@ void  delete_IpAddr(T_pIpAddr *P_IpAddr) {
     L_IpAddr = *P_IpAddr ;
 
     FREE_TABLE(L_IpAddr->m_open);
+
     FREE_TABLE(L_IpAddr->m_value);
     FREE_TABLE(L_IpAddr->m_ip);
-    FREE_VAR(L_IpAddr);
 
+    FREE_TABLE(L_IpAddr->m_open_src);
+    FREE_TABLE(L_IpAddr->m_value_src);
+    FREE_TABLE(L_IpAddr->m_ip_src);
+
+
+    FREE_VAR(L_IpAddr);
     *P_IpAddr = NULL ;
+
   }
   
 }

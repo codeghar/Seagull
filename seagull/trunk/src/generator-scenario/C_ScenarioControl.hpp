@@ -47,6 +47,7 @@ typedef struct _counter_def_t {
 } T_CounterDef, *T_pCounterDef ;
 
 typedef set_t<unsigned long> T_waitValuesSet, *T_pWaitValuesSet ;
+typedef set_t<unsigned long> T_retransDelayValuesSet, *T_pRetransDelayValuesSet ;
 
 class C_ReadControl ; // prevent from circular include
 
@@ -96,7 +97,10 @@ public:
   int  memory_used () ; 
 
   T_pWaitValuesSet get_wait_values () ;
+  T_pRetransDelayValuesSet get_retrans_delay_values () ;
   void             update_wait_cmd (size_t P_nb, unsigned long *P_table);
+
+  void  update_retrans_delay_cmd (size_t P_nb, unsigned long *P_table);
 
   friend iostream_output& operator<<(iostream_output&, C_ScenarioControl&);
 
@@ -109,6 +113,7 @@ public:
 
   int           get_nb_scenario   ();
   int           get_nb_default_scenario () ;
+  int           get_max_nb_retrans () ;
 
 private:
 
@@ -157,7 +162,10 @@ private:
   bool m_external_data_used ;
 
   // wait values
-  T_pWaitValuesSet   m_wait_values ;
+  T_pWaitValuesSet           m_wait_values ;
+
+  bool                       m_retrans_enabled      ;
+  T_pRetransDelayValuesSet   m_retrans_delay_values ;
 
   // generator model
   C_ProtocolControl  *m_protocol_ctrl  ;
@@ -228,6 +236,7 @@ private:
 typedef C_ScenarioControl *T_pC_ScenarioControl ;
 
 #endif // _C_SCENARIO_CONTROL_H
+
 
 
 

@@ -67,7 +67,9 @@ const char* config_opt_table[] = {
   "files-no-timestamp",
   "call-timeout-behaviour-abort",
   "call-open-timeout-ms",
-  "execute-check-action"
+  "execute-check-action",
+  "max-retrans",
+  "retrans-enabled"
 };
 
 static const char _check_level_char [] = {
@@ -292,9 +294,11 @@ C_GeneratorConfig::C_GeneratorConfig (int P_argc, char** P_argv) {
   m_call_timeout_beh_abr   = DEF_CALL_TIMEOUT_BEH_ABRT ;
 
   m_execute_check_action   = DEF_EXECUTE_CHECK_ACTION ;
+  m_open_timeout           = DEF_OPEN_TIMEOUT     ;
 
+  m_max_retrans        = DEF_MAX_RETRANS       ;
+  m_retrans_enabled    = DEF_RETRANS_ENABLED   ;
 
-  m_open_timeout           = DEF_OPEN_TIMEOUT ;
 
   m_call_rate_scale = DEF_CALL_RATE_SCALE ;
 
@@ -405,6 +409,10 @@ bool  C_GeneratorConfig::get_call_timeout_beh_abr () {
 
 bool  C_GeneratorConfig::get_execute_check_action () {
   return (m_execute_check_action) ;
+}
+
+bool  C_GeneratorConfig::get_retrans_enabled () {
+  return (m_retrans_enabled) ;
 }
 
 
@@ -659,6 +667,25 @@ bool C_GeneratorConfig::set_value (T_GeneratorConfigOption P_opt,
     break ;
 
 
+  case E_CFG_OPT_MAX_RETRANS :
+    m_max_retrans = strtoul_f(P_value, &L_end_str, 10) ;
+    if (L_end_str[0] != '\0') { // not a number
+      L_ret = false ;
+    }
+    break ;
+
+  case E_CFG_OPT_RETRANS_ENABLED:
+
+    if(strcmp(P_value, (char *)"true") == 0) {
+      m_retrans_enabled = true ;
+    } else {
+      if(strcmp(P_value, (char *)"false") != 0) {
+	L_ret = false ;
+      }
+    }
+    break ;
+
+
   default:
     L_ret = false ;
     break ;
@@ -753,6 +780,11 @@ bool C_GeneratorConfig::get_value (T_GeneratorConfigOption  P_opt,
   case E_CFG_OPT_OPEN_TIMEOUT :
     *P_val = m_open_timeout ;
     break ;
+
+  case E_CFG_OPT_MAX_RETRANS :
+    *P_val = m_max_retrans ;
+    break ;
+
 
   default:
     L_ret = false ;

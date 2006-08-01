@@ -212,6 +212,12 @@ void C_Socket::set_properties() {
 		    &L_linger, sizeof (L_linger)) < 0) {
       SOCKET_ERROR(1, "Unable to set SO_LINGER option");
     }
+
+    // non blocking mode (for connect only ?)
+    L_flags = call_fcntl(m_socket_id, F_GETFL , NULL);
+    L_flags |= O_NONBLOCK;
+    call_fcntl(m_socket_id, F_SETFL , L_flags);
+
   }
 
   // size of recv buf
@@ -229,9 +235,9 @@ void C_Socket::set_properties() {
   }
 
   // non blocking mode (for connect only ?)
-  L_flags = call_fcntl(m_socket_id, F_GETFL , NULL);
-  L_flags |= O_NONBLOCK;
-  call_fcntl(m_socket_id, F_SETFL , L_flags);
+  // L_flags = call_fcntl(m_socket_id, F_GETFL , NULL);
+  // L_flags |= O_NONBLOCK;
+  // call_fcntl(m_socket_id, F_SETFL , L_flags);
 
 }
 
@@ -259,6 +265,14 @@ size_t C_SocketListen::received_buffer (unsigned char  *P_data,
   return (0); 
 }
 
+T_SockAddrStorage* C_SocketListen::get_remote_sockaddr_ptr() {
+  return (NULL);
+}
+
+tool_socklen_t* C_SocketListen::get_len_remote_sockaddr_ptr() {
+  return (NULL);
+}
+
 int C_SocketListen::_open (size_t P_buffer_size, 
 			   C_ProtocolBinaryFrame *P_protocol) {
 
@@ -271,7 +285,7 @@ int C_SocketListen::_open (size_t P_buffer_size,
 			  P_protocol) ;
 
    if (L_rc == 0) {
-  
+
      set_properties() ;
 
      /* bind the socket to the newly formed address */
@@ -319,20 +333,20 @@ C_Socket* C_SocketListen::process_fd_set (fd_set           *P_rSet,
                                      m_read_buf_size, m_segm_buf_size));
     L_ret = L_socket->_open(m_buffer_size, m_protocol) ;
     if (L_ret == 0) {
-      SOCKET_DEBUG(0, "C_SocketWithData::process_fd_set() CNX");
+      SOCKET_DEBUG(0, "C_SocketListen::process_fd_set() CNX");
       P_event->m_type = C_TransportEvent::E_TRANS_CONNECTION ;
       P_event->m_channel_id = m_channel_id ;
       P_event->m_id = L_socket->get_id() ;
     } else {
-      SOCKET_DEBUG(0, "C_SocketWithData::process_fd_set() NOEVENT open failed");
+      SOCKET_DEBUG(0, "C_SocketListen::process_fd_set() NOEVENT open failed");
       DELETE_VAR(L_socket);
       P_event->m_type = C_TransportEvent::E_TRANS_NO_EVENT ;
     }
   } else {
-    SOCKET_DEBUG(0, "C_SocketWithData::process_fd_set() NOEVENT");
+    SOCKET_DEBUG(0, "C_SocketListen::process_fd_set() NOEVENT");
     P_event->m_type = C_TransportEvent::E_TRANS_NO_EVENT ;
   }
-  
+
   return (L_socket);
 }
 
@@ -340,11 +354,9 @@ T_SockAddrStorage* C_SocketListen::get_source_address() {
   return(&(m_source_addr_info->m_addr));
 }
 
-// UDP
 T_SocketType C_SocketListen::get_trans_type() {
   return(m_type);
 }
-// UDP
 
 C_SocketServer::C_SocketServer(C_SocketListen *P_listen, 
 			       int P_channel_id,
@@ -353,15 +365,60 @@ C_SocketServer::C_SocketServer(C_SocketListen *P_listen,
   : C_SocketWithData(P_channel_id, P_read_buf_size, P_segm_buf_size) {
   SOCKET_DEBUG(0, "C_SocketServer::C_SocketServer() id=" << m_socket_id);
   m_listen_sock = P_listen ;
-  // UDP 
+  m_source_udp_addr_info = NULL ;
   m_type = m_listen_sock->get_trans_type();
-  if (m_type == E_SOCKET_UDP_MODE) {
-    // std::cerr << "m_socket_id before " << m_socket_id << std::endl;
-    m_socket_id = m_listen_sock->get_id();
-    // std::cerr << "m_socket_id " << m_socket_id << std::endl;
-  }
-  // UDP
-  // std::cerr << "m_type " << m_type << std::endl;
+}
+
+C_SocketServer::C_SocketServer(T_SocketType P_type, 
+			       T_pIpAddr    P_addr, 
+			       int          P_channel_id,
+                               size_t       P_read_buf_size,
+                               size_t       P_segm_buf_size)
+  : C_SocketWithData(P_type,
+                     P_addr,
+                     P_channel_id, 
+                     P_read_buf_size, 
+                     P_segm_buf_size) {
+  m_listen_sock = NULL ;
+  m_source_udp_addr_info = P_addr ;     
+  SOCKET_DEBUG(0, "C_SocketServer::C_SocketServer() id=" << m_socket_id);
+}
+
+int C_SocketServer::_open_udp (size_t P_buffer_size, 
+			   C_ProtocolBinaryFrame *P_protocol) {
+
+   int		     L_rc          ; /* system calls return value storage */
+
+   SOCKET_DEBUG(0, "C_SocketServer::_open_udp()");
+
+   L_rc = C_Socket::_open(get_domain(m_source_udp_addr_info), 
+			  P_buffer_size,
+			  P_protocol) ;
+
+   if (L_rc == 0) {
+
+     m_protocol = P_protocol ;
+     
+     m_buffer_size = P_buffer_size ;
+
+     set_properties() ;
+
+     /* bind the socket to the newly formed address */
+     L_rc = call_bind(m_socket_id, 
+		 (sockaddr *)(void *)&(m_source_udp_addr_info->m_addr),
+		 SOCKADDR_IN_SIZE(&(m_source_udp_addr_info->m_addr)));
+   /* check there was no error */
+     if (L_rc) {
+       SOCKET_ERROR(1, "bind [" << strerror(errno) << "]");
+     } else {
+        m_remote_sockaddr         = m_source_udp_addr_info->m_addr;
+        m_len_remote_sockaddr     = SOCKADDR_IN_SIZE(&(m_source_udp_addr_info->m_addr));
+        m_remote_sockaddr_ptr     = &m_remote_sockaddr ;
+        m_len_remote_sockaddr_ptr = &m_len_remote_sockaddr ;
+        m_state = E_SOCKET_STATE_READY ;
+     }
+   }
+   return (L_rc);
 }
 
 C_SocketServer::~C_SocketServer() {
@@ -376,17 +433,13 @@ int C_SocketServer::_open(size_t P_buffer_size,
 
   SOCKET_DEBUG(0, "C_SocketServer::_open()");
 
-  // UDP
-  if (m_type == E_SOCKET_TCP_MODE) {
-
   L_size = SOCKADDR_IN_SIZE(m_listen_sock->get_source_address());
   memset(&m_accepted_addr, 0, L_size);
-
-  m_socket_id = call_accept (m_listen_sock->get_id(), 
-			     (sockaddr *)(void *)&m_accepted_addr,
-			     &L_size);
   
-  } // UDP
+  m_socket_id = call_accept (m_listen_sock->get_id(), 
+                             (sockaddr *)(void *)&m_accepted_addr,
+                             &L_size);
+  
 
   m_protocol = P_protocol ;
 
@@ -432,37 +485,44 @@ int C_SocketClient::_open(T_pOpenStatus  P_status,
 
   if (L_rc == 0) {
     set_properties() ;
-    // UDP
-  if (m_type == E_SOCKET_TCP_MODE) {
+    if (m_type == E_SOCKET_TCP_MODE) {
 
-    L_rc = call_connect (m_socket_id, 
-		    (struct sockaddr*)(void*)&(m_remote_addr_info->m_addr),
-		    SOCKADDR_IN_SIZE(&(m_remote_addr_info->m_addr))) ;
-    if (L_rc) {
-      if (errno != EINPROGRESS) {
-	SOCKET_ERROR(1, "connect failed [" 
-		     << L_rc << "][" 
-		     << strerror(errno) << "]");
-	*P_status = E_OPEN_FAILED ;
+      L_rc = call_connect (m_socket_id, 
+                           (struct sockaddr*)(void*)&(m_remote_addr_info->m_addr),
+                           SOCKADDR_IN_SIZE(&(m_remote_addr_info->m_addr))) ;
+      if (L_rc) {
+        if (errno != EINPROGRESS) {
+          SOCKET_ERROR(1, "connect failed [" 
+                       << L_rc << "][" 
+                       << strerror(errno) << "]");
+          *P_status = E_OPEN_FAILED ;
+        } else {
+          m_state = E_SOCKET_STATE_INPROGESS ;
+          *P_status = E_OPEN_DELAYED ;
+          L_rc = 0 ;
+        }
+        
       } else {
-	m_state = E_SOCKET_STATE_INPROGESS ;
-	*P_status = E_OPEN_DELAYED ;
-	L_rc = 0 ;
+        m_state = E_SOCKET_STATE_READY ;
+        *P_status = E_OPEN_OK ;
       }
-      
     } else {
-      m_state = E_SOCKET_STATE_READY ;
-      *P_status = E_OPEN_OK ;
+      L_rc = call_bind(m_socket_id, 
+                       (sockaddr *)(void *)&(m_remote_addr_info->m_addr_src),
+                       SOCKADDR_IN_SIZE(&(m_remote_addr_info->m_addr_src)));
+     
+       if (L_rc) {
+        SOCKET_ERROR(1, "bind [" << strerror(errno) << "]");
+       } else {
+        m_remote_sockaddr         = m_remote_addr_info->m_addr;
+        m_len_remote_sockaddr     = SOCKADDR_IN_SIZE(&(m_remote_addr_info->m_addr));
+        m_remote_sockaddr_ptr     = &m_remote_sockaddr ;
+        m_len_remote_sockaddr_ptr = &m_len_remote_sockaddr ;
+        
+        m_state                   = E_SOCKET_STATE_READY ;
+        *P_status                 = E_OPEN_OK ;
+        }
     }
-  } else {
-    
-    // UDP
-    // bind
-       m_state = E_SOCKET_STATE_READY ;
-       *P_status = E_OPEN_OK ;
-  }
-  // UDP
-
   }
   return (L_rc);
 }
@@ -499,8 +559,20 @@ C_SocketWithData::C_SocketWithData(T_SocketType P_type,
   m_read_buf_size = P_read_buf_size ;
   ALLOC_TABLE(m_read_buf, char*, sizeof(char), m_read_buf_size);
 
+  m_remote_sockaddr_ptr     = NULL ;
+  m_len_remote_sockaddr_ptr = NULL ;
+
+  m_len_remote_sockaddr = SOCKADDR_IN_SIZE(&m_remote_sockaddr);
+  memset(&m_remote_sockaddr, 0, m_len_remote_sockaddr);
 }
 
+T_SockAddrStorage* C_SocketWithData::get_remote_sockaddr_ptr() {
+  return (m_remote_sockaddr_ptr);
+}
+
+tool_socklen_t* C_SocketWithData::get_len_remote_sockaddr_ptr() {
+  return (m_len_remote_sockaddr_ptr);
+}
 
 C_SocketWithData::~C_SocketWithData() {
   SOCKET_DEBUG(0, "C_SocketWithData::~C_SocketWithData()");
@@ -532,14 +604,17 @@ C_Socket* C_SocketWithData::process_fd_set (fd_set* P_rSet,
 
   SOCKET_DEBUG(0, "C_SocketWithData::process_fd_set() id=" << m_socket_id);
 
-
   switch (m_state) {
 
   case E_SOCKET_STATE_READY:
 
     if (FD_ISSET(m_socket_id, P_rSet)) {
-      L_rc = call_read(m_socket_id, L_buf, m_read_buf_size);
-      // UDP
+      if (m_type == E_SOCKET_TCP_MODE) {
+        L_rc = call_read(m_socket_id, L_buf, m_read_buf_size);
+      } else {
+        L_rc = _read(L_buf);
+      }
+
       if (L_rc <= 0) {
 	SOCKET_DEBUG(0, "C_SocketWithData::process_fd_set() CLOSED");
 	P_event->m_type = C_TransportEvent::E_TRANS_CLOSED ;
@@ -630,3 +705,20 @@ size_t C_SocketWithData::received_buffer(unsigned char *P_data,
   return (L_size);
 }
 
+int C_SocketServer::_read (void* P_buffer) {
+  return (call_recvfrom(m_socket_id, 
+                        P_buffer, 
+                        m_read_buf_size,
+                        0,
+                        (sockaddr *)(void *)m_remote_sockaddr_ptr, 
+                        m_len_remote_sockaddr_ptr));
+}
+
+int C_SocketClient::_read (void* P_buffer) {
+  return (call_recvfrom(m_socket_id, 
+                        P_buffer, 
+                        m_read_buf_size,
+                        0,
+                        NULL,
+                        NULL));
+}

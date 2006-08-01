@@ -33,13 +33,21 @@ typedef enum _enum_ip_usage_mode {
 
 
 typedef struct _struct_ip_addr {
-  T_IpUsageMode           m_umode ;
+  T_IpUsageMode           m_umode       ;
   size_t                  m_buffer_size ;
-  char                   *m_open  ;
-  char                   *m_value ;
-  long                    m_port  ;
-  char                   *m_ip    ;
-  T_SockAddrStorage       m_addr  ;
+  char                   *m_open        ;
+
+  char                   *m_value       ;
+  long                    m_port        ;
+  char                   *m_ip          ;
+  T_SockAddrStorage       m_addr        ;
+
+  char                   *m_open_src    ;
+  char                   *m_value_src   ;
+  long                    m_port_src    ;
+  char                   *m_ip_src      ;
+  T_SockAddrStorage       m_addr_src    ;
+
 } T_IpAddr, *T_pIpAddr ;
 
 void      clear_IpAddr(T_pIpAddr P_IpAddr) ;

@@ -303,6 +303,10 @@ int C_TransIP::send_message (int             P_id,
   unsigned char        *L_data = m_encode_buffer ;
   
   C_ProtocolBinaryFrame *L_protocol ; 
+  
+  T_SockAddrStorage  *L_remote_sockaddr     = NULL  ;
+  tool_socklen_t     *L_len_remote_sockaddr = NULL  ;
+
 
   C_ProtocolFrame::T_MsgError      L_error = C_ProtocolFrame::E_MSG_OK ;
 
@@ -315,33 +319,46 @@ int C_TransIP::send_message (int             P_id,
     L_socket = L_it->second ;
     L_protocol = L_socket -> get_protocol() ;
 
+    if (m_trans_type == E_SOCKET_UDP_MODE) {
+      L_remote_sockaddr     = L_socket->get_remote_sockaddr_ptr () ; 
+      L_len_remote_sockaddr = L_socket->get_len_remote_sockaddr_ptr() ;
+    }
+
     L_error = L_protocol->encode_message(P_msg, L_data, &L_size);
     
     if (L_error == C_ProtocolFrame::E_MSG_OK) {
       L_protocol->log_buffer((char*)"sent", L_data, L_size);
-      // L_ret = send_buffer2(P_id, L_data, L_size) ;
-      (void) send_buffer(P_id, L_data, L_size) ;
+      (void) send_buffer(P_id, L_data, L_size, L_remote_sockaddr, L_len_remote_sockaddr) ;
     }
   }
   return (0) ;
 }
 
 
-size_t C_TransIP::send_buffer (int             P_id, 
-				unsigned char  *P_data, 
-				size_t          P_size) {
+size_t C_TransIP::send_buffer (int                P_id, 
+                               unsigned char     *P_data, 
+                               size_t             P_size,
+                               T_SockAddrStorage *P_remote_sockaddr,
+                               tool_socklen_t    *P_len_remote_sockaddr) {
 
   size_t L_size = 0 ;
   int    L_rc       ;
 
-  GEN_DEBUG(0, "C_TransIP::send_buffer2(" 
+  GEN_DEBUG(0, "C_TransIP::send_buffer(" 
 	    << P_id << "," << P_data << "," << P_size << ")");
 
   GEN_DEBUG(0, "C_TransIP::send_buffer() id OK");
 
-  // UDP
+  if (m_trans_type == E_SOCKET_TCP_MODE) {
+    L_rc = call_send(P_id, P_data, P_size, 0) ;
+  } else {
+    L_rc = call_sendto(P_id, P_data, P_size, 
+                       0,
+                       (struct sockaddr*)(void*)P_remote_sockaddr, 
+                       (tool_socklen_t)*P_len_remote_sockaddr) ;
+  }
 
-  if ((L_rc = call_send(P_id, P_data, P_size, 0) < 0)) {
+  if (L_rc < 0) {
     GEN_ERROR(0, "send failed [" << L_rc << "] [" << strerror(errno) << "]");
     switch (errno) {
     case EAGAIN:
@@ -357,7 +374,7 @@ size_t C_TransIP::send_buffer (int             P_id,
     L_size = P_size ;
   }
     
-  GEN_DEBUG(0, "C_TransIP::send_buffer2() return " << L_size);
+  GEN_DEBUG(0, "C_TransIP::send_buffer() return " << L_size);
   return (L_size);
 }
 
@@ -482,17 +499,41 @@ int C_TransIP::open (int              P_channel_id,
 
   switch (P_Addr->m_umode) {
   case E_IP_USAGE_MODE_SERVER: {
-    C_SocketListen *L_Socket ;
 
-    NEW_VAR(L_Socket, C_SocketListen(m_trans_type, P_Addr, P_channel_id, m_read_buffer_size, m_decode_buffer_size));
-    // std::cerr << "m_trans_type " << m_trans_type << std::endl;
-    L_rc = L_Socket->_open(m_buffer_size, P_protocol) ;
-    if (L_rc == 0) {
-      L_socket_created = L_Socket ;
-      *P_status = E_OPEN_OK ;
+    if (m_trans_type == E_SOCKET_TCP_MODE) {
+      C_SocketListen *L_Socket ;
+      
+      NEW_VAR(L_Socket, C_SocketListen(m_trans_type, 
+                                       P_Addr, 
+                                       P_channel_id, 
+                                       m_read_buffer_size, 
+                                       m_decode_buffer_size));
+      // std::cerr << "m_trans_type " << m_trans_type << std::endl;
+      L_rc = L_Socket->_open(m_buffer_size, P_protocol) ;
+      if (L_rc == 0) {
+        L_socket_created = L_Socket ;
+        *P_status = E_OPEN_OK ;
+      } else {
+        DELETE_VAR(L_Socket) ;
+        *P_status = E_OPEN_FAILED ;
+      }
     } else {
-      DELETE_VAR(L_Socket) ;
-      *P_status = E_OPEN_FAILED ;
+      C_SocketServer *L_Socket ;
+      
+      NEW_VAR(L_Socket, C_SocketServer(m_trans_type, 
+                                       P_Addr, 
+                                       P_channel_id, 
+                                       m_read_buffer_size, 
+                                       m_decode_buffer_size));
+      
+      L_rc = L_Socket->_open_udp(m_buffer_size, P_protocol) ;
+      if (L_rc == 0) {
+        L_socket_created = L_Socket ;
+        *P_status = E_OPEN_OK ;
+      } else {
+        DELETE_VAR(L_Socket) ;
+        *P_status = E_OPEN_FAILED ;
+      }
     }
   }
     break ;
@@ -500,7 +541,11 @@ int C_TransIP::open (int              P_channel_id,
   case E_IP_USAGE_MODE_CLIENT: {
     C_SocketClient *L_Socket ;
 
-    NEW_VAR(L_Socket, C_SocketClient(m_trans_type, P_Addr, P_channel_id, m_read_buffer_size, m_decode_buffer_size));
+    NEW_VAR(L_Socket, C_SocketClient(m_trans_type, 
+                                     P_Addr, 
+                                     P_channel_id, 
+                                     m_read_buffer_size, 
+                                     m_decode_buffer_size));
 
     // std::cerr << "m_trans_type Client" << m_trans_type << std::endl;
     L_rc = L_Socket->_open(P_status, m_buffer_size, P_protocol) ;
@@ -645,6 +690,11 @@ bool C_TransIP::analyze_open_string (char *P_buf, T_pIpAddr P_addr) {
 		  char*,sizeof(char),
 		  strlen(L_tmp)+1);
       strcpy(P_addr->m_open, L_tmp);
+
+      ALLOC_TABLE(P_addr->m_open_src,
+		  char*,sizeof(char),
+		  strlen(L_tmp)+1);
+      strcpy(P_addr->m_open_src, L_tmp);
     } 
   }
   L_buf = P_buf ;
@@ -677,8 +727,6 @@ bool C_TransIP::analyze_open_string (char *P_buf, T_pIpAddr P_addr) {
     }
   }
 
-
-
   return (true) ;
 }
 
@@ -694,6 +742,7 @@ int C_TransIP::extract_ip_addr(T_pIpAddr P_pIpAddr) {
   size_t     L_matchSize ;
 
   GEN_DEBUG(0, "C_TransIP::extract_ip_addr()");
+
 
   if (P_pIpAddr == NULL) { return (-1) ; }
   if (P_pIpAddr->m_open == NULL) { return (0) ; }
@@ -789,6 +838,102 @@ int C_TransIP::extract_ip_addr(T_pIpAddr P_pIpAddr) {
   }
 #endif
 
+  if (P_pIpAddr->m_open_src != NULL) { 
+
+    L_search = P_pIpAddr->m_open_src ;
+    P_pIpAddr -> m_value_src = NULL ;
+    P_pIpAddr -> m_port_src = -1 ;
+    memset(&(P_pIpAddr->m_addr_src), 0, sizeof(T_SockAddrStorage));
+
+    // skip blank 
+    L_status = regcomp (&L_regExpr, "^[:blank:]*\\[", REG_EXTENDED) ;
+    if (L_status != 0) {
+      regerror(L_status, &L_regExpr, L_buffer, 1024);
+      regfree (&L_regExpr) ;
+      GEN_ERROR(0, "regcomp error: [" << L_buffer << "]");
+      return (-1);
+    }
+  
+    L_status = regexec (&L_regExpr, L_search, 1, &L_pmatch, 0) ;
+    regfree (&L_regExpr) ;
+
+    if (L_status == 0) { // IP V6
+      
+      L_search += L_pmatch.rm_eo ;
+      
+      // find end of address
+      L_status = regcomp(&L_regExpr, "[^]]*", REG_EXTENDED) ;
+      if (L_status != 0) {
+        regerror(L_status, &L_regExpr, L_buffer, 1024);
+        regfree (&L_regExpr) ;
+        GEN_ERROR(0, "regcomp error: [" << L_buffer << "]");
+        return (-1);
+      }
+      
+      L_status = regexec (&L_regExpr, L_search, 1, &L_pmatch, 0) ;
+      regfree (&L_regExpr) ;
+      if (L_status == 0) { // end of IP addr found
+        
+        L_matchSize = L_pmatch.rm_eo - L_pmatch.rm_so ;
+        if (L_matchSize) { memcpy(L_buffer, L_search, L_matchSize); }
+        L_buffer[L_matchSize] = 0 ;
+        L_search += L_matchSize ;
+        L_search = strstr(L_search, ":");
+
+        GEN_DEBUG(1, "C_TransIP::extract_ip_addr() IPV6 addr [" << L_buffer << "]");
+      
+      } else {
+        GEN_ERROR(0, "regexec error character [" << ']' << "] not found" );
+        return (-1);
+      }
+
+    } else { // IP V4 or hostname
+      
+      
+      L_search = strstr(P_pIpAddr->m_open_src, ":") ;
+
+      L_matchSize = (L_search != NULL) 
+        ? (L_search - (P_pIpAddr->m_open_src)) : strlen(P_pIpAddr->m_open_src) ;
+      if (L_matchSize) { memcpy(L_buffer, P_pIpAddr->m_open, L_matchSize) ; }
+      L_buffer[L_matchSize] = 0 ;
+
+      
+      GEN_DEBUG(0, "C_TransIP::extract_ip_addr() IPV4 addr or hostname = [" 
+                << L_buffer << "]");
+    }
+
+    if (strlen(L_buffer) != 0) {
+      ALLOC_TABLE(P_pIpAddr -> m_value_src, char*, 
+                  sizeof(char), strlen(L_buffer)+1) ;
+      strcpy(P_pIpAddr->m_value_src, L_buffer);
+    }
+
+    if (L_search != NULL) {
+      char *L_end_ptr = NULL ;
+      P_pIpAddr -> m_port_src = (long)strtoul_f(L_search+1, &L_end_ptr, 10);
+      if (L_end_ptr[0] != '\0') { 
+        P_pIpAddr->m_port_src = -1 ;
+        GEN_DEBUG (0, "C_TransIP::extract_ip_addr() port not defined");
+      }
+    } else {
+      GEN_DEBUG (0, "C_TransIP::extract_ip_addr() port not defined");
+    }
+
+    GEN_DEBUG(1, "C_TransIP::extract_ip_addr() Port [" << P_pIpAddr->m_port << "]");
+
+#ifdef DEBUG_MODE
+  {
+    const char *L_novalue = "no value" ;
+    char *L_value = (P_pIpAddr->m_value_src == NULL) ?
+      (char*)L_novalue : P_pIpAddr->m_value_src ;
+    GEN_DEBUG(1, "C_TransIP::extract_ip_addr() Addr value [" 
+	      << L_value << "]") ;
+  }
+#endif
+
+  }
+  
+
   return (0);
 }
 
@@ -878,6 +1023,90 @@ int C_TransIP::resolve_addr(T_pIpAddr P_pIpAddr) {
     return(-1);
   }
   if (inet_addr((char**)&(P_pIpAddr->m_ip), L_resolved_sockaddr) == -1) {
+    GEN_ERROR(1, "Address not supported");
+  }
+
+#ifndef USE_IPV4_ONLY
+  freeaddrinfo(L_local_addr);
+#endif
+
+  // To be optimized
+  L_host              = P_pIpAddr->m_value_src ;
+  L_port              = P_pIpAddr->m_port_src  ;
+  L_resolved_sockaddr = &P_pIpAddr->m_addr_src ;
+
+#ifdef DEBUG_MODE
+
+  const char *L_cNoHost = "none" ;
+  char *L_hostDebug = (L_host == NULL) ? (char*)L_cNoHost : L_host ;
+
+  GEN_DEBUG(1, "C_TransIP::resolve_addr() [" 
+	    << L_hostDebug
+	    << "]:[" << L_port << "]");
+#endif
+
+#ifndef USE_IPV4_ONLY
+  memset((char*)&L_hints, 0, sizeof(L_hints));
+  L_hints.ai_flags  = AI_PASSIVE;
+  L_hints.ai_family = PF_UNSPEC;
+#endif
+
+  if (L_host == NULL) {
+    if (gethostname(L_local_host, 255)) {
+      GEN_ERROR(1, "Unable to get local IP address");
+      return(-1);
+    } else {
+      ALLOC_TABLE(L_host, char*, sizeof(char),
+		  strlen(L_local_host)+1);
+      strcpy(L_host, L_local_host) ;
+      P_pIpAddr->m_value_src = L_host  ;
+    }
+  }
+  memset(L_resolved_sockaddr, 0, sizeof(T_SockAddrStorage));
+
+#ifndef USE_IPV4_ONLY
+  if (getaddrinfo(L_host,
+		  NULL,
+		  &L_hints,
+		  &L_local_addr) != 0) {
+    GEN_ERROR(1, "Unknown host [" << L_host << "]");
+    return (-1);
+  }
+
+  L_resolved_sockaddr->SOCKADDR_FAMILY = L_local_addr->ai_addr->sa_family;
+  memcpy(L_resolved_sockaddr,
+	 L_local_addr->ai_addr,
+	 SOCKADDR_IN_SIZE
+	 (RICAST(T_SockAddrStorage *,L_local_addr->ai_addr)));
+#else
+  L_local_addr = gethostbyname(L_host);
+  if (L_local_addr != NULL) {
+    L_resolved_sockaddr->SOCKADDR_FAMILY = L_local_addr->h_addrtype;
+    memcpy((void*)&L_resolved_sockaddr->sin_addr.s_addr,
+	   L_local_addr->h_addr_list[0],
+	   L_local_addr->h_length);
+  } else {
+    GEN_ERROR(1, "Unknown host [" << L_host << "]");
+    return (-1);
+  }
+#endif
+
+  switch (L_resolved_sockaddr->SOCKADDR_FAMILY) {
+  case AF_INET:
+    (RICAST(struct sockaddr_in *, L_resolved_sockaddr))->sin_port =
+      htons((short)L_port);
+    break ;
+#ifndef USE_IPV4_ONLY
+  case AF_INET6:
+    (RICAST(struct sockaddr_in6 *, L_resolved_sockaddr))->sin6_port =
+      htons((short)L_port);
+    break ;
+#endif
+  default:
+    GEN_ERROR(1, "Unsupported network");
+    return(-1);
+  }
+  if (inet_addr((char**)&(P_pIpAddr->m_ip_src), L_resolved_sockaddr) == -1) {
     GEN_ERROR(1, "Address not supported");
   }
 

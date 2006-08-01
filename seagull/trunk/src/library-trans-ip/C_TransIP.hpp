@@ -63,9 +63,11 @@ public:
 			   T_pC_TransportEvent P_eventTable,
 			   size_t             *P_nb);
 
-  size_t      send_buffer     (int             P_id, 
-			       unsigned char  *P_data, 
-			       size_t          P_size);
+  size_t      send_buffer     (int                P_id, 
+			       unsigned char     *P_data, 
+			       size_t             P_size,
+                               T_SockAddrStorage *P_remote_sockaddr,
+                               tool_socklen_t    *P_len_remote_sockaddr);
 
   int         send_message    (int             P_id,
 			       C_MessageFrame *P_msg);
@@ -104,7 +106,6 @@ private:
   int             resolve_addr(T_pIpAddr P_pIpAddr);
   int             inet_addr   (char                   **P_addr, 
 			       T_SockAddrStorage       *P_AddrS);
-
 
   void            decode_from_protocol (C_Socket *P_socket);
 

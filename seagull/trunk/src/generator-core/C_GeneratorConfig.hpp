@@ -100,6 +100,8 @@ typedef enum {
   E_CFG_OPT_CALL_TIMEOUT_BEH_ABR,
   E_CFG_OPT_OPEN_TIMEOUT,
   E_CFG_OPT_EXECUTE_CHECK_ACTION,
+  E_CFG_OPT_MAX_RETRANS,
+  E_CFG_OPT_RETRANS_ENABLED,
 
   E_CFG_OPT_Number
 } T_GeneratorConfigOption ;
@@ -151,6 +153,8 @@ class C_GeneratorConfig:public C_CommandLine<T_GeneratorCmdLineOption> {
   bool         get_call_timeout_beh_abr () ;
 
   bool         get_execute_check_action () ;
+
+  bool         get_retrans_enabled () ;
 
 
   T_pConfigValueList get_config_param_list() ;
@@ -213,6 +217,9 @@ private:
   bool           m_execute_check_action      ;
 
   unsigned long  m_open_timeout              ;
+
+  unsigned long  m_max_retrans           ;
+  bool           m_retrans_enabled       ;
 
   unsigned long  m_call_rate_scale           ;
 

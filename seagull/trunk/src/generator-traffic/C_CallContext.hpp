@@ -42,6 +42,23 @@ typedef long T_CallContextState, *T_pCallContextState ;
 class C_CallContext : public C_ContextFrame {
 public:
 
+  typedef struct _retrans_context {
+    C_CallContext * m_context             ;
+    int             m_retrans_index       ; // id table internal 
+    int             m_retrans_delay_index ; // delay value index
+  } T_retransContext, *T_pRetransContext ;
+
+  typedef list_t<T_retransContext> 
+  T_retransContextList, *T_pRetransContextList;
+
+  typedef struct _retrans_data {
+    T_retransContextList::iterator m_iterator ;
+    int                            m_index    ;
+  } T_retransData, *T_pRetransData ;
+
+  typedef list_t <T_retransData> T_retransDataList, *T_pRetransDataList ;
+
+
   // TEMPORARY
   bool                      m_created_call  ;
   // TEMPORARY
@@ -51,6 +68,18 @@ public:
   int                       m_suspend_id    ;
   C_MessageFrame           *m_suspend_msg   ;
   int                       m_channel_id    ;
+  
+  C_MessageFrame           **m_retrans_msg     ;
+  struct timeval            *m_retrans_time    ;
+  int                       *m_nb_retrans_done ;
+  int                       *m_retrans_cmd_idx ;
+  int                        m_nb_retrans      ;
+
+  T_retransContextList::iterator *m_retrans_it;
+  bool                           *m_retrans_it_available ;
+
+  T_retransContext          m_retrans_context ;
+  bool                      m_retrans_to_do ;
 
   T_pValueData              m_id_table ;
 
@@ -60,7 +89,7 @@ public:
   int                       m_channel_received ;
 
 
-  C_CallContext(int P_id, int P_nbChannel, int P_mem=0);
+  C_CallContext(int P_id, int P_nbChannel, int P_mem=0, int P_nbRetrans=0);
   ~C_CallContext() ;
 
   T_pValueData 
@@ -98,6 +127,7 @@ public:
   int                get_internal_id ();
 
   void               clean_suspended () ;
+  void               clean_retrans () ;
 
 private:
 

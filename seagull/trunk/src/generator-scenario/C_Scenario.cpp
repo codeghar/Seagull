@@ -61,6 +61,7 @@ C_Scenario::C_Scenario (C_ScenarioControl     *P_scenario_control,
 			C_ExternalDataControl *P_external_data_control,
 			T_exeCode              P_exe_code,
 			char                  *P_behaviour,
+                        bool                   P_retrans_enabled,
 			unsigned int           P_check_mask, 
 			T_CheckBehaviour       P_checkBehaviour
 			) {
@@ -79,6 +80,8 @@ C_Scenario::C_Scenario (C_ScenarioControl     *P_scenario_control,
   m_stats  = NULL ;
 
   m_exe_end_code = P_exe_code ;
+  m_retrans_enabled        = P_retrans_enabled ;
+  m_nb_retrans = 0 ;
 
   if (P_behaviour == NULL) {
     m_behaviour = E_BEHAVIOUR_SCEN_SUCCESS ;
@@ -134,7 +137,10 @@ C_Scenario::~C_Scenario () {
 	    FREE_VAR(m_cmd_sequence[L_i].m_pre_act_table[L_j].
 		       m_string_expr);
 
-       // free regexp
+            // free regexp ???
+	    DELETE_VAR(m_cmd_sequence[L_i].m_pre_act_table[L_j].
+		       m_regexp_data);
+
 	  }
 	}
 	FREE_TABLE(m_cmd_sequence[L_i].m_pre_act_table);
@@ -160,7 +166,10 @@ C_Scenario::~C_Scenario () {
 	     FREE_VAR(m_cmd_sequence[L_i].m_post_act_table[L_j].
 		       m_string_expr);
 
-        // free regexp
+             // free regexp
+	    DELETE_VAR(m_cmd_sequence[L_i].m_post_act_table[L_j].
+		       m_regexp_data);
+
 	  }
 	}
 	FREE_TABLE(m_cmd_sequence[L_i].m_post_act_table);
@@ -173,6 +182,8 @@ C_Scenario::~C_Scenario () {
   m_sequence_size = 0 ;
   m_stat = NULL ;
   m_stats = NULL ;
+
+  m_nb_retrans = 0 ;
 
   GEN_DEBUG(1, "C_Scenario::~C_Scenario() end");
 }
@@ -208,7 +219,65 @@ T_CallContextState C_Scenario::first_state () {
   return (L_ret);
 }
 
-T_exeCode C_Scenario::execute_cmd (T_pCallContext P_callCtxt, bool P_resume) {
+T_exeCode C_Scenario::execute_cmd_retrans (int P_index, T_pCallContext P_callCtxt) {
+  T_exeCode           L_exeCode    = E_EXE_NOERROR ;
+  int                 L_cmdIdx                     ;
+  T_pCmd_scenario     L_pCmd                       ;
+  
+  struct timezone     L_timeZone                   ;
+  
+  C_MessageFrame     *L_retransMsg = NULL          ;
+  int                 L_channel_id = -1            ;
+
+  GEN_DEBUG(1, "C_Scenario::execute_cmd_retrans() start");
+
+  // retrieve command execution informations
+  L_cmdIdx = P_callCtxt->m_retrans_cmd_idx[P_index];
+  L_pCmd = &m_cmd_sequence[L_cmdIdx] ;
+
+  switch (L_pCmd->m_type) {
+
+  case E_CMD_SCEN_SEND: {
+    
+    L_channel_id = L_pCmd -> m_channel_id ;
+    L_retransMsg = P_callCtxt->m_retrans_msg[P_index] ;
+      
+    if (m_channel_ctrl->
+        send_to_channel(L_channel_id, P_callCtxt->m_channel_table, L_retransMsg)) {
+      
+      GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
+                    "Send error on call with session-id ["
+                    << P_callCtxt->m_id_table[L_channel_id] << "]");
+      
+      L_exeCode = E_EXE_ERROR_SEND ;
+    } else {
+      // to modify use a new counter 
+      m_stat -> executeStatAction (C_GeneratorStats::E_SEND_MSG);
+      gettimeofday(&(P_callCtxt->m_retrans_time[P_index]), &L_timeZone) ;
+      (P_callCtxt->m_nb_retrans_done[P_index]) ++;
+      if (m_stats) {
+        m_stats->updateStats(L_cmdIdx,C_ScenarioStats::E_RETRANS,0);
+        // m_stats->updateStats(L_cmdIdx,C_ScenarioStats::E_MESSAGE,0);
+
+      }
+    }
+  }
+  break ;
+  default:
+    GEN_DEBUG (1, "C_Scenario::execute_cmd() Incorrect type "
+               << L_pCmd->m_type
+               << " command execution");
+    L_exeCode = E_EXE_ERROR;
+    break ;
+  }
+  
+  GEN_DEBUG(1, "C_Scenario::execute_cmd_retrans() end");
+  return (L_exeCode);
+}
+
+
+T_exeCode C_Scenario::execute_cmd (T_pCallContext P_callCtxt,
+                                   bool P_resume) {
 
   T_exeCode           L_exeCode = E_EXE_NOERROR ;
   int                 L_cmdIdx  ;
@@ -270,8 +339,21 @@ T_exeCode C_Scenario::execute_cmd (T_pCallContext P_callCtxt, bool P_resume) {
 	if (m_stats) {
 	  m_stats->updateStats(L_cmdIdx,C_ScenarioStats::E_MESSAGE,0);
 	}
-      }
 
+
+        if (m_retrans_enabled) {
+          if (L_pCmd->m_retrans_delay > 0) {
+            P_callCtxt->m_retrans_context.m_retrans_index = L_pCmd->m_retrans_index ;
+            P_callCtxt->m_retrans_context.m_retrans_delay_index = L_pCmd->m_retrans_delay_index ;
+            P_callCtxt->m_retrans_context.m_context = P_callCtxt ;
+            // std::cerr << "m_retrans_context.m_context =" << P_callCtxt << std::endl ;
+            P_callCtxt->m_retrans_time[L_pCmd->m_retrans_index] = P_callCtxt->m_current_time ;
+            P_callCtxt->m_retrans_cmd_idx[L_pCmd->m_retrans_index] = L_cmdIdx;
+            P_callCtxt->m_retrans_msg[L_pCmd->m_retrans_index] = L_sendMsg ;
+            P_callCtxt->m_retrans_to_do = true ;
+          }
+        }
+      }
     }
 
     if ((L_exeCode == E_EXE_NOERROR) && (L_exeCode != E_EXE_SUSPEND)) {  
@@ -285,9 +367,15 @@ T_exeCode C_Scenario::execute_cmd (T_pCallContext P_callCtxt, bool P_resume) {
       }
     }
 
+
     if (L_exeCode != E_EXE_SUSPEND) {
-      DELETE_VAR(L_sendMsg);
+      if ((m_retrans_enabled) && (L_pCmd->m_retrans_delay > 0)) {
+        L_sendMsg = NULL ;
+      } else {
+        DELETE_VAR(L_sendMsg);
+      }
     }
+
 
   }
     
@@ -537,7 +625,9 @@ size_t C_Scenario::add_cmd  (T_cmd_type          P_type,
 			     int                 P_channel_id,
 	                     T_pC_MessageFrame   P_msg,
 			     int                 P_nb_pre_action,
-			     T_pCmdAction        P_pre_act_table) {
+			     T_pCmdAction        P_pre_act_table,
+                             unsigned long       P_retrans_delay) {
+
   GEN_DEBUG(1, "C_Scenario::add_cmd() start");
 
   if (m_sequence_max < m_sequence_size) {
@@ -547,6 +637,22 @@ size_t C_Scenario::add_cmd  (T_cmd_type          P_type,
     L_cmd_sequence->m_type = P_type ;
     L_cmd_sequence->m_message = P_msg ;
     L_cmd_sequence->m_channel_id = P_channel_id ;
+
+
+    if (m_retrans_enabled == false) {
+      L_cmd_sequence->m_retrans_delay = 0 ;
+      L_cmd_sequence->m_retrans_index = 0 ;
+      L_cmd_sequence->m_retrans_delay_index = 0 ;
+    } else {
+      L_cmd_sequence->m_retrans_delay = P_retrans_delay ;
+      if (P_retrans_delay > 0) {
+        L_cmd_sequence->m_retrans_index = m_nb_retrans ;
+        m_nb_retrans++;
+      } else {
+        L_cmd_sequence->m_retrans_index = 0 ;
+      }
+      L_cmd_sequence->m_retrans_delay_index = 0 ;
+    }
 
     if ((P_nb_pre_action != 0) && (P_pre_act_table != NULL)) {
       L_cmd_sequence->m_pre_action = P_nb_pre_action ;
@@ -580,6 +686,10 @@ size_t C_Scenario::add_cmd  (T_cmd_type    P_type,
     L_cmd_sequence->m_post_action = 0 ;
     L_cmd_sequence->m_post_act_table = NULL ;
 
+    L_cmd_sequence->m_retrans_delay = 0 ;
+    L_cmd_sequence->m_retrans_index = 0 ;
+    L_cmd_sequence->m_retrans_delay_index = 0 ;
+
     m_sequence_max++ ;
     GEN_DEBUG(1, "C_Scenario::add_cmd() end");
     return (m_sequence_max);
@@ -599,6 +709,10 @@ size_t C_Scenario::add_cmd  (T_cmd_type    P_type) {
     L_cmd_sequence->m_pre_act_table = NULL ;
     L_cmd_sequence->m_post_action = 0 ;
     L_cmd_sequence->m_post_act_table = NULL ;
+
+    L_cmd_sequence->m_retrans_delay = 0 ;
+    L_cmd_sequence->m_retrans_index = 0 ;
+    L_cmd_sequence->m_retrans_delay_index = 0 ;
 
     m_sequence_max++ ;
     GEN_DEBUG(1, "C_Scenario::add_cmd() end");
@@ -1383,6 +1497,20 @@ T_exeCode C_Scenario::execute_action(T_pCmd_scenario P_pCmd,
   return (L_exeCode);
 }
 
+void C_Scenario::update_retrans_delay_cmd (size_t P_nb, unsigned long *P_table) {
+  int      L_i ;
+  size_t   L_j ;
+  for(L_i=0; L_i < m_sequence_max; L_i++) {
+    if (m_cmd_sequence[L_i].m_retrans_delay > 0 ) {
+      for (L_j = 0; L_j < P_nb; L_j++) {
+	if (m_cmd_sequence[L_i].m_retrans_delay == P_table[L_j]) {
+	  m_cmd_sequence[L_i].m_retrans_delay_index = L_j ;
+	  break ;
+	}
+      }
+    }
+  }
+}
 
 void C_Scenario::update_wait_cmd (size_t P_nb, unsigned long *P_table) {
   int      L_i ;
@@ -1422,6 +1550,9 @@ void C_Scenario::delete_post_actions (int P_cmd_index) {
 		   m_string_expr);
 
         // free regexp????
+        DELETE_VAR(m_cmd_sequence[P_cmd_index].m_post_act_table[L_j].
+                 m_regexp_data);
+
       }
 
     }
@@ -1445,4 +1576,13 @@ void C_Scenario::delete_stats () {
 
 T_exeCode    C_Scenario::get_exe_end_code() {
   return (m_exe_end_code)  ;
+}
+
+int C_Scenario::get_nb_retrans ()
+{
+  return (m_nb_retrans);
+}
+
+T_pCmd_scenario C_Scenario::get_commands() {
+  return (m_cmd_sequence);
 }

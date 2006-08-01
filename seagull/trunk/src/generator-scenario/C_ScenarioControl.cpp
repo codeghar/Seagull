@@ -60,6 +60,9 @@ C_ScenarioControl::C_ScenarioControl(C_ProtocolControl  *P_protocol_control,
   m_log = NULL ;
   NEW_VAR(m_wait_values, T_waitValuesSet());
 
+  m_retrans_enabled = false;
+  NEW_VAR(m_retrans_delay_values, T_retransDelayValuesSet());
+
   m_external_data = NULL ;
   m_external_data_used = false ;
 
@@ -72,8 +75,6 @@ C_ScenarioControl::C_ScenarioControl(C_ProtocolControl  *P_protocol_control,
   m_nb_counter = 0 ;
   m_counter_table = NULL ;
   m_action_check_abort = false ;
-
-
 }
 
 C_ScenarioControl::~C_ScenarioControl() {
@@ -120,6 +121,11 @@ C_ScenarioControl::~C_ScenarioControl() {
     m_wait_values->erase(m_wait_values->begin(), m_wait_values->end());
   }
   DELETE_VAR(m_wait_values);
+
+  if (!m_retrans_delay_values->empty()) {
+    m_retrans_delay_values->erase(m_retrans_delay_values->begin(), m_retrans_delay_values->end());
+  }
+  DELETE_VAR(m_retrans_delay_values);
 
   if (m_nb_counter != 0){
     for (L_i = 0; L_i < m_nb_counter; L_i++) {
@@ -322,6 +328,10 @@ int C_ScenarioControl::add_scenario
   GEN_DEBUG(1, "C_ScenarioControl::add_scenario() start");
   (*P_nbOpen) = 0 ;
 
+  if (m_config != NULL) {
+    m_retrans_enabled = m_config -> get_retrans_enabled();
+  }
+
   L_behaviour_scen = get_behaviour_scenario(P_scen) ;
   if (L_behaviour_scen != NULL) {
     if ((strcmp(L_behaviour_scen, (char*)"failed")  != 0) && 
@@ -359,6 +369,7 @@ int C_ScenarioControl::add_scenario
 		       m_external_data,
 		       E_EXE_TRAFFIC_END,
 		       L_behaviour_scen,
+                       m_retrans_enabled,
 		       L_check_level,
 		       L_check_behave
 		       ));
@@ -369,7 +380,10 @@ int C_ScenarioControl::add_scenario
 
   case E_SCENARIO_INIT:
     NEW_VAR(m_init_scen, C_Scenario(this, m_channel_ctrl, 
-				    m_external_data,E_EXE_INIT_END,L_behaviour_scen)) ;
+				    m_external_data,
+                                    E_EXE_INIT_END,
+                                    L_behaviour_scen,
+                                    m_retrans_enabled)) ;
 
     L_current_scen = m_init_scen ;
     m_nb_scenario++;
@@ -381,7 +395,11 @@ int C_ScenarioControl::add_scenario
       GEN_FATAL(E_GEN_FATAL_ERROR, "Maximum number of default scenario reached");
     }
     NEW_VAR(m_default_scen[m_nb_default], 
-	    C_Scenario(this, m_channel_ctrl, m_external_data,E_EXE_DEFAULT_END,L_behaviour_scen));
+	    C_Scenario(this, m_channel_ctrl, 
+                       m_external_data,
+                       E_EXE_DEFAULT_END,
+                       L_behaviour_scen,
+                       m_retrans_enabled));
     L_current_scen = m_default_scen[m_nb_default] ;
     GEN_DEBUG(1, "C_ScenarioControl::add_scenario() E_SCENARIO_DEFAULT ");
     m_nb_default ++ ;
@@ -390,7 +408,11 @@ int C_ScenarioControl::add_scenario
 
   case E_SCENARIO_ABORT:
     NEW_VAR(m_abort_scen, 
-	    C_Scenario(this, m_channel_ctrl, m_external_data,E_EXE_ABORT_END,L_behaviour_scen));
+	    C_Scenario(this, m_channel_ctrl, 
+                       m_external_data,
+                       E_EXE_ABORT_END,
+                       L_behaviour_scen,
+                       m_retrans_enabled));
     L_current_scen = m_abort_scen ;
     m_nb_scenario++;
     GEN_DEBUG(1, "C_ScenarioControl::add_scenario() E_SCENARIO_ABORT ");
@@ -549,6 +571,9 @@ int C_ScenarioControl::add_command (T_cmd_type                P_cmd_type,
 
   int                            L_msg_id            = -1       ;
 
+  char                          *L_value_retrans     = NULL     ;
+  unsigned long                  L_retrans_delay     = 0        ;
+  char                          *L_end_str                      ;
 
   GEN_DEBUG(1, "C_ScenarioControl::add_command() start");
 
@@ -605,8 +630,18 @@ int C_ScenarioControl::add_command (T_cmd_type                P_cmd_type,
       break ;
     }
     
-    
     L_protocol = m_channel_ctrl->get_channel_protocol(L_channel_id) ;
+
+    L_value_retrans = P_data->find_value((char*)"retrans");
+    if (L_value_retrans != NULL) {
+      L_retrans_delay = strtoul_f (L_value_retrans, &L_end_str, 10);
+      if (L_end_str[0] != '\0') {
+        GEN_ERROR(E_GEN_FATAL_ERROR, "bad format, ["
+                  << L_value_retrans << "] not a number");
+        L_ret = -1 ;
+        break;
+      }
+    }
 
     L_subList = P_data -> get_sub_data() ;
     for(L_listIt  = L_subList->begin() ;
@@ -648,15 +683,19 @@ int C_ScenarioControl::add_command (T_cmd_type                P_cmd_type,
 
 	// finally add message on the scenario sequence
 	if ((L_msg != NULL) && (L_channel_id != -1)) {
-
 	  (void) P_scen
 	    ->add_cmd (P_cmd_type, 
 		       L_channel_id,
 		       L_msg,
 		       0,
-		       NULL);
+		       NULL,
+                       L_retrans_delay);
 	  
 	  L_cmd_inserted = true ;
+
+          if (L_retrans_delay > 0 ) {
+            m_retrans_delay_values->insert(T_retransDelayValuesSet::value_type(L_retrans_delay));
+          }
 
 	  if (*P_trafficType == E_TRAFFIC_UNKNOWN) {
 	    switch (P_cmd_type) {
@@ -2268,6 +2307,35 @@ T_pWaitValuesSet C_ScenarioControl::get_wait_values() {
   return (m_wait_values);
 }
 
+
+T_pRetransDelayValuesSet C_ScenarioControl::get_retrans_delay_values () {
+  return (m_retrans_delay_values);
+}
+
+void  C_ScenarioControl::update_retrans_delay_cmd (size_t P_nb, 
+                                                   unsigned long *P_table) {
+
+  int L_i ;
+  if (m_abort_scen != NULL) {
+    m_abort_scen -> update_retrans_delay_cmd (P_nb, P_table);
+  }
+  if (m_traffic_scen != NULL) {
+    m_traffic_scen -> update_retrans_delay_cmd (P_nb, P_table);
+  }
+  if (m_save_traffic_scen != NULL) {
+    m_save_traffic_scen -> update_retrans_delay_cmd(P_nb, P_table);
+  }
+  if (m_init_scen != NULL) {
+    m_init_scen -> update_retrans_delay_cmd (P_nb, P_table);
+  }
+  if (m_nb_default != 0) {
+    for(L_i=0; L_i < m_nb_default; L_i++) {
+      m_default_scen[L_i] -> update_retrans_delay_cmd (P_nb, P_table);
+    }
+  }
+}
+
+
 void  C_ScenarioControl::update_wait_cmd (size_t P_nb, 
 					  unsigned long *P_table) {
 
@@ -2690,7 +2758,7 @@ int C_ScenarioControl::check_channel_usage (T_pTrafficType P_channelUsageTable,
 
 int C_ScenarioControl::get_nb_scenario ()
 {
-  return m_nb_scenario;
+  return (m_nb_scenario);
 }
 
 
@@ -2699,5 +2767,36 @@ int C_ScenarioControl::get_nb_default_scenario ()
   return (m_nb_default);
 }
 
+int C_ScenarioControl::get_max_nb_retrans ()
+{
+
+  int L_i ;
+  int L_res = 0 ;
+  int L_max = 0 ;
+  if (m_abort_scen != NULL) {
+    L_res = m_abort_scen->get_nb_retrans ();
+  }
+  if (L_res > L_max) { L_max = L_res ; }
+  if (m_traffic_scen != NULL) {
+    L_res = m_traffic_scen->get_nb_retrans();
+  }
+  if (L_res > L_max) { L_max = L_res ; }
+  if (m_save_traffic_scen != NULL) {
+    L_res = m_save_traffic_scen->get_nb_retrans();
+  }
+  if (L_res > L_max) { L_max = L_res ; }
+  if (m_init_scen != NULL) {
+    L_res = m_init_scen->get_nb_retrans () ;
+  }
+  if (L_res > L_max) { L_max = L_res ; }
+  if (m_nb_default != 0) {
+    for(L_i=0; L_i < m_nb_default ; L_i++) {
+      L_res = m_default_scen[L_i]->get_nb_retrans();
+      if (L_res > L_max) { L_max = L_res ; }
+    }
+  }
+
+  return (L_max);
+}
 
 

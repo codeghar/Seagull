@@ -59,6 +59,9 @@
 #define DEF_CALL_TIMEOUT_BEH_ABRT                            false
 #define DEF_OPEN_TIMEOUT                                         0
 #define DEF_EXECUTE_CHECK_ACTION                              true
+#define DEF_MAX_RETRANS                                          0
+#define DEF_RETRANS_ENABLED                                  false
+
 
 
 #endif

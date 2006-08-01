@@ -77,7 +77,7 @@ void C_CallContext::reset_memory(int P_id) {
 }
   
 
-C_CallContext::C_CallContext(int P_id, int P_nbChannel, int P_mem) : C_ContextFrame() {
+C_CallContext::C_CallContext(int P_id, int P_nbChannel, int P_mem, int P_nbRetrans) : C_ContextFrame() {
   int L_i ;
   m_internal_call_id = P_id ;
   m_state = E_CTXT_ERROR ;
@@ -119,7 +119,34 @@ C_CallContext::C_CallContext(int P_id, int P_nbChannel, int P_mem) : C_ContextFr
       m_id_table[L_i].m_value.m_val_number = 0 ;
     }
   }
-  
+
+  m_nb_retrans = P_nbRetrans ;
+  if (P_nbRetrans) {
+    ALLOC_TABLE(m_retrans_msg, C_MessageFrame**, sizeof(C_MessageFrame*), P_nbRetrans);
+    ALLOC_TABLE(m_retrans_time, struct timeval*, sizeof(struct timeval), P_nbRetrans);
+    ALLOC_TABLE(m_nb_retrans_done, int*, sizeof(int), P_nbRetrans);
+    ALLOC_TABLE(m_retrans_cmd_idx, int*, sizeof(int), P_nbRetrans);
+
+    ALLOC_TABLE(m_retrans_it, T_retransContextList::iterator*, sizeof(T_retransContextList::iterator), P_nbRetrans);
+    ALLOC_TABLE(m_retrans_it_available, bool*, sizeof(bool), P_nbRetrans);
+
+
+    for(L_i = 0 ; L_i < P_nbRetrans; L_i++) {
+      m_nb_retrans_done[L_i] = 0 ;
+      m_retrans_cmd_idx[L_i] = 0 ;
+      m_retrans_msg[L_i] = NULL ;
+      m_retrans_it_available[L_i] = false ;
+    }
+  } else {
+    m_retrans_msg = NULL ;
+    m_retrans_time = NULL ;
+    m_nb_retrans_done = NULL ;
+    m_retrans_cmd_idx = NULL ;
+    m_retrans_it = NULL ;
+    m_retrans_it_available = NULL ; 
+  }
+
+  m_retrans_to_do = false ;
 
 }
 
@@ -145,6 +172,16 @@ C_CallContext::~C_CallContext() {
   FREE_TABLE(m_channel_table);
 
   FREE_TABLE(m_id_table);
+
+  clean_retrans();
+  
+  FREE_TABLE(m_retrans_time);
+  FREE_TABLE(m_nb_retrans_done);
+  FREE_TABLE(m_retrans_cmd_idx);
+
+  FREE_TABLE(m_retrans_it);
+  FREE_TABLE(m_retrans_it_available);
+
 }
 
 void C_CallContext::init() {
@@ -156,12 +193,15 @@ void C_CallContext::init() {
   for (L_i = 0 ; L_i < m_nb_mem; L_i++) {
     reset_memory(L_i) ;
   }
+  
+  clean_retrans () ;
 }
 
 void C_CallContext::reset() {
   m_state = E_CTXT_AVAILABLE ;
   m_current_cmd_idx = 0 ;
   m_created_call = false ;
+  clean_retrans () ;
 }
 
 T_CallContextState C_CallContext::get_state() {
@@ -202,7 +242,7 @@ T_CallContextState C_CallContext::init_state (T_pC_Scenario P_scen,
   reset_id();
   m_created_call = false ;
   m_current_time = *P_time ;
-
+  clean_retrans () ;
   return (m_state);
 }
 
@@ -214,7 +254,7 @@ T_CallContextState C_CallContext::init_state (T_pC_Scenario P_scen) {
   m_current_cmd_idx = 0 ;
   reset_id();
   m_created_call = false ;
-
+  clean_retrans () ;
   return (m_state);
 }
 
@@ -225,7 +265,7 @@ void C_CallContext::init_state(C_Scenario *P_scen, T_pReceiveMsgContext P_rcvCtx
   m_channel_received = P_rcvCtxt->m_channel ;
   m_current_cmd_idx = 0 ;
   // m_id to be tested
-
+  clean_retrans () ;
   m_created_call = false ;
   m_current_time = P_rcvCtxt->m_time ;
 
@@ -267,8 +307,25 @@ void C_CallContext::switch_to_scenario (C_Scenario *P_scen) {
   m_scenario = P_scen ;
   m_state = P_scen->first_state();
   m_current_cmd_idx = 0 ;
+  m_retrans_to_do = false ;
 }
 
 void C_CallContext::clean_suspended () {
   DELETE_VAR(m_suspend_msg)   ;
 }
+
+void C_CallContext::clean_retrans () {
+  int L_i = 0 ;
+  for (L_i = 0 ; L_i < m_nb_retrans; L_i++) {
+    m_nb_retrans_done[L_i] = 0 ;
+    m_retrans_cmd_idx[L_i] = 0 ;
+    DELETE_VAR(m_retrans_msg[L_i]);
+    m_retrans_it_available[L_i] = false ;
+  }
+  m_retrans_to_do = false ;
+}
+
+
+
+
+

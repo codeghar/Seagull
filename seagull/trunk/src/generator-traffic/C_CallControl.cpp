@@ -58,6 +58,11 @@ C_CallControl::C_CallControl(C_GeneratorConfig   *P_config,
   m_call_timeout_abort = false ;
   m_open_timeout_ms = 0 ; 
 
+  m_max_retrans             = 0     ;
+  m_retrans_enabled         = false ;
+  m_retrans_context_list    = NULL  ;
+  m_retrans_delay_values    = NULL  ;
+  m_nb_retrans_delay_values = 0     ;
 
   NEW_VAR(m_call_suspended, T_SuspendMap());
 
@@ -105,6 +110,24 @@ C_CallControl::~C_CallControl() {
 
   m_call_timeout_ms = 0 ; 
   m_open_timeout_ms = 0 ; 
+
+  m_max_retrans = 0 ;
+  m_retrans_enabled = false ;
+
+  if (m_nb_retrans_delay_values > 0 ) {
+    // std::cerr << "m_nb_retrans_delay_values " << m_nb_retrans_delay_values << std::endl ;
+    for(L_i=0; L_i < (int)m_nb_retrans_delay_values; L_i++) {
+      if (!m_retrans_context_list[L_i]->empty()) {
+        m_retrans_context_list[L_i]->erase(m_retrans_context_list[L_i]->begin(),
+                                          m_retrans_context_list[L_i]->end());
+      }
+      DELETE_VAR(m_retrans_context_list[L_i]);
+    }
+    FREE_TABLE(m_retrans_context_list);
+  }
+
+  FREE_TABLE(m_retrans_delay_values);
+  m_nb_retrans_delay_values = 0;
 
   m_call_timeout_abort = false ;
 
@@ -382,6 +405,11 @@ void C_CallControl::messageReceivedControl () {
       GEN_DEBUG(1, "C_CallControl::messageReceivedControl() "<<
 		"scenario in execution for this call");
 
+      if (m_retrans_enabled) {
+        stopRetrans(L_pCallContext);
+      }
+
+
       if (L_pCallContext -> msg_received (&L_rcvCtxt) == false) {
 	// scenario in execution but not in receive state
 	GEN_LOG_EVENT_CONDITIONAL (LOG_LEVEL_TRAFFIC_ERR, 
@@ -494,9 +522,188 @@ void C_CallControl::endTrafficControl() {
   GEN_DEBUG (1, "C_CallControl::endTrafficControl() end");
 }
 
+void C_CallControl::insert_retrans_list(T_pCallContext  P_callContext) {
+
+  int                               L_index, L_retrans_index ;
+
+  GEN_DEBUG (1, "C_CallControl::insert_retrans_list() start");
+  
+  L_index = P_callContext->m_retrans_context.m_retrans_delay_index ;
+  L_retrans_index = P_callContext->m_retrans_context.m_retrans_index ;
+
+  m_retrans_context_list[L_index]->push_back(P_callContext->m_retrans_context);
+  P_callContext->m_retrans_it[L_retrans_index] = m_retrans_context_list[L_index]->end() ;
+  P_callContext->m_retrans_it[L_retrans_index] -- ;
+  P_callContext->m_retrans_it_available[L_retrans_index] = true ; 
+
+  GEN_DEBUG (1, "C_CallControl::insert_retrans_list() end");
+}
+
+void C_CallControl::stopRetrans (T_pCallContext P_callContext) {
+  
+  int L_i, L_cmdIdx ;
+  int L_retrans_delay_index ;
+
+
+  GEN_DEBUG (1, "C_CallControl::stopRetrans() start");
+
+  for (L_i = 0 ; L_i < P_callContext->m_nb_retrans; L_i++) {
+    if (P_callContext->m_retrans_it_available[L_i] == true) {
+      L_cmdIdx = P_callContext->m_retrans_cmd_idx[L_i];
+      L_retrans_delay_index = 
+        (P_callContext->get_scenario()->get_commands())[L_cmdIdx].m_retrans_delay_index ;
+      m_retrans_context_list[L_retrans_delay_index]->erase(P_callContext->m_retrans_it[L_i]) ;
+      P_callContext->m_retrans_it_available[L_i] = false ;
+    }
+  }
+
+  GEN_DEBUG (1, "C_CallControl::stopRetrans() end");
+}
+
+
+void C_CallControl::messageRetransControl () {
+
+  GEN_DEBUG (1, "C_CallControl::messageRetransControl() start");
+  
+  int                                L_i            ;
+  int                                L_retrans_idx  ;
+  int                                L_nbRetrans, L_nbRetransToDo ;
+  struct timeval                     L_current_time ;
+  C_CallContext                     *L_pCallContext ;
+  C_CallContext::T_retransContext    L_retrans_ctxt ;
+  C_CallContext::T_retransContextList::iterator L_it;
+
+  list_t<C_CallContext*>             L_stopRetransList ;
+  list_t<C_CallContext*>::iterator   L_stopRetransListIt ;
+
+  list_t<C_CallContext::T_retransContextList::iterator> L_deleteList ;
+  list_t<C_CallContext::T_retransContextList::iterator>::iterator L_deleteListIt ;
+
+  C_CallContext::T_retransContextList L_doRetransList ;
+  C_CallContext::T_retransContextList::iterator L_doRetransListIt ;
+
+  bool                               L_first_get = false ;
+
+  L_stopRetransList.clear();
+  L_doRetransList.clear();
+  L_deleteList.clear() ;
+  
+  for (L_i=0; L_i < (int)m_nb_retrans_delay_values; L_i++) {
+    if (!(m_retrans_context_list[L_i]->empty())) {
+      L_nbRetrans = m_retrans_context_list[L_i]->size();
+      L_nbRetransToDo = (L_nbRetrans > m_max_send_loop) 
+        ? m_max_send_loop : L_nbRetrans ;
+      
+      GEN_DEBUG (1, "C_CallControl::messageRetransControl() L_nbRetrans " << L_nbRetrans);
+      if (L_nbRetrans) { 
+        if (L_first_get == false) { 
+          GET_TIME(&L_current_time); 
+          L_first_get = true ; 
+        }
+      }
+
+      for (L_it = m_retrans_context_list[L_i]->begin() ; 
+           L_it != m_retrans_context_list[L_i]->end() ;
+           L_it++) {
+        
+        L_retrans_ctxt = *L_it;
+        L_pCallContext = L_retrans_ctxt.m_context ;
+        L_retrans_idx = L_retrans_ctxt.m_retrans_index ;
+        
+        if (  ms_difftime(&L_current_time, &L_pCallContext->m_retrans_time[L_retrans_idx])
+              < (long) m_retrans_delay_values[L_i] ) { 
+          break ; 
+        } else { // retrans to do 
+          if (L_pCallContext->m_nb_retrans_done[L_retrans_idx] <= (int)m_max_retrans) {
+            // std::cerr << "do retrans = " << L_pCallContext << std::endl ;
+            execute_scenario_cmd_retrans (L_retrans_idx, L_pCallContext) ;
+            L_doRetransList.push_back(L_retrans_ctxt);
+            L_deleteList.push_back(L_it);
+          } else {
+            // std::cerr << "stop (max retrans) = " << L_pCallContext << std::endl ;
+            L_stopRetransList.push_back(L_pCallContext) ;
+          }
+        }
+
+        L_nbRetransToDo -- ;
+        if (L_nbRetransToDo == 0) break ;
+
+      }
+
+      if (!L_deleteList.empty()) {
+        for (L_deleteListIt = L_deleteList.begin();
+             L_deleteListIt != L_deleteList.end();
+             L_deleteListIt ++) {
+          m_retrans_context_list[L_i]->erase(*L_deleteListIt); 
+        }
+      }
+    }
+
+    if (!L_stopRetransList.empty()) {
+      for (L_stopRetransListIt = L_stopRetransList.begin();
+           L_stopRetransListIt != L_stopRetransList.end();
+           L_stopRetransListIt++) {
+        L_pCallContext = *L_stopRetransListIt ;
+        stopRetrans(L_pCallContext);
+        makeCallContextAvailable(&L_pCallContext) ;
+        m_stat -> executeStatAction (C_GeneratorStats::E_CALL_FAILED) ;
+      }
+      L_stopRetransList.erase(L_stopRetransList.begin(),
+                              L_stopRetransList.end());
+    }
+
+    if (!L_doRetransList.empty()) {
+      for (L_doRetransListIt = L_doRetransList.begin();
+           L_doRetransListIt != L_doRetransList.end();
+           L_doRetransListIt++) {
+        L_retrans_ctxt = *L_doRetransListIt;
+        m_retrans_context_list[L_i]->push_back(L_retrans_ctxt);
+        L_pCallContext = L_retrans_ctxt.m_context ;
+        L_pCallContext->m_retrans_it[L_retrans_ctxt.m_retrans_index] = 
+          m_retrans_context_list[L_i]->end();
+        (L_pCallContext->m_retrans_it[L_retrans_ctxt.m_retrans_index])--;
+      }
+      L_doRetransList.erase(L_doRetransList.begin(),
+                            L_doRetransList.end());
+    }
+  }
+
+  GEN_DEBUG (1, "C_CallControl::messageRetranstControl() end");
+}
+
+T_exeCode C_CallControl::execute_scenario_cmd_retrans (int P_index, T_pCallContext  P_callContext) {
+  T_pC_Scenario  L_scenario                    ;
+  T_exeCode      L_exeResult                   ;
+  T_pCallContext L_callContext = P_callContext ;
+
+  GEN_DEBUG (1, "C_CallControl::execute_scenario_cmd_retrans() start");
+  
+  L_scenario = L_callContext->get_scenario() ;
+  // ctrl to max_retrans and delay
+  L_exeResult = L_scenario->execute_cmd_retrans (P_index, L_callContext);
+
+  switch (L_exeResult) {
+  case E_EXE_NOERROR:
+    break ;
+  case E_EXE_ERROR_SEND:
+    makeCallContextAvailable(&L_callContext) ;
+    m_stat -> executeStatAction (C_GeneratorStats::E_CALL_FAILED) ;
+    m_stat -> executeStatAction (C_GeneratorStats::E_FAILED_CANNOT_SEND_MSG);
+    m_stat -> err_msg ((char*) "Send error");
+    break ;
+  default: 
+    m_stat -> executeStatAction (C_GeneratorStats::E_CALL_FAILED) ;
+    makeCallContextAvailable(&L_callContext) ;
+    break ;
+  }
+  GEN_DEBUG (1, "C_CallControl::execute_scenario_cmd_retrans() end");
+  return (L_exeResult);
+}
+
 void C_CallControl::messageSendControl() {
   int            L_nbSend, L_nbSendToDo ;
   T_pCallContext L_pCallContext ;
+
 
   GEN_DEBUG (1, "C_CallControl::messageSendControl() start");
   L_nbSend = m_call_ctxt_mlist -> getNbElements (E_CTXT_SEND) ;
@@ -504,9 +711,17 @@ void C_CallControl::messageSendControl() {
     ? m_max_send_loop : L_nbSend ;
   
   while (L_nbSendToDo > 0) {
-     L_pCallContext 
-       = m_call_ctxt_table[m_call_ctxt_mlist->getFirst(E_CTXT_SEND)];
+    L_pCallContext 
+      = m_call_ctxt_table[m_call_ctxt_mlist->getFirst(E_CTXT_SEND)];
     execute_scenario_cmd (L_pCallContext);
+    
+    if (m_retrans_enabled) {
+      if ((L_pCallContext->m_retrans_to_do) == true) {
+        insert_retrans_list(L_pCallContext) ;
+        L_pCallContext->m_retrans_to_do = false ;
+      }
+    } 
+
     L_nbSendToDo -- ;
   }
   GEN_DEBUG (1, "C_CallControl::messageSendControl() end");
@@ -633,6 +848,10 @@ T_GeneratorError C_CallControl::TaskProcedure() {
     messageOpenTimeoutControl();
   }
 
+  if (m_retrans_enabled) {
+    messageRetransControl () ;
+  }
+
   messageReceivedControl () ;
   if (m_nb_wait_values) { waitControl() ; }
   eventControl () ;
@@ -647,7 +866,7 @@ T_GeneratorError C_CallControl::InitProcedure() {
 
   T_GeneratorError L_error = E_GEN_NO_ERROR ;
   int            L_i ;
-  int            L_memory_used, L_channel_used ;
+  int            L_memory_used, L_channel_used, L_nb_retrans ;
   C_CallContext *L_pCallContext ;
   unsigned long  L_config_value ;
   
@@ -655,7 +874,9 @@ T_GeneratorError C_CallControl::InitProcedure() {
   T_pCallContext L_call_ctxt ;
   T_TrafficType  L_type ;
 
-  T_pWaitValuesSet L_wait_values ;
+  T_pWaitValuesSet         L_wait_values          ;
+
+  T_pRetransDelayValuesSet L_retrans_delay_values ;
   
   GEN_DEBUG (1, "C_CallControl::InitProcedure() start");
 
@@ -698,8 +919,15 @@ T_GeneratorError C_CallControl::InitProcedure() {
 	  "Internal open timeout (ms) not specified");
   }
 
-
   m_call_timeout_abort = m_config -> get_call_timeout_beh_abr ();
+
+  if (!m_config->get_value(E_CFG_OPT_MAX_RETRANS,
+			   &m_max_retrans)) {
+    GEN_FATAL(E_GEN_FATAL_ERROR, 
+	  "Internal max retrans is not specified");
+  }
+
+  m_retrans_enabled = m_config -> get_retrans_enabled();
 
   // wait values management
   L_wait_values = m_scenario_control->get_wait_values() ;
@@ -738,11 +966,17 @@ T_GeneratorError C_CallControl::InitProcedure() {
 
   L_memory_used = m_scenario_control->memory_used() ;
   L_channel_used = m_channel_control->nb_channel() ;
+  L_nb_retrans = m_scenario_control->get_max_nb_retrans();
+
+  if (m_retrans_enabled == false) {
+    L_nb_retrans = 0 ; 
+  }
 
   for(L_i = 0; L_i < (int)m_call_ctxt_table_size; L_i++) {
     NEW_VAR(L_pCallContext, C_CallContext(L_i,
 					  L_channel_used,
-					  L_memory_used));
+					  L_memory_used,
+                                          L_nb_retrans));
     m_call_ctxt_table[L_i] = L_pCallContext ;
     m_call_ctxt_mlist->setElementPayload((long)L_i, L_pCallContext);
   }
@@ -750,11 +984,47 @@ T_GeneratorError C_CallControl::InitProcedure() {
   // test if an init scenario is defined
   L_scenario = m_scenario_control->init_scenario_defined(&L_type) ;
 
+  if (m_retrans_enabled) {
+    L_retrans_delay_values = m_scenario_control->get_retrans_delay_values() ;
+    m_nb_retrans_delay_values = L_retrans_delay_values -> size() ;
+
+    // std::cerr << "m_nb_retrans_delay_values=" << m_nb_retrans_delay_values << std::endl ;
+
+    if (m_nb_retrans_delay_values != 0) {
+      
+      T_retransDelayValuesSet::iterator L_retransDelayIt ;
+      int                               L_i              ;
+      
+      ALLOC_TABLE(m_retrans_delay_values, 
+                  unsigned long*, 
+                  sizeof(unsigned long), 
+                  m_nb_retrans_delay_values);
+      L_i = 0 ;
+      for (L_retransDelayIt = L_retrans_delay_values->begin();
+           L_retransDelayIt != L_retrans_delay_values->end() ;
+           L_retransDelayIt++) {
+        m_retrans_delay_values[L_i] = *L_retransDelayIt ;
+        L_i ++ ;
+      }
+
+      ALLOC_TABLE(m_retrans_context_list, C_CallContext::T_pRetransContextList*, sizeof(C_CallContext::T_pRetransContextList), m_nb_retrans_delay_values);
+      for (L_i = 0 ; L_i < (int)m_nb_retrans_delay_values; L_i++) {
+        NEW_VAR(m_retrans_context_list[L_i], 
+                C_CallContext::T_retransContextList());
+      }
+
+
+      m_scenario_control -> update_retrans_delay_cmd (m_nb_retrans_delay_values, 
+                                                      m_retrans_delay_values);
+    }
+
+  }
+
   m_stat->init();
   if (L_scenario == NULL) {
     GEN_WARNING("no init scenario defined");
   } else {
-
+    
     switch(L_type) {
     
     case E_TRAFFIC_CLIENT:
@@ -1115,6 +1385,10 @@ void C_CallControl::messageTimeoutControl() {
       GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
 		    "Call timeout detected");
 
+      if (m_retrans_enabled) {
+        stopRetrans(L_pCallContext);
+      }
+
       // Timeout for scenario stats
       if ((L_stats = (L_pCallContext->get_scenario())->get_stats()) != NULL) {
 	L_stats -> updateStats(L_pCallContext->get_current_cmd_idx(),
@@ -1132,10 +1406,12 @@ void C_CallControl::messageTimeoutControl() {
             ->moveToList(L_pCallContext->get_state(), 
                          L_pCallContext->get_internal_id());
         } else {
+
           m_stat->executeStatAction(C_GeneratorStats::E_CALL_FAILED);
           makeCallContextAvailable(&L_pCallContext);
         }
        } else {
+
          m_stat->executeStatAction(C_GeneratorStats::E_CALL_FAILED);
          makeCallContextAvailable (&L_pCallContext) ;
        }
