@@ -3,6 +3,7 @@
 
 <faqs>
   <title>Frequently Asked Questions</title>
+  <!-- Last FAQ # is 006 -->
 
   <faqsection id="usage">
     <title>Seagull Usage</title>
@@ -43,11 +44,39 @@
        What happens if a call is stuck?
       </question>
       <answer>
-          	<p>By default, the call will be stuck forever. You activate the call-timeout to instruct Seagull to close "hang" calls.
-            If a call is active beyond the call-timeout-ms value, the call will time out and Seagull will close the call by using the <![CDATA[<abort>]]> section
+          	<p>By default, the call will be stuck forever. You need to
+            activate the call-timeout to instruct Seagull to close "hanged" calls.
+            If a call is active beyond the call-timeout-ms value, the call will 
+            time out and Seagull will close the call by using the <![CDATA[<abort>]]> section
             of the scenario if it exists.</p>
       </answer>
     </faq>
+    <faq id="faq006">
+      <question>
+       I occasionally get "Flow control not implemented" messages. What does that mean?
+      </question>
+      <answer>
+          	<p>  The message you see is because Seagull got an "EAGAIN" error 
+            from the TCP protocol stack when trying to send his message. 
+            This EAGAIN error occurs when Seagull cannot send anymore data 
+            (like when TCP buffer full): the TCP stack asks the application
+            (Seagull) to try again later. But this mechanism (which can be called "flow control")
+            is not implemented in Seagull.</p>
+            <p>Looking at the possible causes, this might be because the remote 
+            application (to which Seagull talks to) doesn't read data 
+            quick enough, which causes TCP stack queues on which Seagull is relying 
+            to be overloaded.</p>
+            <p>Also, you must be aware that when you change the call rate, 
+            the max-send and max-receive as well as maybe max-simultaneous-calls parameters 
+            must be changed accordingly (see 
+            <a href="http://gull.sourceforge.net/doc/core.html#ref_traffic_param">http://gull.sourceforge.net/doc/core.html#ref_traffic_param</a> 
+            for values)</p>
+      </answer>
+    </faq>
+    
+  </faqsection>
+  <faqsection id="misc">
+    <title>Miscenalleous questions</title>
     <faq id="faq005">
       <question>
        Is Seagull stable?
