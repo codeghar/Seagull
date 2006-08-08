@@ -472,16 +472,26 @@ seagull is /usr/local/bin/seagull</source>
   </scenario>]]></source>
         <section id="scen_counter">
           <title>Counter section</title>
-          <p>The <strong>counter</strong> section contains some variable initialization. 
-	    Those variables can then be used in other sections.  
-	    This can be in a server type or in a client type scenario.</p>
-          <p>The list of scenario commands that can be included in this section is 
-            described in the <a href="#ref_scenario_commands">scenario command section</a>.</p>
+          <p>The <strong>counter</strong> section contains a list of counters that 
+          are available during the traffic. This is useful, for example, to handle session-id (the name
+          varies depending on the protocol) which are used to identify a call in Seagull.</p>
+          <p>For example, the following code declares 3 counters: HbH-counter (initial value: 1000), 
+          EtE-counter (initial value: 2000) and session-counter (initial value: 0).</p>
+          <source><![CDATA[<counter>
+  <counterdef name="HbH-counter" init="1000"> </counterdef>
+  <counterdef name="EtE-counter" init="2000"> </counterdef>
+  <counterdef name="session-counter" init="0"> </counterdef>
+</counter>]]></source>
+          <p>Those counters can then be used in the scenario using the <a href="#action_inc-counter">inc-counter</a> 
+          and <a href="#action_set-value">set-value</a>
+          scenario actions (see <a href="#ref_actions">scenario actions section</a>).</p>
         </section>
         <section id="scen_init">
           <title>Init section</title>
           <p>The <strong>init</strong> section is executed once, at the time of the connection is setup
             (before any traffic). This can be in a server type or in a client type scenario.</p>
+          <p>This section can be used as a pre-amble to the traffic (like CER/CEA exchange
+          for Diameter protocol).</p>
           <p>The list of scenario commands that can be included in this section is 
             described in the <a href="#ref_scenario_commands">scenario command section</a>.</p>
         </section>
@@ -576,13 +586,13 @@ seagull is /usr/local/bin/seagull</source>
           Those variables are local to each call (each instance of the scenario).</p>
         <p>Here is what is possible to do with call variables:</p>
         <ul>
-          <li>Set a call variable by using the <a href="#action_set-value">set-value</a> action.</li>
+          <li>Set the value of a protocol entity by using the <a href="#action_set-value">set-value</a> action.</li>
           <li>Increment a call variable within a call by using the <a href="#action_inc-var">inc-var</a> action.</li>
-          <li>Increment a call counter by using the <a href="#action_inc-counter">inc-counter</a> action. 
-	    A counter is a global variable.</li>
-          <li>Retrieve the value of a protocol entity by using the <a href="#action_store">store</a> action.</li>
-          <li>Put the value of a call variable in a protocol entity by using the <a href="#action_restore">restore</a> action.</li>
-          <li>In particular, this is the way how Diameter Hop-by-hop Id and End-To-End Id are handled.</li>
+          <li>Increment a call counter by using the <a href="#action_inc-counter">inc-counter</a> action (note: a counter is a global 
+          (that is, valid for the entire traffic) variable).</li>
+          <li>Retrieve the value of a protocol entity in a call variable by using the <a href="#action_store">store</a> action.</li>
+          <li>Put the value of a call variable in a protocol entity by using the <a href="#action_restore">restore</a> action. 
+          (in particular, this is how Diameter Hop-by-hop Id and End-To-End Id are handled.</li>
         </ul>
       </section>
     </section>
@@ -1927,6 +1937,25 @@ For the "libtrans_octcap.so", the possible parameters are the following:<br/>
           </tr>
           <tr>
             <th>
+              <anchor id="action_open"/>
+              <strong>&lt;open&gt;</strong>
+            </th>
+            <th>&nbsp;</th>
+            <th>'open' action opens an instance of the transport channel. This can
+            be used for example to open a new TCP socket for each call. Don't
+            forget to use 'close' action at the end of the scenario.</th>
+            <th>&nbsp;</th>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>args</td>
+            <td>Argument relevant to the transport channel used</td>
+            <td>
+              <code><![CDATA[<open args="mode=client;dest=10.10.11.157:8080"></open>]]></code>
+            </td>
+          </tr>
+          <tr>
+            <th>
               <anchor id="action_close"/>
               <strong>&lt;close&gt;</strong>
             </th>
@@ -2099,7 +2128,7 @@ For the "libtrans_octcap.so", the possible parameters are the following:<br/>
           <tr>
             <td>&nbsp;</td>
             <td>name</td>
-            <td>Name of the call variable to increment</td>
+            <td>Name of the global counter to increment</td>
             <td>"HbH-counter" increment the value of HbH-counter by 1</td>
           </tr>
           <tr>
