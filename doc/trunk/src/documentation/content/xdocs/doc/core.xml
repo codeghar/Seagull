@@ -160,7 +160,7 @@ seagull is /usr/local/bin/seagull</source>
         <p><img src="images/channels.jpg" alt="Channels and protocols"/></p>
         <p>A channel makes the link between a transport and a protocol.</p>
         <note>Only one channel can be opened as server and it has to be opened as the FIRST channel.</note>
-        <p>Transport and channels are defined in the <a href="#config_generic">generic configuration file</a>
+        <p>Transport and channels are defined in the <a href="#transport_config">generic configuration file</a>
         </p>
         <p>Here are some examples:</p>
         <ul>
@@ -1431,16 +1431,25 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
               <td>init-args</td>
               <td>Arguments to be passed to the transport library. The arguments are 
 	    separated by semi-colons (;).</td>
-              <td>For the "libtrans_ip.so", the possible values are:<br/>
-- type = tcp (default=tcp)<br/>
-- decode-buf-len (default=4096): size of the reception buffer (maximum message size after re-assembly)<br/>
-- encode-buf-len (default=4096): size of the sending buffer (maximum message size to be sent (can be segmented))<br/>
-- read-buf-len (default=1024): amount of bytes to read on the IP socket at a time - several reads 
-might be necessary if buffer is the message to read is bigger than the buffer (impact on performances)<br/>
-For the "libtrans_octcap.so", the possible parameters are the following:<br/>
-- flavour (possible values: WBB, AAA, WAA, ABB)<br/>
-- path to the reference library (optional)<br/>
-- reference library (optional)</td>
+              <td><ul>
+              <li>For the "libtrans_ip.so", the possible values are:
+                <ul>
+                  <li>type = tcp (default=tcp)</li>
+                  <li>decode-buf-len (default=4096): size of the reception buffer (maximum message size after re-assembly)</li>
+                  <li>encode-buf-len (default=4096): size of the sending buffer (maximum message size to be sent (can be segmented))</li>
+                  <li>read-buf-len (default=1024): amount of bytes to read on the IP socket at a time - several reads 
+                    might be necessary if buffer is the message to read is bigger than the buffer (impact on performances)</li>
+                </ul>
+              </li>
+              <li>For the "libtrans_octcap.so", the possible parameters are the following:
+                <ul>
+                  <li>flavour (possible values: WBB, AAA, WAA, ABB)</li>
+                  <li>path to the reference library (optional)</li>
+                  <li>reference library (optional)</li>
+                </ul>
+              </li>
+              </ul>
+              </td>
             </tr>
           </table>
           <p></p>
@@ -1462,6 +1471,14 @@ For the "libtrans_octcap.so", the possible parameters are the following:<br/>
               <td>The value must correspond to one of the protocol name defined in a dictionary.</td>
             </tr>
             <tr>
+              <td>global</td>
+              <td>Indicate if a channel is declared and used globally (opened once)
+              or needs to be opened for each scenario call (using the "<a href="#open_action">open</a>" 
+              action). By default, the channel is declared globally. adding <code>global="no"</code>
+              will allow to open channels in the scenarios.</td>
+              <td>-</td>
+            </tr>
+            <tr>
               <td>transport</td>
               <td>Transport to be used for this channel</td>
               <td>The value must correspond to one transport defined previously.</td>
@@ -1469,13 +1486,35 @@ For the "libtrans_octcap.so", the possible parameters are the following:<br/>
             <tr>
               <td>open-args</td>
               <td>Arguments to specify connexion parameters.<br/>
-	    For IP-based protocols, it specifies the mode (client or server), the address and the port.<br/>
-	    For TCAP, it specifies the parameters of the TCAP connexion to the stack.</td>
-              <td>Example of value for a client for a IP-based protocol: 
+                <ul>
+                  <li>libtrans_ip based channels:
+                    <ul>
+                      <li>mode (mandatory): "client" (first message on the channel is sent) or 
+                                "server" (first message on the channel is received)</li>
+                      <li>dest (mandatory): destination IP address/port to send messages</li>
+                      <li>source (optional): source IP address/port to send messages (if not specified,
+                      the system chooses the best one)</li>
+                    </ul>
+                    Example of value for a client for a IP-based protocol: 
 	    "mode=<strong>client</strong>;<strong>dest</strong>=127.0.0.1:3868"<br/>
 	    Example of value for a server for a IP-based protocol: 
-	    "mode=<strong>server</strong>;<strong>source</strong>=127.0.0.1:3868"<br/>
-	    Example for TCAP: "class=SS7_Stack_2;ossn=20;application=2;instance=2".</td>
+	    "mode=<strong>server</strong>;<strong>source</strong>=127.0.0.1:3868"
+                  </li>
+                  <li>libtrans_octcap based channels:
+                    <ul>
+                      <li>class (mandatory): Name of the OCSS7 stack</li>
+                      <li>ossn (mandatory): Originating SSN used to connect Seagull
+                      TCAP application to OCSS7 stack (one of the local OCSS7 SSN)</li>
+                      <li>application (optional): Application ID used by Seagull
+                      (refer to OCSS7 Application Developer's Guide)</li>
+                      <li>instance (optional): Instance ID used by Seagull (refer to 
+                      OCSS7 Application Developer's Guide)</li>
+                    </ul>
+                    Example: "class=SS7_Stack_2;ossn=20;application=2;instance=2"
+                  </li>
+                </ul>
+                </td>
+                <td> </td>
             </tr>
           </table>
         </section>
