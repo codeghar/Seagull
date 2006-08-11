@@ -814,6 +814,7 @@ T_exeCode C_Scenario::execute_action(T_pCmd_scenario P_pCmd,
 	  P_callCtxt->m_suspend_id = L_id ;
 	  P_callCtxt->m_suspend_msg = P_msg ;
           P_callCtxt->m_channel_id   = P_pCmd->m_channel_id ;
+          P_callCtxt->m_channel_received   = P_callCtxt->m_channel_id ;
 	  gettimeofday(&P_callCtxt->m_current_time, &L_timeZone) ;
 	  // OPEN DELAYED => do not execute the command
 	  // just wait for open
