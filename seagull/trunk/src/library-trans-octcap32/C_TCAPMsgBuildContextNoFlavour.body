@@ -425,7 +425,7 @@ bool C_TCAPMsgBuildContextNoFlavour::get_component_data (T_pValueData P_data) {
     }
   } else {
 
-    LOG_ERROR("No operation data");
+    // LOG_ERROR("No operation data");
 
     P_data->m_type = E_TYPE_STRING ;
     P_data->m_value.m_val_binary.m_size = 0 ;
