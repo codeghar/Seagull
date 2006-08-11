@@ -1036,13 +1036,14 @@ int C_TransIP::resolve_addr(T_pIpAddr P_pIpAddr) {
   L_resolved_sockaddr = &P_pIpAddr->m_addr_src ;
 
 #ifdef DEBUG_MODE
-
+{
   const char *L_cNoHost = "none" ;
   char *L_hostDebug = (L_host == NULL) ? (char*)L_cNoHost : L_host ;
 
   GEN_DEBUG(1, "C_TransIP::resolve_addr() [" 
 	    << L_hostDebug
 	    << "]:[" << L_port << "]");
+}
 #endif
 
 #ifndef USE_IPV4_ONLY
