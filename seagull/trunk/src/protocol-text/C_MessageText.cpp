@@ -213,6 +213,9 @@ C_MessageText::C_MessageText(C_ProtocolText *P_protocol,
     // message unknown
     *P_id = -1 ;
     m_id = -1 ;
+    GEN_ERROR(E_GEN_FATAL_ERROR, "Unknown (not in dictionary) message [" 
+                << this->get_text_value(m_header) 
+                << "]");
   } else {
     // decode id
     // std::cerr << "L_message_type    " << L_message_type << std::endl;

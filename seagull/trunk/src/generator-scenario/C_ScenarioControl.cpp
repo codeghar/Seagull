@@ -1957,7 +1957,7 @@ int C_ScenarioControl::add_expression (char       *P_arg,
 	    = get_counter_id (L_value) ;
 	  if (L_string_val->m_data.m_id == -1) {
 	    GEN_ERROR(E_GEN_FATAL_ERROR,
-		  "Unable to found definition for ["
+		  "Unable to find definition for ["
 		  << L_value << "]");
 	    L_ret = -1 ;
 	    break ;

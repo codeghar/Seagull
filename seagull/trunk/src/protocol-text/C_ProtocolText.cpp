@@ -657,7 +657,7 @@ C_MessageFrame* C_ProtocolText::create_new_message (C_MessageFrame *P_msg) {
 }
 
 
-int C_ProtocolText::analyze_messsage_scen (C_XmlData            *P_data, 
+int C_ProtocolText::analyze_message_scen (C_XmlData            *P_data, 
                                            T_pCDATAValueList     P_cdata_value_list) {
 
   int                         L_ret                = 0    ;
@@ -667,7 +667,7 @@ int C_ProtocolText::analyze_messsage_scen (C_XmlData            *P_data,
 
   L_data_scen = P_data->get_sub_data();
   if (L_data_scen == NULL){
-    GEN_ERROR(E_GEN_FATAL_ERROR, "C_ProtocolText::analyze_messsage_scen() "
+    GEN_ERROR(E_GEN_FATAL_ERROR, "C_ProtocolText::analyze_message_scen() "
               << "no value found for this message [" << m_header_name << "]");
     L_ret = -1 ;
   } 
@@ -702,7 +702,7 @@ C_MessageFrame* C_ProtocolText::create_new_message(void                *P_xml,
   NEW_VAR(L_list_value, T_CDATAValueList());
 
   // analyze message from scenario 
-  L_ret = analyze_messsage_scen(P_data, L_list_value) ;
+  L_ret = analyze_message_scen(P_data, L_list_value) ;
 
   if (L_ret != -1) {
     if ((L_list_value != NULL ) && (!(L_list_value)->empty())) {  

@@ -226,7 +226,7 @@ private:
 					  T_FieldHeaderList    *P_fielddef_header_list,
 					  int                  *P_ret);
 
-  int   analyze_messsage_scen(C_XmlData            *P_data, 
+  int   analyze_message_scen(C_XmlData            *P_data, 
                               T_pCDATAValueList     P_cdata_value_list);
 
   C_MessageText* build_message (char *P_header, 
