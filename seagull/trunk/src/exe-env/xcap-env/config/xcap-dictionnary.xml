@@ -60,6 +60,12 @@
              line="0"
              subexpr="1"> 
      </regexp>
+     <regexp name="request-param" 
+             expr="[[:space:]]*([^ ]+)[[:space:]]+([^ ]+)[[:space:]]+HTTP\/1\.1[[:space:]]*$"
+             nbexpr="3"
+             line="0"
+             subexpr="2"> 
+     </regexp>
      <regexp name="answer-type"
              expr="HTTP\/1\.1[[:space:]]+([0-9]+)[[:space:]]+"
              nbexpr="2"
@@ -99,6 +105,8 @@
   <message name="401"></message>   <!-- Answer: Unauthorized -->
   <message name="403"></message>   <!-- Answer: Forbidden -->
   <message name="404"></message>   <!-- Answer: Not Found -->
+  <message name="409"></message>   <!-- Answer: Conflict -->
+  <message name="412"></message>   <!-- Answer: Precondition Failed -->
   <message name="500"></message>   <!-- Answer: Internal Server Error -->
   <message name="501"></message>   <!-- Answer: Not Implemented -->
   <message name="502"></message>   <!-- Answer: Bad Gateway -->
@@ -107,11 +115,4 @@
 </dictionary>
 
 </protocol>
-
-
-
-
-
-
-
 

@@ -22,7 +22,7 @@
 <configuration name="Simple IP Server Conf">
 
   <define entity="transport"
-    name="trans-1"
+    name="tcp-trans"
     file="libtrans_ip.so"
     create_function="create_cipio_instance"
     delete_function="delete_cipio_instance"
@@ -32,8 +32,8 @@
   <define entity="channel"
     name="channel-1"
     protocol="xcap-protocol"
-    transport="trans-1"
-    open-args="mode=server;source=127.0.0.1:8080">
+    transport="tcp-trans"
+    open-args="mode=server;source=127.0.0.1:8090">
   </define>
 
   <define entity="traffic-param" name="display-period" value="1"></define>
