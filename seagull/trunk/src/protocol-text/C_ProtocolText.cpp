@@ -730,7 +730,9 @@ C_MessageFrame* C_ProtocolText::create_new_message(void                *P_xml,
     L_msg = create(this,L_header,L_body);
     if (L_msg == NULL) {
       GEN_ERROR(E_GEN_FATAL_ERROR, "C_ProtocolText::create_new_message() "
-                << "Error while creating message with header [" << L_header << "]");
+                << "Error while creating message with header [" 
+                << L_header 
+                << "]: message not in dictionary?");
     }
   }
   
