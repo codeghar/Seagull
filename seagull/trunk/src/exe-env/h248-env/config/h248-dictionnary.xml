@@ -60,6 +60,11 @@
              nbexpr="4"
              subexpr="2"> 
      </regexp>
+     <regexp name="message-header-no-equal" 
+             expr="[[:space:]]*[!]\/1[[:space:]]*[[]([^]]+)[]][:]{0,1}[0-9]*[[:space:]]*([^ ]+)[[:space:]]*\n"
+             nbexpr="3"
+             subexpr="2"> 
+     </regexp>
    </fielddef>
 
    <fielddef name="transaction-id">
@@ -68,8 +73,18 @@
              nbexpr="2"
              subexpr="1">
      </regexp>
+     <regexp name="trans-id-short"
+             expr="[Tt][[:space:]]*[=][[:space:]]*([0-9]+)"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
      <regexp name="reply-id"
              expr="[Rr][Ee][Pp][Ll][Yy][[:space:]]*[=][[:space:]]*([0-9]+)"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+     <regexp name="transresponseack-id"
+             expr="TransactionResponseAck[[:space:]]*[{][[:space:]]*([0-9]+)[[:space:]]*[}]"
              nbexpr="2"
              subexpr="1">
      </regexp>
@@ -85,6 +100,13 @@
              subexpr="1">
      </regexp>
    </fielddef>
+   <fielddef name="transaction-id-in-body">
+     <regexp name="trans-id-in-body"
+             expr="[[:space:]]*([[:digit:]]*)[[:space:]]*[}]"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
 
 </body>
 
@@ -93,12 +115,11 @@
             session-id="transaction-id" 
             out-of-session-id="transaction-id">
 
-<!--
-<dictionary session-method="open-id">
--->
-
   <message name="Transaction"></message>
+  <message name="T"></message>
+  <message name="TransactionResponseAck"></message>
   <message name="Reply"></message>
+  <message name="R"></message>
 
 </dictionary>
 
