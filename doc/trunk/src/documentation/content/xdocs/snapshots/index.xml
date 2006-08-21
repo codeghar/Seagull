@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN"
 "http://forrest.apache.org/dtd/document-v20.dtd">-->
-<!DOCTYPE document SYSTEM "document-v20-custom.dtd">
+<!DOCTYPE document SYSTEM "../document-v20-custom.dtd">
 <document> 
   <header> 
     <title>Seagull  - Snapshots and videos</title>
@@ -10,12 +10,12 @@
   <body> 
     <section id="snaps">
       <title>Snapshots</title>
-      <p>Seagull running Diameter traffic</p>
-      <img src="images/snap_diameter.jpg"/>
-      <p>Seagull running H248/Megaco traffic</p>
-      <img src="images/snap_h248.jpg"/>
-      <p>Seagull running XCAP over http traffic</p>
-      <img src="images/snap_xcap.jpg"/>
+      <p>Seagull running Diameter traffic:<br/>
+      <img src="images/snap_diameter.jpg" alt="Seagull running Diameter traffic"/></p>
+      <p>Seagull running H248/Megaco traffic:<br/>
+      <img src="images/snap_h248.jpg" alt="Seagull running H248 traffic"/></p>
+      <p>Seagull running XCAP over http traffic:<br/>
+      <img src="images/snap_xcap.jpg" alt="Seagull running XCAP traffic"/></p>
     </section>
     <section id="videos">
       <title>Videos</title>
