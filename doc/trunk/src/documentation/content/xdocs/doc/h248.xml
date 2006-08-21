@@ -1,0 +1,381 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN" "http://forrest.apache.org/dtd/document-v20.dtd">
+<document>
+  <header>
+    <title>Seagull - H248/MEGACO protocol</title>
+  </header>
+  <body>
+    <section>
+      <title>H248/MEGACO protocol details</title>
+      <p>The implementation of H248/MEGACO in Seagull conforms to <a href="http://www.packetizer.com/voip/h248/standards.html">H248 standards</a>,
+      ASCII form (ASN.1 version not supported).</p>
+      <note>H248 implementation in Seagull can be entirely customized through the H248 XML dictionary - which should allow almost
+      any H248 extensions to be supported.</note>
+    </section>
+    <section>
+      <title>Getting started with H248</title>
+      <section>
+        <title>First try</title>
+        <p>So that you can get familiar with Seagull in the context of H248, 
+        here is an example that will launch one H248 server 
+        (a server expects a message as the first scenario command) and one H248
+        client (a client sends a message as the first scenario command). 
+        The client and the server will talk to each other using the loopback interface 
+        (127.0.0.1). The scenario is the following:</p>
+        <source><![CDATA[     | Trans (Add) |
+     |------------>|
+     | Reply (Add) |
+     |<------------|
+     |TransRespAck |
+     |------------>|
+     | Trans (Play)|
+     |------------>|
+     | Trans (Sub) |
+     |------------>|
+     | Reply (Sub) |
+     |<------------|
+     |TransRespAck |
+     |------------>|]]></source>
+        <p>You can also see the <a href="h248.client.xml.html">client</a> XML scenario.</p>
+      </section>
+      <section>
+        <title>First try explained</title>
+        <p>Here is the commented version of the H248 client which, for the example, mixes both short and pretty H248 form:</p>
+        <table>
+          <tr>
+            <th>Scenario</th>
+            <th>Comments</th>
+          </tr>
+          <tr>
+            <td>
+              <source><![CDATA[<?xml version="1.0" encoding="ISO-8859-1" ?>
+<scenario>
+
+<counter>
+  <counterdef name="transaction-counter" init="0"> </counterdef>
+</counter>
+
+<traffic>
+  <send channel="channel-1">
+    <action>
+      <inc-counter name="transaction-counter"> </inc-counter>
+      <set-value name="transaction-id"
+                 format="$(transaction-counter)">
+      </set-value>
+    </action>
+    <message>
+      <!-- header -->
+      <![CDATA[!/1 [16.16.88.188\]:55554
+               T=18571] ]>
+      <!-- body -->
+      <![CDATA[C=${A=${M{TS{SI=iv,BF=off},
+               ST=1{O{MO=sr,RV=off,RG=off},
+                 R{m=audio 49152 RTP/AVP 3 97 98 8 0 101
+                   c=IN IP4 16.16.214.175
+                   a=rtpmap:3 GSM/8000
+                   a=rtpmap:97 iLBC/8000
+                   a=rtpmap:98 iLBC/8000
+                   a=fmtp:98 mode=20
+                   a=rtpmap:8 PCMA/8000
+                   a=rtpmap:0 PCMU/8000
+                   a=rtpmap:101 telephone-event/8000
+                   a=fmtp:101 0-11,16
+                 }}}}}}] ]>
+     </message>
+     <action>
+       <!-- Store the transaction-id for following messages -->
+       <store name="TID" entity="transaction-id">
+         <regexp name="t-id"
+           expr="[Tt][[:space:]]*[=][[:space:]]*([0-9]+)"
+           nbexpr="2"
+           subexpr="1">
+         </regexp>
+       </store>
+     </action>
+   </send>
+
+   <receive channel="channel-1">
+     <message>
+       <!-- header -->
+       <![CDATA[MEGACO/1 [16.16.88.188\]:55555
+                Reply=18571] ]>
+       <!-- body -->
+       <![CDATA[Context=1{
+          Add=T1{Media{
+          TerminationState{ServiceStates=inservice,Buffer=off},
+          Stream=1{
+          LocalControl{Mode=sendreceive,ReservedValue=off,ReservedGroup=off},
+          Local{
+            v=0
+            o=user 0 0 IN IP4 16.16.88.188
+            s=-
+            t=0 0
+            m=audio 3436 RTP/AVP 8 0 101
+            c=IN IP4 16.16.88.188
+            a=rtpmap:8 PCMA/8000/1
+            a=rtpmap:0 PCMU/8000/1
+            a=rtpmap:101 telephone-event/8000/1
+          },
+          Remote{
+            v=0
+            o=user 0 0 IN IP4 16.16.88.188
+            s=-
+            t=0 0
+            m=audio 49152 RTP/AVP 3 97 98 8 0 101
+            c=IN IP4 16.16.214.175
+            a=rtpmap:3 GSM/8000
+            a=rtpmap:97 iLBC/8000
+            a=rtpmap:98 iLBC/8000
+            a=fmtp:98 mode=20
+            a=rtpmap:8 PCMA/8000
+            a=rtpmap:0 PCMU/8000
+            a=rtpmap:101 telephone-event/8000
+            a=fmtp:101 0-11,16
+          }}}}}}] ]>
+     </message>
+   </receive>
+
+   <send channel="channel-1">
+     <action>
+       <restore name="TID" entity="transaction-id-in-body"></restore>
+     </action>
+     <message>
+       <!-- header -->
+       <![CDATA[!/1 [16.16.88.188\]:55554 
+                TransactionResponseAck] ]>
+       <!-- body -->
+       <![CDATA[18571}] ]>
+     </message>
+   </send>
+
+  <send channel="channel-1">
+    <action>
+      <restore name="TID" entity="transaction-id"></restore>
+    </action>
+    <message>
+      <!-- header -->
+      <![CDATA[!/1 [16.16.88.188\]:55554
+               Transaction=18572] ]>
+      <!-- body -->
+      <![CDATA[C=1{MF=T1
+                {SG{aasdc/play
+                {an=
+                 "sid=<file://home/ocmpadm/tests_tools.d/prompts.d/welcome.wav>"}
+              },
+              E=100{g/sc}}}}] ]> 
+    </message>
+  </send>
+
+  <send channel="channel-1">
+    <action>
+      <restore name="TID" entity="transaction-id"></restore>
+    </action>
+    <message>
+      <!-- header -->
+      <![CDATA[!/1 [16.16.88.188\]:55554
+               Transaction=18572] ]>
+      <!-- body -->
+      <![CDATA[C=1{S=T1}}] ]> 
+    </message>
+  </send>
+
+  <receive channel="channel-1">
+    <message>
+      <!-- header -->
+      <![CDATA[MEGACO/1 [16.16.88.188\]:55555
+               Reply=18572] ]>
+      <!-- body -->
+      <![CDATA[Context=1{Subtract=T1}}] ]>
+    </message>
+  </receive>
+
+  <send channel="channel-1">
+    <action>
+      <restore name="TID" entity="transaction-id-in-body"></restore>
+    </action>
+    <message>
+      <!-- header -->
+      <![CDATA[!/1 [16.16.88.188\]:55554
+               TransactionResponseAck] ]>
+      <!-- body -->
+      <![CDATA[68836}] ]> 
+    </message>
+  </send>
+
+</traffic>
+</scenario>
+]]></source>
+            </td>
+            <td>
+              <source><![CDATA[XML header
+
+
+The transaction-counter counter is declared and 
+will be incremented for each new call
+
+
+
+
+
+Increment the transaction counter
+...and set the transaction-id field, as declared
+in the dictionary with the transaction-counter value
+
+
+
+H248 header. Note the "\]" instead of "]"
+
+The transaction ID (T=...) is replaced by the action 
+'set-value'
+H248 body. Note that the first "{" is omitted (see 
+note below)
+
+
+
+
+
+
+
+
+
+
+
+
+
+Now that the message is sent, we store the value of the
+transaction ID (the counter is global to the entire traffic
+and thus its value needs to be saved)
+
+
+
+
+
+
+
+
+Receive the Reply on channel-1
+
+
+
+
+Note that the content of the message is not checked by
+Seagull. Content check can be done using the check-value
+action (see core documentation)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Send the TransactionResponseAck. For this message,
+the transaction id is located in the body. This is
+why you must use the 'restore' action on the 
+'transaction-id-in-body' field. Note that fields
+are described in the dictionary and correspond to regular
+expressions.
+ 
+
+
+
+
+
+
+Send the play transaction
+In this case, the transaction id is located in the header
+(field 'transaction-id')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Send the Substract transaction
+
+
+
+
+
+
+
+
+
+
+
+
+Expect the Reply transaction
+
+
+
+
+
+
+
+
+
+Send the TransactionResponseAck
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+]]></source>
+            </td>
+          </tr>
+        </table>
+      </section>
+    </section>
+    <section id="misc">
+      <title>Miscellaneous considerations</title>
+      <p>When creating the H248 scenario, several points must be considered:</p>
+      <ul>
+        <li>In a CDATA section, "]" must be escaped by using "\]" - this does not apply to "[".</li>
+        <li>The number of "{" and "}" in H248 messages is not equal: because of the way the
+        dictionary is done, there must be one less "{" than the number of "}" (no
+        starting "{" in the body, but ending "}" must be present.</li>
+        <li>In H248 scenarios, heading spaces and tabs are "eaten" by the scenario parser
+        and are not sent on the network.</li>
+      </ul>
+    </section>
+  </body>
+</document>

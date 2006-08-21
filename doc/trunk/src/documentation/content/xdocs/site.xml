@@ -28,11 +28,10 @@ See http://xml.apache.org/forrest/linking.html for more info
      <octcap label='Protocol: tcap' href='octcap.html' />
 <!--     <sip label='Protocol: sip' href='sip.html' />-->
      <xcap label='Protocol: xcap' href='xcap.html' />
+     <xcap label='Protocol: h248' href='h248.html' />
 <!--     <http label='Protocol: http' href='http.html' /> -->
 <!--     <rawbin label='Protocol: raw binary' href='rawbinary.html' /> -->
      <sync label='Protocol: sync' href='sync.html' />
-     <!--<mbi label='Protocol: mbi' href='mbi.html' />
-     <dcc label='Protocol: dcc' href='dcc.html' />-->
      <faq label='FAQ' href='faq.html' />
      <core label='Developer' href='dev.html' />
   </doc>

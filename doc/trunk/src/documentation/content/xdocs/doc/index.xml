@@ -31,6 +31,9 @@
           <link href="xcap.html">XCAP protocol documentation</link>
         </li>
         <li>
+          <link href="h248.html">H248 protocol documentation</link>
+        </li>
+        <li>
           <link href="sync.html">Synchronization protocol documentation</link>
         </li>
       </ul>

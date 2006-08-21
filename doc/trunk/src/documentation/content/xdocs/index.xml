@@ -13,7 +13,7 @@
   <body>
     <section>
       <title>Welcome to Seagull!</title>
-      <p>Seagull is a multi-protocol traffic generator test tool. Primary aimed at IMS protocols
+      <p>Seagull is a free, Open Source (GPL) multi-protocol traffic generator test tool. Primarily aimed at IMS protocols
       (and thus being the perfect complement to 
       <a href="http://sipp.sourceforge.net/">SIPp</a> for IMS testing), Seagull is a powerful
       traffic generator for functional, load, endurance, stress and performance tests for almost
@@ -23,7 +23,7 @@
       <ul>
         <li>Binary/TLV (Diameter and many 3GPP and IETF protocols)</li>
         <li>External library (TCAP, SCTP)</li>
-        <li>Text (XCAP, HTTP)</li>
+        <li>Text (XCAP, HTTP, H248)</li>
       </ul>
       <table>
           <tr>
@@ -51,9 +51,10 @@
         <li>TCAP ITU and ANSI and any protocol over TCAP (Camel, GSM MAP, IS41, Win, ...) either
         over SS7 (E1/T1) or SIGTRAN. For that, it relies on 
         <a href="http://www.hp.com/go/opencall/">HP OpenCall SS7</a>.</li>
-        <li>Radius (subset) over IPv4.</li>
         <li>XCAP over HTTP over IPv4</li>
         <li>HTTP over IPv4</li>
+        <li>H248/Megaco ASCII form over UDP or TCP or SCTP/IPv4</li>
+        <li>Radius (subset) over IPv4.</li>
       </ul>
     </section>
     <section>

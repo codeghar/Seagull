@@ -6,15 +6,21 @@
     <subtitle></subtitle>
   </header>
   <body> 
-    <section>
+    <section id="snaps">
       <title>Snapshots</title>
-      <p>XXX XXX</p>
+      <p>Seagull running Diameter traffic</p>
+      <img src="images/snap_diameter.jpg"/>
+      <p>Seagull running H248/Megaco traffic</p>
+      <img src="images/snap_h248.jpg"/>
+      <p>Seagull running XCAP over http traffic</p>
+      <img src="images/snap_xcap.jpg"/>
     </section>
-    <section>
+    <section id="videos">
       <title>Videos</title>
       <p>Videos are in Flash format. You need to download the flash plugin to be able
       to see Seagull in action.</p>
-      <p>XXXX</p>
+      <p>An overview of Seagull:</p>
+      <p><movie src="http://gull.sf.net/doc/seagull_01.flv" width="494" height="386" autostart="false"/></p>
     </section>    
   </body>
 </document>
