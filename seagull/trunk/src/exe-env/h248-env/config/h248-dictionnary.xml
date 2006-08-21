@@ -113,7 +113,7 @@
 
 <dictionary session-method="field" 
             session-id="transaction-id" 
-            out-of-session-id="transaction-id">
+            out-of-session-id="transaction-id-in-body">
 
   <message name="Transaction"></message>
   <message name="T"></message>
