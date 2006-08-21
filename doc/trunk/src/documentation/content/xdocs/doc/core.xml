@@ -40,7 +40,6 @@
       </section>
       <section>
         <title>Compiling Seagull from source code</title>
-        <fixme author="Olivier">Complete this section.</fixme>
         <p>If the binary package is not available on your platform or if you want
         to modify Seagull source code to add you own features, you will need to
         compile Seagull from the source code.</p>
@@ -48,9 +47,13 @@
         <source>gunzip seagull-x.y.z.tar.gz
 tar -xvf seagull-x.y.z.tar</source>
         <p>This will create a directory called <code>seagull</code>.
-        Go to this directory to compile seagull:</p>
+        Go to this directory and edit "build.conf" file to add or remove sections you
+        want to include during compilation time. To compile seagull:</p>
         <source>cd seagull
 ./build.ksh</source>
+        <p>Executables are located in bin/. Copy them in /usr/local/bin and you should be ready to go.</p>
+        <note>To compile Seagull from the source on CYGWIN, you need to install CYGWIN and the following packages: 
+        shell/pdksh (Public Domain KSH), devel/gcc-g++, devel/make, devel/bison, devel/flex, vi</note>
       </section>
       <section>
         <title>Installing Seagull</title>

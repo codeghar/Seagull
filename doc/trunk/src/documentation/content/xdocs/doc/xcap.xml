@@ -18,22 +18,205 @@
       <title>Getting started with XCAP</title>
       <section>
         <title>First try</title>
-        <fixme author="Olivier">Complete this section</fixme>
+        <p>So that you can get familiar with Seagull in the context of XCAP, 
+        here is an example that will launch one XCAP server 
+        (a server expects a message as the first scenario command) and one XCAP
+        client (a client sends a message as the first scenario command). 
+        The client and the server will talk to each other using the loopback interface 
+        (127.0.0.1). The scenario is the following:</p>
+        <source><![CDATA[          PUT     
+     |------------>|
+     | 201 Created |
+     |<------------|
+     |   DELETE    |
+     |------------>|
+     |   200 OK    |
+     |<------------|]]></source>
+        <p>Here is the XML source of the <a href="xcap.client.xml.html">client scenario</a>.</p>
       </section>
       <section>
         <title>First try explained</title>
+        <p>Here is the commented version of the XCAP client:</p>
+        <table>
+          <tr>
+            <th>Scenario</th>
+            <th>Comments</th>
+          </tr>
+          <tr>
+            <td>
+              <source><![CDATA[<?xml version="1.0" encoding="ISO-8859-1" ?>
+<scenario>
+
+<traffic>
+  <send channel="xcap-channel">
+    <action>
+      <open args="mode=client;dest=127.0.0.1:8090"></open>
+    </action>
+    <message>
+      <!-- header -->
+      <![CDATA[PUT /xcap/test-auid1/users/sip:user@hp.com/doc.xml HTTP/1.1
+        Content-type: application/note+xml;charset=UTF-8
+        X-XCAP-Asserted-Identity: "sip:user@hp.com"
+        User-Agent: Seagull-gull.sourceforge.net
+        Host: clever5:8090
+        Accept: text/html, image/gif, *; q=.2, */*; q=.2
+        Connection: keep-alive] ]>
+      <!-- Body -->
+      <![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+      <note xmlns:dog="the:namespace:for:dog">
+        <dog:to>Jani</dog:to>
+        <from>Tove</from>
+        <heading>Re: Reminder</heading>
+        <body>I will not forget you this week end!</body>
+      </note>] ]>
+    </message>
+  </send>
+
+  <receive channel="xcap-channel">
+    <message>
+    <!-- header -->
+    <![CDATA[HTTP/1.1 201 Created
+      Server: Apache-Coyote/1.1
+      Pragma: No-cache
+      Cache-Control: no-cache
+      Expires: Wed, 31 Dec 1969 18:00:00 CST
+      X-Powered-By: Servlet 2.4; JBoss-4.0.4.GA
+      ETag: 1
+      Content-Length: 0
+      Date: Mon, 07 Aug 2006 21:14:46 GMT] ]>
+    </message>
+  </receive>
+
+  <send channel="xcap-channel">
+    <message>
+      <!-- header -->
+      <![CDATA[DELETE /xcap/test-auid1/users/sip:user@hp.com/doc.xml HTTP/1.1
+        X-XCAP-Asserted-Identity: "sip:user@hp.com"
+        User-Agent: Seagull-gull.sourceforge.net
+        Host: clever5:8090
+        Accept: text/html, image/gif, *; q=.2, */*; q=.2
+        Connection: keep-alive
+        Content-type: application/x-www-form-urlencoded
+      ] ]>
+    </message>
+  </send>
+  
+  <receive channel="xcap-channel">
+    <message>
+    <!-- header -->
+    <![CDATA[HTTP/1.1 200 OK
+      Server: Apache-Coyote/1.1
+      Pragma: No-cache
+      Cache-Control: no-cache
+      Expires: Wed, 31 Dec 1969 18:00:00 CST
+      X-Powered-By: Servlet 2.4; JBoss-4.0.4.GA
+      ETag: 1
+      Content-Length: 0
+      Date: Mon, 07 Aug 2006 21:14:46 GMT] ]>
+    </message>
+    <action>
+      <close></close>
+    </action>
+  </receive>
+
+  </traffic>
+</scenario>
+]]></source>
+            </td>
+            <td>
+              <source><![CDATA[XML header
+
+
+
+
+An XCAP call is identified by the channel on which protocol exchanges occur.
+This action is to open a TCP socket for each new XCAP call. This socket is
+closed at the end of the call (see below).
+
+An XCAP message as an Header (mandatory) and a body (optional).
+Here, Seagull just sends the header as indicated in the CDATA
+
+
+
+
+
+
+
+When the message is sent, the body is separated by the header with
+an empty line (\r\n).
+An XCAP body must be correctly formated: the top most xml tag (<note>
+in this case must be properly closed </note). 
+Seagull parses the body to find out where the message ends (this is
+needed because content-length header is optional).
+
+
+
+
+The 201 Created message is received on the channel that was opened 
+at the beginning of the call.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+The transport channel (TCP socket in this case) is closed at the
+end of the call with the <close/ action.
+
+
+
+
+
+]]></source>
+            </td>
+          </tr>
+        </table>
       </section>
     </section>
-    <section id="config_generic">
-      <title>Generic configuration</title>
-      <p>The generic configuration file describes the network environment
-        as well as traffic parameters.</p>
-    </section>
-    <section>
-      <title>XCAP dictionary</title>
-    </section>
-    <section id="prepostactions_XCAP">
-      <title>Actions in scenario commands for XCAP</title>
+    <section id="misc">
+      <title>Miscellaneous considerations</title>
+      <p>Generating the XCAP traffic is quite easy with Seagull. Users must
+      be aware that some limitations apply with respect to HTTP, on which
+      XCAP relies:</p>
+      <ul>
+        <li>HTTP Digest authentication is not yet supported (but planned)</li>
+        <li>HTTP chunked mode might work but has not been tested</li>
+        <li>HTTPs is not supported</li>
+      </ul>
     </section>
   </body>
 </document>
