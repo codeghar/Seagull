@@ -18,17 +18,16 @@
       enhance Seagull, fix bugs and send your contributions back to the user community!</p>
       <ul>
         <li>Browse Seagull <a href="ext:sourceforge_svn">source code in SVN</a>.</li>
-        <li>Getting a copy - anonymously - of the latest source code: <code>svn co XXXXXXX</code></li>
-        <li>Getting a copy - as a registered developer - of the latest source code: <code>svn co XXXXXXX</code></li>
+        <li>Getting a copy of the latest source code: <source>svn export https://svn.sourceforge.net/svnroot/gull/seagull/trunk/src seagull.svn</source></li>
+        <li>Getting a copy with SVN information (can be later updated by running "svn update") of the latest source code: <source>svn co https://svn.sourceforge.net/svnroot/gull/seagull/trunk/src seagull.svn</source></li>
       </ul>
     </section>
     <section>
       <title>Mailing lists</title>
       <p>Several mailing lists are available, so that you can get the latest news on the project or ask your questions:</p>
         <ul>
-            <li>Seagull announce: new releases - general info are announced on this mailing list as well on Seagull users mailing list. XXX</li>
-            <li>Seagull users: where Seagull users meet and are asking for help. XXX</li>
-            <li>Seagull commits: get a notification each time the source code changes! XXX</li>
+            <li><a href="http://lists.sourceforge.net/mailman/listinfo/gull-users">Seagull users</a>: where Seagull users meet and are asking for help. </li>
+            <li><a href="http://lists.sourceforge.net/mailman/listinfo/gull-commit">Seagull commits</a>: get a notification each time the source code changes!</li>
         </ul>
     </section>    
   </body>

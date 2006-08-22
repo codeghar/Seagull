@@ -2367,5 +2367,15 @@ seagull Command syntax
 [ -msgcheck  ] check the field of the messages received (default no check)]]></source>
       </section>
     </section>
+    <section>
+      <title>Miscenalleous tools</title>
+      <p>When you Seagull, there are some useful tools that you will have to use.</p>
+      <ul>
+        <li><a href="http://www.wireshark.org/">Wireshark</a>: formerly known as "Ethereal", Wireshark
+        is a protocol decoder. It will most likely decode all the protocols supported by Seagull.</li>
+        <li><a href="http://laurent.riesterer.free.fr/regexp/">Visual REGEXP</a>: this invaluable
+        tool can be used to debug your regular expressions (widely used in Seagull!).</li>
+      </ul>
+    </section>
   </body>
 </document>

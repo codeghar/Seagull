@@ -1,18 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V1.2//EN" "http://apache.org/forrest/dtd/document-v12.dtd">
+<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN" "http://apache.org/forrest/dtd/document-v20.dtd">
 <document> 
   <header> 
-    <title>Download Seagull</title> 
+    <title>Download Seagull</title>
   </header>
   <body> 
     <section>
       <title>Stable release</title>
-      <p>XXX XXX</p>
+      <p>Download the latest stable release: <a href="http://sourceforge.net/project/showfiles.php?group_id=163830&amp;package_id=185377">from this link</a>.</p>
     </section>
     <section>
       <title>Developer release</title>
-      <p>XXXXXXXXXX.</p>
-      <p>XXXX</p>
+      <p>Download the latest developer version: <a href="http://sourceforge.net/project/showfiles.php?group_id=163830&amp;package_id=197158">from this link</a>.</p>
     </section>    
   </body>
 </document>
