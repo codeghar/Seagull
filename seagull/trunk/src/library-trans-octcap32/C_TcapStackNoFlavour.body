@@ -30,14 +30,16 @@
 static const char* _Tcap_routing_type_name_table[] = {
    "DPC_SSN",
    "SSN",
-   "GT" };
+   "GT",
+   "GT_SSN" };
 
 static const tc_address_type _Tcap_routing_type_table[] = {
   DPC_SSN,
   SSN,
-  GT } ;
+  GT,
+  GT_SSN } ;
 
-static const int _Tcap_routing_type_supported = 3 ;
+static const int _Tcap_routing_type_supported = 4 ;
 
 static const char* _Tc_gt_indicator_name_table[] = {
    "tc_no_gt",
