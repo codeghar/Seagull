@@ -264,7 +264,10 @@ C_ProtocolStats::~C_ProtocolStats(){
 void C_ProtocolStats::updateStats (T_ProtocolStatDataType P_type,
 				   T_ProtocolStatDataAction P_action,
 				   int P_id) {
-  
+
+  //prevent from unknown messages
+  if ((P_id >= 0) && (P_id <= m_max_id_msg)) {
+ 
   switch (P_type) {
   case E_MESSAGE :
     m_counter_msg_table[m_id_msg_table[P_id]][P_action].m_sem.P();
@@ -298,7 +301,7 @@ void C_ProtocolStats::updateStats (T_ProtocolStatDataType P_type,
   default:
     break ;
   }
-
+  }
 }
 
 iostream_output& C_ProtocolStats::display (iostream_output& P_stream) {

@@ -610,7 +610,11 @@ T_pNameAndIdList C_ProtocolText::message_component_name_list    () {
 
 
 char* C_ProtocolText::message_name(int P_id) {
-  return (m_message_names_table[P_id]);
+  if ((P_id < 0) || (P_id > m_nb_message_names)) {
+    return (NULL);
+  } else {
+    return (m_message_names_table[P_id]);
+  }
 }
 
 

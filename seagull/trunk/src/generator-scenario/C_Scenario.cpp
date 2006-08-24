@@ -440,13 +440,19 @@ T_exeCode C_Scenario::execute_cmd (T_pCallContext P_callCtxt,
 		      "Unexpected message on call with session-id ["
 		      << P_callCtxt->m_id_table[L_channel_id] << "]");
 
-  	GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR,
+  	if ((L_msgReceived)->name() == NULL) {
+     GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR,
+                   "Received [Unknown Message] when expecting ["
+                   << (L_pCmd->m_message)->name()
+                   << "]");
+   } else {
+     GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR,
   		      "Received ["
   		      << (L_msgReceived)->name()
   		      << "] when expecting ["
   		      << (L_pCmd->m_message)->name()
   		      << "]");
-	
+	}
 	GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
 		      "Unexpected message received [ " << (*L_msgReceived) <<
 		      GEN_HEADER_LOG << GEN_HEADER_NO_LEVEL << "]" );
