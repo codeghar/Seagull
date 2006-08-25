@@ -1693,6 +1693,7 @@ iostream_output& C_ProtocolText::print_data_msg(iostream_output& P_stream,
  
   static char L_hexa_buf [50] ;
   static char L_ascii_buf [50] ;
+  static char L_line_buf [100] ;
   const  size_t L_cNum = 16 ; 
   size_t L_j, L_nb ;
   unsigned char*L_cur ;
@@ -1710,11 +1711,8 @@ iostream_output& C_ProtocolText::print_data_msg(iostream_output& P_stream,
       P_stream << GEN_HEADER_LOG << GEN_HEADER_LEVEL(LOG_LEVEL_MSG) ;
 
       pretty_binary_printable_buffer(L_cur, L_cNum, L_hexa_buf, L_ascii_buf);
-      P_stream << "[" ;
-      P_stream << L_hexa_buf ;
-      P_stream << "] <=> [" ;
-      P_stream << L_ascii_buf;
-      P_stream << "]" ;
+      sprintf(L_line_buf, "[%-48.48s] <=> [%-16.16s]", L_hexa_buf, L_ascii_buf);
+      P_stream << L_line_buf;
 
       L_cur += L_cNum ;
     }
@@ -1725,11 +1723,8 @@ iostream_output& C_ProtocolText::print_data_msg(iostream_output& P_stream,
       P_stream << GEN_HEADER_LOG << GEN_HEADER_LEVEL(LOG_LEVEL_MSG) ;
 
       pretty_binary_printable_buffer(L_cur, L_nb, L_hexa_buf, L_ascii_buf);
-      P_stream << "[" ;
-      P_stream << L_hexa_buf ;
-      P_stream << "] <=> [" ;
-      P_stream << L_ascii_buf;
-      P_stream << "]" ;
+      sprintf(L_line_buf, "[%-48.48s] <=> [%-16.16s]", L_hexa_buf, L_ascii_buf);
+      P_stream << L_line_buf;
     }
     
     

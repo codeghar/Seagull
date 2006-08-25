@@ -815,7 +815,10 @@ bool C_MessageBinary::check_field_value (C_MessageFrame   *P_ref,
                               << ", value of field" 
                               << " ["
                               << L_headerField->m_name
-                              << "] is incorrect");
+                              << "] is incorrect. Expected ["
+                              << L_value_ref 
+                              << "] but got ["
+                              << "L_value" << "]");
       }
     } else {
       L_descr = m_protocol->get_header_body_value_description(L_id);
@@ -827,7 +830,19 @@ bool C_MessageBinary::check_field_value (C_MessageFrame   *P_ref,
                               << ", value of " << m_protocol->message_component_name ()
                               << " ["
                               << L_descr->m_name
-                              << "] is incorrect ");
+                              << "]. Expected ["
+                              << L_value_ref
+                              << "] but got ["
+                              << L_value << "]");
+      } else {
+        GEN_LOG_EVENT        (_check_behaviour_mask[P_behave], 
+                              "check failed in [" 
+                              <<  m_protocol->message_name(L_ref->m_header_id) 
+                              << "] " << m_protocol->message_name() 
+                              << ". Expected ["
+                              << L_value_ref
+                              << "], but got ["
+                              << L_value << "]");
       }
     }
   } // if (L_check == false)

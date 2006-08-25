@@ -224,8 +224,6 @@ bool operator==
    const T_ValueData & P_rigth) {
   bool   L_ret = false;
   int    L_i ;
-  size_t L_min ;
-  bool   L_left_min = false ;
   
   if (P_left.m_type == P_rigth.m_type) {
 
@@ -243,27 +241,7 @@ bool operator==
       
       if (P_left.m_value.m_val_binary.m_size 
 	  != P_rigth.m_value.m_val_binary.m_size) {
-	
-	if (P_left.m_value.m_val_binary.m_size 
-	    < P_rigth.m_value.m_val_binary.m_size) {
-	  L_min = P_left.m_value.m_val_binary.m_size  ;
-	  L_left_min = true ;
-	} else {
-	  L_min = P_rigth.m_value.m_val_binary.m_size ;
-	}
-	
-	while (P_left.m_value.m_val_binary.m_value[L_i] 
-	       == P_rigth.m_value.m_val_binary.m_value[L_i]) {
-	  L_i ++ ;
-	  if (L_i == (int) L_min) break ;
-	}
-	if (L_i == (int) L_min) {
-	  L_ret = L_left_min ;
-	} else {
-	  L_ret = P_left.m_value.m_val_binary.m_value[L_i] 
-	    == P_rigth.m_value.m_val_binary.m_value[L_i];
-	}
-	
+        L_ret = false;
       } else {
 	
 	while (P_left.m_value.m_val_binary.m_value[L_i] 
@@ -274,10 +252,9 @@ bool operator==
 	  }
 	}
 	if (L_i == (int)P_left.m_value.m_val_binary.m_size) {
-	  L_ret = false ;
+	  L_ret = true ;
 	} else {
-	  L_ret = P_left.m_value.m_val_binary.m_value[L_i] 
-	    < P_rigth.m_value.m_val_binary.m_value[L_i];
+	  L_ret = false ;
 	}
       }
       break ;
@@ -295,7 +272,7 @@ bool operator==
       break ;
 
     default:
-      GEN_FATAL(E_GEN_FATAL_ERROR, "operator < not implemented");
+      GEN_FATAL(E_GEN_FATAL_ERROR, "operator == not implemented");
       break ;
     }
     

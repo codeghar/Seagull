@@ -1268,7 +1268,7 @@ T_exeCode C_Scenario::execute_action(T_pCmd_scenario P_pCmd,
 	 L_current_action->m_sub_id);
       if (L_check_result == false) {
 	GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-		      "check error on call with session-id ["
+		      "Presence check error on call with session-id ["
 		      << P_callCtxt->m_id_table[P_pCmd->m_channel_id] << "]");
         switch (L_current_action->m_check_behaviour) {
         case E_CHECK_BEHAVIOUR_ERROR :
@@ -1401,7 +1401,7 @@ T_exeCode C_Scenario::execute_action(T_pCmd_scenario P_pCmd,
 	 L_current_action->m_sub_id);
       if (L_check_result == false) {
 	GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-		      "check error on call with session-id ["
+		      "Parameter value check error on call with session-id ["
 		      << P_callCtxt->m_id_table[P_pCmd->m_channel_id] << "]");
 
         switch (L_current_action->m_check_behaviour) {
@@ -1456,7 +1456,7 @@ T_exeCode C_Scenario::execute_action(T_pCmd_scenario P_pCmd,
 		       m_check_behaviour);
       if (L_check_result == false) {
 	GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-		      "check error on call with session-id ["
+		      "Message check error on call with session-id ["
 		      << P_callCtxt->m_id_table[P_pCmd->m_channel_id] << "]");
 	if (m_check_behaviour == E_CHECK_BEHAVIOUR_ERROR) {
 	  L_exeCode = E_EXE_ERROR_CHECK ;
