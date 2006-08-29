@@ -126,7 +126,7 @@ void C_TCAPMsgBuildContextNoFlavour::init_to_external() {
 
   TC_P_O_ADDR(m_primitive).type     =   m_stack->m_o_routing_type;
 
-  if (m_stack->m_o_routing_type == GT) {
+  if ((m_stack->m_o_routing_type == GT) || (m_stack->m_o_routing_type == GT_SSN)) {
     /* Filling in destination global title structure.                     */
     TC_P_O_ADDR(m_primitive).gt.routeOnGt     = TC_YES;              
     TC_P_O_ADDR(m_primitive).gt.gtIndicator   = m_stack->m_o_gt_indicator;         
@@ -141,7 +141,7 @@ void C_TCAPMsgBuildContextNoFlavour::init_to_external() {
   }
 
   TC_P_D_ADDR(m_primitive).type     =   m_stack->m_d_routing_type;
-  if (m_stack->m_d_routing_type == GT) {
+  if ((m_stack->m_d_routing_type == GT) || (m_stack->m_d_routing_type == GT_SSN)) {
     /* Filling in destination global title structure.                     */
     TC_P_D_ADDR(m_primitive).gt.routeOnGt     = TC_YES;              
     TC_P_D_ADDR(m_primitive).gt.gtIndicator   = m_stack->m_d_gt_indicator ;
