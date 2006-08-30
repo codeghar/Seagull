@@ -1376,7 +1376,8 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             <ul>
             <li><strong>session-method</strong>: can be "field" (a session or "call" is identified
             with a protocol field) or "open-id" (a session or "call" is identified with
-            the open id (eg a socket id in case of HTTP))</li>
+            the open id (eg a socket id in case of HTTP)). "open-id" is currently implemented
+            only for "text" protocols.</li>
             <li><strong>session-id (optional)</strong>: only for "field" session-method: the field to be used to identify the session</li>
             <li><strong>out-of-session-id (optional)</strong>: only for "field" session-method: the field to be used in backup of session-id</li>
             </ul>
@@ -1444,7 +1445,8 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
                     might be necessary if buffer is the message to read is bigger than the buffer (impact on performances)</li>
                 </ul>
               </li>
-              <li>For the "libtrans_octcap.so", the possible parameters are the following:
+              <li>For the "libtrans_octcap.so", the possible parameters are the following (see 
+              <a href="http://gull.sourceforge.net/doc/octcap.html#Transport+protocols+and+channels+for+TCAP">details here</a>):
                 <ul>
                   <li>flavour (possible values: WBB, AAA, WAA, ABB)</li>
                   <li>path to the reference library (optional)</li>

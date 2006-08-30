@@ -116,9 +116,9 @@ seagull -conf ../config/conf.client-itu.xml -dico ../config/octcap-itu-dictionna
 
   <define entity="transport"
     name="trans-octcap"
-    file="libtrans_octcap32.so"
-    create_function="create_ctransoctcap32_instance"
-    delete_function="delete_ctransoctcap32_instance"
+    file="libtrans_octcap.so"
+    create_function="create_ctransoctcap_instance"
+    delete_function="delete_ctransoctcap_instance"
     init-args="flavour=WBB">
   </define>
 
@@ -229,9 +229,9 @@ seagull -conf ../config/conf.client-itu.xml -dico ../config/octcap-itu-dictionna
 
   <define entity="transport"
     name="trans-octcap"
-    file="libtrans_octcap32.so"
-    create_function="create_ctransoctcap32_instance"
-    delete_function="delete_ctransoctcap32_instance"
+    file="libtrans_octcap.so"
+    create_function="create_ctransoctcap_instance"
+    delete_function="delete_ctransoctcap_instance"
     init-args="flavour=WBB">
   </define>
 
@@ -642,15 +642,19 @@ End of scenario
 	 The transport is caracterized by a name and a file, which is the dynamic library used. 
 	 This dynamic library is delivered with Seagull. It will call function 
 	 from the correct library. To find the final library, it will use the 
-	 parameters set in the init-args field. In init-args, you can specify the following parameters:</p>
+	 parameters set in the init-args field. In <strong>init-args</strong>, you can specify the following parameters:</p>
 	 <ul>
 	 		 <li>flavour (possible values: WBB, WAA for ITU (sccp_service_kind is set to TCX_SCCP_SERVICE_ITU_WB) and AAA, ABB 
        for ANSI (sccp_service_kind is set to TCX_SCCP_SERVICE_REGULAR))</li>
 	 		 <li>path to the OCSS7's libSS7util.sl shared library (not necessary for OCSS7 >= 3.x - /opt/HP-AIN/SS7_WBB/sharedlib for OCSS7 2.2)</li>
-	 		 <li>library (name of the libSS7util shared library) - libSS7util.sl by default</li>
+	 		 <li>library (name of the libSS7util shared library) - libSS7utilFLAVOUR.sl by default (FLAVOUR being WBB, AAA, WAA or ABB).</li>
 	 </ul>
 	 <p>Only the flavour parameter is mandatory for OCTCAP.</p>
-	 <p/>
+   <p>Some examples:</p>
+   <ul>
+    <li>init-args="flavour=AAA": for an OCSS7 3.x+ with AAA (ANSI) flavour</li>
+    <li>init-args="flavour=WBB;path=/opt/HP-AIN/SS7_WBB/sharedlib;flavour=WBB;library=libSS7util.sl": for an OCSS7 2.2 with WBB (ITU) flavour</li>
+   </ul>
 	 <p>Then you can open one channel for the transport that you have defined.</p>
 	 <note>You can open only one TCAP channel !</note>
 	 <p>A channel makes the link between a transport and a protocol.</p>
@@ -662,8 +666,8 @@ End of scenario
   <define entity="transport"
     name="trans-octcap"
     file="libtrans_octcap.so"
-    create_function="create_ctransoctcap32_instance"
-    delete_function="delete_ctransoctcap32_instance"
+    create_function="create_ctransoctcap_instance"
+    delete_function="delete_ctransoctcap_instance"
     init-args="flavour=WBB">
   </define>
 
@@ -907,9 +911,9 @@ End of scenario
 
 <define entity="transport"
     name="trans-octcap"
-    file="libtrans_octcap32.so"
-    create_function="create_ctransoctcap32_instance"
-    delete_function="delete_ctransoctcap32_instance"
+    file="libtrans_octcap.so"
+    create_function="create_ctransoctcap_instance"
+    delete_function="delete_ctransoctcap_instance"
     init-args="flavour=WBB">
 </define>
 <!-- Then you specify the opening of the channel, on the transport previously described. -->
@@ -1305,7 +1309,7 @@ End of scenario
 	    in the scenario. In this case, the value in the scenario overwrites 
 	    the one in the configuration files. 
 	    Be careful in ANSI: this value has to be given as an integer and not 
-	    in the format a.b.c. For example: 65806 for 1.1.10.
+	    in the format a.b.c. For example: 1.1.10 -> 0x01010a=65802.
 	    </td>
             <td></td>
             <td>
@@ -1322,7 +1326,7 @@ End of scenario
 	    in the scenario. In this case, the value in the scenario overwrites 
 	    the one in the configuration files. 
 	    Be careful in ANSI: this value has to be given as an integer and 
-	    not in the format a.b.c. For example: 65806 for 1.1.10.</td>
+	    not in the format a.b.c. For example: 2.2.57 -> 0x020239=131641.</td>
             <td></td>
             <td>
               <code><![CDATA[<define entity="config-param"
