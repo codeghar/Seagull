@@ -2344,6 +2344,32 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
 	    injected is at end position minus one.</td>
             <td>end="9"</td>
           </tr>
+          <tr>
+            <th>
+              <anchor id="set-new-session-id"/>
+              <strong>&lt;set-new-session-id&gt;</strong>
+            </th>
+            <th>&nbsp;</th>
+            <th>
+              Change the value by which a session (scenario execution) 
+              is identified. This allows scenarios to be executed with multiple
+              session-ids in one scenario. See <a href="h248.html">H248</a> for an example.</th>
+            <th>
+              <code><![CDATA[<set-new-session-id name="TID" entity="transaction-id"></set-new-session-id>]]></code>
+            </th>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>name</td>
+            <td>Value that was used to identify the session (can be a variable that was stored or a counter).</td>
+            <td>name="TID"</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>entity</td>
+            <td>New value to use to identify the session (like the value of a protocol field)</td>
+            <td>name="transaction-id"</td>
+          </tr>
         </table>
       </section>
       <!--
