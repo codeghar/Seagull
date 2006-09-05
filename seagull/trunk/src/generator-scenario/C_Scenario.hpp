@@ -115,6 +115,7 @@ typedef enum _action_scenario_type {
    E_ACTION_SCEN_INC_VAR,
    E_ACTION_SCEN_CHECK_VALUE,
    E_ACTION_SCEN_CHECK_ORDER,
+   E_ACTION_SCEN_SET_NEW_SESSION_ID,
 
    E_NB_ACTION_SCEN,  // internal actions after this value
    E_ACTION_SCEN_INTERNAL_INIT_DONE,

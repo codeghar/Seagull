@@ -47,6 +47,17 @@ void C_CallContext::next_cmd() {
   m_current_cmd_idx++;
 }
 
+
+void C_CallContext::reset_id(int P_channel_id) {
+  if (m_id_table[P_channel_id].m_type == E_TYPE_STRING) {
+    if (m_id_table[P_channel_id].m_value.m_val_binary.m_size) {
+      FREE_TABLE(m_id_table[P_channel_id].m_value.m_val_binary.m_value);
+    }
+  }
+  m_id_table[P_channel_id].m_type = E_TYPE_NUMBER ;
+  m_id_table[P_channel_id].m_value.m_val_number = 0 ;
+}
+
 void C_CallContext::reset_id () {
   int L_i ;
   for (L_i = 0 ; L_i < m_nb_channel; L_i++) {

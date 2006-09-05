@@ -930,7 +930,8 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 
 	  (*P_nbOpen) ++ ;
 	  break ;
-	  
+
+        case E_ACTION_SCEN_SET_NEW_SESSION_ID :
 	case E_ACTION_SCEN_MEMORY_STORE :
 	case E_ACTION_SCEN_MEMORY_RESTORE : 
 	  L_actionArg = L_action -> find_value((char*) "name");
@@ -1159,7 +1160,7 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 
 	case E_ACTION_SCEN_CLOSE :
 	  break ;
-	  
+
 	case E_ACTION_SCEN_SET_VALUE :
 	  
 	  L_actionArg = L_action -> find_value((char*) "name");

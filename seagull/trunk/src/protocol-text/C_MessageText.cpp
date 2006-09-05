@@ -332,7 +332,16 @@ C_MessageText::~C_MessageText() {
   FREE_VAR(m_body)        ;
   m_protocol = NULL       ;
   m_id       = -1         ;
-  FREE_VAR(m_session_id)  ;
+
+  if (m_session_id != NULL) {
+    if ((m_session_id->m_type == E_TYPE_STRING)
+        && (m_session_id->m_value.m_val_binary.m_size> 0)) {
+      FREE_TABLE(m_session_id->m_value.m_val_binary.m_value);
+      m_session_id->m_value.m_val_binary.m_size = 0 ;
+    }
+    FREE_VAR(m_session_id)  ;
+  }
+
   GEN_DEBUG(1, "C_MessageText::~C_MessageText() end");
 }
 

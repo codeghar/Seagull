@@ -48,6 +48,7 @@ const char* action_name_table [] = {
   "inc-var",
   "check-value",
   "check-order",
+  "set-new-session-id",
   "E_NB_ACTION_SCEN",  // internal actions after this value
   "E_ACTION_SCEN_INTERNAL_INIT_DONE",
   "E_ACTION_SCEN_CHECK_ALL_MSG",
@@ -962,7 +963,6 @@ T_exeCode C_Scenario::execute_action(T_pCmd_scenario P_pCmd,
           GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR,
                         action_name_table[L_current_action->m_type] 
                         << " action: you use a memory zone that was not previously stored");
-        
           break ;
         }
 
@@ -1444,6 +1444,59 @@ T_exeCode C_Scenario::execute_action(T_pCmd_scenario P_pCmd,
       }
       break ;
 
+    case E_ACTION_SCEN_SET_NEW_SESSION_ID: {
+
+      T_pValueData          L_mem      ;
+      T_ValueData           L_val      ;
+      
+      T_CallMap::iterator   L_call_it  ;
+      T_pValueData          L_value_id ;
+
+
+      L_val.m_type = E_TYPE_NUMBER ;
+      
+      L_mem = P_callCtxt->get_memory(L_current_action->m_mem_id);
+      if (L_mem->m_value.m_val_binary.m_size == 0) {
+        GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR,
+                      action_name_table[L_current_action->m_type] 
+                      << " action: you use a memory zone that was not previously stored");
+        //        L_exeCode = E_EXE_ERROR;
+        // break ;
+      }
+      
+      if (P_msg -> get_field_value(L_current_action->m_id, 
+                                   L_current_action->m_instance_id,
+                                   L_current_action->m_sub_id,
+                                   &L_val) == true) {
+        if (*L_mem == L_val ) {
+          break;
+        } else {
+          L_call_it = m_call_map_table[P_pCmd->m_channel_id]
+            ->find (T_CallMap::key_type(P_callCtxt->m_id_table[P_pCmd->m_channel_id]));
+          if (L_call_it != m_call_map_table[P_pCmd->m_channel_id]->end()) {
+            m_call_map_table[P_pCmd->m_channel_id]->erase (L_call_it);
+            P_callCtxt->reset_id (P_pCmd->m_channel_id);
+            L_value_id = P_callCtxt->set_id (P_pCmd->m_channel_id,&L_val);
+            m_call_map_table[P_pCmd->m_channel_id]
+              ->insert(T_CallMap::value_type(*L_value_id, P_callCtxt));
+            resetMemory(L_val);
+          } 
+        }
+        
+      } else {
+        GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
+                      action_name_table[L_current_action->m_type] 
+                      << ": the value of the field asked is incorrect or not found");
+        
+        GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
+                      "error on call with session-id ["
+                      << P_callCtxt->m_id_table[P_pCmd->m_channel_id] << "]");
+        
+        L_exeCode = E_EXE_ERROR;
+      }
+
+    }
+      break ;
 
     case E_ACTION_SCEN_INTERNAL_INIT_DONE:
       L_exeCode = E_EXE_INIT_END ;

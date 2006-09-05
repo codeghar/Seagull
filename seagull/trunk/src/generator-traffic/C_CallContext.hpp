@@ -99,6 +99,8 @@ public:
 
   void init()  ;
   void reset() ;
+  void reset_id(int P_channel_id) ;
+
 
   T_CallContextState init_state (C_Scenario *P_scen);
   T_CallContextState init_state (C_Scenario *P_scen, struct timeval *P_time);
