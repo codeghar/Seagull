@@ -99,8 +99,6 @@ public:
 
   char* name() { return(m_name); }
 
-  
-
 protected:
 
   C_ProtocolStatsFrame *m_stats ;

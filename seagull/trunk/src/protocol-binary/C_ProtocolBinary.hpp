@@ -97,9 +97,9 @@ public:
   typedef list_t<T_ManagementSessionId> T_ManagementSessionIdList, *T_pManagementSessionIdList ;
 
   C_ProtocolBinary() ;
-  void  construction_data( C_XmlData            *P_def, 
-                           char                **P_name,
-                           T_pContructorResult   P_res) ;
+  virtual void  construction_data( C_XmlData            *P_def, 
+				   char                **P_name,
+				   T_pContructorResult   P_res) ;
 
   ~C_ProtocolBinary() ;
 
@@ -271,6 +271,8 @@ public:
 
 
   bool get_complex_header_presence ();
+  char* get_header_body_field_separator();
+
 
 protected:
 
@@ -311,6 +313,10 @@ protected:
   T_pNameAndIdList             m_message_name_list            ;
   T_pNameAndIdList             m_message_comp_name_list       ;
 
+
+  // separator management
+  char *m_header_body_field_separator ;
+  int     m_session_id_position       ;
 
   // type management variables
   T_pTypeDef     m_type_def_table ;

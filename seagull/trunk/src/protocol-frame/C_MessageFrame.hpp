@@ -40,6 +40,10 @@ public:
   virtual T_pValueData get_session_id (C_ContextFrame *P_ctxt) = 0 ;
 
   virtual bool         compare_types (C_MessageFrame *P_ref) = 0 ;
+  virtual bool         update_fields (C_MessageFrame *P_ref) = 0 ;
+
+  virtual void         update_message_stats () = 0 ;
+
   virtual bool         check         (C_MessageFrame  *P_ref, 
 				      unsigned int     P_levelMask,
 				      T_CheckBehaviour P_behave) = 0 ;

@@ -421,6 +421,10 @@ T_pValueData C_MessageText::get_out_of_session_id () {
   return (NULL);
 }
 
+bool C_MessageText::update_fields (C_MessageFrame* P_msg) {
+  return (true) ;
+}
+
 bool C_MessageText::compare_types (C_MessageFrame* P_msg) {
 
   bool             L_result ;
@@ -877,3 +881,5 @@ unsigned long C_MessageText::decode(unsigned char               *P_buf,
 
 
 
+void C_MessageText::update_message_stats () {
+}

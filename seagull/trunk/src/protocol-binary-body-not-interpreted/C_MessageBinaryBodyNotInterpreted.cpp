@@ -157,7 +157,7 @@ void C_MessageBinaryBodyNotInterpreted::get_body_value (T_pValueData P_res,
 }
 
 
-void C_MessageBinaryBodyNotInterpreted::set_body_value (int P_id, T_pValueData P_val) {
+bool C_MessageBinaryBodyNotInterpreted::set_body_value (int P_id, T_pValueData P_val) {
   C_ProtocolBinaryBodyNotInterpreted::T_HeaderBodyPositionSize L_pos ;
   // ctrl a ajouter
   if (P_id != 0) {
@@ -175,7 +175,9 @@ void C_MessageBinaryBodyNotInterpreted::set_body_value (int P_id, T_pValueData P
   } else {
     m_protocol->set_body_value(&m_body_val[0], P_val) ;
   }
-    
+  
+  return (true) ;
+
 }
 
 

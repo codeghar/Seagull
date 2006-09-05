@@ -40,6 +40,9 @@ public:
   T_pValueData get_type () ;
 
   bool         compare_types (C_MessageFrame *P_ref) ;
+  bool         update_fields (C_MessageFrame *P_ref) ;
+
+  void         update_message_stats ()      ;
 
   bool         check (C_MessageFrame  *P_ref, 
 		      unsigned int     P_levelMask,

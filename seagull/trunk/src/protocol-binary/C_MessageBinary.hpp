@@ -67,6 +67,7 @@ public:
 
 
   unsigned long  get_type () ;
+  
   void           set_type (unsigned long P_type) ;
 
   unsigned long  decode (unsigned char *P_buffer, 
@@ -80,7 +81,10 @@ public:
 
   // C_ProtocolBinaryFrame::T_pMsgError P_error
 
-  bool           compare_types (C_MessageFrame *P_ref) ;
+  virtual bool           compare_types (C_MessageFrame *P_ref) ;
+
+  virtual bool   update_fields (C_MessageFrame *P_ref) ;
+  virtual void   update_message_stats  () ;
 
   void set_header_value (int P_id, unsigned long P_val);
   void set_header_value (char* P_name, unsigned long P_val);
@@ -92,8 +96,7 @@ public:
 
   void get_header_value (T_pValueData P_res, int P_id);
   virtual void get_body_value (T_pValueData P_res, int P_id);
-
-  virtual void set_body_value (int P_id, T_pValueData P_val);
+  virtual bool set_body_value (int P_id, T_pValueData P_val);
 
   C_MessageBinary& operator= (C_MessageBinary & P_val);
   friend iostream_output& operator<< (iostream_output&, C_MessageBinary &);
@@ -137,6 +140,8 @@ protected:
 
   T_ValueData    m_id               ;
   T_pValueData   m_header_values    ;
+
+  char          *m_header_body_field_separator     ;
 
   // temporary
   // linked with protocol

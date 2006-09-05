@@ -634,6 +634,29 @@ bool extractBinaryVal(T_Value& P_dest, int P_begin, int P_size,
   return (true);
 }
 
-
-
+bool compare_value(T_Value& P_left, 
+                   T_Value& P_rigth) {
+  bool   L_ret = false;
+  int    L_i ;
+  L_i = 0 ;
+  
+  if (P_left.m_val_binary.m_size 
+      != P_rigth.m_val_binary.m_size) {
+    L_ret = false;
+  } else {
+    while (P_left.m_val_binary.m_value[L_i] 
+           == P_rigth.m_val_binary.m_value[L_i]) {
+      L_i ++ ;
+      if (L_i == (int)P_left.m_val_binary.m_size) {
+        break ;
+      }
+    }
+    if (L_i == (int)P_left.m_val_binary.m_size) {
+      L_ret = true ;
+    } else {
+      L_ret = false ;
+    }
+  }
+  return (L_ret);
+}
 

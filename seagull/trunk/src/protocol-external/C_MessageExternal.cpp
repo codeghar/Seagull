@@ -169,6 +169,9 @@ int C_MessageExternal::get_nb_body_fields   () {
   return (m_nb_body_fields) ;
 }
 
+bool C_MessageExternal::update_fields (C_MessageFrame *P_ref) {
+  return (true);
+}
 bool C_MessageExternal::compare_types (C_MessageFrame *P_ref) {
   bool               L_result ;
   C_MessageExternal *L_msg ;
@@ -834,4 +837,7 @@ bool C_MessageExternal::get_field_value(int P_id,
                                         C_RegExp *P_reg,
                                         T_pValueData P_value) {
   return (true) ;
+}
+
+void C_MessageExternal::update_message_stats () {
 }

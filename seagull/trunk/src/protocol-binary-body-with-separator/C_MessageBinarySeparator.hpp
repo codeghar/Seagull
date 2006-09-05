@@ -17,35 +17,34 @@
  *
  */
 
-#ifndef _C_MESSAGEBINARYBODYNOTINTERPRETED_H
-#define _C_MESSAGEBINARYBODYNOTINTERPRETED_H
+#ifndef _C_MESSAGEBINARYSEPARATOR_
+#define _C_MESSAGEBINARYSEPARATOR_
 
 #include "C_MessageBinary.hpp"
-#include "C_ProtocolBinaryBodyNotInterpreted.hpp"
-#include "C_ContextFrame.hpp"
+#include "C_ProtocolBinarySeparator.hpp"
 
-class C_MessageBinaryBodyNotInterpreted : public C_MessageBinary {
+
+class C_MessageBinarySeparator : public C_MessageBinary {
 
 public:
-  C_MessageBinaryBodyNotInterpreted(C_ProtocolBinaryBodyNotInterpreted *P_protocol);
-  virtual ~C_MessageBinaryBodyNotInterpreted();
+
+   C_MessageBinarySeparator(C_ProtocolBinarySeparator *P_protocol);
+  ~C_MessageBinarySeparator();
 
 
-  virtual T_pValueData get_session_id (C_ContextFrame *P_ctxt) ;
-  
-  virtual void get_body_value (T_pValueData P_res, int P_id) ;
-  virtual bool set_body_value (int P_id, T_pValueData P_val) ;
-  
+  T_Value  get_type() ;
 
-private:
+  virtual bool update_fields (C_MessageFrame* P_msg) ;
+  virtual bool compare_types (C_MessageFrame *P_ref) ;
 
-  // optim for prevent dynamic cast
-  C_ProtocolBinaryBodyNotInterpreted* m_local_protocol ;
+  virtual void   update_message_stats  () ;
 
 
-} ;
+} ; // class C_MessageBinarySeparator
 
-typedef C_MessageBinaryBodyNotInterpreted *T_pC_MessageBinaryBodyNotInterpreted;
 
-#endif // _C_MESSAGEBINARYBODYNOTINTERPRETED_H
+
+typedef C_MessageBinarySeparator *T_pC_MessageBinarySeparator ;
+
+#endif // _C_MESSAGEBINARYSEPARATOR_
 

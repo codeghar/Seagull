@@ -99,6 +99,7 @@ extern C_XmlParser* XmlParserClass ;
                                       return T_DATA ;  }
 <DATA_DEFINITION>{bslash}"n"        { XmlParserClass->lex_string_value_update('\n'); }
 <DATA_DEFINITION>{bslash}"r"        { XmlParserClass->lex_string_value_update('\r'); }
+<DATA_DEFINITION>{bslash}"t"        { XmlParserClass->lex_string_value_update('\t'); }
 <DATA_DEFINITION>{bslash}{bslash}   { XmlParserClass->lex_string_value_update('\\') ; }
 <DATA_DEFINITION>{bslash}{crod}     { XmlParserClass->lex_string_value_update(']') ; }
 <DATA_DEFINITION>.                  { XmlParserClass->lex_string_value_update(*yytext); }
@@ -115,6 +116,7 @@ extern C_XmlParser* XmlParserClass ;
 <STRING_MODE>{bslash}{guil}         { XmlParserClass->lex_string_value_update('\"') ; }
 <STRING_MODE>{bslash}"n"            { XmlParserClass->lex_string_value_update('\n'); }
 <STRING_MODE>{bslash}"r"            { XmlParserClass->lex_string_value_update('\r'); }
+<STRING_MODE>{bslash}"t"            { XmlParserClass->lex_string_value_update('\t'); }
 .                        	    { GEN_ERROR(E_GEN_FATAL_ERROR, 
 		      		      "lexical error : unknown token [" 
          			      << yytext << "]"); return T_ERROR; }

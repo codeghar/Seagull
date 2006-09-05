@@ -400,6 +400,11 @@ T_exeCode C_Scenario::execute_cmd (T_pCallContext P_callCtxt,
     
       L_msgReceived = P_callCtxt->get_msg_received() ;
 
+      if (L_msgReceived -> update_fields(L_pCmd->m_message)) {
+        GEN_LOG_EVENT(LOG_LEVEL_MSG, 
+                      "Received [" << *L_msgReceived << "]");
+      } 
+
       if (L_msgReceived -> compare_types (L_pCmd->m_message)) {
 	
 	if (P_resume == false) {
@@ -423,6 +428,7 @@ T_exeCode C_Scenario::execute_cmd (T_pCallContext P_callCtxt,
 	  }
 	  
 	}
+        L_msgReceived -> update_message_stats();
 	
 	if (m_stats) {
 	  m_stats->updateStats(L_cmdIdx,C_ScenarioStats::E_MESSAGE,0);
@@ -442,25 +448,25 @@ T_exeCode C_Scenario::execute_cmd (T_pCallContext P_callCtxt,
 		      << P_callCtxt->m_id_table[L_channel_id] << "]");
 
   	if ((L_msgReceived)->name() == NULL) {
-     GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR,
-                   "Received [Unknown Message] when expecting ["
-                   << (L_pCmd->m_message)->name()
-                   << "]");
-   } else {
-     GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR,
-  		      "Received ["
-  		      << (L_msgReceived)->name()
-  		      << "] when expecting ["
-  		      << (L_pCmd->m_message)->name()
-  		      << "]");
+          GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR,
+                        "Received [Unknown Message] when expecting ["
+                        << (L_pCmd->m_message)->name()
+                        << "]");
+        } else {
+          GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR,
+                        "Received ["
+                        << (L_msgReceived)->name()
+                        << "] when expecting ["
+                        << (L_pCmd->m_message)->name()
+                        << "]");
 	}
 	GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
 		      "Unexpected message received [ " << (*L_msgReceived) <<
 		      GEN_HEADER_LOG << GEN_HEADER_NO_LEVEL << "]" );
-
+        
 	// TO-DO
 	L_exeCode = E_EXE_ERROR_MSG ;
-
+        
 	if (m_stats) {
 	  m_stats->updateStats(L_cmdIdx,C_ScenarioStats::E_UNEXPECTED,0);
 	}
@@ -565,8 +571,12 @@ bool C_Scenario::check_msg_received (T_pReceiveMsgContext P_rcvMsg) {
 
   if (m_sequence_max) {
     if (m_cmd_sequence[0].m_type == E_CMD_SCEN_RECEIVE) {
-      L_msgOk = (P_rcvMsg->m_msg) -> compare_types(m_cmd_sequence[0].m_message) &&
-	        (P_rcvMsg->m_channel == m_cmd_sequence[0].m_channel_id) ;
+      L_msgOk = ((P_rcvMsg->m_msg) -> update_fields(m_cmd_sequence[0].m_message)) ;
+       
+      if (L_msgOk) {
+        L_msgOk = (P_rcvMsg->m_msg) -> compare_types(m_cmd_sequence[0].m_message) &&
+          (P_rcvMsg->m_channel == m_cmd_sequence[0].m_channel_id) ;
+      }
     }
   }
 
@@ -1521,7 +1531,6 @@ T_exeCode C_Scenario::execute_action(T_pCmd_scenario P_pCmd,
       T_pValueData L_value_id ;
       
       L_value_id = P_msg -> get_session_id(P_callCtxt);
-      
       if (L_value_id == NULL) {
         // TO DO
 	GEN_ERROR(E_GEN_FATAL_ERROR, "session id is failed");

@@ -43,6 +43,9 @@ bool extractBinaryVal(T_ValueData& P_dest, int  P_begin, int P_size,
 bool extractBinaryVal(T_Value& P_dest, int  P_begin, int P_size,
 		      T_Value& P_source);
 
+bool compare_value(T_Value& P_left, 
+                   T_Value& P_rigth);
+
 
 bool operator< (const T_ValueData&, 
 		const T_ValueData&);

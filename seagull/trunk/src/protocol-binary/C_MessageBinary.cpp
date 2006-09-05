@@ -64,6 +64,9 @@ C_MessageBinary::C_MessageBinary(C_ProtocolBinary *P_protocol) {
    memset (&m_id, 0, sizeof(T_ValueData));
    m_id.m_type = E_TYPE_NUMBER ;
    
+   m_header_body_field_separator = m_protocol->get_header_body_field_separator () ;
+
+
    GEN_DEBUG(1, "C_MessageBinary::C_MessageBinary() end");
 }
 
@@ -119,8 +122,6 @@ C_MessageBinary::~C_MessageBinary() {
   unsigned long L_i ;
   unsigned long L_nbFields;
 
-
-
   GEN_DEBUG(1, "\nC_MessageBinary::~C_MessageBinary() start: name " << name());
   m_call_id = 0 ;
 
@@ -151,11 +152,15 @@ C_MessageBinary::~C_MessageBinary() {
   m_nb_body_values = 0 ;
 
   m_protocol->reset_value_data (&m_id);
-
+  m_header_body_field_separator = NULL ;
   m_protocol = NULL ;
 
   GEN_DEBUG(1, "C_MessageBinary::~C_MessageBinary() end");
 
+}
+
+bool C_MessageBinary::update_fields (C_MessageFrame* P_msg) {
+  return (true);
 }
 
 bool C_MessageBinary::compare_types (C_MessageFrame* P_msg) {
@@ -169,8 +174,7 @@ bool C_MessageBinary::compare_types (C_MessageFrame* P_msg) {
   if (L_msg == NULL) {
     L_result = false ;
   } else {
-//     GEN_DEBUG(1, "P_msg [" << (*L_msg) << "]");
-     GEN_DEBUG(1, "C_MessageBinary::compare_types() get_type() " << get_type());
+    GEN_DEBUG(1, "C_MessageBinary::compare_types() get_type() " << get_type());
     L_result = (L_msg -> get_type()  == get_type()) ? true : false ;
     GEN_DEBUG(1, "C_MessageBinary::compare_types()  L_result of compare the type of message" << L_result);
   }
@@ -187,7 +191,6 @@ unsigned long  C_MessageBinary::get_type () {
   int           L_i ;
 
   GEN_DEBUG(1, "C_MessageBinary::get_type() start");
-
 
   if (L_idx != -1) {
       L_type = m_header_values[L_idx].m_value.m_val_number ;
@@ -211,13 +214,14 @@ unsigned long  C_MessageBinary::get_type () {
 		<< L_i) ;
 
       if (L_found == true) {
-	  L_type = m_body_val[L_i].m_value.m_val_number ;
-          GEN_DEBUG(1, "C_MessageBinary::get_type()  L_type " << L_type << 
-			  " and m_body_val[L_i].m_value.m_val_signed " 
-			  << m_body_val[L_i].m_value.m_val_signed);
-          GEN_DEBUG(1, "C_MessageBinary::get_type()  L_type " << L_type << 
-			  " and m_body_val[L_i].m_value.m_val_number " 
-			  << m_body_val[L_i].m_value.m_val_number);
+        L_type = m_body_val[L_i].m_value.m_val_number ;
+
+        GEN_DEBUG(1, "C_MessageBinary::get_type()  L_type " << L_type << 
+                  " and m_body_val[L_i].m_value.m_val_signed " 
+                  << m_body_val[L_i].m_value.m_val_signed);
+        GEN_DEBUG(1, "C_MessageBinary::get_type()  L_type " << L_type << 
+                  " and m_body_val[L_i].m_value.m_val_number " 
+                  << m_body_val[L_i].m_value.m_val_number);
       }
   }
 
@@ -475,8 +479,7 @@ void C_MessageBinary::get_body_value (T_pValueData P_res,
   } 
 }
 
-
-void C_MessageBinary::set_body_value (int P_id, T_pValueData P_val) {
+bool C_MessageBinary::set_body_value (int P_id, T_pValueData P_val) {
 
   int  L_i ;
   bool L_found = false ;
@@ -487,6 +490,8 @@ void C_MessageBinary::set_body_value (int P_id, T_pValueData P_val) {
   if (L_found == true) {
     m_protocol->set_body_value(&m_body_val[L_i], P_val) ;
   }
+
+  return (L_found);
   
 }
 
@@ -538,6 +543,8 @@ T_pValueData C_MessageBinary::get_session_id (C_ContextFrame *P_ctxt) {
       GEN_DEBUG(1, "Body Id [" << L_i << "] = " << m_body_val[L_i].m_id << " ");
 
       if (m_body_val[L_i].m_id == L_id) { L_found=true; break; }
+
+
     }
     if (L_found == true) {
       m_protocol->reset_value_data(&m_id);
@@ -943,4 +950,8 @@ bool C_MessageBinary::get_field_value(int P_id,
                                     C_RegExp *P_reg,
                                     T_pValueData P_value) {
   return (true) ;
+}
+
+
+void   C_MessageBinary::update_message_stats  () {
 }

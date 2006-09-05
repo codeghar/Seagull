@@ -2524,7 +2524,7 @@ bool C_ScenarioControl::fromXml (C_XmlData     *P_data,
   		      "Traffic scenario and Init scenario must be"
   		      << " of the same type (client or server)");
   	    L_XmlOk = false ;
-  	  } 
+          } 
 	}
       }
     }

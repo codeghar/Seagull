@@ -563,7 +563,8 @@ int C_ProtocolBinary::analyze_dictionnary_from_xml (C_XmlData *P_def) {
                 << m_header_name << "\" and m_header_body_name is \"" << 
                 m_header_body_name << "\"" ); 
       
-      if ((L_data->get_name() != NULL ) && (strcmp(L_data->get_name(), m_header_name) == 0)) {
+      if ((L_data->get_name() != NULL ) 
+	  && (strcmp(L_data->get_name(), m_header_name) == 0)) {
         // "Message" defintion
  
         L_ret = analyze_sessions_id_from_xml(L_data);
@@ -593,7 +594,8 @@ int C_ProtocolBinary::analyze_dictionnary_from_xml (C_XmlData *P_def) {
         }
       }
       
-      if ((L_data->get_name() != NULL ) && (strcmp(L_data->get_name(), m_header_body_name) == 0)) {
+      if ((L_data->get_name() != NULL ) 
+	  && (strcmp(L_data->get_name(), m_header_body_name) == 0)) {
         // body values dictionnary definitions
         if (L_data->get_sub_data() != NULL) {
           L_headerBodyValueFound = true ;
@@ -601,7 +603,6 @@ int C_ProtocolBinary::analyze_dictionnary_from_xml (C_XmlData *P_def) {
           
           GEN_DEBUG(1, "C_ProtocolBinary::xml_interpretor() m_nb_header_body_values is " << 
                     m_nb_header_body_values);
-          
           L_ret = get_header_body_values_from_xml (L_data);
           if (L_ret == -1) break ;
         }
@@ -752,11 +753,18 @@ C_ProtocolBinary::C_ProtocolBinary() {
   m_max_nb_field_header_body = 0;
   m_header_body_field_table = NULL;
 
+  m_header_body_type_id = -1 ;
+  m_header_body_length_id = -1;
+  
+  m_header_body_field_separator = NULL ;
+
   m_msg_length_start = (unsigned long) 0 ;
   m_msg_length_start_detected = false    ;
 
   NEW_VAR (m_message_name_list, T_NameAndIdList()) ;
   NEW_VAR (m_message_comp_name_list, T_NameAndIdList()) ;
+
+  m_session_id_position = -1 ;
 
   GEN_DEBUG(1, "C_ProtocolBinary::C_ProtocolBinary() end");
   
@@ -981,7 +989,8 @@ C_ProtocolBinary::~C_ProtocolBinary() {
   }
   DELETE_VAR (m_message_comp_name_list) ;
 
-
+  m_header_body_field_separator = NULL ;
+  m_session_id_position = -1 ;
 
   GEN_DEBUG(1, "C_ProtocolBinary::~C_ProtocolBinary() end");
 
@@ -1225,21 +1234,30 @@ int C_ProtocolBinary::get_header_body_from_xml (C_XmlData *P_def) {
   
   GEN_DEBUG(1, "C_ProtocolBinary::get_header_body_from_xml() start");
 
-  L_value_field_type   = P_def->find_value((char*)"type");
-  if (L_value_field_type == NULL) {
-    GEN_ERROR(E_GEN_FATAL_ERROR,"type definition value is mandatory");
-    L_ret = -1 ;
-  }
-  L_value_field_length = P_def->find_value((char*)"length");
-  if (L_value_field_length == NULL) {
-    GEN_ERROR(E_GEN_FATAL_ERROR,"length definition value is mandatory");
-    L_ret = -1 ;
-  }
   m_header_body_name = P_def->find_value((char*)"name");
   if (m_header_body_name == NULL) {
     GEN_ERROR(E_GEN_FATAL_ERROR,"header name value is mandatory");
     L_ret = -1 ;
   }
+
+  L_value_field_type = NULL ;
+  L_value_field_length = NULL ;
+  m_header_body_field_separator = P_def->find_value((char*)"field-separator");
+  if (m_header_body_field_separator == NULL) { // no separator defined 
+                                               // => type and length mandatory
+
+    L_value_field_type   = P_def->find_value((char*)"type");
+    if (L_value_field_type == NULL) {
+      GEN_ERROR(E_GEN_FATAL_ERROR,"type definition value is mandatory");
+      L_ret = -1 ;
+    }
+    L_value_field_length = P_def->find_value((char*)"length");
+    if (L_value_field_length == NULL) {
+      GEN_ERROR(E_GEN_FATAL_ERROR,"length definition value is mandatory");
+      L_ret = -1 ;
+    }
+
+  } 
 
   L_subList = P_def->get_sub_data() ;
 
@@ -1310,14 +1328,18 @@ int C_ProtocolBinary::get_header_body_from_xml (C_XmlData *P_def) {
 				 m_header_body_field_table,
 				 m_header_body_id_map) ;
 
-  	if (strcmp(L_value, L_value_field_type) == 0) {
-	  set_header_body_type_id(L_id) ;
-  	}
+	if (L_value_field_type) {
+	  if (strcmp(L_value, L_value_field_type) == 0) {
+	    set_header_body_type_id(L_id) ;
+	  }
+	}
 
-   	if (strcmp(L_value, L_value_field_length) == 0) {
-   	  set_header_body_length_id(L_id) ;
-   	}
-	
+	if (L_value_field_type) {
+	  if (strcmp(L_value, L_value_field_length) == 0) {
+	    set_header_body_length_id(L_id) ;
+	  }
+	}
+
       }
     } else if ( strcmp(L_value, (char *)"optional") == 0 ) {
 
@@ -1857,8 +1879,13 @@ int C_ProtocolBinary::get_header_values_from_xml (C_XmlData *P_def) {
 				 &(m_body_value_table[L_id].m_value_table[L_valueIdx])) == 0) {
 
 		if ((m_header_type_id == -1) && (L_valueId == m_header_type_id_body)) {
-
-		  L_fieldCode = m_body_value_table[L_id].m_value_table[L_valueIdx].m_value.m_val_number ;
+                  if (m_header_body_field_separator == NULL ) {
+                    L_fieldCode = 
+                      m_body_value_table[L_id].m_value_table[L_valueIdx].m_value.m_val_number ;
+                  } else {
+                    L_fieldCode = 
+                      convert_char_to_ul((char*)m_body_value_table[L_id].m_value_table[L_valueIdx].m_value.m_val_binary.m_value);
+                  }
 		  L_codeFound = true ;
 
 		}
@@ -1979,7 +2006,13 @@ int C_ProtocolBinary::get_header_body_values_from_xml (C_XmlData *P_def) {
       m_header_body_value_table[L_id].m_name = L_name ;
       m_header_body_value_table[L_id].m_type_id = L_typeId ;
 
-      if (L_ret != -1) {
+      if ((L_ret != -1) && (get_header_type_id() == -1)) {
+        if (strcmp(L_name, m_header_type_name) == 0) {
+          m_header_type_id_body = L_id ;
+        }
+      } 
+
+      if ((L_ret != -1) && (m_header_body_field_separator == NULL)) {
 
         GEN_DEBUG(1, "C_ProtocolBinary::get_header_body_values_from_xml() " <<
 		  "L_id = " << L_id);
@@ -1988,15 +2021,6 @@ int C_ProtocolBinary::get_header_body_values_from_xml (C_XmlData *P_def) {
         GEN_DEBUG(1, "C_ProtocolBinary::get_header_body_values_from_xml() " << 
 		  "m_header_type_name = " << 
 		  m_header_type_name);
-
-	if (get_header_type_id() == -1) {  
-	  if (strcmp(L_name, m_header_type_name) == 0) {
-	    m_header_type_id_body = L_id ;
-	    GEN_DEBUG(1, "C_ProtocolBinary::get_header_body_values_from_xml() " 
-		      << "m_header_type_id_body is " << 
-		      m_header_type_id_body);
-	  }
-	} 
 
   	L_subListSetField = L_data->get_sub_data() ;
         if (L_subListSetField != NULL) {
@@ -2092,6 +2116,7 @@ int C_ProtocolBinary::get_header_body_values_from_xml (C_XmlData *P_def) {
                   L_fieldCode = L_fieldValueUl ;
                   L_codeFound = true ;
                 }
+
                 m_header_body_value_table[L_id]
                   .m_value_setted[L_fieldId] = true ;
                 m_header_body_value_table[L_id]
@@ -2104,6 +2129,7 @@ int C_ProtocolBinary::get_header_body_values_from_xml (C_XmlData *P_def) {
                 (m_header_body_value_table[L_id].m_values)[L_fieldIdx]
                   .m_value.m_val_number
                   = L_fieldValueUl ;
+
                 L_fieldIdx++ ;
               }
             }
@@ -2111,11 +2137,11 @@ int C_ProtocolBinary::get_header_body_values_from_xml (C_XmlData *P_def) {
           }
           
         } else {
-          GEN_ERROR(E_GEN_FATAL_ERROR, 
-                    "setfield for ["
-                    << m_header_body_name << "] code is mandatory");
-          L_ret = -1 ;
-          break ;
+	  GEN_ERROR(E_GEN_FATAL_ERROR, 
+		    "setfield for ["
+		    << m_header_body_name << "] code is mandatory");
+	  L_ret = -1 ;
+	  break ;
         }
         if (L_ret == -1) break ;
         if (L_codeFound == false) {
@@ -2131,14 +2157,14 @@ int C_ProtocolBinary::get_header_body_values_from_xml (C_XmlData *P_def) {
           L_ret = -1 ;
           break ;
         }
-        m_header_body_value_id_map
-          ->insert(T_IdMap::value_type(L_name, L_id));
         m_header_body_decode_map
           ->insert(T_DecodeMap::value_type(L_fieldCode, L_id));
-        L_id ++ ;
-      }
+      } // if (L_ret != -1) && (m_header_body_field_separator == NULL)
     }
     if (L_ret == -1) break ;
+    m_header_body_value_id_map
+      ->insert(T_IdMap::value_type(L_name, L_id));
+    L_id ++ ;
   }
   GEN_DEBUG(1, "C_ProtocolBinary::get_header_body_values_from_xml() end");
   
@@ -2204,6 +2230,7 @@ int  C_ProtocolBinary::set_body_value(int          P_id,
 
   P_res->m_id = P_id ;
   P_res->m_sub_val = NULL ;
+
 
   // retrieve type definition of the field
   L_type_id = m_header_body_value_table[P_id].m_type_id ;
@@ -2715,19 +2742,16 @@ int  C_ProtocolBinary::decode_header (unsigned char *P_buf,
 	  // header recognized
 	  L_ret = L_decodeIt->second ;
 
-
 	  if (m_stats) {
 	    m_stats->updateStats (E_MESSAGE,
 				  E_RECEIVE,
 				  L_ret);
 	  }
 
-
           GEN_DEBUG(1, "C_ProtocolBinary::decode_header() L_ret: " << L_ret);
         }
       }
     } 
-
   }
 
   GEN_DEBUG(1, "C_ProtocolBinary::decode_header() end l_ret: " << L_ret);
@@ -4591,8 +4615,8 @@ C_MessageFrame* C_ProtocolBinary::decode_message(unsigned char *P_buffer,
 
   switch (*P_error) {
   case C_ProtocolFrame::E_MSG_OK:
-    GEN_LOG_EVENT(LOG_LEVEL_MSG, 
-		  "Received [" << *L_msg << "]");
+    // GEN_LOG_EVENT(LOG_LEVEL_MSG, 
+    //	  "Received [" << *L_msg << "]");
     break ;
   case C_ProtocolFrame::E_MSG_ERROR_DECODING_SIZE_LESS:
     DELETE_VAR(L_msg);
@@ -4728,6 +4752,7 @@ C_MessageFrame* C_ProtocolBinary::create_new_message(void                *P_xml,
 	// int                       L_nbBodyVal ;
 	char                     *L_bodyName, *L_bodyValue ;
 	C_ProtocolBinary::T_BodyValue   L_bodyVal ;
+        T_TypeType                L_type ; 
 
 	L_msg->set_header_id_value(L_header_val_id);
 	
@@ -4773,7 +4798,8 @@ C_MessageFrame* C_ProtocolBinary::create_new_message(void                *P_xml,
 			<< "L_body_val_id is " 
 			<< L_body_val_id );
 	      
-	      if (get_body_value_type (L_body_val_id) 
+              L_type = get_body_value_type (L_body_val_id) ;
+	      if (L_type 
 		  == E_TYPE_GROUPED) {
 
 	        GEN_DEBUG(1, "C_ProtocolBinary::create_new_message() " 
@@ -4818,7 +4844,20 @@ C_MessageFrame* C_ProtocolBinary::create_new_message(void                *P_xml,
 				   1,
 				   &L_bodyVal,
 				   &L_toBeDelete) == 0) {
-		  L_msg->set_body_value(&L_bodyVal);
+
+                  if (m_header_body_field_separator == NULL) {
+                    L_msg->set_body_value(&L_bodyVal);
+                  } else {
+                    T_ValueData L_tmp_value ;
+                    bool        L_exist     ;
+                    L_tmp_value.m_value = L_bodyVal.m_value ;
+                    L_tmp_value.m_id = L_bodyVal.m_id ;
+                    L_tmp_value.m_type = L_type;
+                    L_exist = L_msg->set_body_value(L_body_val_id,&L_tmp_value);
+                    if (L_exist == false) {
+                      L_msg->set_body_value(&L_bodyVal);
+                    }
+                  }
 
 		  if (L_toBeDelete) {
 	            // Now do not forget to clean L_bodyVal
@@ -4929,8 +4968,7 @@ T_pNameAndIdList C_ProtocolBinary::message_component_name_list    () {
 
   T_NameAndId                  L_elt                     ;
   size_t                          L_i                       ;
-  
-  
+
   for (L_i = 0 ; L_i < m_nb_header_body_values ; L_i ++) {
     
     ALLOC_TABLE(L_elt.m_name,
@@ -5187,6 +5225,10 @@ int C_ProtocolBinary::analyze_sessions_id_from_xml (C_XmlData *P_def) {
   char                     *L_outof_session_id_name = NULL ;
   C_XmlData                *L_data                         ;
 
+  char                     *L_session_id_position_name = NULL ;
+  char                     *L_endstr           ;
+
+
   L_data = P_def ;
   // header values dictionnary definitions
   L_session_id_name = L_data->find_value ((char*)"session-id") ;
@@ -5210,6 +5252,19 @@ int C_ProtocolBinary::analyze_sessions_id_from_xml (C_XmlData *P_def) {
                 << m_header_name << "] section");
       L_ret = -1 ;
     } 
+  }
+
+  if (L_ret != -1) {
+    L_session_id_position_name 
+      = L_data->find_value ((char*)"session-id-position") ;
+    if (L_session_id_position_name != NULL) {
+      m_session_id_position = (int)strtoul_f (L_session_id_position_name, &L_endstr, 10);
+      if (L_endstr[0] != '\0') {
+        GEN_ERROR(E_GEN_FATAL_ERROR, "bad format, ["
+                  << m_session_id_position << "] not a number");
+        L_ret = -1 ;
+      }
+    }
   }
   
   if (L_ret != -1) {
@@ -5307,6 +5362,9 @@ bool C_ProtocolBinary::find_present_session (int P_msg_id,int P_id) {
   return (true);
 }
 
+char* C_ProtocolBinary::get_header_body_field_separator() {
+  return (m_header_body_field_separator);
+}
 
 
 

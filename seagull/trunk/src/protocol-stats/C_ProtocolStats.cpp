@@ -255,53 +255,51 @@ C_ProtocolStats::~C_ProtocolStats(){
   m_initDone = false ;
 
   DELETE_VAR(m_outputStream);
-            
-
 
 }
-
 
 void C_ProtocolStats::updateStats (T_ProtocolStatDataType P_type,
 				   T_ProtocolStatDataAction P_action,
 				   int P_id) {
-
-  //prevent from unknown messages
-  if ((P_id >= 0) && (P_id <= m_max_id_msg)) {
- 
   switch (P_type) {
-  case E_MESSAGE :
-    m_counter_msg_table[m_id_msg_table[P_id]][P_action].m_sem.P();
-    (m_counter_msg_table[m_id_msg_table[P_id]][P_action].m_counter_value)++ ;
-    (m_counter_msg_table[m_id_msg_table[P_id]][P_action].m_counter_periodic_value)++ ;
-    m_counter_msg_table[m_id_msg_table[P_id]][P_action].m_sem.V();
-
-
-    if (m_do_log) {
-      m_counter_msg_table[m_id_msg_table[P_id]][P_action].m_sem_log.P();
-      (m_counter_msg_table[m_id_msg_table[P_id]][P_action].m_counter_log_value)++ ;
-      (m_counter_msg_table[m_id_msg_table[P_id]][P_action].m_counter_periodic_log_value)++ ;
-      m_counter_msg_table[m_id_msg_table[P_id]][P_action].m_sem_log.V();
+  case E_MESSAGE : {
+    if ((P_id >= 0) && (P_id <= m_max_id_msg)) {
+      m_counter_msg_table[m_id_msg_table[P_id]][P_action].m_sem.P();
+      (m_counter_msg_table[m_id_msg_table[P_id]][P_action].m_counter_value)++ ;
+      (m_counter_msg_table[m_id_msg_table[P_id]][P_action].m_counter_periodic_value)++ ;
+      m_counter_msg_table[m_id_msg_table[P_id]][P_action].m_sem.V();
+      
+      
+      if (m_do_log) {
+        m_counter_msg_table[m_id_msg_table[P_id]][P_action].m_sem_log.P();
+        (m_counter_msg_table[m_id_msg_table[P_id]][P_action].m_counter_log_value)++ ;
+        (m_counter_msg_table[m_id_msg_table[P_id]][P_action].m_counter_periodic_log_value)++ ;
+        m_counter_msg_table[m_id_msg_table[P_id]][P_action].m_sem_log.V();
+      }
     }
-
-    break ;
-  case E_MESSAGE_COMPONENT :
-    m_counter_msg_comp_table[m_id_msg_comp_table[P_id]][P_action].m_sem.P();
-    (m_counter_msg_comp_table[m_id_msg_comp_table[P_id]][P_action].m_counter_value)++ ;
-    (m_counter_msg_comp_table[m_id_msg_comp_table[P_id]][P_action].m_counter_periodic_value)++ ;
-    m_counter_msg_comp_table[m_id_msg_comp_table[P_id]][P_action].m_sem.V();
-
-    if (m_do_log) {
-      m_counter_msg_comp_table[m_id_msg_comp_table[P_id]][P_action].m_sem_log.P();
-      (m_counter_msg_comp_table[m_id_msg_comp_table[P_id]][P_action].m_counter_log_value)++ ;
-      (m_counter_msg_comp_table[m_id_msg_comp_table[P_id]][P_action].m_counter_periodic_log_value)++ ;
-      m_counter_msg_comp_table[m_id_msg_comp_table[P_id]][P_action].m_sem_log.V();
+  }
+  break ;
+  case E_MESSAGE_COMPONENT : {
+    if ((P_id >= 0) && (P_id <= m_max_id_msg_comp)) {
+      
+      m_counter_msg_comp_table[m_id_msg_comp_table[P_id]][P_action].m_sem.P();
+      (m_counter_msg_comp_table[m_id_msg_comp_table[P_id]][P_action].m_counter_value)++ ;
+      (m_counter_msg_comp_table[m_id_msg_comp_table[P_id]][P_action].m_counter_periodic_value)++ ;
+      m_counter_msg_comp_table[m_id_msg_comp_table[P_id]][P_action].m_sem.V();
+      
+      if (m_do_log) {
+        m_counter_msg_comp_table[m_id_msg_comp_table[P_id]][P_action].m_sem_log.P();
+        (m_counter_msg_comp_table[m_id_msg_comp_table[P_id]][P_action].m_counter_log_value)++ ;
+        (m_counter_msg_comp_table[m_id_msg_comp_table[P_id]][P_action].m_counter_periodic_log_value)++ ;
+        m_counter_msg_comp_table[m_id_msg_comp_table[P_id]][P_action].m_sem_log.V();
+      }
     }
-
-    break ;
+  }
+  break ;
   default:
     break ;
   }
-  }
+  
 }
 
 iostream_output& C_ProtocolStats::display (iostream_output& P_stream) {
