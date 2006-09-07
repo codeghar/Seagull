@@ -20,5 +20,5 @@
 
 export LD_LIBRARY_PATH=/usr/local/bin
 
-seagull -conf ../config/conf.server.xml -dico ../config/h248-dictionnary.xml -scen ../scenario/server.xml -log ../logs/server.log -llevel ET
+seagull -conf ../config/conf.server.xml -dico ../config/h248-dictionary.xml -scen ../scenario/server.xml -log ../logs/server.log -llevel ET
 

@@ -18,7 +18,7 @@
 
 -->
 
-<!-- h248/megaco-dictionnary definition         -->
+<!-- h248/megaco-dictionary definition          -->
 <!-- text protocol definition                   -->
 <!-- seagull configuration file set             -->
 
@@ -69,19 +69,9 @@
 
    <fielddef name="transaction-id">
      <regexp name="trans-id"
-             expr="Transaction[[:space:]]*[=][[:space:]]*([0-9]+)"
-             nbexpr="2"
-             subexpr="1">
-     </regexp>
-     <regexp name="trans-id-short"
-             expr="T[[:space:]]*[=][[:space:]]*([0-9]+)"
-             nbexpr="2"
-             subexpr="1">
-     </regexp>
-     <regexp name="reply-id"
-             expr="Reply[[:space:]]*[=][[:space:]]*([0-9]+)"
-             nbexpr="2"
-             subexpr="1">
+             expr="(Transaction|T|Reply|R|Pending|P)[[:space:]]*[=][[:space:]]*([0-9]+)"
+             nbexpr="3"
+             subexpr="2">
      </regexp>
      <regexp name="transresponseack-id"
              expr="TransactionResponseAck[[:space:]]*[{][[:space:]]*([0-9]+)[[:space:]]*[}]"
@@ -93,11 +83,11 @@
 </header>
 
 <body name="data" type="data-type">
-   <fielddef name="add-id">
-     <regexp name="add-id"
-             expr="Add[  ]*[=][  ]*([!-}]*)[[:space:]]*[{]"
-             nbexpr="2"
-             subexpr="1">
+   <fielddef name="termination-id">
+     <regexp name="termination-id"
+             expr="(Add|A|Modify|MF|Subtract|S)[[:space:]]*[=]T([[:digit:]]*)[[:space:]]*"
+             nbexpr="3"
+             subexpr="2">
      </regexp>
    </fielddef>
    <fielddef name="transaction-id-in-body">
@@ -107,54 +97,18 @@
              subexpr="1">
      </regexp>
    </fielddef>
-   <fielddef name="modify-id">
-     <regexp name="modif-id"
-             expr="Modify[[:space:]]*[=]T([[:digit:]]*)[[:space:]]*[{]"
-             nbexpr="2"
-             subexpr="1">
-     </regexp>
-   </fielddef>
-   <fielddef name="modify-id-short">
-     <regexp name="modif-id-short"
-             expr="MF[[:space:]]*[=]T([[:digit:]]*)[[:space:]]*[{]"
-             nbexpr="2"
-             subexpr="1">
-     </regexp>
-   </fielddef>
    <fielddef name="context-id">
      <regexp name="cont-id"
-             expr="Context[[:space:]]*[=]([[:digit:]]*)[[:space:]]*[{]"
-             nbexpr="2"
-             subexpr="1">
+             expr="(Context|C)[[:space:]]*[=]([[:digit:]]*)[[:space:]]*[{]"
+             nbexpr="3"
+             subexpr="2">
      </regexp>
    </fielddef>
-   <fielddef name="context-id-short">
-     <regexp name="cont-id-short"
-             expr="C[[:space:]]*[=]([[:digit:]]*)[[:space:]]*[{]"
-             nbexpr="2"
-             subexpr="1">
-     </regexp>
-   </fielddef>
-   <fielddef name="substract-id">
-     <regexp name="cont-id"
-             expr="Substract[[:space:]]*[=]T([[:digit:]]*)[[:space:]]*"
-             nbexpr="2"
-             subexpr="1">
-     </regexp>
-   </fielddef>
-   <fielddef name="substract-id-short">
-     <regexp name="cont-id-short"
-             expr="S[[:space:]]*[=]T([[:digit:]]*)[[:space:]]*"
-             nbexpr="2"
-             subexpr="1">
-     </regexp>
-   </fielddef>
-
 </body>
 
 
 <dictionary session-method="field" 
-            session-id="transaction-id" 
+            session-id="transaction-id"
             out-of-session-id="transaction-id-in-body">
 
   <message name="Pending"></message>
@@ -169,11 +123,4 @@
 </dictionary>
 
 </protocol>
-
-
-
-
-
-
-
 
