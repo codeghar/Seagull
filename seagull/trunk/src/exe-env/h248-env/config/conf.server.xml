@@ -26,7 +26,7 @@
     file="libtrans_ip.so"
     create_function="create_cipio_instance"
     delete_function="delete_cipio_instance"
-    init-args="type=tcp">
+    init-args="type=udp">
   </define>
 
   <define entity="channel"
