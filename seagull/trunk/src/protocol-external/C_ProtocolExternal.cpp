@@ -2836,13 +2836,17 @@ C_MessageExternal* C_ProtocolExternal::build_message (C_MessageExternal *P_msg,
 	  GEN_DEBUG(1, "C_ProtocolExternal::build_message() "
 		    << "L_value_it->m_name [" << L_value_it->m_name << "]");
 	  
-	  L_field_it = m_field_body_name_map->find(T_FieldNameMap::key_type(L_value_it->m_name));
-
-
+     L_field_it = m_field_body_name_map->find(T_FieldNameMap::key_type(L_value_it->m_name));
+     if (L_field_it == m_field_body_name_map->end()) {
+       GEN_ERROR(E_GEN_FATAL_ERROR,
+          "C_ProtocolExternal::build_message field body ["
+          << L_value_it->m_name << "] not found");
+       return (NULL);
+     }
 
 	  L_convert = false ;
 	  L_result = -1 ;
-	  if (m_from_string_field_body_table[((L_field_it->second)->m_id) - m_start_body_index] 
+     if (m_from_string_field_body_table[((L_field_it->second)->m_id) - m_start_body_index] 
 	      != (C_MsgBuildContext::T_ContextStringFunction)NULL) {
 	    L_convert = 
 	      ((m_factory_context)->*(m_from_string_field_body_table[((L_field_it->second)->m_id)- m_start_body_index]))
