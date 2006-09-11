@@ -735,9 +735,14 @@ bool C_MessageBinary::check_field_presence (int              P_id,
   C_ProtocolBinary::T_pHeaderValue     L_descrVal      ; 
   unsigned long                        L_max_nb_field_header ;
 
+
+  L_max_nb_field_header = m_protocol->get_m_max_nb_field_header () ;
+
+  if (P_id < (int)L_max_nb_field_header) { return (true) ; }
+
   // check that the fields of the scenario are present
   for (L_i = 0 ; L_i < m_nb_body_values; L_i++) {
-    if (m_body_val[L_i].m_id == P_id) {
+    if ((m_body_val[L_i].m_id + (int)L_max_nb_field_header) == P_id) {
       L_found = true ;
       break ;
     }
@@ -745,7 +750,6 @@ bool C_MessageBinary::check_field_presence (int              P_id,
 
   if (L_found == false) {
     L_ret = false ;
-    L_max_nb_field_header = m_protocol->get_m_max_nb_field_header () ;
     L_descr = m_protocol->get_header_body_value_description(P_id - L_max_nb_field_header);
     if (L_descr != NULL) {
       L_descrVal = m_protocol->get_header_value_description(m_header_id);
