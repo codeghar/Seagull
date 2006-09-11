@@ -342,8 +342,8 @@ bool C_MessageExternal::check_field_value
     L_check = (L_ref->m_header[P_id] == m_header[P_id]) ;
   } else {
     if (P_sub_id != -1 ) {
-      if ((P_instance <= m_body[P_id-m_nb_header_fields].m_nb) &&
-          (m_body[P_id-m_nb_header_fields].m_nb != 0) &&
+      if ((m_body[P_id-m_nb_header_fields].m_nb != 0) &&
+          (P_instance <= m_body[P_id-m_nb_header_fields].m_nb) &&
           (L_ref->m_ids[P_id] == m_ids[P_id])) {
 	L_check =(m_body[P_id-m_nb_header_fields]
 		  .m_values[P_instance][P_sub_id-m_nb_header_fields-m_nb_body_values]
