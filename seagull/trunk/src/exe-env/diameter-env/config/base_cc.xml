@@ -97,7 +97,7 @@
     </define>
     <define name="Firmware-Revision" type="Unsigned32">
       <setfield name="avp-code" value="267"></setfield>
-      <setfield name="flags" value="64"></setfield>
+      <setfield name="flags" value="0"></setfield>
     </define>
     <define name="Result-Code" type="Unsigned32">
       <setfield name="avp-code" value="268"></setfield>
