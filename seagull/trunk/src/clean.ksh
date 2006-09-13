@@ -37,7 +37,7 @@ TEMP_LINK=${TEMP_LINK:+${TEMP_LINK}" "}`ls | sed -n -e '/^ext$/p' | tr '\n' ' '`
 #        temporary editor files
 
 
-${FIND} . \( -name \*~ -o -name \*.o  -o -name \*.tar.gz -o -name \#*\# \) -print -exec ${RM} \{\} \; | while read file_name
+${FIND} . \( -name \*~ -o -name \*.o  -o -name \#*\# \) -print -exec ${RM} \{\} \; | while read file_name
 do
 	echo "[file ${file_name} deleted]"
 done

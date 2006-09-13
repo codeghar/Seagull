@@ -29,3 +29,14 @@ To compile Seagull from the source:
   in a terminal session and a client script in another terminal session
 - Seagull is running!
 - From there, follow the documentation: http://gull.sourceforge.net/
+
+SCTP support:
+- To enable SCTP support, download sctplib-1.0.4.tar.gz and 
+  socketapi-1.7.0.tar.gz from http://www.sctp.de/ in external-lib-src 
+  directory. Note: glib 1.x > 1.2.8 is a pre-requisite to sctplib
+  and socketapi. You will need to install it also.
+- Modify build-ext-lib.conf to match sctplib and socketapi filenames 
+  (library versions might have been changed)
+- Run build-ext-lib.ksh
+- Modify build.conf to add SCTP support (uncomment BUILD_9_ lines)
+- Compile Seagull (see before)
