@@ -38,6 +38,65 @@
 #define SOCKET_DEBUG(l,m)
 #endif
 
+
+
+int C_SocketWithData::_call_write(int P_socket, 
+                          unsigned char* P_data,
+                          size_t P_size) {
+  return (call_send(P_socket, P_data, P_size, 0));
+}
+
+size_t C_SocketListen::send_buffer(unsigned char     *P_data, 
+                                   size_t             P_size,
+                                   T_SockAddrStorage *P_remote_sockaddr,
+                                   tool_socklen_t    *P_len_remote_sockaddr) {
+  return (0);
+}
+
+size_t C_SocketWithData::send_buffer(unsigned char     *P_data, 
+                                     size_t             P_size,
+                                     T_SockAddrStorage *P_remote_sockaddr,
+                                     tool_socklen_t    *P_len_remote_sockaddr) {
+  size_t L_size = 0 ;
+  int    L_rc       ;
+
+  SOCKET_DEBUG(0, "C_Socket::send_buffer(" 
+	    << m_socket_id << "," << P_data << "," << P_size << ")");
+  
+  SOCKET_DEBUG(0, "C_TransIP::send_buffer() id OK");
+  
+  if (m_type == E_SOCKET_TCP_MODE) {
+    L_rc = _call_write(m_socket_id, P_data, P_size) ;
+  } else {
+    L_rc = call_sendto(m_socket_id, P_data, P_size, 
+                       0,
+                       (struct sockaddr*)(void*)P_remote_sockaddr, 
+                       (tool_socklen_t)*P_len_remote_sockaddr) ;
+  }
+
+  if (L_rc < 0) {
+    SOCKET_ERROR(0, 
+                 "send failed [" << L_rc << "] [" << strerror(errno) << "]");
+    switch (errno) {
+    case EAGAIN:
+      SOCKET_ERROR(0, "Flow control not implemented");
+      break ;
+    case ECONNRESET:
+      break ;
+    default:
+      SOCKET_ERROR(0, "process error [" << errno << "] not implemented");
+      break ;
+    }
+  } else {
+    L_size = P_size ;
+  }
+    
+  SOCKET_DEBUG(0, "C_TransIP::send_buffer() return " << L_size);
+  return (L_size);
+
+}
+
+
 C_Socket::C_Socket(int P_channel_id) {
    SOCKET_DEBUG(1, "C_Socket::C_Socket (" 
 		<< P_channel_id 
@@ -134,6 +193,8 @@ int C_Socket::_open(int              P_socket_domain,
   }
 
   m_protocol = P_protocol ;
+
+  set_properties();
   
   return (0) ;
 }
@@ -177,6 +238,7 @@ void C_Socket::set_fd_set(fd_set *P_rSet, fd_set *P_wSet) {
     break ;
   case E_SOCKET_STATE_INPROGESS:
     FD_SET(m_socket_id, P_wSet);
+    FD_SET(m_socket_id, P_rSet);
     break ;
   case E_SOCKET_STATE_NOT_READY:
     break ;
@@ -285,8 +347,8 @@ int C_SocketListen::_open (size_t P_buffer_size,
 			  P_protocol) ;
 
    if (L_rc == 0) {
-
-     set_properties() ;
+     // AAJ
+     //set_properties() ;
 
      /* bind the socket to the newly formed address */
      L_rc = call_bind(m_socket_id, 
@@ -319,19 +381,25 @@ int C_SocketListen::_open (size_t P_buffer_size,
   
 }
 
+C_Socket* C_SocketListen::create_socket_server(int *P_ret) {
+  C_SocketServer* L_socket ;
+  NEW_VAR(L_socket, C_SocketServer(this, m_channel_id, 
+                                   m_read_buf_size, m_segm_buf_size));
+  (*P_ret) = L_socket->_open(m_buffer_size, m_protocol) ;
+  return (L_socket);
+}
+
 C_Socket* C_SocketListen::process_fd_set (fd_set           *P_rSet, 
 					  fd_set           *P_wSet,
 					  C_TransportEvent *P_event) {
 
-  C_SocketServer  *L_socket = NULL ;
+  C_Socket        *L_socket = NULL ;
   int              L_ret ;
   
   SOCKET_DEBUG(0, "C_SocketListen::process_fd_set() id=" << m_socket_id);
 
   if (FD_ISSET(m_socket_id, P_rSet)) {
-    NEW_VAR(L_socket, C_SocketServer(this, m_channel_id, 
-                                     m_read_buf_size, m_segm_buf_size));
-    L_ret = L_socket->_open(m_buffer_size, m_protocol) ;
+    L_socket = create_socket_server (&L_ret) ;
     if (L_ret == 0) {
       SOCKET_DEBUG(0, "C_SocketListen::process_fd_set() CNX");
       P_event->m_type = C_TransportEvent::E_TRANS_CONNECTION ;
@@ -400,8 +468,8 @@ int C_SocketServer::_open_udp (size_t P_buffer_size,
      m_protocol = P_protocol ;
      
      m_buffer_size = P_buffer_size ;
-
-     set_properties() ;
+     
+     //set_properties() ;
 
      /* bind the socket to the newly formed address */
      L_rc = call_bind(m_socket_id, 
@@ -444,7 +512,7 @@ int C_SocketServer::_open(size_t P_buffer_size,
   m_protocol = P_protocol ;
 
   m_buffer_size = P_buffer_size ;
-
+  // AAJ
   set_properties () ;
 
   if (m_socket_id < 0) {
@@ -484,7 +552,8 @@ int C_SocketClient::_open(T_pOpenStatus  P_status,
 			 P_protocol) ;
 
   if (L_rc == 0) {
-    set_properties() ;
+    // AAJ
+    //set_properties() ;
     if (m_type == E_SOCKET_TCP_MODE) {
 
       L_rc = call_connect (m_socket_id, 
@@ -591,16 +660,91 @@ C_SocketWithData::~C_SocketWithData() {
   FREE_TABLE(m_read_buf);
 }
 
-C_Socket* C_SocketWithData::process_fd_set (fd_set* P_rSet,
-					    fd_set* P_wSet,
-					    C_TransportEvent *P_event) {
+int C_SocketWithData::_call_read(int P_socket, char *P_buf, size_t P_size) {
+  return (call_read(P_socket, P_buf, P_size)) ;
+}
+
+
+C_Socket* C_SocketWithData::process_fd_ready(fd_set *P_rSet, 
+                                             fd_set *P_wSet, 
+                                             C_TransportEvent *P_event) {
+  
   int             L_rc ;
   T_pDataRcv      L_data ;
-  int             L_sock_opt ;
-  socklen_t       L_opt_len ;
   struct timezone L_timeZone ;             
 
   char           *L_buf = m_read_buf ;
+  if (FD_ISSET(m_socket_id, P_rSet)) {
+    if (m_type == E_SOCKET_TCP_MODE) {
+      L_rc = _call_read(m_socket_id, L_buf, m_read_buf_size);
+    } else {
+      L_rc = _read(L_buf);
+    }
+    
+    if (L_rc <= 0) {
+      SOCKET_DEBUG(0, "C_SocketWithData::process_fd_set() CLOSED");
+      P_event->m_type = C_TransportEvent::E_TRANS_CLOSED ;
+      P_event->m_channel_id = m_channel_id ;
+      P_event->m_id = m_socket_id ;
+    } else {
+      SOCKET_DEBUG(0, "C_SocketWithData::process_fd_set() RCV " << L_rc);
+      
+      ALLOC_VAR(L_data, T_pDataRcv, sizeof(T_DataRcv));
+      gettimeofday(&(L_data->m_time), &L_timeZone);
+      
+      P_event->m_type = C_TransportEvent::E_TRANS_RECEIVED ;
+      P_event->m_channel_id = m_channel_id ;
+      P_event->m_id = m_socket_id ;
+      L_data->m_size = L_rc ;
+      ALLOC_TABLE(L_data->m_data, 
+                  unsigned char*, 
+                  sizeof(unsigned char*), 
+                  L_rc);
+      memcpy(L_data->m_data, L_buf, L_rc);
+      m_data_queue.push_back(L_data);
+    }
+  } else {
+    SOCKET_DEBUG(0, "C_SocketWithData::process_fd_set() NOEVENT");
+    P_event->m_type = C_TransportEvent::E_TRANS_NO_EVENT ;
+  }
+  return (NULL);
+}
+
+C_Socket* C_SocketWithData::process_fd_in_progess(fd_set *P_rSet, 
+                                                  fd_set *P_wSet, 
+                                                  C_TransportEvent *P_event) {
+  int             L_sock_opt ;
+  socklen_t       L_opt_len ;
+
+  L_opt_len = sizeof (L_sock_opt);
+  
+  if (FD_ISSET(m_socket_id, P_wSet)) {
+    if (getsockopt(m_socket_id, SOL_SOCKET, SO_ERROR, (void *)&L_sock_opt,
+                   &L_opt_len) == -1) {
+      SOCKET_ERROR(1, "getsockopt(SO_ERROR) failed");
+    }
+    if (L_sock_opt == 0) {
+      m_state = E_SOCKET_STATE_READY ;
+      P_event->m_type = C_TransportEvent::E_TRANS_OPEN ;
+      P_event->m_channel_id = m_channel_id ;
+      P_event->m_id = m_socket_id ;
+    } else {
+      P_event->m_type = C_TransportEvent::E_TRANS_OPEN_FAILED ;
+      P_event->m_channel_id = m_channel_id ;
+      P_event->m_id = m_socket_id ;
+      SOCKET_ERROR(1, "delayed operation error for ["
+                   << m_socket_id << "]");
+    }
+  }
+  return (NULL);
+}
+
+
+C_Socket* C_SocketWithData::process_fd_set (fd_set* P_rSet,
+					    fd_set* P_wSet,
+					    C_TransportEvent *P_event) {
+
+  C_Socket* L_socket = NULL ;
 
   SOCKET_DEBUG(0, "C_SocketWithData::process_fd_set() id=" << m_socket_id);
 
@@ -608,63 +752,12 @@ C_Socket* C_SocketWithData::process_fd_set (fd_set* P_rSet,
 
   case E_SOCKET_STATE_READY:
 
-    if (FD_ISSET(m_socket_id, P_rSet)) {
-      if (m_type == E_SOCKET_TCP_MODE) {
-        L_rc = call_read(m_socket_id, L_buf, m_read_buf_size);
-      } else {
-        L_rc = _read(L_buf);
-      }
-
-      if (L_rc <= 0) {
-	SOCKET_DEBUG(0, "C_SocketWithData::process_fd_set() CLOSED");
-	P_event->m_type = C_TransportEvent::E_TRANS_CLOSED ;
-	P_event->m_channel_id = m_channel_id ;
-	P_event->m_id = m_socket_id ;
-      } else {
-	SOCKET_DEBUG(0, "C_SocketWithData::process_fd_set() RCV " << L_rc);
-
-	ALLOC_VAR(L_data, T_pDataRcv, sizeof(T_DataRcv));
-	gettimeofday(&(L_data->m_time), &L_timeZone);
-
-	P_event->m_type = C_TransportEvent::E_TRANS_RECEIVED ;
-	P_event->m_channel_id = m_channel_id ;
-	P_event->m_id = m_socket_id ;
-	L_data->m_size = L_rc ;
-	ALLOC_TABLE(L_data->m_data, 
-		    unsigned char*, 
-		    sizeof(unsigned char*), 
-		    L_rc);
-	memcpy(L_data->m_data, L_buf, L_rc);
-	m_data_queue.push_back(L_data);
-      }
-    } else {
-      SOCKET_DEBUG(0, "C_SocketWithData::process_fd_set() NOEVENT");
-      P_event->m_type = C_TransportEvent::E_TRANS_NO_EVENT ;
-    }
+    L_socket = process_fd_ready(P_rSet, P_wSet, P_event);
     break ;
 
   case E_SOCKET_STATE_INPROGESS:
-    L_opt_len = sizeof (L_sock_opt);
 
-    if (FD_ISSET(m_socket_id, P_wSet)) {
-      if (getsockopt(m_socket_id, SOL_SOCKET, SO_ERROR, (void *)&L_sock_opt,
-		     &L_opt_len) == -1) {
-	SOCKET_ERROR(1, "getsockopt(SO_ERROR) failed");
-      }
-      if (L_sock_opt == 0) {
-	m_state = E_SOCKET_STATE_READY ;
-	P_event->m_type = C_TransportEvent::E_TRANS_OPEN ;
-	P_event->m_channel_id = m_channel_id ;
-	P_event->m_id = m_socket_id ;
-
-      } else {
-	P_event->m_type = C_TransportEvent::E_TRANS_OPEN_FAILED ;
-	P_event->m_channel_id = m_channel_id ;
-	P_event->m_id = m_socket_id ;
-	SOCKET_ERROR(1, "delayed operation error for ["
-		     << m_socket_id << "]");
-      }
-    }
+    L_socket = process_fd_in_progess(P_rSet, P_wSet, P_event);
     break ;
 
   case E_SOCKET_STATE_NOT_READY:
@@ -672,7 +765,7 @@ C_Socket* C_SocketWithData::process_fd_set (fd_set* P_rSet,
 
   }
 
-  return (NULL);
+  return (L_socket);
 }
 
 size_t C_SocketWithData::received_buffer(unsigned char *P_data, 

@@ -37,6 +37,11 @@ determine_generation()
 {
     L_i=1
     L_end=0
+    L_max=`symbol_value MAX_BUILD`
+    if test -z "${L_max}"
+    then
+       L_max=0
+    fi
 
     while test ${L_end} -eq 0
       do
@@ -44,7 +49,19 @@ determine_generation()
       L_name=`symbol_value BUILD_${L_i}_NAME`
       if test -z "${L_name}"
 	  then
-	  L_end=1 
+       if test ${L_max} -eq 0
+       then 
+	       L_end=1 
+       else
+          if test ${L_i} -le ${L_max}
+          then
+             L_end=0
+          else
+             L_end=1
+          fi
+       fi
+
+
       else
 	  BUILD_TARGET=${BUILD_TARGET:+${BUILD_TARGET}" "}"all_${L_name}"
 	  L_modules=`symbol_value BUILD_${L_i}_MODULES`
@@ -61,8 +78,8 @@ determine_generation()
 	  echo "	@make -f \$(WORK_DIR)/dep-${L_name}.mk WORK_DIR=\$(WORK_DIR) BUILD_DIR=\$(BUILD_DIR) TOOL_NAME=\$(TOOL_NAME) TOOL_VERSION=\$(TOOL_VERSION) DEP_TARGET=${L_name}"
 	  echo ""
 
-	  L_i=`expr ${L_i} + 1`
       fi
+	  L_i=`expr ${L_i} + 1`
       
     done
 }

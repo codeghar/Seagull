@@ -36,17 +36,18 @@ class C_TransIP : public C_Transport {
 public:
 
    C_TransIP ();
-  ~C_TransIP ();
+  virtual ~C_TransIP ();
 
-  int         init (char *P_buf,
+  virtual int init (char *P_buf,
                     T_logFunction P_logError,
                     T_logFunction P_logInfo) ;
-  int         config (T_pConfigValueList P_config_param_list) ;
+
+  virtual int         config (T_pConfigValueList P_config_param_list) ;
 
   int         open (int              P_channel_id,
-		    char            *P_buf, 
-		    T_pOpenStatus    P_status,
-		    C_ProtocolFrame *P_protocol);
+                    char            *P_buf, 
+                    T_pOpenStatus    P_status,
+                    C_ProtocolFrame *P_protocol);
   
   int         pre_select (int             P_n, 
 			  fd_set         *P_readfds,  
@@ -63,11 +64,11 @@ public:
 			   T_pC_TransportEvent P_eventTable,
 			   size_t             *P_nb);
 
-  size_t      send_buffer     (int                P_id, 
-			       unsigned char     *P_data, 
-			       size_t             P_size,
-                               T_SockAddrStorage *P_remote_sockaddr,
-                               tool_socklen_t    *P_len_remote_sockaddr);
+//    size_t      send_buffer     (int                P_id, 
+//  			       unsigned char     *P_data, 
+//  			       size_t             P_size,
+//                                 T_SockAddrStorage *P_remote_sockaddr,
+//                                 tool_socklen_t    *P_len_remote_sockaddr);
 
   int         send_message    (int             P_id,
 			       C_MessageFrame *P_msg);
@@ -85,8 +86,7 @@ public:
   
   T_SelectDef select_definition () ;
 
-
-private:
+protected:
 
   T_SocketType    m_trans_type ;
   T_SocketMap     m_socket_map ;
@@ -96,18 +96,27 @@ private:
   
   T_IpAddrMap     m_ip_addr_map ;
 
-  bool            analyze_init_string (char *P_buf) ;
+  virtual bool            analyze_init_string (char *P_buf) ;
+  void analyze_optional_init_string (char *P_buf) ;
   bool            analyze_open_string (char *P_buf, T_pIpAddr P_addr) ;
-  int             open                (int              P_channel_id, 
-				       T_pIpAddr        P_Addr,
-				       T_pOpenStatus    P_status,
-				       C_ProtocolBinaryFrame *P_protocol) ;
+  virtual int     open                (int              P_channel_id, 
+                                       T_pIpAddr        P_Addr,
+                                       T_pOpenStatus    P_status,
+                                       C_ProtocolBinaryFrame *P_protocol) ;
   int             extract_ip_addr(T_pIpAddr P_pIpAddr);
   int             resolve_addr(T_pIpAddr P_pIpAddr);
   int             inet_addr   (char                   **P_addr, 
 			       T_SockAddrStorage       *P_AddrS);
 
   void            decode_from_protocol (C_Socket *P_socket);
+
+  bool analyze_ulong_value (char* P_buf, 
+                            char* P_pattern,
+                            size_t* P_value);
+
+  bool analyze_string_value (char* P_buf, 
+                             char* P_pattern,
+                             char* P_value);
 
   size_t                        m_buffer_size ;
 

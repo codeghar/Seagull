@@ -71,13 +71,18 @@ public:
   int     get_id () ;
   int     get_channel_id();
   void    _close () ;
-  void    set_fd_set (fd_set *P_rSet, fd_set *P_wSet);
+  virtual void      set_fd_set (fd_set *P_rSet, fd_set *P_wSet);
   virtual C_Socket* process_fd_set(fd_set           *P_rSet, 
 				   fd_set           *P_wSet,
 				   C_TransportEvent *P_event) = 0 ;
 
   virtual T_SockAddrStorage*     get_remote_sockaddr_ptr() = 0    ; 
   virtual tool_socklen_t*        get_len_remote_sockaddr_ptr() = 0 ;
+
+  virtual size_t send_buffer(unsigned char     *P_data, 
+                             size_t             P_size,
+                             T_SockAddrStorage *P_remote_sockaddr,
+                             tool_socklen_t    *P_len_remote_sockaddr) = 0 ;
 
   void          set_channel_id(int P_channel_id);
   void          set_properties () ;
@@ -116,6 +121,22 @@ public:
                    size_t P_segm_buf_size) ;
   virtual ~C_SocketWithData() ;
   virtual C_Socket* process_fd_set(fd_set *P_rSet, fd_set *P_wSet, C_TransportEvent *P_event) ;
+
+
+  virtual C_Socket* process_fd_ready(fd_set *P_rSet, fd_set *P_wSet, C_TransportEvent *P_event);
+  virtual C_Socket* process_fd_in_progess(fd_set *P_rSet, fd_set *P_wSet, C_TransportEvent *P_event) ;
+
+  virtual int _call_read(int P_socket, char *P_buf, size_t P_size);
+
+  virtual int _call_write(int P_socket, 
+                         unsigned char* P_data,
+                         size_t P_size)  ;
+
+  virtual size_t send_buffer(unsigned char     *P_data, 
+                             size_t             P_size,
+                             T_SockAddrStorage *P_remote_sockaddr,
+                             tool_socklen_t    *P_len_remote_sockaddr)  ;
+
   virtual int _read (void *P_buf) = 0 ;
   size_t received_buffer (unsigned char  *P_data, 
 			  size_t          P_size_buf,
@@ -158,6 +179,10 @@ public:
   virtual C_Socket* process_fd_set(fd_set           *P_rSet, 
 			   fd_set           *P_wSet,
 			   C_TransportEvent *P_event) ;
+  virtual size_t send_buffer(unsigned char     *P_data, 
+                             size_t             P_size,
+                             T_SockAddrStorage *P_remote_sockaddr,
+                             tool_socklen_t    *P_len_remote_sockaddr)  ;
   size_t received_buffer  (unsigned char  *P_data, 
 			   size_t          P_size_buf,
 			   struct timeval *P_time) ;
@@ -170,11 +195,10 @@ public:
 protected:
   
   T_pIpAddr           m_source_addr_info ;
-
-private:
-
   size_t              m_read_buf_size ;
   size_t              m_segm_buf_size ;
+
+  virtual C_Socket*   create_socket_server(int *P_ret) ;
 
 } ;
 
@@ -194,7 +218,7 @@ public:
 
 
   virtual ~C_SocketServer();
-  int _open (size_t P_buffer_size, C_ProtocolBinaryFrame *P_protocol) ;
+  virtual int _open (size_t P_buffer_size, C_ProtocolBinaryFrame *P_protocol) ;
 
   int _open_udp (size_t P_buffer_size, 
                  C_ProtocolBinaryFrame *P_protocol) ;
@@ -216,9 +240,9 @@ public:
                  size_t        P_read_buf_size,
                  size_t        P_segm_buf_size) ;
   virtual ~C_SocketClient() ;
-  int _open (T_pOpenStatus P_status,
-	     size_t        P_buffer_size,
-	     C_ProtocolBinaryFrame *P_protocol);
+  virtual int _open (T_pOpenStatus P_status,
+                     size_t        P_buffer_size,
+                     C_ProtocolBinaryFrame *P_protocol);
   int _read (void *P_buf) ;
 
 } ;

@@ -81,10 +81,25 @@ int C_TransIP::init (char *P_buf,
                      T_logFunction P_logError,
                      T_logFunction P_logInfo) {
 
+  int L_ret = -1 ;
+
   GEN_DEBUG(1, "C_TransIP::init  ("<< P_buf << ")");
   m_logError = P_logError ;
   m_logInfo = P_logInfo ;
-  return ((analyze_init_string(P_buf) == true) ? 0 : -1);
+
+  if (analyze_init_string(P_buf)) {
+    ALLOC_TABLE(m_decode_buffer,
+                unsigned char *,
+                sizeof(unsigned char),
+                m_decode_buffer_size);
+    ALLOC_TABLE(m_encode_buffer,
+                unsigned char *,
+                sizeof(unsigned char),
+                m_encode_buffer_size);
+    L_ret = 0 ;
+  }
+
+  return (L_ret);
 }
 
 int C_TransIP::config (T_pConfigValueList P_config_param_list) {
@@ -310,9 +325,7 @@ int C_TransIP::send_message (int             P_id,
 
   C_ProtocolFrame::T_MsgError      L_error = C_ProtocolFrame::E_MSG_OK ;
 
-
-  // to be used, once ...
-  // int                   L_ret = -1   ;
+  int                   L_ret = -1   ;
 
   L_it = m_socket_map.find (T_SocketMap::key_type(P_id));
   if (L_it != m_socket_map.end()) {
@@ -328,56 +341,14 @@ int C_TransIP::send_message (int             P_id,
     
     if (L_error == C_ProtocolFrame::E_MSG_OK) {
       L_protocol->log_buffer((char*)"sent", L_data, L_size);
-      (void) send_buffer(P_id, L_data, L_size, L_remote_sockaddr, L_len_remote_sockaddr) ;
+
+      L_ret = L_socket
+        ->send_buffer(L_data, L_size, L_remote_sockaddr, L_len_remote_sockaddr);
+
     }
   }
-  return (0) ;
+  return ((L_ret>0) ? 0 : L_ret) ;
 }
-
-
-size_t C_TransIP::send_buffer (int                P_id, 
-                               unsigned char     *P_data, 
-                               size_t             P_size,
-                               T_SockAddrStorage *P_remote_sockaddr,
-                               tool_socklen_t    *P_len_remote_sockaddr) {
-
-  size_t L_size = 0 ;
-  int    L_rc       ;
-
-  GEN_DEBUG(0, "C_TransIP::send_buffer(" 
-	    << P_id << "," << P_data << "," << P_size << ")");
-
-  GEN_DEBUG(0, "C_TransIP::send_buffer() id OK");
-
-  if (m_trans_type == E_SOCKET_TCP_MODE) {
-    L_rc = call_send(P_id, P_data, P_size, 0) ;
-  } else {
-    L_rc = call_sendto(P_id, P_data, P_size, 
-                       0,
-                       (struct sockaddr*)(void*)P_remote_sockaddr, 
-                       (tool_socklen_t)*P_len_remote_sockaddr) ;
-  }
-
-  if (L_rc < 0) {
-    GEN_ERROR(0, "send failed [" << L_rc << "] [" << strerror(errno) << "]");
-    switch (errno) {
-    case EAGAIN:
-      GEN_ERROR(0, "Flow control not implemented");
-      break ;
-    case ECONNRESET:
-      break ;
-    default:
-      GEN_ERROR(0, "process error [" << errno << "] not implemented");
-      break ;
-    }
-  } else {
-    L_size = P_size ;
-  }
-    
-  GEN_DEBUG(0, "C_TransIP::send_buffer() return " << L_size);
-  return (L_size);
-}
-
 
 size_t C_TransIP::received_buffer (int            P_id, 
 				   unsigned char *P_data, 
@@ -577,18 +548,96 @@ int C_TransIP::open (int              P_channel_id,
   return (L_id);
 }
 
-bool C_TransIP::analyze_init_string(char *P_buf) {
-
-  bool             L_ret = false  ;
+bool C_TransIP::analyze_ulong_value (char* P_buf, 
+                                     char* P_pattern,
+                                     size_t* P_value) {
+  bool L_ret = false ;
   char            *L_ptr          ;
   char             L_tmp  [255]   ;
   char            *L_buf          ;
 
+  char            *L_pattern      ;
+
+  L_buf = P_buf ;
+  L_ptr = strstr(L_buf, P_pattern);
+  ALLOC_TABLE(L_pattern, char*, sizeof(char),strlen(P_pattern)+8);
+  L_pattern[0] = '\0' ;
+  sprintf(L_pattern, "%s", P_pattern);
+  strcat(L_pattern, "%[^;]*s");
+  if (L_ptr != NULL) {
+    sscanf(L_ptr, L_pattern, L_tmp);
+    GEN_DEBUG(1, "C_TransIP::analyze_ulong_value() buffer size [" 
+  	      << L_tmp << "]");
+
+    if (strlen(L_tmp)>0) {
+      char *L_end_ptr ;
+      unsigned long L_value ;
+      L_value = strtoul_f (L_tmp, &L_end_ptr, 10);
+      if (L_end_ptr[0] == '\0') { // good format
+        *P_value = L_value ;
+        L_ret = true ;
+      }
+    }
+  }
+
+  FREE_TABLE(L_pattern);
+  return (L_ret);
+}
+
+bool C_TransIP::analyze_string_value (char* P_buf, 
+                                      char* P_pattern,
+                                      char* P_value) {
+  bool L_ret = false ;
+
+  char            *L_ptr          ;
+  char            *L_pattern      ;
+
+  GEN_DEBUG(1, "C_TransIP::analyze_string_value ("<< P_buf << ")");
+  L_ptr = strstr(P_buf,P_pattern) ;
+  ALLOC_TABLE(L_pattern, char*, sizeof(char),strlen(P_pattern)+8);
+  L_pattern[0] = '\0' ;
+  sprintf(L_pattern, "%s", P_pattern);
+  strcat(L_pattern, "%[^;]*s");
+  if (L_ptr != NULL) {
+    sscanf(L_ptr, L_pattern, P_value);
+    L_ret = true ;
+  }
+
+  FREE_TABLE(L_pattern);
+  return (L_ret);
+}
+
+void C_TransIP::analyze_optional_init_string(char *P_buf) {
+
+  if (analyze_ulong_value (P_buf,
+                           (char*)"decode-buf-len=",
+                           &m_decode_buffer_size)) {
+    // not mandatory
+  } 
+  if (analyze_ulong_value (P_buf,
+                           (char*)"encode-buf-len=",
+                           &m_encode_buffer_size)) {
+    // not mandatory
+  } 
+  if (analyze_ulong_value (P_buf,
+                           (char*)"read-buf-len=",
+                           &m_read_buffer_size)) {
+    // not mandatory
+  } 
+}
+
+bool C_TransIP::analyze_init_string(char *P_buf) {
+
+  bool             L_ret = false  ;
+  char             L_tmp  [255]   ;
+
 
   GEN_DEBUG(1, "C_TransIP::analyze_init_string  ("<< P_buf << ")");
-  L_ptr = strstr(P_buf,"type=") ;
-  if (L_ptr != NULL) {
-    sscanf(L_ptr, "type=%[^;]*s", L_tmp);
+
+  if (analyze_string_value (P_buf,
+                           (char*)"type=",
+                           L_tmp)) {
+    // mandatory
     if (!strcmp(L_tmp,"tcp")) {
       m_trans_type = E_SOCKET_TCP_MODE ;
       L_ret = true ;
@@ -596,67 +645,9 @@ bool C_TransIP::analyze_init_string(char *P_buf) {
       m_trans_type = E_SOCKET_UDP_MODE ;
       L_ret = true ;
     }
-    GEN_DEBUG(1, "C_TransIP::analyze_init_string() type [" << L_tmp << "]");
-  }
+  } 
 
-  L_buf = P_buf ;
-  L_ptr = strstr(L_buf, "decode-buf-len=");
-  if (L_ptr != NULL) {
-    sscanf(L_ptr+15, "%[^;]*s", L_tmp);
-    GEN_DEBUG(1, "C_TransIP::analyze_init_string() buffer size [" 
-  	      << L_tmp << "]");
-    if (strlen(L_tmp)>0) {
-      char *L_end_ptr ;
-      unsigned long L_value ;
-      L_value = strtoul_f (L_tmp, &L_end_ptr, 10);
-      if (L_end_ptr[0] == '\0') { // good format
-  	m_decode_buffer_size = L_value ;
-      }
-    }
-  }
-  
-  L_buf = P_buf ;
-  L_ptr = strstr(L_buf, "encode-buf-len=");
-  if (L_ptr != NULL) {
-    sscanf(L_ptr+15, "%[^;]*s", L_tmp);
-    GEN_DEBUG(1, "C_TransIP::analyze_init_string() buffer size [" 
-  	      << L_tmp << "]");
-    if (strlen(L_tmp)>0) {
-      char *L_end_ptr ;
-      unsigned long L_value ;
-      L_value = strtoul_f (L_tmp, &L_end_ptr, 10);
-      if (L_end_ptr[0] == '\0') { // good format
-  	m_encode_buffer_size = L_value ;
-      }
-    }
-  }
-
-
-  L_buf = P_buf ;
-  L_ptr = strstr(L_buf, "read-buf-len=");
-  if (L_ptr != NULL) {
-    sscanf(L_ptr+13, "%[^;]*s", L_tmp);
-    GEN_DEBUG(1, "C_TransIP::analyze_init_string() buffer size [" 
-  	      << L_tmp << "]");
-    if (strlen(L_tmp)>0) {
-      char *L_end_ptr ;
-      unsigned long L_value ;
-      L_value = strtoul_f (L_tmp, &L_end_ptr, 10);
-      if (L_end_ptr[0] == '\0') { // good format
-  	m_read_buffer_size = L_value ;
-      }
-    }
-  }
-
-
-  ALLOC_TABLE(m_decode_buffer,
-              unsigned char *,
-              sizeof(unsigned char),
-              m_decode_buffer_size);
-  ALLOC_TABLE(m_encode_buffer,
-              unsigned char *,
-              sizeof(unsigned char),
-              m_encode_buffer_size);
+  analyze_optional_init_string(P_buf);
 
   return (L_ret);
   
