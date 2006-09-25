@@ -1416,19 +1416,19 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             <tr>
               <td>file</td>
               <td>Shared library to be used for transport.</td>
-              <td>Value is "libtrans_ip.so" for TCP, "libtrans_extsctp.so" for SCTP (this one is 
+              <td>Value is "libtrans_ip.so" for IP/TCP, libtrans_iptls.so for IP/TLS (this one is based on openssl library), "libtrans_extsctp.so" for SCTP (this one is 
 	    based on an external SCTP library) and "libtrans_octcap.so" for TCAP.</td>
             </tr>
             <tr>
               <td>create_function</td>
               <td>Function used to create a transport instance</td>
-              <td>Value is "create_cipio_instance" for IP-based protocols 
+              <td>Value is "create_cipio_instance" for IP-based protocols,  "create_ciptlsio_instance" for IP/TLS 
 	    and "create_ctransoctcap_instance" for TCAP.</td>
             </tr>
             <tr>
               <td>delete_function</td>
               <td>Function used to delete a transport instance</td>
-              <td>Value is "delete_cipio_instance" for IP-based protocols 
+              <td>Value is "delete_cipio_instance" for IP-based protocols, "delete_ciptlsio_instance" for IP/TLS 
 	    and "delete_ctransoctcap_instance" for TCAP. </td>
             </tr>
             <tr>
@@ -1439,6 +1439,18 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
               <li>For the "libtrans_ip.so", the possible values are:
                 <ul>
                   <li>type = tcp (default=tcp)</li>
+                  <li>decode-buf-len (default=4096): size of the reception buffer (maximum message size after re-assembly)</li>
+                  <li>encode-buf-len (default=4096): size of the sending buffer (maximum message size to be sent (can be segmented))</li>
+                  <li>read-buf-len (default=1024): amount of bytes to read on the IP socket at a time - several reads 
+                    might be necessary if buffer is the message to read is bigger than the buffer (impact on performances)</li>
+                </ul>
+              </li>
+	      <li>For the "libtrans_iptls.so", the possible values are:
+                <ul>
+                  <li>method=SSLv23       : indicates the method of connection. This value corresponds to SSLv23_method</li>
+                  <li>cert_chain_file=xxx : indicates the name of the certificate</li>
+                  <li>private_key_file=yyy  : indicates the name of the private key</li>
+		  <li>passwd=zzz            : this password protects the private key</li>
                   <li>decode-buf-len (default=4096): size of the reception buffer (maximum message size after re-assembly)</li>
                   <li>encode-buf-len (default=4096): size of the sending buffer (maximum message size to be sent (can be segmented))</li>
                   <li>read-buf-len (default=1024): amount of bytes to read on the IP socket at a time - several reads 
