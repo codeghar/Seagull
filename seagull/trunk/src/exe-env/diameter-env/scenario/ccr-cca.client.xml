@@ -28,7 +28,7 @@
 </counter>
 
 <init>
-  <send channel="trans-ip-v4">
+  <send channel="channel-1">
     <command name="CER">
       <avp name="Origin-Host" value="seagull.ims.hpintelco.org"> </avp>
       <avp name="Origin-Realm" value="ims.hpintelco.org"> </avp>
@@ -48,7 +48,7 @@
     </command>
   </send>
   
-  <receive channel="trans-ip-v4">
+  <receive channel="channel-1">
     <command name="CEA">
     </command>
   </receive>
@@ -56,7 +56,7 @@
 
 <!-- Traffic -->
 <traffic>
-  <send channel="trans-ip-v4">
+  <send channel="channel-1">
     <action>
       <!-- For each new call, increment the session-ID counter -->
       <inc-counter name="HbH-counter"> </inc-counter>
@@ -112,7 +112,7 @@
     </action>
   </send>
   
-  <receive channel="trans-ip-v4">
+  <receive channel="channel-1">
     <action>
       <stop-timer></stop-timer>
     </action>

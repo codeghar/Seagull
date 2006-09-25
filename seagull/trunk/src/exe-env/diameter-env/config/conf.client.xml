@@ -19,10 +19,10 @@
 -->
 
 <?xml version="1.0" encoding="ISO-8859-1"?>
-<configuration name="Simple IP Server Conf">
+<configuration name="Simple IP Client Conf">
 
   <define entity="transport"
-    name="trans-ip-v4"
+    name="trans-1"
     file="libtrans_ip.so"
     create_function="create_cipio_instance"
     delete_function="delete_cipio_instance"
@@ -30,9 +30,9 @@
   </define>
 
   <define entity="channel"
-    name="trans-ip-v4"
+    name="channel-1"
     protocol="diameter-v1"
-    transport="trans-ip-v4"
+    transport="trans-1"
     open-args="mode=client;dest=127.0.0.1:3868">
   </define>
 

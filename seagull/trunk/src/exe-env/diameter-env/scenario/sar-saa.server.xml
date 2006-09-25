@@ -22,7 +22,7 @@
 <scenario>
 
 <init>
-  <receive channel="trans-ip-v4">
+  <receive channel="channel-1">
     <command name="CER">
     </command>
     <action>
@@ -30,7 +30,7 @@
     </action>
   </receive>
   
-  <send channel="trans-ip-v4">
+  <send channel="channel-1">
     <command name="CEA">
       <avp name="Result-Code" value="2001"> </avp>
       <avp name="Origin-Host" value="idefix.grenoble.hp.com"> </avp>
@@ -44,7 +44,7 @@
 </init>
 
 <traffic>
-  <receive channel="trans-ip-v4">
+  <receive channel="channel-1">
     <command name="SAR">
       <!-- Only need to specify what needs to be parsed -->
       <avp name="Session-Id" value="dont_care"> </avp>
@@ -57,7 +57,7 @@
     </action>
   </receive>
   
-  <send channel="trans-ip-v4">
+  <send channel="channel-1">
     <!-- Restore action is before the command -->
     <action>
       <restore name="HbH" entity="HbH-id"> </restore>

@@ -21,12 +21,20 @@
 <?xml version="1.0" encoding="ISO-8859-1"?>
 
 <configuration name="Simple IP Server Conf">
+
+<!--
+    cert_chain_file=xxx   : indicate the name of your certificate
+    private_key_file=yyy  : indicate the name of your private key
+    passwd=zzz            : this password protects the private key
+-->
+
+
   <define entity="transport"
     name="trans-1"
-    file="libtrans_ip.so"
-    create_function="create_cipio_instance"
-    delete_function="delete_cipio_instance"
-    init-args="type=tcp">
+    file="libtrans_iptls.so"
+    create_function="create_ciptlsio_instance"
+    delete_function="delete_ciptlsio_instance"
+    init-args="method=SSLv23;cert_chain_file=xxx;private_key_file=yyy;passwd=zzz">
   </define>
 
   <define entity="channel"
