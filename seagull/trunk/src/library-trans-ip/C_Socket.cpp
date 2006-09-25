@@ -347,7 +347,6 @@ int C_SocketListen::_open (size_t P_buffer_size,
 			  P_protocol) ;
 
    if (L_rc == 0) {
-     // AAJ
      //set_properties() ;
 
      /* bind the socket to the newly formed address */
@@ -512,7 +511,7 @@ int C_SocketServer::_open(size_t P_buffer_size,
   m_protocol = P_protocol ;
 
   m_buffer_size = P_buffer_size ;
-  // AAJ
+
   set_properties () ;
 
   if (m_socket_id < 0) {
@@ -552,7 +551,7 @@ int C_SocketClient::_open(T_pOpenStatus  P_status,
 			 P_protocol) ;
 
   if (L_rc == 0) {
-    // AAJ
+
     //set_properties() ;
     if (m_type == E_SOCKET_TCP_MODE) {
 

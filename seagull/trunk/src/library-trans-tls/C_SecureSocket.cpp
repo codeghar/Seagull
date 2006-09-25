@@ -256,9 +256,6 @@ int C_SecureSocketClient::_open (T_pOpenStatus P_status,
   if ((m_bio = BIO_new_socket(m_socket_id, BIO_CLOSE)) == NULL ) {
     SOCKET_ERROR(0, "Unable to create the BIO- client in New TLS connection");
   } 
-  else {
-    SOCKET_ERROR(0, "create the BIO- client in New TLS connection");
-  }
   
   SSL_set_bio(m_ssl,m_bio,m_bio);
   
