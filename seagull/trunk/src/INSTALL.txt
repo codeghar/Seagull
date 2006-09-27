@@ -40,3 +40,12 @@ SCTP support:
 - Run build-ext-lib.ksh
 - Modify build.conf to add SCTP support (uncomment BUILD_9_ lines)
 - Compile Seagull (see before)
+
+TLS support:
+- To enable TLS support, download openssl-0.9.8 or greater in
+  external-lib-src directory.
+- Modify build-ext-lib.conf to match openssl filename
+  (library versions might have been changed)
+- Run build-ext-lib.ksh
+- Modify build.conf to add TLS support (uncomment BUILD_10_ lines)
+- Compile Seagull (see before)
