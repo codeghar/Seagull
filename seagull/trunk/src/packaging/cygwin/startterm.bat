@@ -8,6 +8,5 @@ set LD_LIBRARY_PATH=%RUN_DIR%
 set PATH=%PATH%;%RUN_DIR%
 
 cd %RUN_DIR% 
-mount c:/ / 
 cmd /k "mode 81,25 && cls && echo You can now run seagull by typing 'seagull'"
 
