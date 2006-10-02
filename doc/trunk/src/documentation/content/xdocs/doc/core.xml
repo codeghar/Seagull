@@ -152,66 +152,6 @@ seagull is /usr/local/bin/seagull</source>
     <section>
       <title>Using Seagull</title>
       <section>
-        <title>Transport protocols and channels</title>
-        <p>Seagull messages are sent/received using a transport protocol. Several transport protocols can be used: TCP, UDP or SCTP,
-	 all three over IPv4 or IPv6. In addition, <a href="ext:hpoc">HP OpenCall SS7</a> can be used to provide TCAP over SS7 transport. 
-   See <a href="octcap.html">TCAP</a> documentation for more details.</p>
-        <p>You first have to define the transport to use. This is done in the <a href="#config_generic">generic configuration file</a> (see example below). 
-	 Then you can open channels for the transport that you have defined. You can open one or several
-	 channels. Each channel can be on the same or on different transports, and can use the same or
-	 a different protocol.</p>
-        <p><img src="images/channels.jpg" alt="Channels and protocols"/></p>
-        <p>A channel makes the link between a transport and a protocol.</p>
-        <note>Only one channel can be opened as server and it has to be opened as the FIRST channel.</note>
-        <p>Transport and channels are defined in the <a href="#transport_config">generic configuration file</a>
-        </p>
-        <p>Here are some examples:</p>
-        <ul>
-          <li>Example using IPv4:
-        <source><![CDATA[
-  <define entity="transport"
-    name="trans-ip-v4"
-    file="libtrans_ip.so"
-    create_function="create_cipio_instance"
-    delete_function="delete_cipio_instance"
-    init-args="type=tcp">
-  </define>
-
-  <define entity="channel"
-    name="channel-ip-1"
-    protocol="Protocol"
-    transport="trans-ip-v4"
-    open-args="mode=client;dest=192.168.0.13:3868">
-  </define>
-]]></source>
-          </li>
-          <li>Example using IPv6:
-        <source><![CDATA[
-  <define entity="transport"
-    name="trans-ip-v6"
-    file="libtrans_ip.so"
-    create_function="create_cipio_instance"
-    delete_function="delete_cipio_instance"
-    init-args="type=tcp">
-  </define>
-
-  <define entity="channel"
-    name="channel-ip-1"
-    protocol="Protocol"
-    transport="trans-ip-v6"
-    open-args="mode=client;dest=[fec0::5:20f:20ff:fefe:ea51]:3868">
-  </define>]]></source>
-          </li>
-        </ul>
-        <p/>
-        <p> The library (SCTP or IP) is defined in the config section of the server and of the client, using the "file" attribute.</p>
-        <p> The library chooses the version of IP to use thanks to the format of the IP address (with dots for IPv4, 
-	  with colons for IPv6).</p>
-        <p> The type of transport for IP can be UDP or TCP. This is specified with the "type" field of the init-args parameter
-	  for the transport.</p>
-      </section>
-
-      <section>
         <title>Traffic shape</title>
         <p>In current version of Seagull, the traffic shape is a constant call rate traffic. 
         In addition, some parameters
@@ -449,6 +389,202 @@ seagull is /usr/local/bin/seagull</source>
         <note>All the screens in Seagull follow the same logic: if all the information 
 	  cannot be displayed on one screen you'll have to press the same key once again 
 	  to display the rest of the information.</note>
+      </section>
+    </section>
+    <section>
+      <title>Concepts and definitions</title>
+      <section>
+        <title>Scenario</title>
+        <p>A <a href="#config_scenario">scenario</a> is what gets executed by Seagull. 
+        Composed of multiple <a href="#Scenario+sections">sections</a>, each section is 
+        a sequence of <a href="#ref_scenario_commands">commands</a>, described in XML. 
+        Within a scenario section, &lt;send&gt; and &lt;receive&gt; commands are
+        used to send and receive protocol messages.</p>
+      </section>
+      <section>
+        <title>Session-Id</title>
+        <p>The Session-Id is a generic concept in Seagull. Under classical usage,
+        session-id are not seen by the user. It can become handy to understand
+        what a session-id is.</p>
+        <p>A Session-Id maps to one or several protocol fields.
+        How the mapping is done is indicated in the dictionary. For example, in Diameter, the session-id maps to
+        Diameter's Session-Id avp. In H248, session-id maps to H.248's transaction-id.</p>
+        <p>A session-id is valid for a channel. Thus, a scenario that makes use
+        of multiple channels will have multiple session-ids.</p>
+        <p>Let's take the example of a scenario which uses one channel.
+        The scenario is the following:</p>
+        <table>
+        <tr>
+        <td><source><![CDATA[  <send channel="trans-ip-v4">
+    <action>
+      <!-- For each new call, increment the session-ID counter -->
+      <inc-counter name="HbH-counter"> </inc-counter>
+      <inc-counter name="EtE-counter"> </inc-counter>
+      <inc-counter name="session-counter"> </inc-counter>
+      <set-value name="HbH-id" 
+                 format="$(HbH-counter)"></set-value>
+      <set-value name="EtE-id" 
+                 format="$(EtE-counter)"></set-value>
+      <set-value name="Session-Id" 
+                 format=".;1096298391;$(session-counter)"></set-value>
+    </action>
+    <command name="SAR">
+      <avp name="Session-Id" value="value_is_replaced"> </avp>
+      <avp name="Vendor-Specific-Application-Id">
+        <avp name="Vendor-Id" value="11"></avp>
+        <avp name="Auth-Application-Id" value="167772151"></avp>
+        <avp name="Acct-Application-Id" value="0"></avp>
+      </avp>
+      <avp name="Auth-Session-State" value="1"> </avp>
+      <avp name="Origin-Host" value="seagull"> </avp>
+      <avp name="Origin-Realm" value="ims.hpintelco.org"> </avp>
+      <avp name="Destination-Realm" value="ims.hpintelco.org"> </avp>
+      <avp name="Server-Name" value="seagull"> </avp>
+      <avp name="Server-Assignment-Type" value="3"> </avp>
+      <avp name="User-Data-Request-Type" value="0"> </avp>
+      <avp name="Public-Identity" 
+           value="sip:olivierj@ims.hpintelco.org"> </avp>
+      <avp name="Destination-Host" value="hss.ims.hpintelco.org"> </avp>
+    </command>
+    <action>
+      <start-timer></start-timer>
+    </action>
+  </send>
+  
+  <receive channel="trans-ip-v4">
+    <action>
+      <stop-timer></stop-timer>
+    </action>
+    <command name="SAA">
+    </command>
+  </receive>]]></source>
+  </td>
+  <td><source><![CDATA[When sending the message, Seagull 
+initializes the session-id with the value of "Session-Id" AVP, 
+as indicated in Diameter's dictionary
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+When receiving a message, Seagull tries to find the 
+session-id in the list of its known session-ids. If 
+the parameter corresponding to the session-id (as 
+indicated in the dictionary) is not found, then  
+Seagull will look at parameters indicated by 
+"out-of-session-id" parameters in the dictionary.
+]]></source></td>
+  </tr>
+  </table>
+        <p>When a message is received and cannot be matched to
+        an known session-id, then it is treated as a "new (incoming) call".</p>
+        <p></p>
+        <warning>Limitations: Following the session-id principles, multi-channel
+        scenarios are currently limited. For example, a scenario where the
+        first command is a message that is sent on channel-1 and the
+        second command is a message received on channel-2 will not be workable in
+        Seagull (this is planned to be addressed by a new feature that will
+        allow to describe how to map calls by a generic mapping method)</warning>
+      </section>
+      <section>
+        <title>Transport protocols and channels</title>
+        <p>Seagull messages are sent/received using a transport protocol. Several transport protocols can be used: TCP, UDP or SCTP,
+	 all three over IPv4 or IPv6. In addition, <a href="ext:hpoc">HP OpenCall SS7</a> can be used to provide TCAP over SS7 transport. 
+   See <a href="octcap.html">TCAP</a> documentation for more details.</p>
+        <p>You first have to define the transport to use. This is done in the <a href="#config_generic">generic configuration file</a> (see example below). 
+	 Then you can open channels for the transport that you have defined. You can open one or several
+	 channels. Each channel can be on the same or on different transports, and can use the same or
+	 a different protocol.</p>
+        <p><img src="images/channels.jpg" alt="Channels and protocols"/></p>
+        <p>A channel makes the link between a transport and a protocol.</p>
+        <note>Only one channel can be opened as server and it has to be opened as the FIRST channel.</note>
+        <p>Transport and channels are defined in the <a href="#transport_config">generic configuration file</a>
+        </p>
+        <p>Here are some examples:</p>
+        <ul>
+          <li>Example using TCP over IPv4:
+        <source><![CDATA[
+  <define entity="transport"
+    name="trans-ip-v4"
+    file="libtrans_ip.so"
+    create_function="create_cipio_instance"
+    delete_function="delete_cipio_instance"
+    init-args="type=tcp">
+  </define>
+
+  <define entity="channel"
+    name="channel-ip-1"
+    protocol="Protocol"
+    transport="trans-ip-v4"
+    open-args="mode=client;dest=192.168.0.13:3868">
+  </define>
+]]></source>
+          </li>
+          <li>Example using TCP over IPv6:
+        <source><![CDATA[
+  <define entity="transport"
+    name="trans-ip-v6"
+    file="libtrans_ip.so"
+    create_function="create_cipio_instance"
+    delete_function="delete_cipio_instance"
+    init-args="type=tcp">
+  </define>
+
+  <define entity="channel"
+    name="channel-ip-1"
+    protocol="Protocol"
+    transport="trans-ip-v6"
+    open-args="mode=client;dest=[fec0::5:20f:20ff:fefe:ea51]:3868">
+  </define>]]></source>
+          </li>
+          <li>Example using TLS over IPv4:
+        <source><![CDATA[
+  <define entity="transport"
+    name="trans-ip-tls"
+    file="libtrans_iptls.so"
+    create_function="create_ciptlsio_instance"
+    delete_function="delete_ciptlsio_instance"
+    init-args="method=SSLv23;cert_chain_file=xxx;private_key_file=yyy;passwd=zzz">
+  </define>
+
+  <define entity="channel"
+    name="channel-tls"
+    protocol="Protocol"
+    transport="trans-ip-tls"
+    open-args="mode=client;dest=192.168.0.10:3868">
+  </define>]]></source>
+          </li>
+        </ul>
+        <p/>
+        <p>For more details, see "<a href="#transport_config">Transport Configuration</a>".</p>
       </section>
     </section>
     <section id="config_scenario">
@@ -1416,7 +1552,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             <tr>
               <td>file</td>
               <td>Shared library to be used for transport.</td>
-              <td>Value is "libtrans_ip.so" for IP/TCP, libtrans_iptls.so for IP/TLS (this one is based on openssl library), "libtrans_extsctp.so" for SCTP (this one is 
+              <td>Value is "libtrans_ip.so" for TCP or UDP over IP, libtrans_iptls.so for TLS over IP (based on openssl library), "libtrans_extsctp.so" for SCTP (this one is 
 	    based on an external SCTP library) and "libtrans_octcap.so" for TCAP.</td>
             </tr>
             <tr>
