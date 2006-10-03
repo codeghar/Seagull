@@ -34,11 +34,7 @@
       <section>
         <title>First try explained</title>
         <p>Here is the script (start_client.ksh) that launched the client in our example:</p>
-        <source><![CDATA[#!/bin/ksh
-
-export LD_LIBRARY_PATH=/usr/local/bin
-
-seagull -conf ../config/conf.client.xml -dico ../config/synchro-dictionnary.xml 
+        <source><![CDATA[seagull -conf ../config/conf.client.xml -dico ../config/synchro-dictionary.xml 
 -scen ../scenario/client.xml -log ../logs/client.log -llevel ET]]>
 	</source>
         <note>On some HP-UX systems, you might need to include the following export 
@@ -50,7 +46,7 @@ seagull -conf ../config/conf.client.xml -dico ../config/synchro-dictionnary.xml
 
 export LD_LIBRARY_PATH=/usr/local/bin
 
-seagull -conf ../config/conf.client.xml -dico ../config/[protocol-dictionary].xml ../config/synchro-dictionnary.xml 
+seagull -conf ../config/conf.client.xml -dico ../config/[protocol-dictionary].xml ../config/synchro-dictionary.xml 
 -scen ../scenario/client.xml -log ../logs/client.log -llevel ET>
 	  </code>
         </note>
@@ -58,10 +54,8 @@ seagull -conf ../config/conf.client.xml -dico ../config/[protocol-dictionary].xm
         a CMD_INITSYNCHRO and answer by a CMD_INITSYNCHRO message. Then they exchange 
 	CMD_CALLCREATE messages. See the dictionary for the complete list of messages 
 	that can be exchanged between the client and the server.</p>
-        <p>Both sides are relying on the synchro dictionary provided
-        with the tool. The dictionnary is: synchro-dictionnary.xml
-	Refer to <a href="#config_dict">dictionary configuration</a> section for more information on the
-        format of this dictionary. The dictionary is specified using the <code>-dico</code>
+        <p>The dictionary for the synchronization protocol is "synchro-dictionary.xml", 
+        and is specified using the <code>-dico</code>
         parameter on the <a href="#cli_help">command line</a>.</p>
         <p>The generic configuration (including network and other parameters)
         is different for the client and the server. The client uses <code>conf.client.xml</code>
