@@ -82,7 +82,13 @@
         <li>...</li>
       </ul>
       <p>Better than a thousand words, see Seagull flying:</p>
-      <p><movie src="http://gull.sf.net/doc/seagull_01.flv" width="494" height="386" autostart="false"/></p>
+      <p>    <object type="application/x-shockwave-flash" width="494" height="386" 
+      wmode="transparent" data="http://gull.sf.net/flvplayer.swf?file=http://gull.sf.net/doc/seagull_01.flv">
+      <param name="movie" value="http://gull.sf.net/flvplayer.swf?file=http://gull.sf.net/doc/seagull_01.flv" />
+      <param name="wmode" value="transparent" />
+    </object></p>
+      
+      <!--<movie src="http://gull.sf.net/doc/seagull_01.flv" width="494" height="386" autostart="false"/></p>-->
     </section>
     <section>
       <title>Open Source</title>
