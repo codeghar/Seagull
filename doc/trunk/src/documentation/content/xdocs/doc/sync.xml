@@ -71,7 +71,7 @@ seagull -conf ../config/conf.client.xml -dico ../config/[protocol-dictionary].xm
           <tr>
             <td>
               <source><![CDATA[<?xml version="1.0" encoding="ISO-8859-1"?>
-<configuration name="Simple IP Server Conf">
+<configuration name="Simple IP Client Conf">
 
   <define entity="transport"
     name="trans-ip-v4"
@@ -88,75 +88,7 @@ seagull -conf ../config/conf.client.xml -dico ../config/[protocol-dictionary].xm
     open-args="mode=]]><strong><![CDATA[client]]></strong><![CDATA[;dest=127.0.0.1:15000">
   </define>
 
-  <define entity="traffic-param"
-          name="call-rate"
-          value="1">
-  </define>	
-  
-  <define entity="traffic-param"
-          name="display-period"
-          value="1">
-  </define>
-
-  <define entity="traffic-param"
-          name="log-stat-period"
-          value="1">
-  </define>
-
-  <define entity="traffic-param"
-          name="call-timeout-ms"
-          value="5000">
-  </define>
-
-  <define entity="traffic-param"
-          name="data-log-period"
-	  value="10">
-  </define>
-
-  <define entity="traffic-param"
-          name="data-log-number"
-	  value="100">
-  </define>
-
-  <define entity="traffic-param"
-          name="data-log-rtdistrib"
-	  value="3000">
-  </define>
-
-  <define entity="traffic-param"
-          name="log-stat-file"
-          value="../logs/client-stat.csv">
-  </define>
-
-  <define entity="traffic-param"
-          name="data-log-file"
-          value="../logs/client-rtt.csv">
-  </define>
-
-  <define entity="traffic-param"
-          name="max-send"
-          value="1000">
-  </define>
-
-  <define entity="traffic-param"
-          name="max-receive"
-          value="1000">
-  </define>
-
-  <define entity="traffic-param"
-          name="max-simultaneous-calls"
-          value="5000">
-  </define>
-
-  <define entity="traffic-param"
-          name="msg-check-level"
-          value="P">
-  </define>
-
-  <define entity="traffic-param"
-          name="msg-check-behaviour"
-          value="E">
-  </define>
+  ...
 
 </configuration>]]></source>
             </td>
@@ -179,71 +111,8 @@ seagull -conf ../config/conf.client.xml -dico ../config/[protocol-dictionary].xm
     open-args="mode=]]><strong><![CDATA[server]]></strong><![CDATA[;source=127.0.0.1:15000">
   </define>
 
-  <define entity="traffic-param"
-          name="call-rate"
-          value="1">
-  </define>	
+  ...
   
-  <define entity="traffic-param"
-          name="display-period"
-          value="1">
-  </define>
-
-  <define entity="traffic-param"
-          name="log-stat-period"
-          value="1">
-  </define>
-
-  <define entity="traffic-param"
-          name="call-timeout-ms"
-          value="5000">
-  </define>
-
-  <define entity="traffic-param"
-          name="data-log-period"
-	  value="10">
-  </define>
-
-  <define entity="traffic-param"
-          name="data-log-number"
-	  value="100">
-  </define>
-
-  <define entity="traffic-param"
-          name="data-log-rtdistrib"
-	  value="3000">
-  </define>
-
-  <define entity="traffic-param"
-          name="max-send"
-          value="1000">
-  </define>
-
-  <define entity="traffic-param"
-          name="max-receive"
-          value="1000">
-  </define>
-
-  <define entity="traffic-param"
-          name="max-simultaneous-calls"
-          value="5000">
-  </define>
-
-  <define entity="traffic-param"
-          name="number-calls"
-          value="1">
-  </define>
-
-  <define entity="traffic-param"
-          name="msg-check-level"
-          value="P">
-  </define>
-
-  <define entity="traffic-param"
-          name="msg-check-behaviour"
-          value="E">
-  </define>
-
 </configuration>]]></source>
             </td>
           </tr>
@@ -321,9 +190,10 @@ End of the init scenario.
 
 Beginning of the traffic scenario
 
-Performa actions before sending the next message:
+Perform actions before sending the next message:
 - increment the counter defined in the counter section.
 - set the user id value
+
 
 Send a CMD_CALLCREATE command-synchro
 
@@ -342,6 +212,59 @@ End of scenario
             </td>
           </tr>
         </table>
+        </section>
+      <section>
+        <title>Commands and parameters</title>
+        <section>
+          <title>Commands</title>
+          <p>Several synchronization commands are available:</p>
+          <ul><li>CMD_INITSYNCHRO: generally used to initiate a synchronized session (in the &lt;init&gt; section
+          of the scenario)</li>
+          <li>CMD_ENDSYNCHRO: generally used to close a synchronized session (optional)</li>
+          <li>CMD_CALLCREATE: generally used to send a synchronization command with parameters
+          in the middle of a scenario execution</li>
+          </ul>
+          <note>The usage indicated here for the commands is not mandatory</note>
+          <note>If needed, more commands can be added in the sync dictionary</note>
+        </section>
+        <section>
+          <title>Parameters</title>
+            <p>One of the important feature of the synchronization protocol is
+            passing parameters along with synchro commands. The parameters
+            can come from:</p>
+            <ul><li>&lt;<a href="core.html#External+data+management">restore-from-external</a>&gt; 
+            actions (coming from a data file),</li>
+            <li>&lt;<a href="core.html#action_restore">restore</a>&gt; actions (following a 
+            &lt;<a href="core.html#action_store">store</a>&gt; action to save the
+            value of a message parameter)</li>
+            </ul>
+            <p>Example: use of two parameters, one from an external data file and one
+            coming from a message received earlier (saved in "PARAM" call variable using
+            &lt;<a href="core.html#action_store">store</a>&gt; action:</p>
+            <source><![CDATA[<send channel="channel-1">
+  <action>
+     <inc-counter name="session-counter"></inc-counter>
+     <set-value name="user-id-1" 
+                format="$(session-counter)"></set-value>
+     <restore-from-external field="1" entity="field-bin-1-data"
+       begin="1" end="3"></restore-from-external>
+     <restore name="PARAM" entity="field-bin-2-data"></restore>
+  </action>
+  <command-synchro name="CMD_CALLCREATE">
+  </command-synchro>
+  <action>
+    <store name="SESSION-ID" entity="user-id-1"></store> 
+  </action>
+</send>]]></source>
+          <p>In the default dictionary, there are 4 parameters declared:</p>
+          <ul><li>field-bin-1-data</li>
+          <li>field-bin-2-data</li>
+          <li>field-int-1-data</li>
+          <li>field-int-2-data</li>
+          </ul>
+          <p>"bin" parameters are used to pass Octet strings. "int" parameters are
+          used to pass integers.</p>
+        </section>
       </section>
     </section>
     <section id="config_generic">
