@@ -13,17 +13,18 @@
   <body>
     <section>
       <title>Welcome to Seagull!</title>
-      <p>Seagull is a free, Open Source (GPL) multi-protocol traffic generator test tool. Primarily aimed at IMS protocols
+      <p>Seagull is a free, Open Source (GPL) multi-protocol traffic generator test tool. Primarily aimed at 
+      <a href="http://en.wikipedia.org/wiki/IP_Multimedia_Subsystem">IMS</a> (3GPP, TISPAN, CableLabs) protocols 
       (and thus being the perfect complement to 
       <a href="http://sipp.sourceforge.net/">SIPp</a> for IMS testing), Seagull is a powerful
-      traffic generator for functional, load, endurance, stress and performance tests for almost
+      traffic generator for functional, load, endurance, stress and performance/benchmark tests for almost
       any kind of protocol.</p>
       <p>In addition, its openness allows to add the support of a brand new protocol in less than 2
       hours - with no programming knowledge. For that, Seagull comes with several protocol families embedded in the source code:</p>
       <ul>
-        <li>Binary/TLV (Diameter and many 3GPP and IETF protocols)</li>
+        <li>Binary/TLV (Diameter, Radius and many 3GPP and IETF protocols)</li>
         <li>External library (TCAP, SCTP)</li>
-        <li>Text (XCAP, HTTP, H248)</li>
+        <li>Text (XCAP, HTTP, H248 ASCII)</li>
       </ul>
       <table>
           <tr>
@@ -47,7 +48,7 @@
       <ul>
         <li>Diameter base ( 
         <a href="http://www.ietf.org/rfc/rfc3588.txt">RFC 3588</a>) and any Diameter relating
-        application - IMS Cx, Dx, Ro, Rf, Sh over TCP or SCTP over IPv4 or IPv6.</li>
+        application - IMS Cx, Dx, Ro, Rf, Sh over TCP or SCTP or TLS over IPv4 or IPv6.</li>
         <li>TCAP ITU and ANSI and any protocol over TCAP (Camel, GSM MAP, IS41, Win, ...) either
         over SS7 (E1/T1) or SIGTRAN. For that, it relies on 
         <a href="http://www.hp.com/go/opencall/">HP OpenCall SS7</a>.</li>
