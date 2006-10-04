@@ -888,12 +888,18 @@ Seagull will look at parameters indicated by
 
     <section>
       <title>External data management</title>
-      <p>Seagull allows to inject external data into the messages:</p>
-      <figure alt="Example of external data injection" src="images/external_data.jpg" width="727"/>
-      <p> Those external data are defined into a separated file. This allows 
-	to have messages with fields that have different values for every call:</p>
-      <p>To use this feature, you need to specify those two parameters in the configuration file:</p>
-      <source><![CDATA[  <define entity="traffic-param"
+      <section>
+        <title>Description</title>
+        <p>Seagull allows to change the content of the messages before sending them, according
+        to an external data file (CSV format). 
+        For each new scenario that Seagull executes, a new line is read from the external data file. Lines
+        can be read in sequence or randomly. This lines breaks into fields which can 
+        be used to change the content of a message to send.</p>
+        <p>This feature allow to provision a list of users or subscribers that
+        are used during Seagull's traffic.</p>
+        <p>To use this feature, you need to specify "external-data-file" (file to
+        read from) and "external-data-select" (how to read the file) parameters in the configuration file:</p>
+        <source><![CDATA[  <define entity="traffic-param"
           name="external-data-file"
           value="FULL_PATH/EXTERNAL_FILE.csv">
   </define>
@@ -902,56 +908,64 @@ Seagull will look at parameters indicated by
           name="external-data-select"
           value="sequential">
   </define>]]></source>
-      <p/>
-      <p> The value of the "external-data-select" parameter can be <strong>"random"</strong> 
-	  or <strong>"sequential"</strong>. 
-	  In the first case, the new value is taken randomly from the external data file, 
-	  in the second it is taken in a sequential order (first line of external data file for first call, second line for second call...).</p>
-      <p>Here is an example of external data file: </p>
-      <source><![CDATA[ 
-"string";"string";"number";
-    
-# this is an example
-
-     "0472826017" ;  "0472826061" ; "10" ;
-     "0472826027" ;  "0472826062" ; "12" ;
-     "0472826037" ;  "0472826063" ; "14" ;
-     "0472826047" ;  "0472826064" ; "16" ;
-     "0472826057" ;  "0472826065" ; "18" ;
-     "0472826067" ;  "0472826066" ; "20" ;
-     "0472826077" ;  "0472826067" ; "22" ;
-
-
-// end of file
+        <p/>
+        <p>The value of the "external-data-select" parameter can be <strong>"random"</strong> 
+      or <strong>"sequential"</strong>. 
+      In the first case, the new value is taken randomly from the external data file, 
+      in the second it is taken in a sequential order (first line of external data file for first call, second line for second call...).</p>
+        <p>Here is an example of external data file: </p>
+        <source><![CDATA[ "string";"string";"number";
+# FIELD 0        FIELD 1       FIELD 2    
+"0472826017" ;  "0x214365870921" ; "10" ;
+"0472826027" ;  "0x214365870931" ; "12" ;
+"0472826037" ;  "0x214365870941" ; "14" ;
+"0472826047" ;  "0x214365870951" ; "16" ;
+"0472826057" ;  "0x214365870961" ; "18" ;
+"0472826067" ;  "0x214365870971" ; "20" ;
+"0472826077" ;  "0x214365870981" ; "22" ;
 ]]></source>
-      <p/>
-      <p> Notice that the comments can be written using # or //. 
-	  Numeric values can be in decimal (for example: "10") or 
-	  hexadecimal (for example: "0xA2").</p>
-      <p> The first line with characters without the comment signs is the line 
-	  that defines the type of the data contained in this file. This line is 
-	  <strong>mandatory</strong>. This type must be one of the basic types of the tool: 
-	  string, number, signed, number64 or signed64.</p>
-      <p> On each line of data, you can access the data that you need with its index: the first data on the line is 
-	  field(0), the second one is field(1), and so on.</p>
-      <p>This index is used in the scenario to specify which data is used to fill in the specified field of the message.</p>
-      <p>You can specify also at which position in your buffer you start to inject the data ("begin" field), and
-	  until which position you inject it ("end" field).
-	  Be careful, when using the "begin" and "end" fields, the count starts at zero. 
-	  Here is an example from one client scenario:</p>
-      <source><![CDATA[<restore-from-external field="1" entity="FIELD_NAME"
-	   begin="1" end="3">
-	   </restore-from-external>]]></source>
-      <p>In this example, the data will be injected at the second position (0 is 
-	  the first one, so 1 is the second one) and until the third position. 
-	  So you inject 2 bytes of data: one at the second position and one at the third position.</p>
-      <p>The field FIELD_NAME must exist in the message, as defined in the dictionary. Its value in the current message 
-	  will be changed to the data of the second column (second because field="1").</p>
-      <note>When the size specified (difference between "begin" and "end") is larger than the injected buffer, 
-	  the buffer is injected in its full length from the "begin" position, and a warning is logged.</note>
-      <note>When the destination buffer is too short to reach the "begin" position (e.g. buffer with 2 numbers and "begin=5"), 
-	  zeros are added to the destination buffer so it reaches a size big enough to enable the injection of the buffer at 
-	  the "begin" position. A warning is logged.</note>
+        <p/>
+        <p> Notice that the comments can be written using # or //. 
+      String values can be in ASCII (for example: "10" will translate to 0x3130) or 
+      hexadecimal (for example: "0xA2").</p>
+        <p> The first line with characters without the comment signs is the line 
+      that defines the type of the data contained in this file. This line is 
+      <strong>mandatory</strong>. The type must be one of the basic types of Seagull: 
+      string, number, signed, number64 or signed64.</p>
+        <p> On each line of data, you can access a field (column) with its index: the first data on the line is 
+      field(0), the second one is field(1), and so on.</p>
+        <p>This index is used in the scenario to specify which data is used to fill in the specified field of the message.</p>
+        <p>You can specify also at which position in your buffer you start to inject the data ("begin" field), and
+      until which position you inject it ("end" field).
+      Be careful, when using the "begin" and "end" fields, the count starts at zero. 
+      Here is an example from one client scenario:</p>
+        <source><![CDATA[<restore-from-external field="1" entity="FIELD_NAME"
+       begin="1" end="3">
+       </restore-from-external>]]></source>
+        <p>In this example, the data will be injected at the second position (0 is 
+      the first one, so 1 is the second one) and until the third position. 
+      So you inject 2 bytes of data: one at the second position and one at the third position.</p>
+        <p>The field FIELD_NAME must exist in the message, as defined in the dictionary. Its value in the current message 
+      will be changed to the data of the second column (second because field="1").</p>
+        <note>When the size specified (difference between "begin" and "end") is larger than the injected buffer, 
+      the buffer is injected in its full length from the "begin" position, and a warning is logged.</note>
+        <note>When the destination buffer is too short to reach the "begin" position (e.g. buffer with 2 numbers and "begin=5"), 
+      zeros are added to the destination buffer so it reaches a size big enough to enable the injection of the buffer at 
+      the "begin" position. A warning is logged.</note>
+      </section>
+      <section>
+        <title>Example</title>
+        <p/>
+        <figure alt="Example of external data injection" src="images/external_data.png" width="967"/>
+        <p>In this example, TCAP's operation-data with an initial value of "0x3016a00e820c48656c6c6f2c20776f726c64810100820100"
+        will be altered from octet 5 to octet 10 (first octet is 0) so that the values will be:</p>
+        <ul>
+        <li>0x3016a00e82<strong>214365870921</strong>2c20776f726c64810100820100 for 1st scenario execution</li>
+        <li>0x3016a00e82<strong>214365870931</strong>2c20776f726c64810100820100 for 2nd scenario execution</li>
+        <li>0x3016a00e82<strong>214365870941</strong>2c20776f726c64810100820100 for 3rd scenario execution</li>
+        <li>0x3016a00e82<strong>214365870951</strong>2c20776f726c64810100820100 for 4th scenario execution</li>
+        <li>...</li></ul>
+      </section>
     </section>
     <p class="pageBreakBefore"></p>
     <section id="statistics">
