@@ -885,7 +885,7 @@ int C_TransIP::extract_ip_addr(T_pIpAddr P_pIpAddr) {
 
       L_matchSize = (L_search != NULL) 
         ? (L_search - (P_pIpAddr->m_open_src)) : strlen(P_pIpAddr->m_open_src) ;
-      if (L_matchSize) { memcpy(L_buffer, P_pIpAddr->m_open, L_matchSize) ; }
+      if (L_matchSize) { memcpy(L_buffer, P_pIpAddr->m_open_src, L_matchSize) ; }
       L_buffer[L_matchSize] = 0 ;
 
       
