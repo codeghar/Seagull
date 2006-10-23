@@ -141,33 +141,23 @@ C_SecureSocketServer::C_SecureSocketServer(SSL_CTX * P_ssl_ctx,
 C_SecureSocketServer::~C_SecureSocketServer() {
 }
 
-int C_SecureSocketServer::_call_read(int P_socket, 
-                                     char *P_buf, 
-                                     size_t P_size) {
-
+int C_SecureSocketServer::_call_read() { 
   int L_result = 0 ;
-  //if (m_ssl->rwstate != SSL_NOTHING) {
-    L_result = SSL_read(m_ssl, P_buf, P_size);
+    L_result = SSL_read(m_ssl, m_read_buf, m_read_buf_size);
     if (L_result < 0) ssl_error(L_result) ;
-
-    //}
   return (L_result) ;
 }
 
-int C_SecureSocketServer::_open(size_t P_buffer_size, 
-			  C_ProtocolBinaryFrame *P_protocol) {
-  int L_ret ;
+int C_SecureSocketServer::_secure_mode () {
+ 
   int L_result ;
-  L_ret = C_SocketServer::_open(P_buffer_size, P_protocol);
-  
+  int L_ret = 0 ;
+
   m_ssl = SSL_new(m_ssl_ctx);
   SSL_set_accept_state(m_ssl);
   if ((m_bio = BIO_new_socket(m_socket_id, BIO_CLOSE)) == NULL ) {
     SOCKET_ERROR(0, "Unable to create the BIO- in New TLS connection");
   } 
-  else {
-    SOCKET_ERROR(0, "create the BIO- in New TLS connection");
-  }
   
   SSL_set_bio(m_ssl,m_bio,m_bio);
   
@@ -176,20 +166,31 @@ int C_SecureSocketServer::_open(size_t P_buffer_size,
   if (L_result < 0 ) {
     if (SSL_get_error(m_ssl, L_result) == SSL_ERROR_WANT_READ) {
       m_state = E_SOCKET_STATE_INPROGESS ;
-      //*P_status = E_OPEN_DELAYED ;
       L_ret = 0 ;
     } else {
       ssl_error(L_result);
       L_ret = -1 ;
     }
   } 
+
+  return (L_ret);
+  
+}
+
+int C_SecureSocketServer::_open(size_t P_buffer_size, 
+			  C_ProtocolBinaryFrame *P_protocol) {
+  int L_ret ;
+  L_ret = C_SocketServer::_open(P_buffer_size, P_protocol);
+
+  if (L_ret == 0) {
+    L_ret = _secure_mode () ;
+  }
   
   return (L_ret);
 }
 
-int C_SecureSocketServer::_call_write(int P_socket, 
-                                     unsigned char* P_data,
-                                     size_t P_size) {
+int C_SecureSocketServer::_call_write(unsigned char* P_data,
+				      size_t P_size) {
   
   int L_result = 0 ;
   L_result = SSL_write(m_ssl,P_data,P_size);
@@ -218,56 +219,62 @@ C_SecureSocketClient::~C_SecureSocketClient() {
   
 }
 
-int C_SecureSocketClient::_call_read(int P_socket, 
-                                     char *P_buf, 
-                                     size_t P_size) {
+int C_SecureSocketClient::_call_read() { 
 
   int L_result = 0 ;
 
-  //if (m_ssl->rwstate != SSL_NOTHING) {
-  L_result = SSL_read(m_ssl, P_buf, P_size);
+  L_result = SSL_read(m_ssl, m_read_buf, m_read_buf_size);
   if (L_result < 0) ssl_error(L_result) ;
-  //}
 
   return (L_result) ;
 }
 
-int C_SecureSocketClient::_call_write(int P_socket, 
-                             unsigned char* P_data,
-                             size_t P_size) {
+int C_SecureSocketClient::_call_write(unsigned char* P_data,
+				      size_t P_size) {
   int L_result = 0 ;
-  
   L_result = SSL_write(m_ssl,P_data,P_size);
   if (L_result < 0) ssl_error(L_result) ;
   
   return (L_result) ;
 }
 
-int C_SecureSocketClient::_open (T_pOpenStatus P_status,
-                                 size_t        P_buffer_size,
-                                 C_ProtocolBinaryFrame *P_protocol) {
-  int L_ret ;
-  int L_result ;
+int C_SecureSocketClient::_secure_mode() {
+  int L_result, L_ret ;
 
-  L_ret = C_SocketClient::_open(P_status, P_buffer_size, P_protocol);
   m_ssl = SSL_new(m_ssl_ctx);
   SSL_set_connect_state(m_ssl) ;
   
   if ((m_bio = BIO_new_socket(m_socket_id, BIO_CLOSE)) == NULL ) {
     SOCKET_ERROR(0, "Unable to create the BIO- client in New TLS connection");
   } 
+ 
   
   SSL_set_bio(m_ssl,m_bio,m_bio);
   
   L_result = SSL_connect(m_ssl) ;
   if ( L_result < 0 ) {
     if (SSL_get_error(m_ssl, L_result) == SSL_ERROR_WANT_READ) {
+      m_state = E_SOCKET_STATE_INPROGESS ;
       L_ret = 0 ;
     } else {
       ssl_error(L_result);
       L_ret = -1 ;
     }
   } 
+  return (L_ret);
+  
+}
+
+int C_SecureSocketClient::_open (T_pOpenStatus P_status,
+                                 size_t        P_buffer_size,
+                                 C_ProtocolBinaryFrame *P_protocol) {
+  int L_ret ;
+
+  L_ret = C_SocketClient::_open(P_status, P_buffer_size, P_protocol);
+
+  if (L_ret == 0) {
+    L_ret = _secure_mode () ;
+  }
 
   return (L_ret);
 }
@@ -321,8 +328,23 @@ C_Socket* C_SecureSocketServer::process_fd_in_progess (fd_set* P_rSet,
   return (L_socket);
 }
 
+C_SecureSocketClient::C_SecureSocketClient
+(SSL_CTX * P_ssl_ctx, C_SocketClient& P_Socket)
+  : C_SocketClient(P_Socket), C_SecureSocket(P_ssl_ctx) {
+  (void) _secure_mode();
+}
 
+C_SecureSocketServer::C_SecureSocketServer
+(SSL_CTX * P_ssl_ctx, C_SocketServer& P_Socket)
+  : C_SocketServer(P_Socket), C_SecureSocket(P_ssl_ctx) {
+  (void) _secure_mode();
+}
 
+C_SecureSocketListen::C_SecureSocketListen
+(SSL_CTX * P_ssl_ctx, C_SocketListen& P_Socket) 
+  : C_SocketListen(P_Socket),
+    C_SecureSocket (P_ssl_ctx) {
+}
 
 
 

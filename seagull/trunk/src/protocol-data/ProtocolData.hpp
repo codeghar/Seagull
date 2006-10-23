@@ -46,6 +46,8 @@ bool extractBinaryVal(T_Value& P_dest, int  P_begin, int P_size,
 bool compare_value(T_Value& P_left, 
                    T_Value& P_rigth);
 
+char* create_string(T_ValueData& P_src);
+
 
 bool operator< (const T_ValueData&, 
 		const T_ValueData&);

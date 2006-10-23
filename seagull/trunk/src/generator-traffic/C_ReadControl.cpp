@@ -462,6 +462,14 @@ void C_ReadControl::force_init() {
   }
 }
 
+unsigned long C_ReadControl::get_call_rate() {
+  unsigned long L_ret = 0 ;
+  if (m_call_controller != NULL) {
+    L_ret = m_call_controller->get_call_rate();
+  }  
+  return (L_ret);
+}
+
 void C_ReadControl::change_call_rate(T_GenChangeOperation P_op, 
 				     unsigned long        P_rate) {
   if (m_call_controller != NULL) {

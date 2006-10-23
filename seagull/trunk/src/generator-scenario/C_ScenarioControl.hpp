@@ -38,6 +38,8 @@
 #include "C_DataLogControl.hpp"
 
 #include "C_ExternalDataControl.hpp"
+#include "C_CommandActionFactory.hpp"
+
 
 typedef struct _counter_def_t {
   int                 m_id    ;
@@ -50,6 +52,12 @@ typedef set_t<unsigned long> T_waitValuesSet, *T_pWaitValuesSet ;
 typedef set_t<unsigned long> T_retransDelayValuesSet, *T_pRetransDelayValuesSet ;
 
 class C_ReadControl ; // prevent from circular include
+
+class C_CommandAction ; 
+
+typedef list_t<C_CommandAction *> T_CommandActionLst, 
+  *T_pCommandActionLst ;
+
 
 class C_ScenarioControl {
 public:
@@ -109,11 +117,12 @@ public:
   void                increase_counter  (int P_id);
   int                 get_counter_id    (char *P_name);
 
-  void set_call_map (T_pCallMap *P_call_map);
+  int                 get_nb_scenario   ();
+  int                 get_nb_default_scenario () ;
+  int                 get_max_nb_retrans () ;
+  int                 get_max_nb_send () ;
+  int                 get_max_nb_recv () ;
 
-  int           get_nb_scenario   ();
-  int           get_nb_default_scenario () ;
-  int           get_max_nb_retrans () ;
 
 private:
 
@@ -160,6 +169,9 @@ private:
   // external data management
   C_ExternalDataControl  *m_external_data ;
   bool m_external_data_used ;
+
+  unsigned int m_check_level ;
+  T_CheckBehaviour m_check_behaviour ;
 
   // wait values
   T_pWaitValuesSet           m_wait_values ;
@@ -208,12 +220,15 @@ private:
 		   int&                      P_channel_id,
 		   bool&                     P_pre_action,
 		   bool&                     P_pre_action_done,
-		   T_pCmdAction&             P_CmdActionTable,
+                   //                   T_pCmdAction&             P_CmdActionTable,
 		   int&                      P_nb_action,
-		   T_CmdActionList&          P_CmdActionList,
+		   // T_CmdActionList&          P_CmdActionList,
 		   bool&                     P_inserted,
 		   int                       P_nb_value,
-		   int                       P_msg_id
+		   int                       P_msg_id,
+                   C_CommandActionFactory&   P_CmdActionFactory,
+                   T_CommandActionLst&       P_CommandActionLst,                   
+                   C_CommandAction**&         P_CommandActionTable
                    ) ;
 
   int add_expression (char                *P_arg,

@@ -577,3 +577,34 @@ int C_ChannelControl::opened () {
 
   return (L_nb);
 }
+
+
+int C_ChannelControl::set_option_global_channel (int P_id,
+                                                 char *P_args,
+                                                 int *P_table) {
+  int            L_ret  = 0       ;
+  T_pChannelData L_data           ;
+
+
+  if (P_id < m_channel_table_size) {
+    L_data = m_channel_table [P_id] ;
+
+    // global channel
+    L_ret = (L_data->m_transport)
+      ->set_option(P_table[P_id],
+                   P_args);
+
+  }
+    
+  return (L_ret);
+}
+
+//  int C_ChannelControl::set_option_global_channel (int P_Channel_Id, char *P_buf) {
+//    int L_ret = 0 ;
+//    // global channel
+//    L_ret = (m_channel_table[P_Channel_Id]->m_transport)
+//      ->set_option(m_channel_table[P_Channel_Id]->m_open_id, 
+//                   P_buf);
+  
+//    return (L_ret);
+//  }

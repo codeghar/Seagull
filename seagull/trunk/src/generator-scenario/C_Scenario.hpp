@@ -41,40 +41,12 @@
 #include "C_ExternalDataControl.hpp"
 #include "C_ScenarioStats.hpp"
 
-
 #include "C_RegExp.hpp"
 
+
+
+
 // STRING related types
-
-typedef struct _union_string_data {
-  int   m_id ;
-  char *m_value ;
-} T_ValueStringData, *T_pValueStringData ;
-
-typedef enum _enum_behaviour_scenario {
-
-  E_BEHAVIOUR_SCEN_SUCCESS,
-  E_BEHAVIOUR_SCEN_FAILED,
-  E_BEHAVIOUR_SCEN_IGNORE
-}  T_BehaviourScenario, 
-  *T_pBehaviourScenario ;
-
-typedef enum _enum_string_type {
-  E_STR_STATIC,
-  E_STR_COUNTER
-} T_ValueStringType ;
-
-typedef struct _struct_string_portion {
-  T_ValueStringType m_type ;
-  T_ValueStringData m_data ;
-} T_StringValue, *T_pStringValue ;
-
-typedef struct _struct_string_express {
-  int            m_nb_portion ;
-  T_pStringValue m_portions ;
-} T_StringExpression, *T_pStringExpression ;
-
-
 typedef enum _enum_exe_code {
   E_EXE_NOERROR = 0,
 
@@ -92,15 +64,6 @@ typedef enum _enum_exe_code {
   E_EXE_ERROR
 } T_exeCode ;
 
-typedef enum _cmd_scenario_type {
-   E_CMD_SCEN_SEND = 0,
-   E_CMD_SCEN_RECEIVE,
-   E_CMD_SCEN_WAIT,
-   E_CMD_SCEN_END,
-   E_NB_CMD_SCEN
-}  T_cmd_type,
-  *T_pCmd_type ;
-
 typedef enum _action_scenario_type {
    E_ACTION_SCEN_OPEN= 0,
    E_ACTION_SCEN_CLOSE,
@@ -116,6 +79,7 @@ typedef enum _action_scenario_type {
    E_ACTION_SCEN_CHECK_VALUE,
    E_ACTION_SCEN_CHECK_ORDER,
    E_ACTION_SCEN_SET_NEW_SESSION_ID,
+   E_ACTION_SCEN_TRANSPORT_OPTION,
 
    E_NB_ACTION_SCEN,  // internal actions after this value
    E_ACTION_SCEN_INTERNAL_INIT_DONE,
@@ -125,16 +89,25 @@ typedef enum _action_scenario_type {
 }  T_action_type,
   *T_pAction_type ;
 
-extern const char* command_name_table [] ;
-extern const char* action_name_table [] ;
+typedef enum _enum_string_type {
+  E_STR_STATIC,
+  E_STR_COUNTER
+} T_ValueStringType ;
 
-typedef struct _action_regexp_str_t {
-  // char *m_name ;
-  char *m_expr      ;
-  int   m_nb_match  ; 
-  int   m_sub_match ; 
-  int   m_line      ;     
-} T_ActionRegExpStr, *T_pActionRegExpStr ;
+typedef struct _union_string_data {
+  int   m_id ;
+  char *m_value ;
+} T_ValueStringData, *T_pValueStringData ;
+
+typedef struct _struct_string_portion {
+  T_ValueStringType m_type ;
+  T_ValueStringData m_data ;
+} T_StringValue, *T_pStringValue ;
+
+typedef struct _struct_string_express {
+  int            m_nb_portion ;
+  T_pStringValue m_portions ;
+} T_StringExpression, *T_pStringExpression ;
 
 typedef struct _xml_cmd_action {
   T_action_type       m_type            ;
@@ -157,6 +130,39 @@ typedef struct _xml_cmd_action {
 typedef list_t<T_pCmdAction> T_CmdActionList, 
                                *T_pCmdActionList ;
 
+
+typedef enum _enum_behaviour_scenario {
+
+  E_BEHAVIOUR_SCEN_SUCCESS,
+  E_BEHAVIOUR_SCEN_FAILED,
+  E_BEHAVIOUR_SCEN_IGNORE
+}  T_BehaviourScenario, 
+  *T_pBehaviourScenario ;
+
+
+typedef enum _cmd_scenario_type {
+   E_CMD_SCEN_SEND = 0,
+   E_CMD_SCEN_RECEIVE,
+   E_CMD_SCEN_WAIT,
+   E_CMD_SCEN_END,
+   E_NB_CMD_SCEN
+}  T_cmd_type,
+  *T_pCmd_type ;
+
+
+extern const char* command_name_table [] ;
+extern const char* action_name_table [] ;
+
+typedef struct _action_regexp_str_t {
+  // char *m_name ;
+  char *m_expr      ;
+  int   m_nb_match  ; 
+  int   m_sub_match ; 
+  int   m_line      ;     
+} T_ActionRegExpStr, *T_pActionRegExpStr ;
+
+class C_CommandAction ;
+
 typedef struct _xml_cmd_scenario {
 
   T_cmd_type           m_type           ;
@@ -168,8 +174,9 @@ typedef struct _xml_cmd_scenario {
 
   int                  m_pre_action     ;
   int                  m_post_action    ;
-  T_pCmdAction         m_pre_act_table  ;
-  T_pCmdAction         m_post_act_table ;
+
+  C_CommandAction**    m_pre_action_table ;
+  C_CommandAction**    m_post_action_table ;
 
   unsigned long        m_retrans_delay  ;
   unsigned long        m_retrans_index  ;
@@ -204,15 +211,16 @@ public:
 		   int                 P_channel_id,
 		   T_pC_MessageFrame   P_msg,
 		   int                 P_nb_pre_action,
-		   T_pCmdAction        P_pre_act_table,
+		   C_CommandAction**   P_pre_act_table,
                    unsigned long       P_retrans_delay);
 
 
   // define post actions for the last command added
   size_t define_post_actions (int          P_nb_post_action,
-			      T_pCmdAction P_post_act_table) ;
+			      C_CommandAction** P_post_act_table) ;
   size_t define_pre_actions (int          P_nb_pre_action,
-			     T_pCmdAction P_pre_act_table) ;
+			     C_CommandAction** P_pre_act_table) ;
+
 
   size_t add_cmd  (T_cmd_type    P_type,
 		   unsigned long P_duration);
@@ -232,9 +240,6 @@ public:
 
   friend iostream_output& operator<<(iostream_output&, C_Scenario&);
 
-  void set_call_map (T_pCallMap *P_call_map);
-
-
   void set_stats(C_ScenarioStats *P_scenStat) ;
   C_ScenarioStats* get_stats();
   void delete_stats () ;
@@ -242,6 +247,12 @@ public:
   T_exeCode    get_exe_end_code()  ;
 
   int                  get_nb_retrans();
+
+  int                  get_nb_recv_per_scen () ;
+
+  int                  get_nb_send_per_scen () ;
+
+
 
   T_pCmd_scenario      get_commands() ;
 
@@ -268,20 +279,23 @@ private:
   T_exeCode          m_exe_end_code  ;
 
 
-  T_exeCode          execute_action (T_pCmd_scenario P_pCmd,
-				     T_pCallContext  P_callCtxt,
-				     C_MessageFrame  *P_msg,
-				     int             P_nbActions,
-				     T_pCmdAction    P_actions,
-				     C_MessageFrame  *P_ref);
+  T_exeCode          execute_action (T_pCmd_scenario      P_pCmd,
+				     T_pCallContext       P_callCtxt,
+				     C_MessageFrame      *P_msg,
+				     int                  P_nbActions,
+				     C_CommandAction**    P_actions,
+				     C_MessageFrame      *P_ref);
 
-  T_pCallMap       *m_call_map_table ;
   void delete_post_actions (int P_cmd_index);
 
   T_BehaviourScenario m_behaviour ;
 
   bool                  m_retrans_enabled  ;
   int                   m_nb_retrans            ;
+
+
+  int                   m_nb_send_per_scene   ;
+  int                   m_nb_recv_per_scene   ;
 
 } ;
 

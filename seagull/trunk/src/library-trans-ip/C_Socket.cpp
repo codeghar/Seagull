@@ -38,25 +38,45 @@
 #define SOCKET_DEBUG(l,m)
 #endif
 
+int C_Socket::get_prototype() {
+  int L_ret ;
 
+  switch (m_type) {
+  case E_SOCKET_TCP_MODE:
+    L_ret = SOCK_STREAM ;
+    break ;
+  case E_SOCKET_UDP_MODE:
+    L_ret = SOCK_DGRAM ;
+    break ;
+  default:
+    L_ret = -1 ;
+    break ;
+  }
+  return L_ret ;
+}
 
-int C_SocketWithData::_call_write(int P_socket, 
-                          unsigned char* P_data,
-                          size_t P_size) {
-  return (call_send(P_socket, P_data, P_size, 0));
+int C_SocketWithData::_call_write(unsigned char* P_data,
+				  size_t P_size) {
+  return (call_send(m_socket_id, P_data, P_size, 0));
+}
+
+int C_SocketWithData::_write(unsigned char* P_data,
+			     size_t         P_size) {
+  return (call_sendto(m_socket_id, P_data, P_size, 
+		      0,
+		      (struct sockaddr*)(void*)m_remote_sockaddr_ptr, 
+		      (tool_socklen_t)*m_len_remote_sockaddr_ptr)) ;
 }
 
 size_t C_SocketListen::send_buffer(unsigned char     *P_data, 
-                                   size_t             P_size,
-                                   T_SockAddrStorage *P_remote_sockaddr,
-                                   tool_socklen_t    *P_len_remote_sockaddr) {
+                                   size_t             P_size) {
   return (0);
 }
 
 size_t C_SocketWithData::send_buffer(unsigned char     *P_data, 
-                                     size_t             P_size,
-                                     T_SockAddrStorage *P_remote_sockaddr,
-                                     tool_socklen_t    *P_len_remote_sockaddr) {
+                                     size_t             P_size){
+  //                                     T_SockAddrStorage *P_remote_sockaddr,
+  //                                     tool_socklen_t    *P_len_remote_sockaddr) {
   size_t L_size = 0 ;
   int    L_rc       ;
 
@@ -66,12 +86,9 @@ size_t C_SocketWithData::send_buffer(unsigned char     *P_data,
   SOCKET_DEBUG(0, "C_TransIP::send_buffer() id OK");
   
   if (m_type == E_SOCKET_TCP_MODE) {
-    L_rc = _call_write(m_socket_id, P_data, P_size) ;
+    L_rc = _call_write(P_data, P_size) ;
   } else {
-    L_rc = call_sendto(m_socket_id, P_data, P_size, 
-                       0,
-                       (struct sockaddr*)(void*)P_remote_sockaddr, 
-                       (tool_socklen_t)*P_len_remote_sockaddr) ;
+    L_rc = _write(P_data, P_size) ;
   }
 
   if (L_rc < 0) {
@@ -96,6 +113,15 @@ size_t C_SocketWithData::send_buffer(unsigned char     *P_data,
 
 }
 
+C_Socket::C_Socket(C_Socket &P_Socket) {
+  m_socket_id = P_Socket.m_socket_id   ; 
+  m_channel_id = P_Socket.m_channel_id     ;
+  m_type = P_Socket.m_type        ;
+  m_src_port = P_Socket.m_src_port    ;
+  m_state = P_Socket.m_state       ;
+  m_buffer_size = P_Socket.m_buffer_size ;
+  m_protocol = P_Socket.m_protocol ;
+}
 
 C_Socket::C_Socket(int P_channel_id) {
    SOCKET_DEBUG(1, "C_Socket::C_Socket (" 
@@ -105,9 +131,6 @@ C_Socket::C_Socket(int P_channel_id) {
    m_socket_id = -1 ;
    m_channel_id = P_channel_id ;
    m_state = E_SOCKET_STATE_NOT_READY ;
-   m_decode = NULL ;
-   m_recv_msg_list = NULL ;
-
 }
 
 C_Socket::C_Socket(T_SocketType P_type, 
@@ -123,8 +146,6 @@ C_Socket::C_Socket(T_SocketType P_type,
 
   m_channel_id = P_channel_id ;
   m_state = E_SOCKET_STATE_NOT_READY ;
-  m_decode = NULL ;
-  m_recv_msg_list = NULL ;
 }
 
 C_Socket::C_Socket(T_SocketType P_type, 
@@ -136,18 +157,16 @@ C_Socket::C_Socket(T_SocketType P_type,
   m_type = P_type ;
   m_channel_id = P_channel_id ;
   m_state = E_SOCKET_STATE_NOT_READY ;
-  m_decode = NULL ;
-  m_recv_msg_list = NULL ;
 }
 
 C_pDataDecode C_Socket::get_decode() {
-  return (m_decode);
+  return (NULL);
 }
 C_ProtocolBinaryFrame* C_Socket::get_protocol() {
   return (m_protocol);
 }
 T_pRcvMsgCtxtList C_Socket::get_list() {
-  return (m_recv_msg_list);
+  return (NULL);
 }
 
 
@@ -157,11 +176,10 @@ void C_Socket::set_channel_id(int P_channel_id) {
   m_channel_id = P_channel_id ;
 }
 
-int C_Socket::_open(int              P_socket_domain, 
-		    size_t           P_buffer_size,
+int C_Socket::_open(int                    P_socket_domain, 
+		    size_t                 P_buffer_size,
 		    C_ProtocolBinaryFrame *P_protocol) {
   
-  int L_socket_type   ; /* socket type */
   int L_socket_domain ; /* socket domain */
 
   SOCKET_DEBUG(1, "C_Socket::_open ()");
@@ -169,22 +187,9 @@ int C_Socket::_open(int              P_socket_domain,
   m_buffer_size = P_buffer_size ;
   L_socket_domain = P_socket_domain ; 
 
-  /* first, determine type of socket to be used */
-  switch (m_type) {
-  case E_SOCKET_TCP_MODE:
-    L_socket_type = SOCK_STREAM ;
-    break ;
-  case E_SOCKET_UDP_MODE:
-    L_socket_type = SOCK_DGRAM ;
-    break ;
-  default:
-    SOCKET_ERROR(0, "Unsupported transport type");
-    exit (1);
-  }
-  
   /* allocate a free socket                 */
   /* Internet address family, Stream socket */
-  m_socket_id = call_socket(L_socket_domain, L_socket_type, 0);
+  m_socket_id = call_socket(L_socket_domain, get_prototype(), 0);
   
   SOCKET_DEBUG(1, "m_socket_id [" << m_socket_id << "]");
 
@@ -274,12 +279,6 @@ void C_Socket::set_properties() {
 		    &L_linger, sizeof (L_linger)) < 0) {
       SOCKET_ERROR(1, "Unable to set SO_LINGER option");
     }
-
-    // non blocking mode (for connect only ?)
-    L_flags = call_fcntl(m_socket_id, F_GETFL , NULL);
-    L_flags |= O_NONBLOCK;
-    call_fcntl(m_socket_id, F_SETFL , L_flags);
-
   }
 
   // size of recv buf
@@ -296,10 +295,19 @@ void C_Socket::set_properties() {
     SOCKET_ERROR(1, "Unable to set socket rcvbuf");
   }
 
-  // non blocking mode (for connect only ?)
-  // L_flags = call_fcntl(m_socket_id, F_GETFL , NULL);
-  // L_flags |= O_NONBLOCK;
-  // call_fcntl(m_socket_id, F_SETFL , L_flags);
+  // non blocking mode
+  L_flags = call_fcntl(m_socket_id, F_GETFL , NULL);
+  L_flags |= O_NONBLOCK;
+  call_fcntl(m_socket_id, F_SETFL , L_flags);
+
+}
+
+C_SocketListen::C_SocketListen(C_SocketListen &P_Socket)
+  : C_Socket(P_Socket) {
+
+  m_source_addr_info = P_Socket.m_source_addr_info ;
+  m_read_buf_size = P_Socket.m_read_buf_size ;
+  m_segm_buf_size = P_Socket.m_segm_buf_size ;
 
 }
 
@@ -327,12 +335,8 @@ size_t C_SocketListen::received_buffer (unsigned char  *P_data,
   return (0); 
 }
 
-T_SockAddrStorage* C_SocketListen::get_remote_sockaddr_ptr() {
-  return (NULL);
-}
-
-tool_socklen_t* C_SocketListen::get_len_remote_sockaddr_ptr() {
-  return (NULL);
+int C_SocketListen::_call_listen (int P_max) {
+  return (call_listen(m_socket_id, P_max));
 }
 
 int C_SocketListen::_open (size_t P_buffer_size, 
@@ -347,7 +351,6 @@ int C_SocketListen::_open (size_t P_buffer_size,
 			  P_protocol) ;
 
    if (L_rc == 0) {
-     //set_properties() ;
 
      /* bind the socket to the newly formed address */
      L_rc = call_bind(m_socket_id, 
@@ -364,7 +367,7 @@ int C_SocketListen::_open (size_t P_buffer_size,
 	 /* 5 pending connection requests will be queued by the	*/
 	 /* system, if we are not directly awaiting them using	*/
 	 /* the accept() system call, when they arrive.		*/
-	 L_rc = call_listen(m_socket_id, 5);
+	 L_rc = _call_listen(5);
 	 
 	 /* check there was no error */
 	 if (L_rc) {
@@ -425,6 +428,13 @@ T_SocketType C_SocketListen::get_trans_type() {
   return(m_type);
 }
 
+
+C_SocketServer::C_SocketServer (C_SocketServer& P_Socket) 
+  : C_SocketWithData (P_Socket) {
+  m_listen_sock = P_Socket.m_listen_sock;
+  m_source_udp_addr_info = P_Socket.m_source_udp_addr_info;
+}
+
 C_SocketServer::C_SocketServer(C_SocketListen *P_listen, 
 			       int P_channel_id,
                                size_t P_read_buf_size,
@@ -452,7 +462,7 @@ C_SocketServer::C_SocketServer(T_SocketType P_type,
 }
 
 int C_SocketServer::_open_udp (size_t P_buffer_size, 
-			   C_ProtocolBinaryFrame *P_protocol) {
+			       C_ProtocolBinaryFrame *P_protocol) {
 
    int		     L_rc          ; /* system calls return value storage */
 
@@ -468,8 +478,6 @@ int C_SocketServer::_open_udp (size_t P_buffer_size,
      
      m_buffer_size = P_buffer_size ;
      
-     //set_properties() ;
-
      /* bind the socket to the newly formed address */
      L_rc = call_bind(m_socket_id, 
 		 (sockaddr *)(void *)&(m_source_udp_addr_info->m_addr),
@@ -525,6 +533,11 @@ int C_SocketServer::_open(size_t P_buffer_size,
   return (L_rc);
 }
 
+
+C_SocketClient::C_SocketClient(C_SocketClient& P_Socket) 
+  : C_SocketWithData (P_Socket) {
+}
+
 C_SocketClient::C_SocketClient(T_SocketType P_type, 
 			       T_pIpAddr    P_addr, 
 			       int          P_channel_id,
@@ -552,7 +565,6 @@ int C_SocketClient::_open(T_pOpenStatus  P_status,
 
   if (L_rc == 0) {
 
-    //set_properties() ;
     if (m_type == E_SOCKET_TCP_MODE) {
 
       L_rc = call_connect (m_socket_id, 
@@ -595,6 +607,31 @@ int C_SocketClient::_open(T_pOpenStatus  P_status,
   return (L_rc);
 }
 
+C_SocketWithData::C_SocketWithData(C_SocketWithData &P_Socket) 
+  : C_Socket (P_Socket) {
+
+  m_data_queue = P_Socket.m_data_queue ;
+  m_remote_addr_info = P_Socket.m_remote_addr_info ;
+  m_accepted_addr = P_Socket.m_accepted_addr ;
+
+  m_read_buf_size = P_Socket.m_read_buf_size ;
+  m_read_buf = P_Socket.m_read_buf      ;
+  P_Socket.m_read_buf = NULL ;
+
+  m_remote_sockaddr = P_Socket.m_remote_sockaddr     ; 
+  m_len_remote_sockaddr = P_Socket.m_len_remote_sockaddr ;
+
+  m_remote_sockaddr_ptr = P_Socket.m_remote_sockaddr_ptr     ; 
+  m_len_remote_sockaddr_ptr = P_Socket.m_len_remote_sockaddr_ptr ;
+
+  m_decode = P_Socket.m_decode   ;
+  P_Socket.m_decode = NULL ;
+  m_recv_msg_list = P_Socket.m_recv_msg_list ;
+  P_Socket.m_recv_msg_list = NULL ;
+  
+}
+
+
 C_SocketWithData::C_SocketWithData(int P_channel_id,
                                    size_t P_read_buf_size,
                                    size_t P_segm_buf_size) 
@@ -634,12 +671,12 @@ C_SocketWithData::C_SocketWithData(T_SocketType P_type,
   memset(&m_remote_sockaddr, 0, m_len_remote_sockaddr);
 }
 
-T_SockAddrStorage* C_SocketWithData::get_remote_sockaddr_ptr() {
-  return (m_remote_sockaddr_ptr);
+C_pDataDecode C_SocketWithData::get_decode() {
+  return (m_decode);
 }
 
-tool_socklen_t* C_SocketWithData::get_len_remote_sockaddr_ptr() {
-  return (m_len_remote_sockaddr_ptr);
+T_pRcvMsgCtxtList C_SocketWithData::get_list() {
+  return (m_recv_msg_list);
 }
 
 C_SocketWithData::~C_SocketWithData() {
@@ -659,8 +696,8 @@ C_SocketWithData::~C_SocketWithData() {
   FREE_TABLE(m_read_buf);
 }
 
-int C_SocketWithData::_call_read(int P_socket, char *P_buf, size_t P_size) {
-  return (call_read(P_socket, P_buf, P_size)) ;
+int C_SocketWithData::_call_read() { 
+  return (call_read(m_socket_id, m_read_buf, m_read_buf_size)) ;
 }
 
 
@@ -672,12 +709,11 @@ C_Socket* C_SocketWithData::process_fd_ready(fd_set *P_rSet,
   T_pDataRcv      L_data ;
   struct timezone L_timeZone ;             
 
-  char           *L_buf = m_read_buf ;
   if (FD_ISSET(m_socket_id, P_rSet)) {
     if (m_type == E_SOCKET_TCP_MODE) {
-      L_rc = _call_read(m_socket_id, L_buf, m_read_buf_size);
+      L_rc = _call_read(); 
     } else {
-      L_rc = _read(L_buf);
+      L_rc = _read();
     }
     
     if (L_rc <= 0) {
@@ -699,7 +735,7 @@ C_Socket* C_SocketWithData::process_fd_ready(fd_set *P_rSet,
                   unsigned char*, 
                   sizeof(unsigned char*), 
                   L_rc);
-      memcpy(L_data->m_data, L_buf, L_rc);
+      memcpy(L_data->m_data, m_read_buf, L_rc);
       m_data_queue.push_back(L_data);
     }
   } else {
@@ -797,20 +833,23 @@ size_t C_SocketWithData::received_buffer(unsigned char *P_data,
   return (L_size);
 }
 
-int C_SocketServer::_read (void* P_buffer) {
+int C_SocketServer::_read () {
   return (call_recvfrom(m_socket_id, 
-                        P_buffer, 
+                        m_read_buf, 
                         m_read_buf_size,
                         0,
                         (sockaddr *)(void *)m_remote_sockaddr_ptr, 
                         m_len_remote_sockaddr_ptr));
 }
 
-int C_SocketClient::_read (void* P_buffer) {
+int C_SocketClient::_read () {
   return (call_recvfrom(m_socket_id, 
-                        P_buffer, 
+                        m_read_buf, 
                         m_read_buf_size,
                         0,
                         NULL,
                         NULL));
 }
+
+
+// End of file

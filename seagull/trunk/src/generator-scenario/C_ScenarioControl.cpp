@@ -26,10 +26,14 @@
 #include "BufferUtils.hpp"
 
 #include "C_ScenarioStats.hpp"
+#include "C_CommandActionFactory.hpp"
+#include "C_GeneratorStats.hpp"
+#include "C_CommandAction.hpp"
 
 #include "list_t.hpp"
 #include "integer_t.hpp" // For strtoul_f
 #include <regex.h>
+
 
 
 #define XML_SCENARIO_SECTION               (char*)"scenario"
@@ -39,7 +43,18 @@
 #define XML_SCENARIO_INIT_SECTION          (char*)"init"
 #define XML_SCENARIO_ABORT_SECTION         (char*)"abort"
 
-
+static const T_CmdAction no_cmd_action = {
+  E_ACTION_SCEN_OPEN,
+  NULL,
+  -1, -1, -1, -1, -1, -1,
+  NULL,
+  -1, -1,
+  NULL,
+  E_CHECK_BEHAVIOUR_WARNING,
+  -1,
+  NULL
+} ;
+  
 C_ScenarioControl::C_ScenarioControl(C_ProtocolControl  *P_protocol_control,
 				     C_TransportControl *P_transport_control,
 				     C_ChannelControl   *P_channel_control) {
@@ -66,6 +81,9 @@ C_ScenarioControl::C_ScenarioControl(C_ProtocolControl  *P_protocol_control,
   m_external_data = NULL ;
   m_external_data_used = false ;
 
+  m_check_level = 0 ;
+  m_check_behaviour = E_CHECK_BEHAVIOUR_WARNING ;
+
   // generator model
   m_protocol_ctrl = P_protocol_control ;
   m_transport_ctrl = P_transport_control ;
@@ -89,14 +107,17 @@ C_ScenarioControl::~C_ScenarioControl() {
     m_traffic_scen->delete_stats();
   }
   DELETE_VAR(m_traffic_scen);
+  
   if (m_init_scen) {
     m_init_scen->delete_stats();
   }
   DELETE_VAR(m_init_scen);
+
   if (m_abort_scen) {
     m_abort_scen->delete_stats();
   }
   DELETE_VAR(m_abort_scen);
+
   if (m_nb_default) {
     for(L_i=0; L_i < m_nb_default; L_i++) {
       if (m_default_scen[L_i]) {
@@ -105,6 +126,7 @@ C_ScenarioControl::~C_ScenarioControl() {
     }
   }
   FREE_TABLE(m_default_scen);
+
   m_traffic_type = E_TRAFFIC_UNKNOWN ;
   m_init_type = E_TRAFFIC_UNKNOWN ;
   m_max_default = 0 ;
@@ -307,7 +329,8 @@ int C_ScenarioControl::add_scenario
   int                               L_i ; 
   int                               L_ret = 0 ;
 
-  T_pCmdAction                      L_action_end_init = NULL ;
+  T_CmdAction                       L_action_end_init ;
+  C_CommandAction**                 L_action_end_init_table = NULL ;
   T_pC_Scenario                     L_current_scen = NULL ;
   C_ScenarioStats                  *L_current_stat = NULL ;
 
@@ -323,6 +346,18 @@ int C_ScenarioControl::add_scenario
 
   char                              *L_behaviour_scen = NULL ;
 
+
+  T_Controllers            L_controllers ;
+
+  L_controllers.m_log = m_log ;
+  L_controllers.m_scenario_control = this ;
+  L_controllers.m_stat = C_GeneratorStats::instance() ;
+  L_controllers.m_external_data = m_external_data ;
+  L_controllers.m_check_mask      = m_check_level ;
+  L_controllers.m_check_behaviour      = m_check_behaviour ;
+  L_controllers.m_channel_ctrl = m_channel_ctrl ;
+
+  C_CommandActionFactory    L_CommandActionFactory(&L_controllers) ;
 
 
   GEN_DEBUG(1, "C_ScenarioControl::add_scenario() start");
@@ -364,6 +399,8 @@ int C_ScenarioControl::add_scenario
       m_config->get_value(E_CFG_OPT_CHECK_BEHAVIOUR, 
 			  (unsigned int*)&L_check_behave);
     }
+    m_check_level = L_check_level ;
+    m_check_behaviour = L_check_behave ;
     NEW_VAR(m_traffic_scen, 
 	    C_Scenario(this, m_channel_ctrl, 
 		       m_external_data,
@@ -483,15 +520,17 @@ int C_ScenarioControl::add_scenario
       break ;
     case E_SCENARIO_INIT:
       m_init_type = *P_trafficType;
+
+      L_action_end_init = no_cmd_action ;
       // add init done action at the end of the command
-      ALLOC_TABLE(L_action_end_init, T_pCmdAction, sizeof(T_CmdAction), 1);
-      L_action_end_init[0].m_type        = E_ACTION_SCEN_INTERNAL_INIT_DONE ;
-      L_action_end_init[0].m_args        = NULL ;
-      L_action_end_init[0].m_id          = -1  ;
-      L_action_end_init[0].m_mem_id      = -1 ;
-      L_action_end_init[0].m_string_expr = NULL ;
-      L_action_end_init[0].m_regexp_data = NULL ;
-      L_nb_cmd = L_current_scen->define_post_actions(1, L_action_end_init);
+      L_action_end_init.m_type        = E_ACTION_SCEN_INTERNAL_INIT_DONE ;
+      
+      ALLOC_TABLE(L_action_end_init_table, 
+                  C_CommandAction**, sizeof(C_CommandAction*),1);
+      L_action_end_init_table[0] 
+        = L_CommandActionFactory.create(L_action_end_init);
+      L_nb_cmd = L_current_scen
+        ->define_post_actions(1, (C_CommandAction**)L_action_end_init_table);
       break ;
 
     case E_SCENARIO_DEFAULT:
@@ -550,9 +589,10 @@ int C_ScenarioControl::add_command (T_cmd_type                P_cmd_type,
 
   char                          *L_value                        ;
   int                            L_ret               = 0        ;
-  T_pCmdAction                   L_CmdActionTable    = NULL     ;
+  C_CommandAction**             L_CommandActionTable    = NULL     ;
   int                            L_nb_action         = 0        ;
-  T_CmdActionList                L_cmdActionList                ;
+  // T_CmdActionList                L_cmdActionList                ;
+  T_CommandActionLst             L_commandActionList            ;
 
   bool                           L_map_inserted      = false    ;
 
@@ -575,18 +615,34 @@ int C_ScenarioControl::add_command (T_cmd_type                P_cmd_type,
   unsigned long                  L_retrans_delay     = 0        ;
   char                          *L_end_str                      ;
 
+
+  T_Controllers            L_controllers ;
+
+  L_controllers.m_log = m_log ;
+  L_controllers.m_scenario_control = this ;
+  L_controllers.m_stat = C_GeneratorStats::instance() ;
+  L_controllers.m_external_data = m_external_data ;
+  L_controllers.m_check_mask      = m_check_level ;
+  L_controllers.m_check_behaviour      = m_check_behaviour ;
+  L_controllers.m_channel_ctrl = m_channel_ctrl ;
+
+  C_CommandActionFactory    L_CommandActionFactory(&L_controllers) ;
+
+
   GEN_DEBUG(1, "C_ScenarioControl::add_command() start");
 
-  L_cmdActionList.clear() ;
+  // L_cmdActionList.clear() ;
+  L_commandActionList.clear() ;
 
   switch (P_cmd_type) {
 
   case E_CMD_SCEN_RECEIVE:
     if (P_checkMsgRecv == true) {
-      T_pCmdAction L_action_check = NULL ;
-      ALLOC_VAR(L_action_check, T_pCmdAction, sizeof(T_CmdAction));
-      L_action_check -> m_type = E_ACTION_SCEN_CHECK_ALL_MSG ;
-      L_cmdActionList.push_back(L_action_check);
+      T_CmdAction L_action_check ;
+      L_action_check = no_cmd_action ;
+      L_action_check.m_type = E_ACTION_SCEN_CHECK_ALL_MSG ;
+      L_commandActionList.push_back
+        (L_CommandActionFactory.create(L_action_check));
       L_nb_action++ ;
       GEN_DEBUG(1, "C_ScenarioControl::add_command() E_CMD_SCEN_RECEIVE");
     }
@@ -786,12 +842,15 @@ int C_ScenarioControl::add_command (T_cmd_type                P_cmd_type,
 			      L_channel_id,
 			      L_pre_action,
 			      L_pre_action_done,
-			      L_CmdActionTable,
+                              //			      L_CmdActionTable,
 			      L_nb_action,
-			      L_cmdActionList,
+			      //L_cmdActionList,
 			      L_map_inserted,
 			      L_nb_body_value,
-                              L_msg_id
+                              L_msg_id,
+                              L_CommandActionFactory,
+                              L_commandActionList,
+                              L_CommandActionTable
 			      );
 	  if (L_ret == -1) break ;
 	}
@@ -800,12 +859,16 @@ int C_ScenarioControl::add_command (T_cmd_type                P_cmd_type,
 
       if (L_map_inserted == false) {
 	// no action on the scenario => add post action with add in call map
-	T_pCmdAction L_action_map = NULL ;
-	ALLOC_TABLE(L_action_map, T_pCmdAction, 
-		    sizeof(T_CmdAction), 1);
-	L_action_map[0].m_type = E_ACTION_SCEN_ADD_IN_CALL_MAP ;
-	L_action_map[0].m_id = L_channel_id ;
-	P_scen -> define_post_actions(1, L_action_map);
+
+	T_CmdAction L_action_map ;
+        C_CommandAction** L_action_map_table ;
+        ALLOC_TABLE(L_action_map_table, C_CommandAction**, sizeof(C_CommandAction*),1);
+        L_action_map = no_cmd_action ;
+	L_action_map.m_type = E_ACTION_SCEN_ADD_IN_CALL_MAP ;
+	L_action_map.m_id = L_channel_id ;
+        L_action_map_table[0] = L_CommandActionFactory.create(L_action_map) ;
+
+	P_scen -> define_post_actions(1, (C_CommandAction**)L_action_map_table);
 	L_map_inserted = true ;
       }
 
@@ -838,12 +901,15 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 				    int&                      P_channel_id,
 				    bool&                     P_pre_action,
 				    bool&                     P_pre_action_done,
-				    T_pCmdAction&             P_CmdActionTable,
+                                    //				    T_pCmdAction&             P_CmdActionTable,
 				    int&                      P_nb_action,
-				    T_CmdActionList&          P_cmdActionList,
+                                    //		T_CmdActionList&          P_cmdActionList,
 				    bool&                     P_inserted,
 				    int                       P_nb_value,
-                                    int                       P_msg_id
+                                    int                       P_msg_id,
+                                    C_CommandActionFactory&   P_CmdActionFactory,
+                                    T_CommandActionLst&       P_CommandActionLst,
+                                    C_CommandAction**&         P_CommandActionTable
 				    ) {
 
   int                       L_ret                   = 0      ;
@@ -860,7 +926,7 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 
 
   bool                      L_entityFieldFound       = false ;
-  T_pCmdAction              L_select_line_action     = NULL  ;
+  T_CmdAction               L_select_line_action             ;
   int                       L_field_id                       ;
   char                     *L_end_str                        ;
   bool                      L_begin_present          = false ;
@@ -899,19 +965,11 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 	}
       }
       if (L_actionFound == true) {
-	
+
  	ALLOC_VAR(L_actionData, T_pCmdAction, sizeof(T_CmdAction));
+        *L_actionData = no_cmd_action ;
 	L_actionData -> m_type            = L_actionType ;
 	L_actionData -> m_instance_id     = 0            ;
-	L_actionData -> m_sub_id          = -1           ;
-	L_actionData -> m_size            = -1           ;
-	L_actionData -> m_begin           = -1           ;
-	L_actionData -> m_position        = -1           ;
-	L_actionData -> m_pattern_size    = -1           ;
-	L_actionData -> m_pattern         = NULL         ;
-        L_actionData -> m_args            = NULL         ;
-
-        L_actionData -> m_regexp_data     = NULL         ;
                 
 	switch (L_actionType) {
 	  
@@ -1542,17 +1600,11 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 	      
 	      if (*P_selectLine_added == false) {
 		
+                L_select_line_action = no_cmd_action ;
 		// Add a new action for select data line
-		ALLOC_VAR(L_select_line_action, T_pCmdAction, sizeof(T_CmdAction));
-		L_select_line_action -> m_type = E_ACTION_SCEN_SELECT_EXTERNAL_DATA_LINE ;
-		L_select_line_action -> m_args        = NULL ;
-		L_select_line_action -> m_id          = -1  ;
-		L_select_line_action -> m_mem_id      = -1 ;
-		L_select_line_action -> m_string_expr = NULL ;
-
-                L_select_line_action -> m_regexp_data = NULL ;
-
-		P_cmdActionList.push_back(L_select_line_action);
+		L_select_line_action . m_type = E_ACTION_SCEN_SELECT_EXTERNAL_DATA_LINE ;
+		P_CommandActionLst.push_back
+                  (P_CmdActionFactory.create(L_select_line_action));
 		P_nb_action++ ;
 		
 		// once time
@@ -1685,6 +1737,42 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 	  }
 	  break ;
 
+        case E_ACTION_SCEN_TRANSPORT_OPTION : 
+          L_actionArg = L_action -> find_value((char*) "channel");
+	  if (L_actionArg == NULL) {
+	    GEN_ERROR(E_GEN_FATAL_ERROR, "name value mandatory for action ["
+		      << L_actionName << "]");
+	    L_ret = -1 ;
+	    break ; 
+	  }
+
+          L_actionData->m_id = m_channel_ctrl->get_channel_id(L_actionArg);
+          if (L_actionData->m_id  == ERROR_CHANNEL_UNKNOWN) {
+            GEN_ERROR(E_GEN_FATAL_ERROR, 
+                      "Channel [" << L_actionArg << "] unknowm for action ["
+		      << L_actionName << "]");
+            L_ret = -1 ;
+            break ;
+          }
+
+
+	  L_actionArg2 = L_action -> find_value((char*) "value");
+	  if (L_actionArg2 == NULL) {
+	    GEN_ERROR(E_GEN_FATAL_ERROR, "value mandatory for action ["
+		      << L_actionName << "]");
+	    L_ret = -1 ;
+	    break ; 
+	  } else {
+            if (strlen(L_actionArg2) > 0 ) {
+              L_actionData -> m_args = L_actionArg2 ;
+            } else {
+              GEN_ERROR(E_GEN_FATAL_ERROR, "no value for action ["
+                        << L_actionName << "]");
+              L_ret = -1 ;
+            }
+          }
+
+        break;
 
 	case E_ACTION_SCEN_CHECK_ORDER:
 	  L_actionArg = L_action -> find_value((char*) "name");
@@ -1775,12 +1863,14 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
               FREE_VAR(L_actionData);
               break ;
             default:
-              P_cmdActionList.push_back(L_actionData);
+              P_CommandActionLst.push_back(P_CmdActionFactory.create(*L_actionData));
+              FREE_VAR(L_actionData);
               P_nb_action++ ;
               break ;
             }
           } else {
-            P_cmdActionList.push_back(L_actionData);
+            P_CommandActionLst.push_back(P_CmdActionFactory.create(*L_actionData));
+            FREE_VAR(L_actionData);
             P_nb_action++ ;
           }
 	} 
@@ -1800,26 +1890,26 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 	
   	// pre actions settings
   	if (P_nb_action != 0) {
-	  T_CmdActionList::iterator L_cmdActionIt ;
+	  T_CommandActionLst::iterator L_cmdActionIt ;
 	  int                       L_actionIdx = 0 ;
-	  T_pCmdAction              L_actionData = NULL ;
 	  
-	  ALLOC_TABLE(P_CmdActionTable, T_pCmdAction, sizeof(T_CmdAction), P_nb_action);
-	  
-	  for (L_cmdActionIt  = P_cmdActionList.begin();
-	       L_cmdActionIt != P_cmdActionList.end();
+	  ALLOC_TABLE(P_CommandActionTable, 
+                      C_CommandAction**,
+                      sizeof(C_CommandAction*),
+                      P_nb_action);
+	  for (L_cmdActionIt  = P_CommandActionLst.begin();
+	       L_cmdActionIt != P_CommandActionLst.end();
 	       L_cmdActionIt++) {
-	    L_actionData = *L_cmdActionIt ;
-	    P_CmdActionTable[L_actionIdx] = *L_actionData ;
-	    FREE_VAR(L_actionData) ;
+            P_CommandActionTable[L_actionIdx] = *L_cmdActionIt ;
 	    L_actionIdx ++ ;
 	  }
-	  if (!P_cmdActionList.empty()) {
-	    P_cmdActionList.erase(P_cmdActionList.begin(),P_cmdActionList.end());
+	  if (!P_CommandActionLst.empty()) {
+	    P_CommandActionLst.erase(P_CommandActionLst.begin(),P_CommandActionLst.end());
 	  }
-  	  P_scen -> define_pre_actions(P_nb_action, P_CmdActionTable);
+
+          P_scen -> define_pre_actions(P_nb_action, P_CommandActionTable);
 	  P_nb_action = 0 ;
-	  P_CmdActionTable = NULL ;
+	  P_CommandActionTable = NULL ;
   	}
   	P_pre_action_done = true ;
 	
@@ -1831,36 +1921,36 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
   	// (== if not already inserted for this channel)
   	P_inserted = P_map_inserted[P_channel_id];
   	if (P_inserted == false) {
-  	  T_pCmdAction L_action_map = NULL ;
-  	  ALLOC_VAR(L_action_map, T_pCmdAction, sizeof(T_CmdAction));
-  	  L_action_map -> m_type = E_ACTION_SCEN_ADD_IN_CALL_MAP ;
-  	  L_action_map -> m_id = P_channel_id ;
-  	  P_cmdActionList.push_back(L_action_map);
+  	  T_CmdAction L_action_map ;
+          L_action_map = no_cmd_action ;
+  	  L_action_map . m_type = E_ACTION_SCEN_ADD_IN_CALL_MAP ;
+  	  L_action_map . m_id = P_channel_id ;
+  	  P_CommandActionLst.push_back(P_CmdActionFactory.create(L_action_map));
   	  P_nb_action++ ;
   	  P_inserted = true ;
   	}
 	
   	if (P_nb_action != 0) {
  
-  	  T_CmdActionList::iterator L_cmdActionIt ;
-  	  int                       L_actionIdx = 0 ;
+  	  T_CommandActionLst::iterator L_cmdActionIt ;
+  	  int                          L_actionIdx = 0 ;
 	  
-  	  ALLOC_TABLE(P_CmdActionTable, T_pCmdAction, sizeof(T_CmdAction), P_nb_action);
+	  ALLOC_TABLE(P_CommandActionTable, 
+                      C_CommandAction**,
+                      sizeof(C_CommandAction*),
+                      P_nb_action);
 
-  	  for (L_cmdActionIt  = P_cmdActionList.begin();
-  	       L_cmdActionIt != P_cmdActionList.end();
+  	  for (L_cmdActionIt  = P_CommandActionLst.begin();
+  	       L_cmdActionIt != P_CommandActionLst.end();
   	       L_cmdActionIt++) {
-  	    L_actionData = *L_cmdActionIt ;
-  	    P_CmdActionTable[L_actionIdx] = *L_actionData ;
-  	    FREE_VAR(L_actionData) ;
+  	    P_CommandActionTable[L_actionIdx] = *L_cmdActionIt ;
   	    L_actionIdx ++ ;
   	  }
-  	  if (!P_cmdActionList.empty()) {
-  	    P_cmdActionList.erase(P_cmdActionList.begin(),P_cmdActionList.end());
+  	  if (!P_CommandActionLst.empty()) {
+  	    P_CommandActionLst.erase(P_CommandActionLst.begin(),P_CommandActionLst.end());
   	  }
 	  
-  	  // post action
-  	  P_scen -> define_post_actions(P_nb_action, P_CmdActionTable);
+          P_scen -> define_post_actions(P_nb_action, P_CommandActionTable);
   	}
 	
       }
@@ -2361,28 +2451,6 @@ void  C_ScenarioControl::update_wait_cmd (size_t P_nb,
   
 }
 
-void C_ScenarioControl::set_call_map(T_pCallMap *P_call_map) {
-  int L_i ;
-  if (m_abort_scen != NULL) {
-    m_abort_scen -> set_call_map (P_call_map);
-  }
-  if (m_traffic_scen != NULL) {
-    m_traffic_scen -> set_call_map (P_call_map);
-  }
-  if (m_save_traffic_scen != NULL) {
-    m_save_traffic_scen -> set_call_map (P_call_map) ;
-  }
-  if (m_init_scen != NULL) {
-    m_init_scen -> set_call_map (P_call_map);
-  }
-  if (m_nb_default != 0) {
-    for(L_i=0; L_i < m_nb_default; L_i++) {
-      m_default_scen[L_i] -> set_call_map (P_call_map);
-    }
-  }
-}
-
-
 bool C_ScenarioControl::fromXml (C_XmlData     *P_data, 
 				 bool           P_check_msg,
 				 bool          *P_data_mesure,
@@ -2757,19 +2825,16 @@ int C_ScenarioControl::check_channel_usage (T_pTrafficType P_channelUsageTable,
   return (L_ret) ;
 }
 
-int C_ScenarioControl::get_nb_scenario ()
-{
+int C_ScenarioControl::get_nb_scenario () {
   return (m_nb_scenario);
 }
 
 
-int C_ScenarioControl::get_nb_default_scenario ()
-{
+int C_ScenarioControl::get_nb_default_scenario () {
   return (m_nb_default);
 }
 
-int C_ScenarioControl::get_max_nb_retrans ()
-{
+int C_ScenarioControl::get_max_nb_retrans () {
 
   int L_i ;
   int L_res = 0 ;
@@ -2793,6 +2858,71 @@ int C_ScenarioControl::get_max_nb_retrans ()
   if (m_nb_default != 0) {
     for(L_i=0; L_i < m_nb_default ; L_i++) {
       L_res = m_default_scen[L_i]->get_nb_retrans();
+      if (L_res > L_max) { L_max = L_res ; }
+    }
+  }
+
+  return (L_max);
+}
+
+
+
+int C_ScenarioControl::get_max_nb_send () {
+
+  int L_i ;
+  int L_res = 0 ;
+  int L_max = 0 ;
+  if (m_abort_scen != NULL) {
+    L_res = m_abort_scen->get_nb_send_per_scen ();
+  }
+  if (L_res > L_max) { L_max = L_res ; }
+  if (m_traffic_scen != NULL) {
+    L_res = m_traffic_scen->get_nb_send_per_scen();
+  }
+  if (L_res > L_max) { L_max = L_res ; }
+  if (m_save_traffic_scen != NULL) {
+    L_res = m_save_traffic_scen->get_nb_send_per_scen();
+  }
+  if (L_res > L_max) { L_max = L_res ; }
+  if (m_init_scen != NULL) {
+    L_res = m_init_scen->get_nb_send_per_scen () ;
+  }
+  if (L_res > L_max) { L_max = L_res ; }
+  if (m_nb_default != 0) {
+    for(L_i=0; L_i < m_nb_default ; L_i++) {
+      L_res = m_default_scen[L_i]->get_nb_send_per_scen();
+      if (L_res > L_max) { L_max = L_res ; }
+    }
+  }
+
+  return (L_max);
+}
+
+
+int C_ScenarioControl::get_max_nb_recv () {
+
+  int L_i ;
+  int L_res = 0 ;
+  int L_max = 0 ;
+  if (m_abort_scen != NULL) {
+    L_res = m_abort_scen->get_nb_recv_per_scen ();
+  }
+  if (L_res > L_max) { L_max = L_res ; }
+  if (m_traffic_scen != NULL) {
+    L_res = m_traffic_scen->get_nb_recv_per_scen();
+  }
+  if (L_res > L_max) { L_max = L_res ; }
+  if (m_save_traffic_scen != NULL) {
+    L_res = m_save_traffic_scen->get_nb_recv_per_scen();
+  }
+  if (L_res > L_max) { L_max = L_res ; }
+  if (m_init_scen != NULL) {
+    L_res = m_init_scen->get_nb_recv_per_scen () ;
+  }
+  if (L_res > L_max) { L_max = L_res ; }
+  if (m_nb_default != 0) {
+    for(L_i=0; L_i < m_nb_default ; L_i++) {
+      L_res = m_default_scen[L_i]->get_nb_recv_per_scen();
       if (L_res > L_max) { L_max = L_res ; }
     }
   }

@@ -26,6 +26,7 @@
 #include "C_ReadControl.hpp"
 #include "C_XmlData.hpp"
 #include "C_ScenarioControl.hpp"
+#include "C_RemoteControl.hpp"
 
 #include "C_DisplayControl.hpp"
 #include "C_LogStatControl.hpp"
@@ -62,6 +63,7 @@ public:
   void restart_traffic () ;
   void force_init () ;
   void pause_display () ;
+  unsigned long get_call_rate() ;
   void change_call_rate(T_GenChangeOperation P_op, unsigned long P_rate);
   void change_rate_scale(unsigned long P_scale);
   void change_burst (unsigned long P_burst);
@@ -115,6 +117,11 @@ private:
 
   C_KeyboardControl       *m_keyboard_control ;
   bool                     m_do_keyboard_control ;
+
+
+  C_RemoteControl        *m_remote_control ;
+  bool                    m_do_remote_control ;
+  
 
   int                      m_nb_forced ;
   pthread_t               *m_keyboard_thread ;

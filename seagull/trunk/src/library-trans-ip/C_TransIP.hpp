@@ -64,18 +64,8 @@ public:
 			   T_pC_TransportEvent P_eventTable,
 			   size_t             *P_nb);
 
-//    size_t      send_buffer     (int                P_id, 
-//  			       unsigned char     *P_data, 
-//  			       size_t             P_size,
-//                                 T_SockAddrStorage *P_remote_sockaddr,
-//                                 tool_socklen_t    *P_len_remote_sockaddr);
-
   int         send_message    (int             P_id,
 			       C_MessageFrame *P_msg);
-
-  size_t      received_buffer (int             P_id, 
-			       unsigned char  *P_data,
-			       size_t          P_size_buf);
 
   bool        get_message (int P_id, T_pReceiveMsgContext P_ctxt) ;
 
@@ -90,43 +80,46 @@ protected:
 
   T_SocketType    m_trans_type ;
   T_SocketMap     m_socket_map ;
-  // T_IpAddrList    m_ip_addr_list  ;
 
   int             m_max_fd     ;
   
   T_IpAddrMap     m_ip_addr_map ;
 
-  virtual bool            analyze_init_string (char *P_buf) ;
-  void analyze_optional_init_string (char *P_buf) ;
-  bool            analyze_open_string (char *P_buf, T_pIpAddr P_addr) ;
-  virtual int     open                (int              P_channel_id, 
+  virtual bool      analyze_init_string (char *P_buf) ;
+  void              analyze_optional_init_string (char *P_buf) ;
+  bool              analyze_open_string (char *P_buf, T_pIpAddr P_addr) ;
+  virtual C_Socket* open              (int              P_channel_id, 
                                        T_pIpAddr        P_Addr,
                                        T_pOpenStatus    P_status,
                                        C_ProtocolBinaryFrame *P_protocol) ;
-  int             extract_ip_addr(T_pIpAddr P_pIpAddr);
-  int             resolve_addr(T_pIpAddr P_pIpAddr);
-  int             inet_addr   (char                   **P_addr, 
-			       T_SockAddrStorage       *P_AddrS);
+  int               extract_ip_addr(T_pIpAddr P_pIpAddr);
+  int               resolve_addr(T_pIpAddr P_pIpAddr);
+  int               inet_addr   (char                   **P_addr, 
+				 T_SockAddrStorage       *P_AddrS);
 
-  void            decode_from_protocol (C_Socket *P_socket);
+  void              decode_from_protocol (C_Socket *P_socket);
 
-  bool analyze_ulong_value (char* P_buf, 
-                            char* P_pattern,
-                            size_t* P_value);
+  bool              analyze_ulong_value (char* P_buf, 
+					 char* P_pattern,
+					 size_t* P_value);
 
-  bool analyze_string_value (char* P_buf, 
-                             char* P_pattern,
-                             char* P_value);
-
+  bool              analyze_string_value (char* P_buf, 
+					  char* P_pattern,
+					  char* P_value);
+  
   size_t                        m_buffer_size ;
 
-  size_t	                m_encode_buffer_size, m_decode_buffer_size, m_read_buffer_size ;
-  unsigned char                *m_encode_buffer, *m_decode_buffer ;
+  size_t	                m_encode_buffer_size, 
+                                m_decode_buffer_size, 
+                                m_read_buffer_size ;
+  unsigned char                *m_encode_buffer, 
+                               *m_decode_buffer ;
 
   list_t<T_SocketMap::iterator> m_delete_list ;
   list_t<C_Socket *>            m_insert_list ;
 
-  T_logFunction                 m_logError, m_logInfo ;
+  T_logFunction                 m_logError, 
+                                m_logInfo ;
 
 } ;
 

@@ -290,6 +290,7 @@ public:
 	* Dump data periodically in the file m_FileName
 	*/
   void dumpData ();
+  
 
   /**
    * initialize the class variable member
@@ -300,6 +301,8 @@ public:
   // void setCurrentScreen() ;
   void makeDisplay1 (bool P_display) ;
   void makeDisplay2 () ;
+
+  char *dumpCounters();
 
 private:
 
@@ -324,6 +327,7 @@ private:
   unsigned long            m_counters        [E_NB_COUNTER];
   unsigned long            m_displayCounters [E_NB_COUNTER];
   unsigned long            m_loggingCounters [E_NB_COUNTER];
+  unsigned long            m_remoteCounters  [E_NB_COUNTER];
 
   T_dynamicalRepartition*  m_ResponseTimeRepartition;
   T_dynamicalRepartition*  m_CallLengthRepartition;

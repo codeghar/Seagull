@@ -28,7 +28,7 @@ class C_TrafficModel {
 public:
 
   C_TrafficModel ();
-  ~C_TrafficModel ();
+  virtual ~C_TrafficModel ();
 
   /**
    * Initialization
@@ -70,8 +70,12 @@ public:
    *
    * @return a positive value if new calls are allowed, and zero if not
    */
-  int  authorize_new_call ();
+  virtual int  authorize_new_call () = 0 ;
+  
+  //  int  authorize_new_call_lis ();
+  long get_current_period_duration();
 
+  unsigned long get_desired_rate ();
   void change_desired_rate (unsigned long P_rate);
   void increase_desired_rate () ;
   void decrease_desired_rate () ;
@@ -79,9 +83,11 @@ public:
 
   void change_rate_scale (long P_rateScale) ;
   
-private:
-
+  //private:
+protected:
   void update() ;
+  void reset() ;
+  
   void re_init() ;
 
   C_Semaphore   *m_sem_desired ;

@@ -66,11 +66,11 @@ C_Generator::C_Generator(int P_argc, char**P_argv) : C_TaskControl() {
 
   NEW_VAR(m_scen_control, 
 	  C_ScenarioControl(m_protocol_ctrl,m_transport_ctrl, m_channel_ctrl));
-
   NEW_VAR(m_read_control, C_ReadControl(m_channel_ctrl, m_transport_ctrl));
 
   NEW_VAR(m_keyboard_control, C_KeyboardControl());
   m_do_keyboard_control = false ;
+
 
   m_nb_forced = 0 ;
 
@@ -120,6 +120,9 @@ C_Generator::~C_Generator() {
   DELETE_TABLE(m_log_protocol_stat_control);
 
 
+  DELETE_VAR(m_remote_control);
+  m_do_remote_control = false ;
+
   DELETE_VAR(m_keyboard_control);
   m_do_keyboard_control = false ;
 
@@ -163,6 +166,8 @@ T_GeneratorError C_Generator::TaskProcedure() {
   pthread_t              *L_logStatThread = NULL;
   pthread_t              *L_logDataThread = NULL;
   pthread_t             **L_logProtocolStatThread = NULL ;
+
+  pthread_t              *L_remoteThread = NULL;
   
   T_pEndTraceArg          L_arg           = NULL;
 
@@ -185,6 +190,11 @@ T_GeneratorError C_Generator::TaskProcedure() {
     L_arg -> m_thread = m_keyboard_thread ;
     
     use_trace_end(_gen_stop_controller, (void*)L_arg);
+  }
+
+  if (m_do_remote_control == true) {
+    m_remote_control->init();
+    L_remoteThread = start_thread_control(m_remote_control);
   }
 
   // start display control if needed
@@ -282,9 +292,6 @@ T_GeneratorError C_Generator::TaskProcedure() {
 	}
       }
     }
-
-
-
     
     m_display_control->init_screens();
     L_displayThread = start_thread_control(m_display_control);
@@ -306,7 +313,6 @@ T_GeneratorError C_Generator::TaskProcedure() {
   }
 
 
-
   // start log data control if needed
   if (m_do_data_log_control == true) {
     L_logDataThread = start_thread_control(m_data_log_control);
@@ -320,6 +326,11 @@ T_GeneratorError C_Generator::TaskProcedure() {
   if (m_do_keyboard_control == true) {
     m_keyboard_control -> stop () ;
   }
+
+  if (m_do_remote_control == true) {
+    m_remote_control -> stop () ;
+  }
+
   if (m_do_display_control == true) {
     m_display_control -> stop() ;
   }
@@ -343,6 +354,11 @@ T_GeneratorError C_Generator::TaskProcedure() {
     wait_thread_control_end (L_logStatThread);
   }
 
+  if (m_do_remote_control == true) {
+    wait_thread_control_end (L_remoteThread);
+  }
+
+
   GEN_DEBUG(1, "C_Generator::TaskProcedure() wait display end");
   if (m_do_display_control == true) {
     wait_thread_control_end (L_displayThread);
@@ -353,10 +369,9 @@ T_GeneratorError C_Generator::TaskProcedure() {
     wait_thread_control_end (m_keyboard_thread);
     FREE_VAR(L_arg);
   }
-  
+
   for (L_i = 0 ; L_i < m_nb_log_protocol_stat_control ; L_i++ ) {
     wait_thread_control_end(L_logProtocolStatThread[L_i]);
-    // FREE_VAR(L_logProtocolStatThread[L_i]);
   }
   FREE_TABLE(L_logProtocolStatThread);
 
@@ -381,7 +396,8 @@ T_GeneratorError C_Generator::InitProcedure() {
   int                              L_size_dico_file_list      ;
   list_t<char*>::iterator          L_it                       ;
 
-  
+  char                            *L_remote_cmd               ;
+
 
   string_t                         L_log_file("") ;
 
@@ -432,6 +448,8 @@ T_GeneratorError C_Generator::InitProcedure() {
   L_size_dico_file_list  = L_dico_file_list->size() ;
 
   L_check_msg = m_config -> get_check_msg () ;
+
+  L_remote_cmd = m_config -> get_remote_cmd () ;
 
 
 
@@ -790,7 +808,14 @@ T_GeneratorError C_Generator::InitProcedure() {
       }
     }
 
-
+    if (L_remote_cmd) {
+      char                    L_remote_address[80] ;
+      
+      snprintf(L_remote_address, 80, 
+               "mode=server;source=%s",L_remote_cmd); 
+      NEW_VAR(m_remote_control, C_RemoteControl(this,m_protocol_ctrl,L_remote_address)); // add a port
+      m_do_remote_control = true ; 
+    }
 
     if (m_config->get_display_protocol_stat()) {
       if (m_config->get_value (E_CFG_OPT_LOG_PROTOCOL_STAT_PERIOD, 
@@ -1161,6 +1186,15 @@ void C_Generator::force_init() {
   }
 }
 
+unsigned long C_Generator::get_call_rate() {
+  unsigned long L_ret = 0 ;
+  if (m_read_control != NULL) {
+    L_ret = m_read_control -> get_call_rate ();
+  }
+  return (L_ret);
+}
+
+
 void C_Generator::change_call_rate(T_GenChangeOperation P_op,
 				   unsigned long        P_rate) {
   if (m_read_control != NULL) {
@@ -1199,6 +1233,11 @@ void C_Generator::ExitProcedure () {
   if (m_do_log_stat_control == true) {
     m_log_stat_control -> stop() ;
   }
+
+  if (m_do_remote_control == true) {
+    m_remote_control -> stop () ;
+  }
+
   if (m_do_keyboard_control == true) {
     m_keyboard_control->force_end_procedure();
   }

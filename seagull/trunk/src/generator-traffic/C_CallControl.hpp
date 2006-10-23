@@ -44,10 +44,18 @@
 #include "ProtocolData.hpp"
 #include "ReceiveMsgContext.h"
 
+
+#include "C_TrafficDistribUniform.hpp"
+#include "C_TrafficDistribBestEffort.hpp"
+#include "C_TrafficDistribPoisson.hpp"
+
+
 typedef struct _event_recv {
   C_TransportEvent::T_TransportEvent_type m_type ;
   int                                     m_id   ;
 } T_EventRecv, *T_pEventRecv ;
+
+class C_ScenarioControl ;
 
 class C_CallControl : public C_TaskControl {
 
@@ -63,7 +71,7 @@ public:
   typedef map_t<int, T_pCallContext> T_SuspendMap, *T_pSuspendMap ;
 
    C_CallControl(C_GeneratorConfig    *P_config, 
-		 T_pC_ScenarioControl  P_scenControl,
+		 C_ScenarioControl    *P_scenControl,
 		 C_ChannelControl     *P_channel_ctrl);
   ~C_CallControl();
   
@@ -74,6 +82,7 @@ public:
   virtual void pause_traffic () ;
   virtual void restart_traffic () ;
           void force_init() ;
+  virtual unsigned long get_call_rate();
   virtual void change_call_rate(T_GenChangeOperation P_op,
 				unsigned long        P_rate);
   virtual void change_rate_scale(unsigned long P_scale);
@@ -81,6 +90,7 @@ public:
 
   T_GeneratorError close() ;
 
+  T_pCallMap* get_call_map () ;
   
 protected:
 
@@ -114,7 +124,7 @@ protected:
   T_EventRecvList     *m_event_list ;
 
   // scenario informations
-  T_pC_ScenarioControl m_scenario_control ;
+  C_ScenarioControl   *m_scenario_control ;
 
   // channel management
   C_ChannelControl    *m_channel_control ;
@@ -138,6 +148,10 @@ protected:
 
   unsigned long         *m_retrans_delay_values           ;
   size_t                 m_nb_retrans_delay_values        ;
+
+  int                    m_nb_send_per_scene              ;
+  int                    m_nb_recv_per_scene              ;
+
   
   // TaskController related methods
   T_GeneratorError TaskProcedure();
@@ -183,7 +197,7 @@ typedef C_CallControl * T_pC_CallControl ;
 class C_CallControlClient : public C_CallControl {
 public:
   C_CallControlClient(C_GeneratorConfig *P_config, 
-		      T_pC_ScenarioControl P_scenControl,
+		      C_ScenarioControl *P_scenControl,
 		      C_ChannelControl     *P_channel_ctrl) ;
   ~C_CallControlClient() ;
   
@@ -198,12 +212,22 @@ protected:
   void             restart_traffic() ;
 
 
+  unsigned long    get_call_rate();
   void             change_call_rate(T_GenChangeOperation P_op,
 				    unsigned long        P_rate);
   void             change_rate_scale(unsigned long P_scale);
   void             change_burst (unsigned long P_burst);
 
-  T_pTrafficModel  m_traffic_model ;
+  C_TrafficModel*  m_traffic_model ;
+
+
+  unsigned int            m_model_traffic_select        ;
+  typedef void           (C_CallControlClient::*T_Update_Param_Traffic)()    ;
+  T_Update_Param_Traffic  m_update_param_traffic        ;
+  void                    calculNilParamTraffic()       ;  
+  void                    calculUpdateParamTraffic()    ;  
+
+
   bool             m_outgoing_traffic ;
 
   long             m_call_rate, m_burst_limit ;

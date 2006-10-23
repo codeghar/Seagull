@@ -20,6 +20,7 @@
 #include "C_CallContext.hpp"
 #include "C_Scenario.hpp"
 #include "GeneratorTrace.hpp"
+#include "C_CallControl.hpp"
 
 #include "Utils.hpp"
 
@@ -88,8 +89,11 @@ void C_CallContext::reset_memory(int P_id) {
 }
   
 
-C_CallContext::C_CallContext(int P_id, int P_nbChannel, int P_mem, int P_nbRetrans) : C_ContextFrame() {
+C_CallContext::C_CallContext(C_CallControl *P_call_control,
+                             int P_id, int P_nbChannel, 
+                             int P_mem, int P_nbRetrans) : C_ContextFrame() {
   int L_i ;
+  m_call_control = P_call_control ;
   m_internal_call_id = P_id ;
   m_state = E_CTXT_ERROR ;
   m_scenario = NULL ;

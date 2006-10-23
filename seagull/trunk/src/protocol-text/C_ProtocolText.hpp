@@ -120,7 +120,7 @@ public:
                           char           *P_body);
 
 
-  // typedef T_pValueData (C_MessageText::* T_SessionMethod)(C_ContextFrame *P_void);
+  int find_field_id (char*P_name) ;
 
   typedef C_ProtocolFrame::T_MsgError 
   (C_MessageText::* T_BodyDecodeMethod)(int  P_index,
@@ -196,7 +196,6 @@ private:
   } T_DefMethod, *T_pDefMethod ;
   typedef list_t<T_DefMethod> T_DefMethodList, *T_pDefMethodList ;
 
-  int find_field_id (char*P_name) ;
 
   int xml_interpretor(C_XmlData *P_def,
                       char **P_name,

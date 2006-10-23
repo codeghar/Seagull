@@ -23,10 +23,13 @@
 #include "GeneratorError.h"
 #include "BufferUtils.hpp"
 #include "TimeUtils.hpp"
+#include "C_CommandAction.hpp"
 
 #include "C_ScenarioControl.hpp"
 
 #include "integer_t.hpp" // For strtoul_f
+
+  
 
 const char* command_name_table [] = {
   "send",
@@ -49,6 +52,7 @@ const char* action_name_table [] = {
   "check-value",
   "check-order",
   "set-new-session-id",
+  "transport-option",
   "E_NB_ACTION_SCEN",  // internal actions after this value
   "E_ACTION_SCEN_INTERNAL_INIT_DONE",
   "E_ACTION_SCEN_CHECK_ALL_MSG",
@@ -84,6 +88,9 @@ C_Scenario::C_Scenario (C_ScenarioControl     *P_scenario_control,
   m_retrans_enabled        = P_retrans_enabled ;
   m_nb_retrans = 0 ;
 
+  m_nb_send_per_scene = 0 ;
+  m_nb_recv_per_scene = 0 ;
+
   if (P_behaviour == NULL) {
     m_behaviour = E_BEHAVIOUR_SCEN_SUCCESS ;
   } else {
@@ -102,14 +109,10 @@ C_Scenario::C_Scenario (C_ScenarioControl     *P_scenario_control,
 
 }
 
-void C_Scenario::set_call_map (T_pCallMap *P_call_map) {
-  m_call_map_table = P_call_map ;
-}
-
 C_Scenario::~C_Scenario () {
 
   int          L_i;
-  int          L_j, L_k ;
+  int          L_j;
   GEN_DEBUG(1, "C_Scenario::~C_Scenario() start seq nb: " << m_sequence_max);
 
   if (m_sequence_max) {
@@ -121,59 +124,16 @@ C_Scenario::~C_Scenario () {
 
       if (m_cmd_sequence[L_i].m_pre_action != 0) {
 	for (L_j = 0 ; L_j < m_cmd_sequence[L_i].m_pre_action; L_j ++) {
-	  if (m_cmd_sequence[L_i].m_pre_act_table[L_j].m_type
-	      == E_ACTION_SCEN_SET_VALUE) {
-	    for(L_k = 0; 
-		L_k < m_cmd_sequence[L_i].m_pre_act_table[L_j].
-		  m_string_expr->m_nb_portion; L_k++) {
-	      if (m_cmd_sequence[L_i].m_pre_act_table[L_j].
-		  m_string_expr->m_portions[L_k].m_type
-		  == E_STR_STATIC) {
-		FREE_TABLE(m_cmd_sequence[L_i].m_pre_act_table[L_j].
-			   m_string_expr->m_portions[L_k].m_data.m_value);
-	      }
-	    }
-	    FREE_TABLE(m_cmd_sequence[L_i].m_pre_act_table[L_j].
-		       m_string_expr->m_portions);
-	    FREE_VAR(m_cmd_sequence[L_i].m_pre_act_table[L_j].
-		       m_string_expr);
-
-            // free regexp ???
-	    DELETE_VAR(m_cmd_sequence[L_i].m_pre_act_table[L_j].
-		       m_regexp_data);
-
-	  }
+          DELETE_VAR(m_cmd_sequence[L_i].m_pre_action_table[L_j]);
 	}
-	FREE_TABLE(m_cmd_sequence[L_i].m_pre_act_table);
+        FREE_TABLE(m_cmd_sequence[L_i].m_pre_action_table);
       }
 
       if (m_cmd_sequence[L_i].m_post_action != 0) {
 	for (L_j = 0 ; L_j < m_cmd_sequence[L_i].m_post_action; L_j ++) {
-	  if (m_cmd_sequence[L_i].m_post_act_table[L_j].m_type
-	      == E_ACTION_SCEN_SET_VALUE) {
-	    for(L_k = 0; 
-		L_k < m_cmd_sequence[L_i].m_post_act_table[L_j].
-		  m_string_expr->m_nb_portion; L_k++) {
-	      if (m_cmd_sequence[L_i].m_post_act_table[L_j].
-		  m_string_expr->m_portions[L_k].m_type
-		  == E_STR_STATIC) {
-		FREE_TABLE(m_cmd_sequence[L_i].m_post_act_table[L_j].
-			   m_string_expr->m_portions[L_k].m_data.m_value);
-	      }
-	    }
-
-	    FREE_TABLE(m_cmd_sequence[L_i].m_post_act_table[L_j].
-		       m_string_expr->m_portions);
-	     FREE_VAR(m_cmd_sequence[L_i].m_post_act_table[L_j].
-		       m_string_expr);
-
-             // free regexp
-	    DELETE_VAR(m_cmd_sequence[L_i].m_post_act_table[L_j].
-		       m_regexp_data);
-
-	  }
+          DELETE_VAR(m_cmd_sequence[L_i].m_post_action_table[L_j]);
 	}
-	FREE_TABLE(m_cmd_sequence[L_i].m_post_act_table);
+        FREE_TABLE(m_cmd_sequence[L_i].m_post_action_table);
       }
 
     }
@@ -185,6 +145,10 @@ C_Scenario::~C_Scenario () {
   m_stats = NULL ;
 
   m_nb_retrans = 0 ;
+
+  m_nb_send_per_scene = 0 ;
+  m_nb_recv_per_scene = 0 ;
+
 
   GEN_DEBUG(1, "C_Scenario::~C_Scenario() end");
 }
@@ -316,7 +280,7 @@ T_exeCode C_Scenario::execute_cmd (T_pCallContext P_callCtxt,
 	L_exeCode = execute_action(L_pCmd, P_callCtxt, 
 				   L_sendMsg, 
 				   L_pCmd->m_pre_action,
-				   L_pCmd->m_pre_act_table,
+				   L_pCmd->m_pre_action_table,
 				   L_pCmd->m_message) ;
       }
     } else {
@@ -363,7 +327,7 @@ T_exeCode C_Scenario::execute_cmd (T_pCallContext P_callCtxt,
 	L_exeCode = execute_action(L_pCmd, P_callCtxt, 
 				   L_sendMsg, 
 				   L_pCmd->m_post_action,
-				   L_pCmd->m_post_act_table,
+				   L_pCmd->m_post_action_table,
 				   L_pCmd->m_message) ;
       }
     }
@@ -412,7 +376,7 @@ T_exeCode C_Scenario::execute_cmd (T_pCallContext P_callCtxt,
 	    L_exeCode = execute_action(L_pCmd, P_callCtxt, 
 				       L_msgReceived,
 				       L_pCmd->m_pre_action,
-				       L_pCmd->m_pre_act_table,
+				       L_pCmd->m_pre_action_table,
 				       L_pCmd->m_message) ;
 	  }
 	}
@@ -423,7 +387,7 @@ T_exeCode C_Scenario::execute_cmd (T_pCallContext P_callCtxt,
 	    L_exeCode = execute_action(L_pCmd, P_callCtxt, 
 				       L_msgReceived, 
 				       L_pCmd->m_post_action,
-				       L_pCmd->m_post_act_table,
+				       L_pCmd->m_post_action_table,
 				       L_pCmd->m_message) ;
 	  }
 	  
@@ -522,7 +486,7 @@ T_exeCode C_Scenario::execute_cmd (T_pCallContext P_callCtxt,
 	L_exeCode = execute_action(L_pCmd, P_callCtxt, 
 				   NULL,
 				   L_pCmd->m_pre_action,
-				   L_pCmd->m_pre_act_table,
+				   L_pCmd->m_pre_action_table,
 				   L_pCmd->m_message) ;
       }
       if (L_exeCode == E_EXE_NOERROR) {
@@ -530,7 +494,7 @@ T_exeCode C_Scenario::execute_cmd (T_pCallContext P_callCtxt,
 	  L_exeCode = execute_action(L_pCmd,P_callCtxt, 
 				     NULL, 
 				     L_pCmd->m_post_action,
-				     L_pCmd->m_post_act_table,
+				     L_pCmd->m_post_action_table,
 				     L_pCmd->m_message) ;
 	}
       }
@@ -594,9 +558,10 @@ void C_Scenario::set_size (size_t P_size) {
 }
 
 
+
 size_t C_Scenario::define_post_actions  
 (int          P_nb_post_action,
- T_pCmdAction P_post_act_table) {
+ C_CommandAction** P_post_act_table) {
 
   GEN_DEBUG(1, "C_Scenario::define_post_actions() start");
 
@@ -605,7 +570,7 @@ size_t C_Scenario::define_post_actions
     if ((P_nb_post_action != 0) && (P_post_act_table != NULL)) {
       delete_post_actions(m_sequence_max-1);
       L_cmd_sequence->m_post_action = P_nb_post_action ;
-      L_cmd_sequence->m_post_act_table = P_post_act_table ;
+      L_cmd_sequence->m_post_action_table = P_post_act_table ;
     }
   }
 
@@ -616,17 +581,16 @@ size_t C_Scenario::define_post_actions
 
 
 size_t C_Scenario::define_pre_actions  
-(int          P_nb_pre_action,
- T_pCmdAction P_pre_act_table) {
+(int               P_nb_pre_action,
+ C_CommandAction** P_pre_act_table) {
 
   GEN_DEBUG(1, "C_Scenario::define_post_actions() start");
 
   if (m_sequence_max-1 >= 0) {
     T_pCmd_scenario L_cmd_sequence = &(m_cmd_sequence[m_sequence_max-1]) ;
     if ((P_nb_pre_action != 0) && (P_pre_act_table != NULL)) {
-      //      delete_post_actions(m_sequence_max-1);
       L_cmd_sequence->m_pre_action = P_nb_pre_action ;
-      L_cmd_sequence->m_pre_act_table = P_pre_act_table ;
+      L_cmd_sequence->m_pre_action_table = P_pre_act_table ;
     }
   }
 
@@ -642,7 +606,7 @@ size_t C_Scenario::add_cmd  (T_cmd_type          P_type,
 			     int                 P_channel_id,
 	                     T_pC_MessageFrame   P_msg,
 			     int                 P_nb_pre_action,
-			     T_pCmdAction        P_pre_act_table,
+			     C_CommandAction**   P_pre_act_table,
                              unsigned long       P_retrans_delay) {
 
   GEN_DEBUG(1, "C_Scenario::add_cmd() start");
@@ -652,6 +616,19 @@ size_t C_Scenario::add_cmd  (T_cmd_type          P_type,
     T_pCmd_scenario L_cmd_sequence = &(m_cmd_sequence[m_sequence_max]) ;
 
     L_cmd_sequence->m_type = P_type ;
+    switch (P_type) {
+
+    case E_CMD_SCEN_SEND: 
+      m_nb_send_per_scene++;
+      break ;
+      
+    case E_CMD_SCEN_RECEIVE:
+      m_nb_recv_per_scene++;
+      break ;
+    default :
+      break;
+    }
+
     L_cmd_sequence->m_message = P_msg ;
     L_cmd_sequence->m_channel_id = P_channel_id ;
 
@@ -673,13 +650,13 @@ size_t C_Scenario::add_cmd  (T_cmd_type          P_type,
 
     if ((P_nb_pre_action != 0) && (P_pre_act_table != NULL)) {
       L_cmd_sequence->m_pre_action = P_nb_pre_action ;
-      L_cmd_sequence->m_pre_act_table = P_pre_act_table ;
+      L_cmd_sequence->m_pre_action_table = P_pre_act_table ;
     } else {
       L_cmd_sequence->m_pre_action = 0 ;
-      L_cmd_sequence->m_pre_act_table = NULL ;
+      L_cmd_sequence->m_pre_action_table = NULL ;
     }
     L_cmd_sequence->m_post_action = 0 ;
-    L_cmd_sequence->m_post_act_table = NULL ;
+    L_cmd_sequence->m_post_action_table = NULL ;
 
     m_sequence_max++ ;
     GEN_DEBUG(1, "C_Scenario::add_cmd() end");
@@ -699,9 +676,9 @@ size_t C_Scenario::add_cmd  (T_cmd_type    P_type,
     L_cmd_sequence->m_duration = P_duration ;
 
     L_cmd_sequence->m_pre_action = 0 ;
-    L_cmd_sequence->m_pre_act_table = NULL ;
+    L_cmd_sequence->m_pre_action_table = NULL ;
     L_cmd_sequence->m_post_action = 0 ;
-    L_cmd_sequence->m_post_act_table = NULL ;
+    L_cmd_sequence->m_post_action_table = NULL ;
 
     L_cmd_sequence->m_retrans_delay = 0 ;
     L_cmd_sequence->m_retrans_index = 0 ;
@@ -723,9 +700,9 @@ size_t C_Scenario::add_cmd  (T_cmd_type    P_type) {
     L_cmd_sequence->m_type = P_type ;
 
     L_cmd_sequence->m_pre_action = 0 ;
-    L_cmd_sequence->m_pre_act_table = NULL ;
+    L_cmd_sequence->m_pre_action_table = NULL ;
     L_cmd_sequence->m_post_action = 0 ;
-    L_cmd_sequence->m_post_act_table = NULL ;
+    L_cmd_sequence->m_post_action_table = NULL ;
 
     L_cmd_sequence->m_retrans_delay = 0 ;
     L_cmd_sequence->m_retrans_index = 0 ;
@@ -774,794 +751,30 @@ T_exeCode C_Scenario::execute_action(T_pCmd_scenario P_pCmd,
 				     T_pCallContext  P_callCtxt,
 				     C_MessageFrame *P_msg,
 				     int             P_nbActions,
-				     T_pCmdAction    P_actions,
+				     C_CommandAction** P_actions,
 				     C_MessageFrame *P_ref) {
 
   T_exeCode           L_exeCode = E_EXE_NOERROR ;
-  int                 L_i, L_j ;
-  T_pCmdAction        L_current_action;
-  static char         L_tmp_string [250] ;
-  static char         L_tmp_string_filled [250] ;
-  char               *L_ptr ;
-  size_t              L_size, L_current_size ;
-  bool                L_reset_value = false ;
-  long                L_time_ms ;
-  bool                L_check_result ;
+  int                 L_i ;
 
-  int                 L_id ;
+  C_CommandAction*    L_current_action;
 
-  bool                L_suspend = false ;
-  T_OpenStatus        L_openStatus ;
-  struct timezone     L_timeZone ;
-
-  char *L_values, *L_chr, *L_end_ptr ;
-  unsigned long    L_value ;
 
   GEN_DEBUG(1, "C_Scenario::execute_action() start");
   GEN_DEBUG(1, "C_Scenario::execute_action() P_nbActions is " << 
 		  P_nbActions);
 
-
   for (L_i = 0; L_i < P_nbActions ; L_i++) {
 
-    L_current_action = &P_actions[L_i] ;
-
-
-    GEN_DEBUG(1, "C_Scenario::execute_action() action type["
-	      << L_i << "] is \"" 
-	      << action_name_table[L_current_action->m_type] 
-	      << "\" (" << L_current_action->m_type << ")"
-	      );
-
-
-    switch (L_current_action->m_type) {
-
-    case E_ACTION_SCEN_OPEN :
-
-      L_id = m_channel_ctrl->open_local_channel(P_pCmd->m_channel_id,
-                                                L_current_action->m_args,
- 						P_callCtxt->m_channel_table,
- 						&L_openStatus);
-
-						
-      if (L_id != -1) {
-
-	if (L_openStatus == E_OPEN_DELAYED) {
-	  L_suspend = true ;
-	  P_callCtxt->m_suspend_id = L_id ;
-	  P_callCtxt->m_suspend_msg = P_msg ;
-          P_callCtxt->m_channel_id   = P_pCmd->m_channel_id ;
-          P_callCtxt->m_channel_received   = P_callCtxt->m_channel_id ;
-	  gettimeofday(&P_callCtxt->m_current_time, &L_timeZone) ;
-	  // OPEN DELAYED => do not execute the command
-	  // just wait for open
-	}
-
-      } else {
-	GEN_ERROR(E_GEN_FATAL_ERROR, "Open failed");
-  	L_exeCode = E_EXE_ERROR ;
-  	break ;
-      }
-      break ; 
-
-    case E_ACTION_SCEN_CLOSE :
-
-      // m_channel_ctrl->close_local_channel(P_pCmd->m_channel_id, NULL);
-      m_channel_ctrl->close_local_channel(P_pCmd->m_channel_id, P_callCtxt->m_channel_table);
-      break ;
-
-    case E_ACTION_SCEN_MEMORY_STORE : {
-      T_pValueData L_mem = NULL ;
-      int            L_size ;
-
-      P_callCtxt->reset_memory(L_current_action->m_mem_id) ;
-
-      GEN_DEBUG(2, "store memory id = " << L_current_action->m_mem_id);
-      GEN_DEBUG(2, "store field id = " << L_current_action->m_id);
-
-      L_mem = P_callCtxt->get_memory(L_current_action->m_mem_id);
-
-      L_size = L_current_action->m_size ;
-
-      if (L_size != -1) {
-	// string or binary type
-	T_ValueData L_val ;
-	L_val.m_type = E_TYPE_NUMBER ;
-
-
-	if (P_msg -> get_field_value(L_current_action->m_id, 
-                                     L_current_action->m_instance_id,
-                                     L_current_action->m_sub_id,
-                                     &L_val) == true) {
-
-          if (L_size > ((int)L_val.m_value.m_val_binary.m_size-L_current_action->m_begin)) {
-            
-            GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-                          action_name_table[L_current_action->m_type] 
-                          << ": the size desired  ["
-                          << L_size << "] exceed the length of buffer ["
-                          << (L_val.m_value.m_val_binary.m_size - L_current_action->m_begin) << "]");
-            
-            GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-                          "error on call with session-id ["
-                          << P_callCtxt->m_id_table[P_pCmd->m_channel_id] << "]");
-            
-            resetMemory(L_val);
-            L_exeCode = E_EXE_ERROR;
-          } else {
-            L_mem->m_value.m_val_binary.m_size = L_size ;
-            L_mem->m_type = L_val.m_type ;
-            
-            ALLOC_TABLE(L_mem->m_value.m_val_binary.m_value,
-                        unsigned char*,
-                        sizeof(unsigned char),
-                        L_size);
-            
-            extractBinaryVal(*L_mem, L_current_action->m_begin, L_size,
-                             L_val);
-            
-            resetMemory(L_val);
-          }
-        } else {
-	  GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-                        action_name_table[L_current_action->m_type] 
-                        << ": the value of the field asked is incorrect or not found");
-	  
-	  GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-			"error on call with session-id ["
-			<< P_callCtxt->m_id_table[P_pCmd->m_channel_id] << "]");
-          
-	  L_exeCode = E_EXE_ERROR;
-        }
-      } else {
-
-        if (L_current_action->m_regexp_data != NULL) {
-          if (P_msg -> get_field_value(L_current_action->m_id, 
-                                       L_current_action->m_regexp_data,
-                                       L_mem) == false) {
-            
-            GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-                          action_name_table[L_current_action->m_type] 
-                          << ": the value of the field asked is incorrect or not found");
-            
-            GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-                          "error on call with session-id ["
-                          << P_callCtxt->m_id_table[P_pCmd->m_channel_id] << "]");
-            
-            L_exeCode = E_EXE_ERROR;
-          }
-        } else {
-          if (P_msg -> get_field_value(L_current_action->m_id, 
-                                       L_current_action->m_instance_id,
-                                       L_current_action->m_sub_id,
-                                       L_mem) == false) {
-            
-            GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-                          action_name_table[L_current_action->m_type] 
-                          << ": the value of the field asked is incorrect or not found");
-            
-            GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-                          "error on call with session-id ["
-                          << P_callCtxt->m_id_table[P_pCmd->m_channel_id] << "]");
-            
-            L_exeCode = E_EXE_ERROR;
-          }
-        }
-
-      }
-    }
-
-      break ;
-
-    case E_ACTION_SCEN_MEMORY_RESTORE : {
-      
-      T_pValueData L_mem ;
-      int          L_size  ;
-
-      GEN_DEBUG(2, "restore memory id = " << L_current_action->m_mem_id);
-      GEN_DEBUG(2, "restore field id = " << L_current_action->m_id);
-
-      L_mem = P_callCtxt->get_memory(L_current_action->m_mem_id);
-
-      L_size = L_current_action->m_size ;
-
-      if (L_size != -1) {
-	T_ValueData           L_val ;
-	L_val.m_type = E_TYPE_NUMBER ;
-
-        if (L_mem->m_value.m_val_binary.m_size == 0) {
-          GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR,
-                        action_name_table[L_current_action->m_type] 
-                        << " action: you use a memory zone that was not previously stored");
-          break ;
-        }
-
-	// RETRIEVE the data 
-	if (P_msg -> get_field_value(L_current_action->m_id, 
-				 L_current_action->m_instance_id,
-				 L_current_action->m_sub_id,
-                                     &L_val) == true) {
-
-          if (L_size > (int)L_val.m_value.m_val_binary.m_size) {
-            GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR,
-                          action_name_table[L_current_action->m_type] 
-                          << ": the size desired  ["
-                          << L_size << "] exceed the length of buffer ["
-                          << L_val.m_value.m_val_binary.m_size << "]");
-            L_size = L_val.m_value.m_val_binary.m_size ;
-          }
-
-          copyBinaryVal(L_val, L_current_action->m_begin, L_size,
-                        *L_mem);
-
-          if (P_msg -> set_field_value(&L_val, 
-                                       L_current_action->m_id,
-                                       L_current_action->m_instance_id,
-                                       L_current_action->m_sub_id) == false ) {
-
-            GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-                          action_name_table[L_current_action->m_type] 
-                          << ": problem when set field value");
-            
-            GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-                          "error on call with session-id ["
-                          << P_callCtxt->m_id_table[P_pCmd->m_channel_id] << "]");
-            
-            L_exeCode = E_EXE_ERROR;
-          }
-          resetMemory(L_val);
-        } else {
-	  GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-                        action_name_table[L_current_action->m_type] 
-                        << ": the value of the field asked is incorrect or not found");
-	  
-	  GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-			"error on call with session-id ["
-			<< P_callCtxt->m_id_table[P_pCmd->m_channel_id] << "]");
-          
-	  L_exeCode = E_EXE_ERROR;
-        }
-      } else {
-        if (P_msg -> set_field_value(L_mem, 
-			         L_current_action->m_id,
-			         L_current_action->m_instance_id,
-                                     L_current_action->m_sub_id) == false ) {
-
-          GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-                        action_name_table[L_current_action->m_type] 
-                        << ": problem when set field value");
-          
-          GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-                        "error on call with session-id ["
-                        << P_callCtxt->m_id_table[P_pCmd->m_channel_id] << "]");
-          
-          L_exeCode = E_EXE_ERROR;
-        }
-      }
-    }
-
-      break ;
-
-    case E_ACTION_SCEN_START_TIMER :
-      
-      P_callCtxt->m_start_time = P_callCtxt->m_current_time ;
-      break ;
-
-    case E_ACTION_SCEN_STOP_TIMER : 
-
-      GEN_DEBUG(1, "C_Scenario::execute_action() E_ACTION_SCEN_STOP_TIMER " << 
-		    m_log);
-      L_time_ms = 
-	ms_difftime(&P_callCtxt->m_current_time, 
-		    &P_callCtxt->m_start_time);
-      m_stat->executeStatAction (C_GeneratorStats::E_ADD_RESPONSE_TIME_DURATION,
-				 L_time_ms) ;
-      if (m_log) {
-	// return exec => PB no memory available
-	m_log->time_data(&P_callCtxt->m_start_time, 
-			 &P_callCtxt->m_current_time);
-      }
-      break ;
-
-    case E_ACTION_SCEN_SET_VALUE: {
-      
-      T_ValueData L_mem ;
-      L_mem.m_type = E_TYPE_NUMBER ;
-
-      L_mem.m_type = P_msg->get_field_type(L_current_action->m_id,0);
-
-      switch (L_mem.m_type) {
-
-      case E_TYPE_NUMBER:
-	L_mem.m_value.m_val_number = m_controller->get_counter_value
-	  (L_current_action->m_string_expr->m_portions[0].m_data.m_id) ;
-	break ;
-
-      case E_TYPE_SIGNED:
-	L_mem.m_value.m_val_signed = (T_Integer32) m_controller->get_counter_value
-	  (L_current_action->m_string_expr->m_portions[0].m_data.m_id) ;
-	break ;
-
-      case E_TYPE_STRING:
-	L_tmp_string[0] = '\0' ;
-	L_ptr = L_tmp_string ;
-	L_size = 0 ;
-	for (L_j = 0 ;
-	     L_j < L_current_action->m_string_expr->m_nb_portion;
-	     L_j ++) {
-	  switch (L_current_action->m_string_expr->m_portions[L_j].m_type) {
-	  case E_STR_STATIC:
-	    strcpy(L_ptr, 
-		   L_current_action
-		   ->m_string_expr->m_portions[L_j].m_data.m_value);
-	    L_current_size = strlen(L_ptr) ;
-	    L_size += L_current_size ;
-	    L_ptr += L_current_size ;
-	    break ;
-	  case E_STR_COUNTER:
-	    sprintf(L_ptr, "%ld", 
-		    m_controller->get_counter_value
-		    (L_current_action->m_string_expr
-		     ->m_portions[L_j].m_data.m_id)) ;
-	    L_current_size = strlen(L_ptr);
-	    L_size += L_current_size;
-	    L_ptr += L_current_size;
-	    break ;
-	  }
-	}
-	L_mem.m_value.m_val_binary.m_size = L_size ;
-	L_mem.m_value.m_val_binary.m_value 
-	  = (unsigned char *) L_tmp_string;
-
-        if (L_current_action->m_size != -1) {
-          if (L_current_action->m_size > (int)L_size) {
-            int L_filled_size = L_current_action->m_size - L_size ;
-            int L_fill_idx = 0 ;
-            memcpy(L_tmp_string_filled+L_filled_size,
-                   L_tmp_string,
-                   L_size);
-            
-            while ((L_fill_idx+(L_current_action->m_pattern_size)) > L_filled_size) {
-              memcpy(L_tmp_string_filled+L_fill_idx,
-                     L_current_action->m_pattern,
-                     L_current_action->m_pattern_size);
-              L_fill_idx += L_current_action->m_pattern_size ;
-            }
-            L_mem.m_value.m_val_binary.m_size = L_current_action->m_size ;
-            L_mem.m_value.m_val_binary.m_value 
-              = (unsigned char *) L_tmp_string_filled;
-            
-          }
-        }
-
-	L_reset_value = true ;
-	
-	break;
-	
-	case E_TYPE_STRUCT:{ 
-
-	  // P_instance,
-	  // P_sub_id
-
-	  P_msg -> get_field_value(L_current_action->m_id, 
-				   0,0,
-				   // L_current_action->m_instance_id,
-				   // L_current_action->m_sub_id,
-				   &L_mem);
-	  switch (L_current_action->m_string_expr->m_nb_portion) {
-	  case 1:
-	    L_values = L_current_action->m_string_expr->m_portions[0].m_data.m_value ;
-	    L_chr = strrchr(L_values, ';');
-	    if (L_values == L_chr) {
-	      // L_mem.m_value.m_val_struct.m_id_1 not setted 
-	      if (*(L_chr+1) != '\0') {
-		L_value = strtoul_f (L_chr+1, &L_end_ptr, 10);
-		if (L_end_ptr[0] == '\0') { // good format
-		  L_mem.m_value.m_val_struct.m_id_2
-		    = L_value ;
-		}
-	      }
-	      
-	    } else {
-	      *L_chr = '\0';
-	      L_value = strtoul_f (L_values, &L_end_ptr, 10);
-	      if (L_end_ptr[0] == '\0') { // good format
-		L_mem.m_value.m_val_struct.m_id_1
-		  = L_value ;
-	      }
-	      if (*(L_chr+1) != '\0') {
-		L_value = strtoul_f (L_chr+1, &L_end_ptr, 10);
-		if (L_end_ptr[0] == '\0') { // good format
-		  L_mem.m_value.m_val_struct.m_id_2
-		    = L_value ;
-		}
-	      }
-	      *L_chr = ';' ; 
-	    }
-	    break ;
-	    
-	  case 2:
-	    if (L_current_action->m_string_expr->m_portions[0].m_type == E_STR_COUNTER){
-	      L_mem.m_value.m_val_struct.m_id_1 = m_controller->get_counter_value
-		(L_current_action->m_string_expr->m_portions[0].m_data.m_id) ;
-	      L_values = L_current_action->m_string_expr->m_portions[1].m_data.m_value ;
-	      L_chr = strrchr(L_values, ';');
-	      if (*(L_chr+1) != '\0') {
-		L_value = strtoul_f (L_chr+1, &L_end_ptr, 10);
-		if (L_end_ptr[0] == '\0') { // good format
-		  L_mem.m_value.m_val_struct.m_id_2
-		    = L_value ;
-		}
-	      }
-	      
-	    } else {
-	      
-	      L_values = L_current_action->m_string_expr->m_portions[0].m_data.m_value ;
-	      L_chr = strrchr(L_values, ';');
-	      if (L_values != L_chr) {
-		*L_chr = '\0' ;      
-		L_value = strtoul_f (L_values, &L_end_ptr, 10);
-		if (L_end_ptr[0] == '\0') { // good format
-		  L_mem.m_value.m_val_struct.m_id_1
-		    = L_value ;
-		}
-		*L_chr = ';' ;      
-	      }
-	      L_mem.m_value.m_val_struct.m_id_2 = m_controller->get_counter_value
-		(L_current_action->m_string_expr->m_portions[1].m_data.m_id) ;
-	      
-	    } 
-	    
-	    break ;
-	  case 3:
-	    L_mem.m_value.m_val_struct.m_id_1 = m_controller->get_counter_value
-	      (L_current_action->m_string_expr->m_portions[0].m_data.m_id) ;
-	    L_mem.m_value.m_val_struct.m_id_2 = m_controller->get_counter_value
-	      (L_current_action->m_string_expr->m_portions[2].m_data.m_id) ;
-	    break ;
-	  default:
-	    break ;
-	  }
-	}
-	  break ;
-
-      case E_TYPE_NUMBER_64:
-	L_mem.m_value.m_val_number_64 = (T_UnsignedInteger64) m_controller->get_counter_value
-	  (L_current_action->m_string_expr->m_portions[0].m_data.m_id) ;
-	break ;
-
-      case E_TYPE_SIGNED_64:
-	L_mem.m_value.m_val_signed_64 = (T_Integer64) m_controller->get_counter_value
-	  (L_current_action->m_string_expr->m_portions[0].m_data.m_id) ;
-	break ;
-
-	default:
-	  GEN_FATAL(E_GEN_FATAL_ERROR, "Unsupported type for action execution");
-	  break ;
-	}
-
-
-        if (P_msg->set_field_value(&L_mem, 
-                                   L_current_action->m_id,
-                                   L_current_action->m_instance_id,
-                                   L_current_action->m_sub_id) == false ) {
-
-          GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-                        action_name_table[L_current_action->m_type] 
-                        << ": problem when set field value");
-          
-          GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-                        "error on call with session-id ["
-                        << P_callCtxt->m_id_table[P_pCmd->m_channel_id] << "]");
-          
-          L_exeCode = E_EXE_ERROR;
-
-        }
-
-  	if (L_reset_value == true) {
-  	  L_mem.m_type = E_TYPE_NUMBER ;
-  	}
-
-    }
-      break ;
-
-    case E_ACTION_SCEN_INC_COUNTER :
-      m_controller->increase_counter(L_current_action->m_id) ;
-      break ;
-
-    case E_ACTION_SCEN_CHECK_PRESENCE:
-      L_check_result 
-	= P_msg->check_field_presence 
-	(L_current_action->m_id,
-	 L_current_action->m_check_behaviour,
-	 L_current_action->m_instance_id,
-	 L_current_action->m_sub_id);
-      if (L_check_result == false) {
-	GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-		      "Presence check error on call with session-id ["
-		      << P_callCtxt->m_id_table[P_pCmd->m_channel_id] << "]");
-        switch (L_current_action->m_check_behaviour) {
-        case E_CHECK_BEHAVIOUR_ERROR :
-          L_exeCode = E_EXE_ERROR_CHECK ;
-          break;
-        case E_CHECK_BEHAVIOUR_ABORT:
-          L_exeCode = E_EXE_ABORT_CHECK ;
-          break;
-        default:
-          break;
-        }
-      }
-      break ;
-
-    case E_ACTION_SCEN_GET_EXTERNAL_DATA : {
-      T_pValueData L_value ;
-      int          L_size  ;
-      
-      L_value = m_external_data->get_value(P_callCtxt->m_selected_line, 
-					   L_current_action->m_field_data_num);
-
-      if (L_value != NULL) {
-        L_size = L_current_action->m_size ;
-
-        if (L_size != -1) {
-          // binary or string type
-          T_ValueData           L_val ;
-          L_val.m_type = E_TYPE_NUMBER ;
-          
-          if (L_size > (int)L_value->m_value.m_val_binary.m_size) {
-            GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR,
-                          action_name_table[L_current_action->m_type] 
-                          << ": the size desired  ["
-                          << L_size << "] exceed the length of buffer ["
-                          << L_value->m_value.m_val_binary.m_size << "]");
-            L_size = L_value->m_value.m_val_binary.m_size ;
-          }
-          
-          if (P_msg -> get_field_value(L_current_action->m_id, 
-				 L_current_action->m_instance_id,
-                                       L_current_action->m_sub_id,
-                                       &L_val) == true) {
-            
-            copyBinaryVal(L_val, L_current_action->m_begin, L_size,
-                          *L_value);
-            
-            if (P_msg -> set_field_value(&L_val, 
-                                     L_current_action->m_id,
-                                     L_current_action->m_instance_id,
-                                         L_current_action->m_sub_id) == false ) {
-
-              GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-                            action_name_table[L_current_action->m_type] 
-                            << ": problem when set field value");
-              
-              GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-                            "error on call with session-id ["
-                            << P_callCtxt->m_id_table[P_pCmd->m_channel_id] << "]");
-              
-              L_exeCode = E_EXE_ERROR;
-            }
-            resetMemory(L_val);
-
-          } else {
-            GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-                          action_name_table[L_current_action->m_type] 
-                          << ": the value of the field asked is incorrect or not found");
-            
-            GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-                          "error on call with session-id ["
-                          << P_callCtxt->m_id_table[P_pCmd->m_channel_id] << "]");
-            L_exeCode = E_EXE_ERROR;
-          }
-        } else {
-          if (P_msg -> set_field_value(L_value, 
-                                       L_current_action->m_id,
-                                       L_current_action->m_instance_id,
-                                       L_current_action->m_sub_id) == false) {
-            
-            GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-                          action_name_table[L_current_action->m_type] 
-                          << ": problem when set field value");
-            
-            GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-                          "error on call with session-id ["
-                          << P_callCtxt->m_id_table[P_pCmd->m_channel_id] << "]");
-            
-            L_exeCode = E_EXE_ERROR;
-          }
-        }
-      } else {
-        GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-                      action_name_table[L_current_action->m_type] 
-                      << ": the value of the field asked is incorrect or not found");
-        
-        GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-                      "error on call with session-id ["
-                      << P_callCtxt->m_id_table[P_pCmd->m_channel_id] << "]");
-        L_exeCode = E_EXE_ERROR;
-      }
-    }
-    break ;
-    
-    case E_ACTION_SCEN_INC_VAR: {
-      
-      T_pValueData L_mem ;
-      L_mem = P_callCtxt->get_memory(L_current_action->m_mem_id);
-
-      switch (L_mem->m_type) {
-	
-      case E_TYPE_NUMBER:
-	L_mem->m_value.m_val_number = L_mem->m_value.m_val_number ++ ;
-	break ;
-	
-      default:
-	GEN_FATAL(E_GEN_FATAL_ERROR, "Unsupported type [" << L_mem->m_type << "] for increment function");
-	break ;
-	
-      }
-    }
-    break ;
-
-    case E_ACTION_SCEN_CHECK_VALUE:
-      L_check_result 
-	= P_msg->check_field_value 
-	(P_ref,
-	 L_current_action->m_id,
-	 L_current_action->m_check_behaviour,
-	 L_current_action->m_instance_id,
-	 L_current_action->m_sub_id);
-      if (L_check_result == false) {
-	GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-		      "Parameter value check error on call with session-id ["
-		      << P_callCtxt->m_id_table[P_pCmd->m_channel_id] << "]");
-
-        switch (L_current_action->m_check_behaviour) {
-        case E_CHECK_BEHAVIOUR_ERROR :
-          L_exeCode = E_EXE_ERROR_CHECK ;
-          break;
-        case E_CHECK_BEHAVIOUR_ABORT:
-          L_exeCode = E_EXE_ABORT_CHECK ;
-          break;
-        default:
-          break;
-        }
-
-      }
-      break ;
-
-    case E_ACTION_SCEN_CHECK_ORDER:
-      L_check_result 
-	= P_msg->check_field_order 
-	(L_current_action->m_id,
-	 L_current_action->m_check_behaviour,
-	 L_current_action->m_position);
-      if (L_check_result == false) {
-	GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-		      "check error on call with session-id ["
-		      << P_callCtxt->m_id_table[P_pCmd->m_channel_id] << "]");
-
-
-        switch (L_current_action->m_check_behaviour) {
-        case E_CHECK_BEHAVIOUR_ERROR :
-          L_exeCode = E_EXE_ERROR_CHECK ;
-          break;
-        case E_CHECK_BEHAVIOUR_ABORT:
-          L_exeCode = E_EXE_ABORT_CHECK ;
-          break;
-        default:
-          break;
-        }
-
-      }
-      break ;
-
-    case E_ACTION_SCEN_SET_NEW_SESSION_ID: {
-
-      T_pValueData          L_mem      ;
-      T_ValueData           L_val      ;
-      
-      T_CallMap::iterator   L_call_it  ;
-      T_pValueData          L_value_id ;
-
-
-      L_val.m_type = E_TYPE_NUMBER ;
-      
-      L_mem = P_callCtxt->get_memory(L_current_action->m_mem_id);
-      if (L_mem->m_value.m_val_binary.m_size == 0) {
-        GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR,
-                      action_name_table[L_current_action->m_type] 
-                      << " action: you use a memory zone that was not previously stored");
-        //        L_exeCode = E_EXE_ERROR;
-        // break ;
-      }
-      
-      if (P_msg -> get_field_value(L_current_action->m_id, 
-                                   L_current_action->m_instance_id,
-                                   L_current_action->m_sub_id,
-                                   &L_val) == true) {
-        if (*L_mem == L_val ) {
-          break;
-        } else {
-          L_call_it = m_call_map_table[P_pCmd->m_channel_id]
-            ->find (T_CallMap::key_type(P_callCtxt->m_id_table[P_pCmd->m_channel_id]));
-          if (L_call_it != m_call_map_table[P_pCmd->m_channel_id]->end()) {
-            m_call_map_table[P_pCmd->m_channel_id]->erase (L_call_it);
-            P_callCtxt->reset_id (P_pCmd->m_channel_id);
-            L_value_id = P_callCtxt->set_id (P_pCmd->m_channel_id,&L_val);
-            m_call_map_table[P_pCmd->m_channel_id]
-              ->insert(T_CallMap::value_type(*L_value_id, P_callCtxt));
-            resetMemory(L_val);
-          } 
-        }
-        
-      } else {
-        GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-                      action_name_table[L_current_action->m_type] 
-                      << ": the value of the field asked is incorrect or not found");
-        
-        GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-                      "error on call with session-id ["
-                      << P_callCtxt->m_id_table[P_pCmd->m_channel_id] << "]");
-        
-        L_exeCode = E_EXE_ERROR;
-      }
-
-    }
-      break ;
-
-    case E_ACTION_SCEN_INTERNAL_INIT_DONE:
-      L_exeCode = E_EXE_INIT_END ;
-      break ;
-
-    case E_ACTION_SCEN_CHECK_ALL_MSG:
-      L_check_result 
-	= P_msg->check(P_ref, 
-		       m_check_mask,
-		       m_check_behaviour);
-      if (L_check_result == false) {
-	GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-		      "Message check error on call with session-id ["
-		      << P_callCtxt->m_id_table[P_pCmd->m_channel_id] << "]");
-	if (m_check_behaviour == E_CHECK_BEHAVIOUR_ERROR) {
-	  L_exeCode = E_EXE_ERROR_CHECK ;
-	}
-      }
-      break ;
-
-    case E_ACTION_SCEN_ADD_IN_CALL_MAP: {
-      T_pValueData L_value_id ;
-      
-      L_value_id = P_msg -> get_session_id(P_callCtxt);
-      if (L_value_id == NULL) {
-        // TO DO
-	GEN_ERROR(E_GEN_FATAL_ERROR, "session id is failed");
-  	L_exeCode = E_EXE_ERROR ;
-      } else {
-        L_value_id = P_callCtxt->set_id (L_current_action->m_id,L_value_id);
-        m_call_map_table[L_current_action->m_id]
-          ->insert(T_CallMap::value_type(*L_value_id, P_callCtxt));
-      }
-    }
-    break ;
-    
-    case E_ACTION_SCEN_SELECT_EXTERNAL_DATA_LINE: {
-      P_callCtxt->m_selected_line = m_external_data->select_line();
-    }
-    break ;
-
-    default:
-      GEN_FATAL(E_GEN_FATAL_ERROR, "Action execution error");
-      break ;
-    } // switch
-
-    if (L_exeCode != E_EXE_NOERROR) break ;
+    L_current_action = P_actions[L_i] ;
+    L_exeCode = L_current_action->execute(P_pCmd,
+                                          P_callCtxt,
+                                          P_msg,
+                                          P_ref);
 
   } // for L_i
 
   
-  if ((L_exeCode == E_EXE_NOERROR) && (L_suspend == true)) {
-    L_exeCode = E_EXE_SUSPEND ;
-  }
-
   GEN_DEBUG(1, "C_Scenario::execute_action() end");
   return (L_exeCode);
 }
@@ -1599,33 +812,13 @@ void C_Scenario::update_wait_cmd (size_t P_nb, unsigned long *P_table) {
 
 void C_Scenario::delete_post_actions (int P_cmd_index) {
 
-  int L_j, L_k ;
+  int L_j ;
 
   if (m_cmd_sequence[P_cmd_index].m_post_action != 0) {
     for (L_j = 0 ; L_j < m_cmd_sequence[P_cmd_index].m_post_action; L_j ++) {
-      if (m_cmd_sequence[P_cmd_index].m_post_act_table[L_j].m_type
-	  == E_ACTION_SCEN_SET_VALUE) {
-	for(L_k = 0; 
-	    L_k < m_cmd_sequence[P_cmd_index].m_post_act_table[L_j].
-	      m_string_expr->m_nb_portion; L_k++) {
-	  if (m_cmd_sequence[P_cmd_index].m_post_act_table[L_j].
-	      m_string_expr->m_portions[L_k].m_type
-	      == E_STR_STATIC) {
-	    FREE_TABLE(m_cmd_sequence[P_cmd_index].m_post_act_table[L_j].
-		       m_string_expr->m_portions[L_k].m_data.m_value);
-	  }
-	}
-	FREE_TABLE(m_cmd_sequence[P_cmd_index].m_post_act_table[L_j].
-		   m_string_expr);
-
-        // free regexp????
-        DELETE_VAR(m_cmd_sequence[P_cmd_index].m_post_act_table[L_j].
-                 m_regexp_data);
-
-      }
-
+      DELETE_VAR(m_cmd_sequence[P_cmd_index].m_post_action_table[L_j])
     }
-    FREE_TABLE(m_cmd_sequence[P_cmd_index].m_post_act_table);
+    FREE_TABLE(m_cmd_sequence[P_cmd_index].m_post_action_table);
     m_cmd_sequence[P_cmd_index].m_post_action = 0 ;
   }
 }
@@ -1654,4 +847,16 @@ int C_Scenario::get_nb_retrans ()
 
 T_pCmd_scenario C_Scenario::get_commands() {
   return (m_cmd_sequence);
+}
+
+
+int C_Scenario::get_nb_send_per_scen ()
+{
+  return (m_nb_send_per_scene);
+}
+
+
+int C_Scenario::get_nb_recv_per_scen ()
+{
+  return (m_nb_recv_per_scene);
 }

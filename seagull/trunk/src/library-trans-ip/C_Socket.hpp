@@ -34,7 +34,6 @@
 
 #include "ReceiveMsgContext.h"
 
-
 typedef enum _enum_socket_mode {
   E_SOCKET_TCP_MODE,
   E_SOCKET_UDP_MODE
@@ -56,39 +55,37 @@ typedef list_t<T_pDataRcv> T_DataRcvList, *T_pDataRcvList ;
 
 class C_Socket {
 public:
-   C_Socket (int P_channel_id) ;
-   C_Socket (T_SocketType P_type, int P_port, int P_channel_id);
-   C_Socket (T_SocketType P_type, int P_channel_id);
-
-   int _open (int    P_socket_domain, 
-	      size_t P_buffer_size,
-	      C_ProtocolBinaryFrame *P_protocol);
-
+  C_Socket (int P_channel_id) ;
+  C_Socket (T_SocketType P_type, int P_port, int P_channel_id);
+  C_Socket (T_SocketType P_type, int P_channel_id);
+  C_Socket (C_Socket& P_Socket); // Socket with no data setted
   virtual ~C_Socket () ;
+
+  virtual int get_prototype () ;
   virtual size_t received_buffer (unsigned char  *P_data, 
 				  size_t          P_size_buf,
 				  struct timeval *P_time) = 0 ;
-  int     get_id () ;
-  int     get_channel_id();
-  void    _close () ;
   virtual void      set_fd_set (fd_set *P_rSet, fd_set *P_wSet);
   virtual C_Socket* process_fd_set(fd_set           *P_rSet, 
 				   fd_set           *P_wSet,
 				   C_TransportEvent *P_event) = 0 ;
 
-  virtual T_SockAddrStorage*     get_remote_sockaddr_ptr() = 0    ; 
-  virtual tool_socklen_t*        get_len_remote_sockaddr_ptr() = 0 ;
-
   virtual size_t send_buffer(unsigned char     *P_data, 
-                             size_t             P_size,
-                             T_SockAddrStorage *P_remote_sockaddr,
-                             tool_socklen_t    *P_len_remote_sockaddr) = 0 ;
+                             size_t             P_size) = 0 ;
+  virtual C_pDataDecode          get_decode () ;
+  virtual T_pRcvMsgCtxtList      get_list() ;
 
-  void          set_channel_id(int P_channel_id);
-  void          set_properties () ;
-  C_pDataDecode          get_decode () ;
+
+  void                   set_properties () ;
+
+  int                    _open (int    P_socket_domain, 
+	                        size_t P_buffer_size,
+	                        C_ProtocolBinaryFrame *P_protocol);
+  int                    get_id () ;
+  int                    get_channel_id();
+  void                   _close () ;
+  void                   set_channel_id(int P_channel_id);
   C_ProtocolBinaryFrame* get_protocol() ;
-  T_pRcvMsgCtxtList      get_list() ;
 
 protected:
 
@@ -101,9 +98,6 @@ protected:
 
   // decode process temporary
   C_ProtocolBinaryFrame  *m_protocol ;
-  C_pDataDecode           m_decode   ;
-
-  T_pRcvMsgCtxtList       m_recv_msg_list ;
 
 } ;
 
@@ -119,33 +113,26 @@ public:
 		   int P_channel_id,
                    size_t P_read_buf_size,
                    size_t P_segm_buf_size) ;
+  C_SocketWithData(C_SocketWithData &P_Socket);
   virtual ~C_SocketWithData() ;
+
   virtual C_Socket* process_fd_set(fd_set *P_rSet, fd_set *P_wSet, C_TransportEvent *P_event) ;
-
-
   virtual C_Socket* process_fd_ready(fd_set *P_rSet, fd_set *P_wSet, C_TransportEvent *P_event);
   virtual C_Socket* process_fd_in_progess(fd_set *P_rSet, fd_set *P_wSet, C_TransportEvent *P_event) ;
-
-  virtual int _call_read(int P_socket, char *P_buf, size_t P_size);
-
-  virtual int _call_write(int P_socket, 
-                         unsigned char* P_data,
-                         size_t P_size)  ;
-
+  virtual int _call_read(); 
+  virtual int _call_write(unsigned char* P_data,
+			  size_t P_size)  ;
+  virtual int _write(unsigned char* P_data,
+		     size_t P_size)  ;
   virtual size_t send_buffer(unsigned char     *P_data, 
-                             size_t             P_size,
-                             T_SockAddrStorage *P_remote_sockaddr,
-                             tool_socklen_t    *P_len_remote_sockaddr)  ;
-
-  virtual int _read (void *P_buf) = 0 ;
+                             size_t             P_size) ;
+  virtual int _read () = 0 ;
+  virtual C_pDataDecode          get_decode () ;
+  virtual T_pRcvMsgCtxtList      get_list() ;
+  
   size_t received_buffer (unsigned char  *P_data, 
 			  size_t          P_size_buf,
 			  struct timeval *P_time) ;
-
-  T_SockAddrStorage*       get_remote_sockaddr_ptr()     ; 
-  tool_socklen_t*          get_len_remote_sockaddr_ptr() ;
-
-  
 protected:
 
   T_DataRcvList           m_data_queue ;
@@ -162,6 +149,8 @@ protected:
   T_SockAddrStorage*      m_remote_sockaddr_ptr     ; 
   tool_socklen_t*         m_len_remote_sockaddr_ptr ;
 
+  C_pDataDecode           m_decode   ;
+  T_pRcvMsgCtxtList       m_recv_msg_list ;
 
 } ;
 
@@ -169,28 +158,27 @@ class C_SocketListen : public C_Socket {
 
 public:
 
-             C_SocketListen(T_SocketType  P_type, 
-			    T_pIpAddr     P_addr, 
-			    int           P_channel_id,
-                            size_t        P_read_buf_size,
-                            size_t        P_segm_buf_size) ;
-  virtual   ~C_SocketListen() ;
-  int       _open (size_t P_buffer_size, C_ProtocolBinaryFrame *P_protocol) ;
-  virtual C_Socket* process_fd_set(fd_set           *P_rSet, 
-			   fd_set           *P_wSet,
-			   C_TransportEvent *P_event) ;
-  virtual size_t send_buffer(unsigned char     *P_data, 
-                             size_t             P_size,
-                             T_SockAddrStorage *P_remote_sockaddr,
-                             tool_socklen_t    *P_len_remote_sockaddr)  ;
-  size_t received_buffer  (unsigned char  *P_data, 
-			   size_t          P_size_buf,
-			   struct timeval *P_time) ;
-  T_SockAddrStorage * get_source_address () ;
+  C_SocketListen(T_SocketType  P_type, 
+		 T_pIpAddr     P_addr, 
+		 int           P_channel_id,
+		 size_t        P_read_buf_size,
+		 size_t        P_segm_buf_size) ;
+  C_SocketListen(C_SocketListen &P_Socket); // Socket with no data setted
+  virtual ~C_SocketListen() ;
 
-  T_SocketType             get_trans_type() ;
-  T_SockAddrStorage*       get_remote_sockaddr_ptr()     ; 
-  tool_socklen_t*          get_len_remote_sockaddr_ptr() ;
+  virtual C_Socket* process_fd_set(fd_set           *P_rSet, 
+				   fd_set           *P_wSet,
+				   C_TransportEvent *P_event) ;
+  virtual size_t send_buffer(unsigned char     *P_data, 
+                             size_t             P_size);
+  virtual int _call_listen (int P_max) ;
+
+  int                _open (size_t P_buffer_size, C_ProtocolBinaryFrame *P_protocol) ;
+  size_t             received_buffer  (unsigned char  *P_data, 
+				       size_t          P_size_buf,
+				       struct timeval *P_time) ;
+  T_SockAddrStorage* get_source_address () ;
+  T_SocketType       get_trans_type() ;
   
 protected:
   
@@ -205,25 +193,23 @@ protected:
 class C_SocketServer : public C_SocketWithData {
 
 public:
-           C_SocketServer(C_SocketListen *P_listen, 
-			  int P_channel_id,
-                          size_t P_read_buf_size,
-                          size_t P_segm_buf_size);
-
-           C_SocketServer(T_SocketType  P_type, 
-                          T_pIpAddr     P_addr, 
-                          int           P_channel_id,
-                          size_t        P_read_buf_size,
-                          size_t        P_segm_buf_size) ;
-
-
+  C_SocketServer(C_SocketListen *P_listen, 
+		 int             P_channel_id,
+		 size_t          P_read_buf_size,
+		 size_t          P_segm_buf_size);
+  C_SocketServer(T_SocketType  P_type, 
+		 T_pIpAddr     P_addr, 
+		 int           P_channel_id,
+		 size_t        P_read_buf_size,
+		 size_t        P_segm_buf_size) ;
+  C_SocketServer (C_SocketServer& P_Socket);
   virtual ~C_SocketServer();
+
   virtual int _open (size_t P_buffer_size, C_ProtocolBinaryFrame *P_protocol) ;
+  virtual int _read ();
 
   int _open_udp (size_t P_buffer_size, 
                  C_ProtocolBinaryFrame *P_protocol) ;
-
-  int _read (void *P_buf) ;
 
 private:
   C_SocketListen     *m_listen_sock ;
@@ -239,11 +225,13 @@ public:
 		 int           P_channel_id,
                  size_t        P_read_buf_size,
                  size_t        P_segm_buf_size) ;
+  C_SocketClient(C_SocketClient &P_Socket);
   virtual ~C_SocketClient() ;
+
   virtual int _open (T_pOpenStatus P_status,
                      size_t        P_buffer_size,
                      C_ProtocolBinaryFrame *P_protocol);
-  int _read (void *P_buf) ;
+  int _read ();
 
 } ;
 

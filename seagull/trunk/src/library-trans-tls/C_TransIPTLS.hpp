@@ -46,10 +46,12 @@ public:
 
 protected : 
 
-  virtual int open (int              P_channel_id, 
-                    T_pIpAddr        P_Addr,
-                    T_pOpenStatus    P_status,
-                    C_ProtocolBinaryFrame *P_protocol) ;
+  virtual C_Socket* open (int              P_channel_id, 
+			  T_pIpAddr        P_Addr,
+			  T_pOpenStatus    P_status,
+			  C_ProtocolBinaryFrame *P_protocol) ;
+
+  virtual int set_option (int P_Channel_Id, char *P_buf) ;
 
   int analyze_config(T_ConfigValue& P_config) ;
   
@@ -57,17 +59,21 @@ protected :
 
   int load_crls(char *crlfile) ;
 
+
 protected :
 
+  C_Socket* make_secure (C_Socket *) ;
 
   T_SSLMethodType find_method(char* P_name);
 
-  SSL_CTX * m_ssl_ctx ;
-  char *m_passwd ;
-  char *m_cert_chain_file ;
-  char *m_crl_file ;
-  char *m_private_key_file ;
+  SSL_CTX        *m_ssl_ctx ;
+  char           *m_passwd ;
+  char           *m_cert_chain_file ;
+  char           *m_crl_file ;
+  char           *m_private_key_file ;
   T_SSLMethodType m_method ;
+
+  bool            m_start_secure_mode ;
 
 } ;
 

@@ -76,6 +76,12 @@ public:
 				     int *P_table, 
 				     T_pOpenStatus P_status);
 
+  //  int            set_option_global_channel (int P_Channel_Id, char *P_buf) ;
+  int            set_option_global_channel (int P_id,
+                                            char *P_args,
+                                            int *P_table) ;
+
+
 
   void           close_local_channel (int P_id, int*P_table);
 

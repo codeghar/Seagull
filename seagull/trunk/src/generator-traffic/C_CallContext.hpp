@@ -30,6 +30,8 @@
 class C_Scenario ; // prevent from circular include 
                    // => C_Scenario.hpp only in .cpp
 
+class C_CallControl ; 
+
 typedef long T_CallContextState, *T_pCallContextState ;
 #define E_CTXT_AVAILABLE    0L
 #define E_CTXT_SUSPEND      1L
@@ -87,9 +89,12 @@ public:
   int                       m_selected_line;
 
   int                       m_channel_received ;
+  
+  C_CallControl*            m_call_control ;
 
 
-  C_CallContext(int P_id, int P_nbChannel, int P_mem=0, int P_nbRetrans=0);
+  C_CallContext(C_CallControl *P_call_control, 
+                int P_id, int P_nbChannel, int P_mem=0, int P_nbRetrans=0);
   ~C_CallContext() ;
 
   T_pValueData 

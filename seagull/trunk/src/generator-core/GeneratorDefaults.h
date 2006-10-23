@@ -61,7 +61,8 @@
 #define DEF_EXECUTE_CHECK_ACTION                              true
 #define DEF_MAX_RETRANS                                          0
 #define DEF_RETRANS_ENABLED                                  false
-
+#define DEF_MODEL_TRAFFIC_SELECT           E_MODEL_TRAFFIC_UNIFORM
+#define DEF_OPTION_REMOTE_CMD                                 NULL
 
 
 #endif

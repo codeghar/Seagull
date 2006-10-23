@@ -49,9 +49,19 @@ typedef enum {
   E_NB_CHECK_DATA_SELECT
 } T_CheckDataSelect ;
 
+typedef enum {
+  E_MODEL_TRAFFIC_UNIFORM = 0 ,
+  E_MODEL_TRAFFIC_BESTEFFORT,
+  E_MODEL_TRAFFIC_POISSON,
+  E_NB_MODEL_TRAFFIC_SELECT
+} T_ModelTrafficSelect ;
+
 extern const unsigned int _check_level_mask [] ;
 extern const unsigned int _check_behaviour_mask [] ;
 extern const char*        _check_external_select [] ;
+extern const char*        _model_traffic_select [] ;
+
+
 
 typedef enum {
   E_CMDLINE_conf_file = 0,
@@ -63,6 +73,7 @@ typedef enum {
   E_CMDLINE_bg_mode,
   E_CMDLINE_timestamp_log,
   E_CMDLINE_check_msg,
+  E_CMDLINE_remote_cmd,
 
   E_CMDLINE_nbOptions
 } T_GeneratorCmdLineOption ;
@@ -102,6 +113,7 @@ typedef enum {
   E_CFG_OPT_EXECUTE_CHECK_ACTION,
   E_CFG_OPT_MAX_RETRANS,
   E_CFG_OPT_RETRANS_ENABLED,
+  E_CFG_OPT_MODEL_TRAFFIC_SELECT,
 
   E_CFG_OPT_Number
 } T_GeneratorConfigOption ;
@@ -137,12 +149,15 @@ class C_GeneratorConfig:public C_CommandLine<T_GeneratorCmdLineOption> {
   char*        get_log_file();
   char*        get_scen_file();
 
+
   T_pcharPlist get_dico_file_list() ;
 
   unsigned int get_log_level();
   bool         get_bg_mode ();
   bool         get_timestamp_log ();
   bool         get_check_msg () ;
+
+  char*        get_remote_cmd() ;
 
 
   bool         get_display_protocol_stat () ;
@@ -175,6 +190,8 @@ private:
   bool         m_option_bg_mode       ;
   bool         m_option_timestamp_log ;
   bool         m_option_check_msg     ;
+  char        *m_option_remote_cmd    ;
+  
 
   bool            *m_conf_opt_set ; // config option setted
   // config options
@@ -195,6 +212,8 @@ private:
 
   char          *m_external_data_file ;
   unsigned int   m_external_data_select ;
+
+  unsigned int   m_model_traffic_select ;
 
   unsigned int   m_check_level_mask ;
   unsigned int   m_check_behaviour  ;

@@ -49,6 +49,7 @@ public:
                        int           P_channel_id,
                        size_t        P_read_buf_size,
                        size_t        P_segm_buf_size) ;
+  C_SecureSocketListen(SSL_CTX * P_ssl_ctx, C_SocketListen& P_Socket);
   virtual ~C_SecureSocketListen() ;  
 protected:
   virtual C_Socket*  create_socket_server(int *P_ret) ;
@@ -71,11 +72,14 @@ public:
                        size_t        P_read_buf_size,
                        size_t        P_segm_buf_size) ;
   
+  C_SecureSocketServer(SSL_CTX * P_ssl_ctx, C_SocketServer& P_Socket);
   virtual ~C_SecureSocketServer();
-  virtual int _call_read(int P_socket, char *P_buf, size_t P_size);
+  virtual int _call_read() ;
+
   virtual int _open(size_t                 P_buffer_size, 
                     C_ProtocolBinaryFrame *P_protocol) ;
-  virtual int _call_write(int P_socket, unsigned char *P_buf, size_t P_size);
+  int _secure_mode() ;
+  virtual int _call_write(unsigned char *P_buf, size_t P_size);
   virtual C_Socket* process_fd_in_progess(fd_set *P_rSet, 
                                           fd_set *P_wSet, 
                                           C_TransportEvent *P_event) ;
@@ -91,16 +95,18 @@ public:
                        int           P_channel_id,
                        size_t        P_read_buf_size,
                        size_t        P_segm_buf_size) ;
+  C_SecureSocketClient(SSL_CTX * P_ssl_ctx, C_SocketClient& P_Socket);
   virtual ~C_SecureSocketClient() ;
-  virtual int _call_read(int P_socket, char *P_buf, size_t P_size);
+  virtual int _call_read() ; 
+
   virtual int _open (T_pOpenStatus P_status,
                      size_t        P_buffer_size,
                      C_ProtocolBinaryFrame *P_protocol);
+  int _secure_mode() ;
   virtual C_Socket* process_fd_in_progess(fd_set *P_rSet, 
                                           fd_set *P_wSet, 
                                           C_TransportEvent *P_event) ;
-
-  virtual int _call_write(int P_socket, unsigned char *P_buf, size_t P_size);
+  virtual int _call_write(unsigned char *P_buf, size_t P_size);
   
 } ;
 

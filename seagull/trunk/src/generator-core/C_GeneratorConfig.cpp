@@ -69,7 +69,9 @@ const char* config_opt_table[] = {
   "call-open-timeout-ms",
   "execute-check-action",
   "max-retrans",
-  "retrans-enabled"
+  "retrans-enabled",
+  "model-traffic-select"
+
 };
 
 static const char _check_level_char [] = {
@@ -95,6 +97,13 @@ const unsigned int _check_behaviour_mask [] = {
 const char* _check_external_select[] = {
   "sequential",
   "random"
+} ;
+
+
+const char* _model_traffic_select[] = {
+  "uniform",
+  "best-effort",
+  "poisson"
 } ;
 
 bool C_GeneratorConfig::set_data 
@@ -176,6 +185,11 @@ bool C_GeneratorConfig::set_data
       m_option_check_msg = true ;
       return (true) ;
 
+    case E_CMDLINE_remote_cmd:
+      m_option_remote_cmd = L_currentValue ;
+      return (true) ;
+
+
     case E_CMDLINE_nbOptions:
       return (false) ;		// ???
       
@@ -238,7 +252,14 @@ C_GeneratorConfig::C_GeneratorConfig (int P_argc, char** P_argv) {
      { E_CMDLINE_check_msg, (char*)"msgcheck",
        C_GeneratorConfig::E_OT_OPTIONAL, 0, NULL,
        (char*)"", 
-       (char*)"check the field of the messages received (default no check)"}
+       (char*)"check the field of the messages received (default no check)"},
+
+     { E_CMDLINE_remote_cmd, (char*)"remote-cmd",
+       C_GeneratorConfig::E_OT_OPTIONAL, 1,  one_value_string,
+       (char*)"", 
+       (char*)"remote command active @IP:port (default no remote)"}
+
+
 
   } ;
 
@@ -299,8 +320,11 @@ C_GeneratorConfig::C_GeneratorConfig (int P_argc, char** P_argv) {
   m_max_retrans        = DEF_MAX_RETRANS       ;
   m_retrans_enabled    = DEF_RETRANS_ENABLED   ;
 
+  m_model_traffic_select = DEF_MODEL_TRAFFIC_SELECT ; // by default to be define
 
   m_call_rate_scale = DEF_CALL_RATE_SCALE ;
+
+  m_option_remote_cmd = DEF_OPTION_REMOTE_CMD ;
 
   ALLOC_TABLE(m_conf_opt_set, bool*, sizeof(bool), E_CFG_OPT_Number);
   for(L_i=0; L_i < E_CFG_OPT_Number; L_i++) {
@@ -321,6 +345,7 @@ C_GeneratorConfig::~C_GeneratorConfig() {
   m_option_log_file = NULL ;
   m_option_conf_file = NULL ;
   m_option_bg_mode = false ;
+  m_option_remote_cmd  = NULL ;
 
   if (!m_option_dico_file_list->empty()) {
     m_option_dico_file_list->erase(m_option_dico_file_list->begin(),
@@ -354,6 +379,11 @@ bool          C_GeneratorConfig::checkConfig(){
 
 char* C_GeneratorConfig::get_conf_file() {
   return(m_option_conf_file) ;
+}
+
+
+char* C_GeneratorConfig::get_remote_cmd() {
+  return(m_option_remote_cmd) ;
 }
 
 char* C_GeneratorConfig::get_log_file() {
@@ -572,6 +602,18 @@ bool C_GeneratorConfig::set_value (T_GeneratorConfigOption P_opt,
     for (L_j = 0; L_j < E_NB_CHECK_DATA_SELECT ; L_j ++) {
       if(strcmp(P_value, _check_external_select[L_j]) == 0) {
 	m_external_data_select = L_j ;
+	L_ret = true ;
+	break ;
+      }
+    }
+
+      break ;
+
+  case E_CFG_OPT_MODEL_TRAFFIC_SELECT :
+    L_ret = false ;
+    for (L_j = 0; L_j < E_NB_MODEL_TRAFFIC_SELECT ; L_j ++) {
+      if(strcmp(P_value, _model_traffic_select[L_j]) == 0) {
+	m_model_traffic_select = L_j ;
 	L_ret = true ;
 	break ;
       }
@@ -810,6 +852,10 @@ bool C_GeneratorConfig::get_value (T_GeneratorConfigOption  P_opt,
 
   case E_CFG_OPT_EXTERNAL_DATA_SELECT :
     *P_val = m_external_data_select ;
+    break ;
+
+  case E_CFG_OPT_MODEL_TRAFFIC_SELECT :
+    *P_val = m_model_traffic_select ;
     break ;
 
   default:

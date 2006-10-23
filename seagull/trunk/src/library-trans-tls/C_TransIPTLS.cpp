@@ -219,6 +219,17 @@ bool C_TransIPTLS::analyze_init_string (char *P_buf) {
     L_ret = true ;
   } 
 
+  L_tmp[0] = '\0' ;
+  if (L_ret && analyze_string_value (P_buf,
+                                     (char*)"secure=",
+                                     L_tmp)) {
+
+    if (strcmp(L_tmp, (char*)"no") == 0){
+      m_start_secure_mode = false ;
+    }
+    L_ret = true ;
+  } 
+
   return (L_ret);
 }
 
@@ -235,6 +246,7 @@ C_TransIPTLS::C_TransIPTLS() : C_TransIP()  {
   m_private_key_file = NULL ;
   m_crl_file = NULL ;
   m_method = NULL ;
+  m_start_secure_mode = true ;
 }
 
 C_TransIPTLS::~C_TransIPTLS() {
@@ -318,107 +330,135 @@ int C_TransIPTLS::init (char *P_buf,
 }
 
 
-int C_TransIPTLS::open (int              P_channel_id, 
-                        T_pIpAddr        P_Addr,
-                        T_pOpenStatus    P_status,
-                        C_ProtocolBinaryFrame *P_protocol) {
+C_Socket* C_TransIPTLS::open (int              P_channel_id, 
+			      T_pIpAddr        P_Addr,
+			      T_pOpenStatus    P_status,
+			      C_ProtocolBinaryFrame *P_protocol) {
 
-  char              *L_server_name   ;
-  int                L_id = -1 ;
-  int                L_rc ;
   C_Socket          *L_socket_created = NULL ;
 
-  GEN_DEBUG(1, "C_TransIP::open ()");
-
-  L_server_name = NULL ;
-
-  if (P_Addr->m_open != NULL) {
-    extract_ip_addr(P_Addr);
-    resolve_addr(P_Addr);
-  }
-
-  switch (P_Addr->m_umode) {
-  case E_IP_USAGE_MODE_SERVER: {
-
-    if (m_trans_type == E_SOCKET_TCP_MODE) {
-      C_SecureSocketListen *L_Socket ;
+  if (m_start_secure_mode == true) {
+    
+    int                L_rc ;
+    
+    GEN_DEBUG(1, "C_TransIPTLS::open ()");
+    
+    switch (P_Addr->m_umode) {
+    case E_IP_USAGE_MODE_SERVER: {
       
+      C_SecureSocketListen *L_Socket ;
+    
       NEW_VAR(L_Socket, C_SecureSocketListen(m_ssl_ctx,
-                                             m_trans_type, 
-                                             P_Addr, 
-                                             P_channel_id, 
-                                             m_read_buffer_size, 
-                                             m_decode_buffer_size));
+					     m_trans_type, 
+					     P_Addr, 
+					     P_channel_id, 
+					     m_read_buffer_size, 
+					     m_decode_buffer_size));
       // std::cerr << "m_trans_type " << m_trans_type << std::endl;
       L_rc = L_Socket->_open(m_buffer_size, P_protocol) ;
       if (L_rc == 0) {
-        L_socket_created = L_Socket ;
-        *P_status = E_OPEN_OK ;
+	L_socket_created = L_Socket ;
+	*P_status = E_OPEN_OK ;
       } else {
-        DELETE_VAR(L_Socket) ;
-        *P_status = E_OPEN_FAILED ;
-      }
-    } else {
-      C_SecureSocketServer *L_Socket ;
-      
-      NEW_VAR(L_Socket, C_SecureSocketServer(m_ssl_ctx,
-                                             m_trans_type, 
-                                             P_Addr, 
-                                             P_channel_id, 
-                                             m_read_buffer_size, 
-                                             m_decode_buffer_size));
-      
-      L_rc = L_Socket->_open_udp(m_buffer_size, P_protocol) ;
-      if (L_rc == 0) {
-        L_socket_created = L_Socket ;
-        *P_status = E_OPEN_OK ;
-      } else {
-        DELETE_VAR(L_Socket) ;
-        *P_status = E_OPEN_FAILED ;
+	DELETE_VAR(L_Socket) ;
+	*P_status = E_OPEN_FAILED ;
       }
     }
-  }
-    break ;
+      break ;
     
-  case E_IP_USAGE_MODE_CLIENT: {
-    C_SecureSocketClient *L_Socket ;
+    case E_IP_USAGE_MODE_CLIENT: {
+      C_SecureSocketClient *L_Socket ;
+      
+      NEW_VAR(L_Socket, C_SecureSocketClient(m_ssl_ctx,
+					     m_trans_type, 
+					     P_Addr, 
+					     P_channel_id, 
+					     m_read_buffer_size, 
+					     m_decode_buffer_size));
 
-    NEW_VAR(L_Socket, C_SecureSocketClient(m_ssl_ctx,
-                                           m_trans_type, 
-                                           P_Addr, 
-                                           P_channel_id, 
-                                           m_read_buffer_size, 
-                                           m_decode_buffer_size));
+      // std::cerr << "m_trans_type Client" << m_trans_type << std::endl;
+      L_rc = L_Socket->_open(P_status, m_buffer_size, P_protocol) ;
+      if (L_rc == 0) {
+	L_socket_created = L_Socket ;
+      } else {
+	DELETE_VAR(L_Socket) ;
+	*P_status = E_OPEN_FAILED ;
+      }
+    }
+      
+      break ;
 
-    // std::cerr << "m_trans_type Client" << m_trans_type << std::endl;
-    L_rc = L_Socket->_open(P_status, m_buffer_size, P_protocol) ;
-    if (L_rc == 0) {
-      L_socket_created = L_Socket ;
-    } else {
-      DELETE_VAR(L_Socket) ;
+    case E_IP_USAGE_MODE_UNKNOWN:
+      
+      GEN_ERROR(1, "OPEN failed: Unsupported mode");
       *P_status = E_OPEN_FAILED ;
+      break ;
+    }
+  
+  } else {
+    L_socket_created = C_TransIP::open(P_channel_id, 
+				       P_Addr,
+				       P_status,
+				       P_protocol) ;
+  }
+
+  return (L_socket_created);
+}
+
+C_Socket* C_TransIPTLS::make_secure (C_Socket *P_Socket) {
+  
+  C_Socket *L_new = NULL ;
+  
+  {
+    C_SocketClient *L_socket = NULL ;
+
+    L_socket = dynamic_cast<C_SocketClient*>(P_Socket) ;
+    if (L_socket != NULL) {
+      NEW_VAR(L_new,
+	      C_SecureSocketClient(m_ssl_ctx,*L_socket));
     }
   }
 
-    break ;
+  if (L_new == NULL) {
+    C_SocketServer *L_socket = NULL ;
 
-  case E_IP_USAGE_MODE_UNKNOWN:
-
-    GEN_ERROR(1, "OPEN failed: Unsupported mode");
-    *P_status = E_OPEN_FAILED ;
-    break ;
+    L_socket = dynamic_cast<C_SocketServer*>(P_Socket) ;
+    if (L_socket != NULL) {
+      NEW_VAR(L_new,
+	      C_SecureSocketServer(m_ssl_ctx,*L_socket));
+    }
   }
+
+  // making secure a listen socket is not possible
   
-  if (L_socket_created != NULL) {
-    L_id = L_socket_created -> get_id () ;
-    m_socket_map.insert (T_SocketMap::value_type(L_id,L_socket_created));
-    if (L_id > m_max_fd) { m_max_fd = L_id;  } ;
+  return (L_new);
+}
+
+int C_TransIPTLS::set_option (int P_Channel_Id, char *P_buf) {
+
+  C_Socket             *L_socket = NULL;
+  T_SocketMap::iterator L_it ;
+  int                   L_ret = 0 ;
+
+  L_it = m_socket_map.find(T_SocketMap::key_type(P_Channel_Id));
+  if (L_it != m_socket_map.end()) {
+    L_socket = make_secure (L_it->second);
+    if (L_socket != NULL) {
+      m_socket_map.erase(L_it);
+      m_socket_map.insert(T_SocketMap::value_type(L_socket->get_id(),
+                                                  L_socket));
+    } else {
+      
+      L_ret = -1 ;
+    }
+    //DELETE_VAR(L_it->second) ;
+  } else {
+    L_ret = -1 ;
   }
 
-  FREE_VAR(L_server_name);
-
-  return (L_id);
+  return (L_ret);
 }
+
 
 // External interface
 

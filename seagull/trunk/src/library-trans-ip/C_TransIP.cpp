@@ -115,8 +115,9 @@ int C_TransIP::open (int   P_channel_id,
 		     T_pOpenStatus P_status,
 		     C_ProtocolFrame *P_protocol) {
 
-  int       L_ret = 0 ;
-  T_pIpAddr L_openAddr = NULL ;
+  int        L_ret = 0 ;
+  T_pIpAddr  L_openAddr = NULL ;
+  C_Socket  *L_socket = NULL ;
 
   GEN_DEBUG(1, "C_TransIP::open(protocol=" << P_protocol << ")");
 
@@ -129,15 +130,32 @@ int C_TransIP::open (int   P_channel_id,
 
   *P_status = E_OPEN_FAILED ;
   L_openAddr = create_IpAddr() ;
-  
-  L_ret = (analyze_open_string(P_buf, L_openAddr) == true) ? 
-    open(P_channel_id, L_openAddr, P_status, (C_ProtocolBinaryFrame*)P_protocol) : -1 ;
+
+  if (analyze_open_string(P_buf, L_openAddr) == true) {
+
+    if (L_openAddr->m_open != NULL) {
+      extract_ip_addr(L_openAddr);
+      resolve_addr(L_openAddr);
+
+      L_socket =
+	open(P_channel_id, L_openAddr, P_status, 
+	     (C_ProtocolBinaryFrame*)P_protocol) ;
+
+      if (L_socket != NULL) {
+	L_ret = L_socket -> get_id () ;
+	m_socket_map.insert (T_SocketMap::value_type(L_ret,L_socket));
+	if (L_ret > m_max_fd) { m_max_fd = L_ret;  } ;
+      }
+
+    } else {
+      L_ret = -1 ;
+    }
+  } else {
+    L_ret = -1 ;
+  }
   
   if (L_ret != -1) {
-
     m_ip_addr_map.insert(T_IpAddrMap::value_type(L_ret,L_openAddr));
-
-
   } else {
     delete_IpAddr(&L_openAddr);
   }
@@ -319,10 +337,6 @@ int C_TransIP::send_message (int             P_id,
   
   C_ProtocolBinaryFrame *L_protocol ; 
   
-  T_SockAddrStorage  *L_remote_sockaddr     = NULL  ;
-  tool_socklen_t     *L_len_remote_sockaddr = NULL  ;
-
-
   C_ProtocolFrame::T_MsgError      L_error = C_ProtocolFrame::E_MSG_OK ;
 
   int                   L_ret = -1   ;
@@ -332,41 +346,19 @@ int C_TransIP::send_message (int             P_id,
     L_socket = L_it->second ;
     L_protocol = L_socket -> get_protocol() ;
 
-    if (m_trans_type == E_SOCKET_UDP_MODE) {
-      L_remote_sockaddr     = L_socket->get_remote_sockaddr_ptr () ; 
-      L_len_remote_sockaddr = L_socket->get_len_remote_sockaddr_ptr() ;
-    }
-
     L_error = L_protocol->encode_message(P_msg, L_data, &L_size);
     
     if (L_error == C_ProtocolFrame::E_MSG_OK) {
       L_protocol->log_buffer((char*)"sent", L_data, L_size);
 
       L_ret = L_socket
-        ->send_buffer(L_data, L_size, L_remote_sockaddr, L_len_remote_sockaddr);
+        ->send_buffer(L_data, L_size);
 
     }
   }
   return ((L_ret>0) ? 0 : L_ret) ;
 }
 
-size_t C_TransIP::received_buffer (int            P_id, 
-				   unsigned char *P_data, 
-				   size_t         P_size_buf) {
-
-  T_SocketMap::iterator L_it ;
-  size_t                L_ret = 0 ;
-
-  GEN_DEBUG(0, "C_TransIP::received_buffer(" << P_id << ")");
-  L_it = m_socket_map.find(T_SocketMap::key_type(P_id));
-  if (L_it != m_socket_map.end()) {
-    //    L_ret = (L_it->second) -> received_buffer (P_data, P_size_buf);
-  } else {
-    GEN_ERROR(0, "transport id [" << P_id << "] incorrect");
-  }
-  return (L_ret);
-}
-  
 int C_TransIP::close () {
 
   T_SocketMap::iterator L_it ;
@@ -444,29 +436,15 @@ int C_TransIP::close (int P_id) {
 
 // Internal methods
 
-int C_TransIP::open (int              P_channel_id, 
-		     T_pIpAddr        P_Addr,
-		     T_pOpenStatus    P_status,
-		     C_ProtocolBinaryFrame *P_protocol) {
+C_Socket* C_TransIP::open (int              P_channel_id, 
+			   T_pIpAddr        P_Addr,
+			   T_pOpenStatus    P_status,
+			   C_ProtocolBinaryFrame *P_protocol) {
 
-  // Temporary for source/destination address
-  //  char              *L_ptr ;
-  char              *L_server_name   ;
-  //  int                L_port ;
-  //  int                L_server_port ;
-  int                L_id = -1 ;
   int                L_rc ;
   C_Socket          *L_socket_created = NULL ;
-  //  T_IpAddr           L_addr ;
 
   GEN_DEBUG(1, "C_TransIP::open ()");
-
-  L_server_name = NULL ;
-
-  if (P_Addr->m_open != NULL) {
-    extract_ip_addr(P_Addr);
-    resolve_addr(P_Addr);
-  }
 
   switch (P_Addr->m_umode) {
   case E_IP_USAGE_MODE_SERVER: {
@@ -537,15 +515,7 @@ int C_TransIP::open (int              P_channel_id,
     break ;
   }
   
-  if (L_socket_created != NULL) {
-    L_id = L_socket_created -> get_id () ;
-    m_socket_map.insert (T_SocketMap::value_type(L_id,L_socket_created));
-    if (L_id > m_max_fd) { m_max_fd = L_id;  } ;
-  }
-
-  FREE_VAR(L_server_name);
-
-  return (L_id);
+  return (L_socket_created);
 }
 
 bool C_TransIP::analyze_ulong_value (char* P_buf, 
@@ -1149,8 +1119,6 @@ void C_TransIP::decode_from_protocol (C_Socket *P_socket) {
   T_ReceiveMsgContext               L_msg_ctxt ;
   
   C_MessageFrame                   *L_decoded_msg ;
-
-  // C_ProtocolBinaryFrame::T_MsgError L_decode_result        ;
 
   C_ProtocolFrame::T_MsgError       L_decode_result        ;
   size_t                            L_ret ;

@@ -26,6 +26,8 @@
 
 #include <cerrno>  // for errno definition
 #include <cstring> // for strerror defionition
+#include <cmath>
+
 
 C_CallControl::C_CallControl(C_GeneratorConfig   *P_config, 
 			     T_pC_ScenarioControl P_scenControl,
@@ -64,6 +66,9 @@ C_CallControl::C_CallControl(C_GeneratorConfig   *P_config,
   m_retrans_delay_values    = NULL  ;
   m_nb_retrans_delay_values = 0     ;
 
+  m_nb_send_per_scene = 0 ;
+  m_nb_recv_per_scene = 0 ;
+
   NEW_VAR(m_call_suspended, T_SuspendMap());
 
   m_config = P_config ;
@@ -82,6 +87,11 @@ C_CallControl::C_CallControl(C_GeneratorConfig   *P_config,
 
   GEN_DEBUG (1, "C_CallControl::C_CallControl() end");
 }
+
+T_pCallMap* C_CallControl::get_call_map () {
+  return (m_call_map_table) ;
+}
+
 
 C_CallControl::~C_CallControl() {
 
@@ -113,6 +123,10 @@ C_CallControl::~C_CallControl() {
 
   m_max_retrans = 0 ;
   m_retrans_enabled = false ;
+
+  m_nb_send_per_scene = 0 ;
+  m_nb_recv_per_scene = 0 ;
+
 
   if (m_nb_retrans_delay_values > 0 ) {
     // std::cerr << "m_nb_retrans_delay_values " << m_nb_retrans_delay_values << std::endl ;
@@ -972,8 +986,13 @@ T_GeneratorError C_CallControl::InitProcedure() {
     L_nb_retrans = 0 ; 
   }
 
+
+  m_nb_send_per_scene = m_scenario_control->get_max_nb_send () ; 
+  m_nb_recv_per_scene = m_scenario_control->get_max_nb_recv () ; 
+
   for(L_i = 0; L_i < (int)m_call_ctxt_table_size; L_i++) {
-    NEW_VAR(L_pCallContext, C_CallContext(L_i,
+    NEW_VAR(L_pCallContext, C_CallContext(this,
+                                          L_i,
 					  L_channel_used,
 					  L_memory_used,
                                           L_nb_retrans));
@@ -1048,8 +1067,6 @@ T_GeneratorError C_CallControl::InitProcedure() {
     }
     
   }
-
-  m_scenario_control->set_call_map(m_call_map_table);
 
   GEN_DEBUG (1, "C_CallControl::InitProcedure() end");
   return (L_error);
@@ -1167,6 +1184,8 @@ C_CallControlClient::C_CallControlClient(C_GeneratorConfig    *P_config,
 
   GEN_DEBUG (1, "C_CallControlClient::C_CallControlClient() start");
   m_traffic_scen = NULL ;
+  m_update_param_traffic = NULL ;
+
   GEN_DEBUG (1, "C_CallControlClient::C_CallControlClient() end");
 
 }
@@ -1198,7 +1217,31 @@ T_GeneratorError C_CallControlClient::InitProcedure() {
     GEN_FATAL(E_GEN_FATAL_ERROR, "Internal call rate scale not specified");
   }
 
-  NEW_VAR(m_traffic_model, C_TrafficModel());
+   if (!m_config->get_value (E_CFG_OPT_MODEL_TRAFFIC_SELECT, 
+                             &m_model_traffic_select)) {
+      GEN_FATAL(E_GEN_FATAL_ERROR, "Model traffic not specified");
+   }
+
+   switch (m_model_traffic_select) {
+   case 0:
+     NEW_VAR(m_traffic_model, C_TrafficDistribUniform());
+     m_update_param_traffic = &C_CallControlClient::calculUpdateParamTraffic ;
+     break ;
+   case 1:
+     NEW_VAR(m_traffic_model, C_TrafficDistribBestEffort());
+     m_update_param_traffic = &C_CallControlClient::calculNilParamTraffic  ;
+     break ;
+   case 2:
+     NEW_VAR(m_traffic_model, C_TrafficDistribPoisson());
+     m_update_param_traffic = &C_CallControlClient::calculNilParamTraffic   ;
+     break ;
+     
+   default:
+     GEN_FATAL(E_GEN_FATAL_ERROR, "Internal: Selection option not recognized for traffic model");
+     break ;
+   }
+   
+   
   m_traffic_model->init(m_call_rate, m_burst_limit,(long)0, m_call_rate_scale) ;
 
   L_ret = C_CallControl::InitProcedure();
@@ -1227,14 +1270,58 @@ T_GeneratorError C_CallControlClient::TaskProcedure() {
   return (C_CallControl::TaskProcedure());
 }
 
+void C_CallControlClient::calculNilParamTraffic() {
+ // nothing to do
+}
+
+void C_CallControlClient::calculUpdateParamTraffic() {
+  // to be define
+  long               L_currentPeriodDuration ;
+  
+  L_currentPeriodDuration = m_traffic_model -> get_current_period_duration() ; 
+  
+  
+  //std::cerr <<  "newCallControl : Current Period Duration (ti-tp)  : " 
+  //        << L_currentPeriodDuration<< std::endl;
+  
+  L_currentPeriodDuration = (L_currentPeriodDuration == 0) ? 1 : L_currentPeriodDuration ;
+  
+  
+  //std::cerr <<  "Current Period Duration (ti-tp)  : " 
+  //     << (float)(L_currentPeriodDuration/1000.0) << std::endl;
+  
+  //std::cerr << "m_call_rate " << m_call_rate << std::endl;
+  //std::cerr << "m_nb_send_per_scene " << m_nb_send_per_scene << std::endl;
+  
+  
+  m_max_send_loop    =   (int)floor (0.5 + 
+                                     ((m_call_rate * m_nb_send_per_scene)/ 
+                                      (float)(L_currentPeriodDuration/1000.0))) ; 
+  
+  
+  
+  m_max_receive_loop =   (int) floor (0.5 + 
+                                      ((m_call_rate * m_nb_recv_per_scene)/
+                                       (float)(L_currentPeriodDuration/1000.0))) ;
+  
+  // std::cerr << "m_max_send_loop " << m_max_send_loop << std::endl;
+  // std::cerr << "m_max_receive_loop " << m_max_receive_loop << std::endl;
+  
+}
+
+
 void C_CallControlClient::newCallControl() {
   
   int                L_nbNewCalls ; // number of new calls to be created
   T_pCallContext     L_pCallContext ;
 
+
   GEN_DEBUG (1, "C_CallControlClient::newCallControl() start");
 
+
   L_nbNewCalls = m_traffic_model -> authorize_new_call() ;
+
+  ((this)->*(m_update_param_traffic))();
 
   while (L_nbNewCalls) {
     
@@ -1492,6 +1579,9 @@ void C_CallControl::force_init() {
   init_done() ;
 }
 
+unsigned long C_CallControl::get_call_rate () {
+  return(0UL);
+}
 void C_CallControl::change_call_rate(T_GenChangeOperation P_op,
 				     unsigned long P_rate) {
 }
@@ -1501,6 +1591,10 @@ void C_CallControl::change_rate_scale(unsigned long P_scale) {
 
 void C_CallControl::change_burst(unsigned long P_burst) {
   
+}
+
+unsigned long C_CallControlClient::get_call_rate () {
+  return(m_traffic_model->get_desired_rate());
 }
 
 void C_CallControlClient::change_call_rate(T_GenChangeOperation P_op,

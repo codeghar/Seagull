@@ -483,9 +483,6 @@ C_MessageFrame* C_ProtocolText::decode_message(unsigned char *P_buffer,
   L_msg = (C_MessageText*)create_new_message(NULL);
 
 
-  //  std::cerr << "decode_message L_size    *** " << *P_size << std::endl; 
-
-
   (*P_size) = L_msg -> decode (P_buffer, *P_size, P_error);
 
   switch (*P_error) {
@@ -498,8 +495,8 @@ C_MessageFrame* C_ProtocolText::decode_message(unsigned char *P_buffer,
 			    L_msg_id);
     }
 
-    GEN_LOG_EVENT(LOG_LEVEL_MSG, 
-  		  "Received [" << *L_msg << "]");
+    // GEN_LOG_EVENT(LOG_LEVEL_MSG, 
+    //	  "Received [" << *L_msg << "]");
   }
     break ;
   case C_ProtocolFrame::E_MSG_ERROR_DECODING_SIZE_LESS:

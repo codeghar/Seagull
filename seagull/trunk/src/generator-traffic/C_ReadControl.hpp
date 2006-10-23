@@ -54,6 +54,7 @@ public:
   void pause_traffic() ;
   void restart_traffic () ;
   void force_init () ;
+  unsigned long get_call_rate();
   void change_call_rate(T_GenChangeOperation P_op, unsigned long P_rate);
   void change_rate_scale(unsigned long P_scale);
   void change_burst (unsigned long P_burst);

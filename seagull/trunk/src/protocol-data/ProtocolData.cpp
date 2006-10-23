@@ -634,6 +634,25 @@ bool extractBinaryVal(T_Value& P_dest, int P_begin, int P_size,
   return (true);
 }
 
+char* create_string(T_ValueData& P_src) {
+
+  char *L_result = NULL ;
+
+  if ((P_src.m_type == E_TYPE_STRING) && 
+      (P_src.m_value.m_val_binary.m_size > 0)) {
+    ALLOC_TABLE(L_result,
+                char*,
+                sizeof(char),
+                P_src.m_value.m_val_binary.m_size+1);
+    memcpy(L_result, 
+           (char*)P_src.m_value.m_val_binary.m_value,
+           P_src.m_value.m_val_binary.m_size);
+    
+    L_result[P_src.m_value.m_val_binary.m_size] = 0 ;
+  }
+  return (L_result);
+}
+
 bool compare_value(T_Value& P_left, 
                    T_Value& P_rigth) {
   bool   L_ret = false;

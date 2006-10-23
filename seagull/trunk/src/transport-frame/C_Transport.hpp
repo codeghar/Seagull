@@ -76,6 +76,7 @@ public:
   virtual bool            get_message(int P_id, T_pReceiveMsgContext P_ctxt) = 0 ;
   virtual int             send_message(int P_id, C_MessageFrame *P_msg) = 0 ;
 
+  virtual int             set_option (int P_Channel_Id, char *P_buf) {return (0);} ;
   //  virtual int             set_context (int P_id, void *P_context) = 0 ;
   virtual T_SelectDef     select_definition () = 0;
 

@@ -139,7 +139,6 @@ bool C_TransportControl::fromXml (C_XmlData *P_data) {
 
   GEN_DEBUG(1, "C_TransportControl::fromXml() start");
   if (P_data != NULL) {
-    //    std::cerr << "TOTO" << *P_data << std::endl;
     if ((L_sectionList = P_data->get_sub_data()) != NULL) {
       // std::cerr << "L_sectionList->size() " << L_sectionList->size() << std::endl;
       for(L_sectionListIt  = L_sectionList->begin() ;
