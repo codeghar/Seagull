@@ -1,0 +1,490 @@
+<!--
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+ (c)Copyright 2006 Hewlett-Packard Development Company, LP.
+
+-->
+
+<!-- xcap-dictionnary definition                 -->
+<!-- xcap protocol definition                    -->
+<!-- seagull configuration file set              -->
+
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<protocol name="sip-protocol" 
+          type="text"
+          filter="lib=libparser_xml.so;function=filter_xml"
+          field-separator="\r\n"
+          body-separator="\r\n">
+
+<configuration-parameters>
+</configuration-parameters>
+
+<types>
+</types>
+
+
+<body-method>
+   <defmethod name="body-with-content-length"
+              method="length"
+              param="content-length"
+              default="yes">
+   </defmethod>
+
+   <defmethod name="body-to-be-parsed"
+              method="parser"
+              param="lib=libparser_xml.so;function=parse_xml">
+   </defmethod>
+</body-method>
+
+<header name="message"
+        type="type">
+   <fielddef name="type">
+     <regexp name="request-type" 
+             expr="[[:space:]]*([^ ]+)[[:space:]]+[^ ]+[[:space:]]+SIP\/2\.0[[:space:]]*$"
+             nbexpr="2"
+             line="0"
+             subexpr="1"> 
+     </regexp>
+     <regexp name="answer-type"
+             expr="SIP\/2\.0[[:space:]]+([0-9]+)[[:space:]]+"
+             nbexpr="2"
+             line="0"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+  
+   <fielddef name="content-length"
+             format="content-length: $(field-value)\r\n">
+     <regexp name="cl"
+             expr="[Cc][Oo][Nn][Tt][Ee][Nn][Tt]-[Ll][Ee][Nn][Gg][Tt][Hh][ 	]*:[ 	]*([!-}]*).*$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+
+   <fielddef name="content-type">
+     <regexp name="ct"
+             expr="[Cc][Oo][Nn][Tt][Ee][Nn][Tt]-[Tt][Yy][Pp][Ee][ 	]*:[ 	]*([!-}]*).*$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+   
+   <fielddef name="invite-name">
+     <regexp name="invite-name"
+             expr="[Ii][Nn][Vv][Ii][Tt][Ee][   ]*sip:([A-Za-z0-9._-]*)@([A-Za-z0-9.:_-]*) (SIP/2.0)"
+             nbexpr="3"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+
+   <fielddef name="invite-addr">
+     <regexp name="invite-addr"
+             expr="[Ii][Nn][Vv][Ii][Tt][Ee][   ]*sip:([A-Za-z0-9._-]*)@([A-Za-z0-9.:_-]*) (SIP/2.0)"
+             nbexpr="3"
+             subexpr="2">
+     </regexp>
+   </fielddef>
+
+   <fielddef name="bye-name">
+     <regexp name="bye-name"
+             expr="[Bb][Yy][Ee][   ]*sip:([A-Za-z0-9._-]*)@([A-Za-z0-9.:_-]*) (SIP/2.0)"
+             nbexpr="3"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+
+   <fielddef name="bye-addr">
+     <regexp name="bye-addr"
+             expr="[Bb][Yy][Ee][   ]*sip:([A-Za-z0-9._-]*)@([A-Za-z0-9.:_-]*) (SIP/2.0)"
+             nbexpr="3"
+             subexpr="2">
+     </regexp>
+   </fielddef>
+
+   <fielddef name="ack-name">
+     <regexp name="ack-name"
+             expr="[Aa][Cc][Kk][   ]*sip:([A-Za-z0-9._-]*)@([A-Za-z0-9.:_-]*) (SIP/2.0)"
+             nbexpr="3"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+
+   <fielddef name="ack-addr">
+     <regexp name="ack-addr"
+             expr="[Aa][Cc][Kk][   ]*sip:([A-Za-z0-9._-]*)@([A-Za-z0-9.:_-]*) (SIP/2.0)"
+             nbexpr="3"
+             subexpr="2">
+     </regexp>
+   </fielddef>
+
+   <fielddef name="call-id">
+     <regexp name="call-id"
+             expr="[Cc][Aa][Ll][Ll]-[Ii][Dd][ 	]*:[ 	]*([!-}]*).*$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+   
+   <fielddef name="call-id-addr">
+     <regexp name="call-id-addr"
+             expr="[Cc][Aa][Ll][Ll]-[Ii][Dd][   ]*:[  ]*([!-}]*)@([!-}]*).*$"
+             nbexpr="3"
+             subexpr="2">
+     </regexp>
+   </fielddef>
+
+   <fielddef name="call-id-id">
+     <regexp name="call-id-id"
+             expr="[Cc][Aa][Ll][Ll]-[Ii][Dd][   ]*:[  ]*([!-}]*)@([!-}]*).*$"
+             nbexpr="3"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+
+   <fielddef name="via">
+     <regexp name="via"
+             expr="[Vv][Ii][Aa][ 	]*:[ 	](.*)$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+
+   <fielddef name="via-transport">
+     <regexp name="via-transport"
+             expr="[Vv][Ii][Aa][    ]*:[  ]SIP/2.0/(UDP|TCP) ([A-Za-z0-9.:_-]*)(;branch=(.*))*"
+             nbexpr="5"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+
+   <fielddef name="via-addr">
+     <regexp name="via-addr"
+             expr="[Vv][Ii][Aa][    ]*:[  ]SIP/2.0/(UDP|TCP) ([A-Za-z0-9.:_-]*)(;branch=(.*))*"
+             nbexpr="5"
+             subexpr="2">
+     </regexp>
+   </fielddef>
+
+   <fielddef name="via-branch">
+     <regexp name="via-branch"
+             expr="[Vv][Ii][Aa][    ]*:[  ]SIP/2.0/(UDP|TCP) ([A-Za-z0-9.:_-]*)(;branch=(.*))*"
+             nbexpr="5"
+             subexpr="4">
+     </regexp>
+   </fielddef>
+
+   <fielddef name="from">
+     <regexp name="from"
+             expr="[Ff][Rr][Oo][Mm][ 	]*:[ 	](.*)$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+
+   <fielddef name="from-realname">
+     <regexp name="from-realname"
+             expr="[Ff][Rr][Oo][Mm][   ]*:[   ]*([A-Za-z0-9._ \"\-]*)[   <]*sip:([!-}]*)@([A-Za-z0-9.:_\-]*)>*(;tag=(.*))*"
+             nbexpr="6"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+
+   <fielddef name="from-name">
+     <regexp name="from-name"
+             expr="[Ff][Rr][Oo][Mm][   ]*:[   ]*([A-Za-z0-9._ \"-]*)[   <]*sip:([!-}]*)@([A-Za-z0-9.:_-]*)>*(;tag=(.*))*"
+             nbexpr="6"
+             subexpr="2">
+     </regexp>
+   </fielddef>
+
+   <fielddef name="from-addr">
+     <regexp name="from-addr"
+             expr="[Ff][Rr][Oo][Mm][   ]*:[   ]*([A-Za-z0-9._ \"-]*)[   <]*sip:([!-}]*)@([A-Za-z0-9.:_-]*)>*(;tag=(.*))*"
+             nbexpr="6"
+             subexpr="3">
+     </regexp>
+   </fielddef>
+   
+   <fielddef name="from-tag">
+     <regexp name="from-tag"
+             expr="[Ff][Rr][Oo][Mm][   ]*:[   ]*([A-Za-z0-9._ \"-]*)[   <]*sip:([!-}]*)@([A-Za-z0-9.:_\-]*)>*(;tag=(.*))*"
+             nbexpr="6"
+             subexpr="4">
+     </regexp>
+   </fielddef>
+
+   <fielddef name="to">
+     <regexp name="to"
+             expr="[Tt][Oo][ 	]*:[ 	](.*)$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+  
+   <fielddef name="to-realname">
+     <regexp name="to-realname"
+             expr="[Tt][Oo][   ]*:[   ]*([A-Za-z0-9._ \"-]*)[   <]*sip:([!-}]*)@([A-Za-z0-9.:_\-]*)>*(;tag=(.*))*"
+             nbexpr="6"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+
+   <fielddef name="to-name">
+     <regexp name="to-name"
+             expr="[Tt][Oo][   ]*:[   ]*([A-Za-z0-9. \"_-]*)[   <]*sip:([!-}]*)@([A-Za-z0-9.:_\-]*)>*(;tag=(.*))*"
+             nbexpr="6"
+             subexpr="2">
+     </regexp>
+   </fielddef>
+
+   <fielddef name="to-addr">
+     <regexp name="to-addr"
+             expr="[Tt][Oo][   ]*:[   ]*([A-Za-z0-9._ \"-]*)[   <]*sip:([!-}]*)@([A-Za-z0-9.:_\-]*)>*(;tag=(.*))*"
+             nbexpr="6"
+             subexpr="3">
+     </regexp>
+   </fielddef>
+
+   <fielddef name="to-tag">
+     <regexp name="to-tag"
+             expr="[Tt][Oo][   ]*:[   ]*([A-Za-z0-9. \"_-]*)[   <]*sip:([!-}]*)@([A-Za-z0-9.:_\-]*)>*(;tag=(.*))*"
+             nbexpr="6"
+             subexpr="4">
+     </regexp>
+   </fielddef>
+
+ 
+   <fielddef name="cseq">
+     <regexp name="cseq"
+             expr="[Cc][Ss][Ee][Qq][ 	]*:[ 	](.*)$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+   
+   <fielddef name="contact">
+     <regexp name="contact"
+             expr="[Cc][Oo][Nn][Tt][Aa][Cc][Tt][ 	]*:[ 	](.*)$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+
+   <fielddef name="max-forward">
+     <regexp name="maxforward"
+             expr="[Mm][Aa][Xx]-[Ff][Oo][Rr][Ww][Aa][Rr][Dd][Ss][ 	]*:[ 	](.*)$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+
+   <fielddef name="subject">
+     <regexp name="subject"
+             expr="[Ss][Uu][Bb][Jj][Ee][Cc][Tt][ 	]*:[ 	](.*)$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+   
+</header>
+
+<body name="data" type="data-type">
+
+   <fielddef name="v">
+     <regexp name="v"
+             expr="[v]=[ 	]*(.*)$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+
+   <fielddef name="o">
+     <regexp name="o"
+             expr="[o][ 	]*=[ 	]*(.*)$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+   <fielddef name="s">
+     <regexp name="s"
+             expr="[s][ 	]*=[ 	]*(.*)$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+   <fielddef name="i">
+     <regexp name="i"
+             expr="[i][ 	]*=[ 	]*(.*)$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+   <fielddef name="u">
+     <regexp name="u"
+             expr="[u][ 	]*=[ 	]*(.*)$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+   <fielddef name="e">
+     <regexp name="e"
+             expr="[e][ 	]*=[ 	]*(.*)$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+   <fielddef name="p">
+     <regexp name="p"
+             expr="[p][ 	]*=[ 	]*(.*)$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+   <fielddef name="c">
+     <regexp name="c"
+             expr="[c][ 	]*=[ 	]*(.*)$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+   <fielddef name="b">
+     <regexp name="b"
+             expr="[b][ 	]*=[ 	]*(.*)$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+   <fielddef name="z">
+     <regexp name="z"
+             expr="[z][ 	]*=[ 	]*(.*)$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+   <fielddef name="k">
+     <regexp name="k"
+             expr="[k][ 	]*=[ 	]*(.*)$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+   <fielddef name="a">
+     <regexp name="a"
+             expr="[a][ 	]*=[ 	]*(.*)$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+   <fielddef name="t">
+     <regexp name="t"
+             expr="[t][ 	]*=[ 	]*(.*)$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+   <fielddef name="r">
+     <regexp name="r"
+             expr="[r][ 	]*=[ 	]*(.*)$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+   <fielddef name="m">
+     <regexp name="m"
+             expr="[m][ 	]*=[ 	]*(.*)$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+</body>
+
+<dictionary session-method="field"
+            session-id="call-id" out-of-session-id="call-id">
+  <message name="INVITE"></message>
+  <message name="ACK"></message>
+  <message name="BYE"></message>
+  <message name="REGISTER"></message>
+  <message name="CANCEL"></message>
+  <message name="OPTIONS"></message>
+
+  <message name="100"></message>   
+  <message name="180"></message>   
+  <message name="181"></message>   
+  <message name="182"></message>   
+  <message name="183"></message>   
+
+  <message name="200"></message>   
+
+  <message name="300"></message>   
+  <message name="301"></message>   
+  <message name="302"></message>   
+  <message name="305"></message>   
+  <message name="380"></message>   
+
+  <message name="400"></message>   
+  <message name="401"></message>   
+  <message name="402"></message>   
+  <message name="403"></message>   
+  <message name="404"></message>   
+  <message name="405"></message>   
+  <message name="406"></message>   
+  <message name="407"></message>   
+  <message name="408"></message>   
+  <message name="410"></message>   
+  <message name="413"></message>   
+  <message name="414"></message>   
+  <message name="415"></message>   
+  <message name="416"></message>   
+  <message name="420"></message>   
+  <message name="423"></message>   
+  <message name="480"></message>   
+  <message name="481"></message>   
+  <message name="482"></message>   
+  <message name="483"></message>   
+  <message name="484"></message>   
+  <message name="485"></message>   
+  <message name="486"></message>   
+  <message name="487"></message>   
+  <message name="488"></message>   
+  <message name="491"></message>   
+  <message name="493"></message>   
+
+  <message name="500"></message>   
+  <message name="501"></message>   
+  <message name="502"></message>   
+  <message name="503"></message>   
+  <message name="504"></message>   
+  <message name="505"></message>   
+  <message name="513"></message>   
+  
+  <message name="600"></message>   
+  <message name="603"></message>   
+  <message name="604"></message>   
+  <message name="606"></message>   
+
+</dictionary>
+
+</protocol>
+
+
+
+
+
+
+
+
