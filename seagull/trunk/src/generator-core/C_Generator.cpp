@@ -56,8 +56,8 @@ void _gen_log_info(char *P_data) {
   GEN_LOG_EVENT_FORCE(P_data);
 }
 
-C_Generator::C_Generator(int P_argc, char**P_argv) : C_TaskControl() {
-
+C_Generator::C_Generator(cmd_line_pt P_cmd_line) : C_TaskControl() {
+  int L_i;  
 
   // generator model
   NEW_VAR(m_transport_ctrl, C_TransportControl(_gen_log_error, _gen_log_info));
@@ -74,8 +74,35 @@ C_Generator::C_Generator(int P_argc, char**P_argv) : C_TaskControl() {
 
   m_nb_forced = 0 ;
 
-  m_cmd_line_size = P_argc ;
-  m_cmd_line_values = P_argv ;
+
+  for (L_i = 0 ; L_i < P_cmd_line->m_nb_args ; L_i ++) {
+    if ((P_cmd_line->m_args[L_i]) && (strcmp(P_cmd_line->m_args[L_i],(char*)"-remotecontrol")== 0)) {
+      P_cmd_line->m_nb_args += 2 ;
+      
+      ALLOC_TABLE(P_cmd_line->m_args[P_cmd_line->m_nb_args-2],
+                  char*,
+                  sizeof(char),
+                  strlen((char*)"-dico")+1);
+      strcpy(P_cmd_line->m_args[P_cmd_line->m_nb_args-2],(char*)"-dico");
+
+      ALLOC_TABLE(P_cmd_line->m_args[P_cmd_line->m_nb_args-1],
+                  char*,
+                  sizeof(char),
+                  strlen((char*)"cmd-control-text-dictionnary.xml")+1);
+      strcpy(P_cmd_line->m_args[P_cmd_line->m_nb_args-1],
+             (char*)"cmd-control-text-dictionnary.xml");
+      break;
+    }
+  }
+
+//    for (L_i = 0 ; L_i < P_cmd_line->m_nb_args ; L_i ++) {
+//      std::cerr << "P_cmd_line->m_args[" << L_i << "] " << 
+//        P_cmd_line->m_args[L_i] << std::endl;
+//    }
+
+  m_cmd_line_size =  P_cmd_line->m_nb_args ;
+  m_cmd_line_values = P_cmd_line->m_args;
+
   m_xml_data = NULL ;
 
   m_do_display_control = false ;
@@ -397,6 +424,7 @@ T_GeneratorError C_Generator::InitProcedure() {
   list_t<char*>::iterator          L_it                       ;
 
   char                            *L_remote_cmd               ;
+  char                            *L_remote_dico_path         ;
 
 
   string_t                         L_log_file("") ;
@@ -423,7 +451,6 @@ T_GeneratorError C_Generator::InitProcedure() {
   char                            *L_external_data_file = NULL ;
 
   bool                             L_files_no_timestamp = false ;
-
 
   long                             L_logProtocolStatPeriod = 0    ;
   string_t                         L_logProtocolStatFileName      ;
@@ -452,6 +479,7 @@ T_GeneratorError C_Generator::InitProcedure() {
   L_remote_cmd = m_config -> get_remote_cmd () ;
 
 
+  L_remote_dico_path = m_config -> get_remote_dico_path () ;
 
   // configuration xml file analysis
   if (L_conf_file != NULL) {
@@ -468,7 +496,15 @@ T_GeneratorError C_Generator::InitProcedure() {
     for (L_it = L_dico_file_list->begin();
 	 L_it != L_dico_file_list->end();
 	 L_it++) {
-      L_file_all[L_i] = *L_it;
+      
+      if ((L_remote_cmd) && (strcmp(*L_it,(char*)"cmd-control-text-dictionnary.xml")== 0)) {
+        char      L_name_dico[80];
+        snprintf(L_name_dico, 80, 
+                 "%s/%s",L_remote_dico_path,*L_it); 
+        L_file_all[L_i] = L_name_dico ;
+      } else {
+        L_file_all[L_i] = *L_it;
+      }
       L_i ++ ;
     }
     L_file_all[L_i] = L_scen_file;
@@ -810,7 +846,7 @@ T_GeneratorError C_Generator::InitProcedure() {
 
     if (L_remote_cmd) {
       char                    L_remote_address[80] ;
-      
+
       snprintf(L_remote_address, 80, 
                "mode=server;source=%s",L_remote_cmd); 
       NEW_VAR(m_remote_control, C_RemoteControl(this,m_protocol_ctrl,L_remote_address)); // add a port

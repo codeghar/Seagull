@@ -106,6 +106,8 @@ protected:
   unsigned long        m_call_created ;
   unsigned long        m_call_to_simulate ;
   bool                 m_pause ;
+  T_TrafficType        m_type ;
+
 
   // call context management
   T_pCallContext      *m_call_ctxt_table ;

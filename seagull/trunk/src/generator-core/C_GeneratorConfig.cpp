@@ -189,6 +189,10 @@ bool C_GeneratorConfig::set_data
       m_option_remote_cmd = L_currentValue ;
       return (true) ;
 
+    case E_CMDLINE_remote_dico_path:
+      m_option_remote_dico_path = L_currentValue ;
+      return (true) ;
+
 
     case E_CMDLINE_nbOptions:
       return (false) ;		// ???
@@ -254,12 +258,15 @@ C_GeneratorConfig::C_GeneratorConfig (int P_argc, char** P_argv) {
        (char*)"", 
        (char*)"check the field of the messages received (default no check)"},
 
-     { E_CMDLINE_remote_cmd, (char*)"remote-cmd",
+     { E_CMDLINE_remote_cmd, (char*)"remotecontrol",
        C_GeneratorConfig::E_OT_OPTIONAL, 1,  one_value_string,
        (char*)"", 
-       (char*)"remote command active @IP:port (default no remote)"}
+       (char*)"remote control active @IP:port (default no remote)"},
 
-
+     { E_CMDLINE_remote_dico_path, (char*)"remote_dico_path",
+       C_GeneratorConfig::E_OT_OPTIONAL, 1,  one_value_string,
+       (char*)"", 
+       (char*)"remote dictionnary path (default /usr/local/share/seagull/config)"}
 
   } ;
 
@@ -325,6 +332,7 @@ C_GeneratorConfig::C_GeneratorConfig (int P_argc, char** P_argv) {
   m_call_rate_scale = DEF_CALL_RATE_SCALE ;
 
   m_option_remote_cmd = DEF_OPTION_REMOTE_CMD ;
+  m_option_remote_dico_path = DEF_REMOTE_DICO_PATH ;
 
   ALLOC_TABLE(m_conf_opt_set, bool*, sizeof(bool), E_CFG_OPT_Number);
   for(L_i=0; L_i < E_CFG_OPT_Number; L_i++) {
@@ -346,6 +354,8 @@ C_GeneratorConfig::~C_GeneratorConfig() {
   m_option_conf_file = NULL ;
   m_option_bg_mode = false ;
   m_option_remote_cmd  = NULL ;
+
+  m_option_remote_dico_path = NULL ;
 
   if (!m_option_dico_file_list->empty()) {
     m_option_dico_file_list->erase(m_option_dico_file_list->begin(),
@@ -384,6 +394,10 @@ char* C_GeneratorConfig::get_conf_file() {
 
 char* C_GeneratorConfig::get_remote_cmd() {
   return(m_option_remote_cmd) ;
+}
+
+char* C_GeneratorConfig::get_remote_dico_path() {
+  return(m_option_remote_dico_path) ;
 }
 
 char* C_GeneratorConfig::get_log_file() {
@@ -609,17 +623,6 @@ bool C_GeneratorConfig::set_value (T_GeneratorConfigOption P_opt,
 
       break ;
 
-  case E_CFG_OPT_MODEL_TRAFFIC_SELECT :
-    L_ret = false ;
-    for (L_j = 0; L_j < E_NB_MODEL_TRAFFIC_SELECT ; L_j ++) {
-      if(strcmp(P_value, _model_traffic_select[L_j]) == 0) {
-	m_model_traffic_select = L_j ;
-	L_ret = true ;
-	break ;
-      }
-    }
-
-      break ;
 
   case E_CFG_OPT_DATA_LOG_RTDISTRIB:
 
@@ -726,6 +729,18 @@ bool C_GeneratorConfig::set_value (T_GeneratorConfigOption P_opt,
       }
     }
     break ;
+
+  case E_CFG_OPT_MODEL_TRAFFIC_SELECT :
+    L_ret = false ;
+    for (L_j = 0; L_j < E_NB_MODEL_TRAFFIC_SELECT ; L_j ++) {
+      if(strcmp(P_value, _model_traffic_select[L_j]) == 0) {
+	m_model_traffic_select = L_j ;
+	L_ret = true ;
+	break ;
+      }
+    }
+
+      break ;
 
 
   default:
@@ -891,7 +906,6 @@ bool C_GeneratorConfig::get_value (T_GeneratorConfigOption  P_opt,
     break ;
 
   case E_CFG_OPT_LOG_PROTOCOL_STAT_NAME :
-
     *P_val = m_log_protocol_stat_name ;
     break ;
 

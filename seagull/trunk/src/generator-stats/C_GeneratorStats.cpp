@@ -1738,165 +1738,120 @@ char* C_GeneratorStats::dumpCounters() {
   char   L_buffer[MAX_CHAR_BUFFER_SIZE];
 
 
-  long           localElapsedTime  ;
   long           globalElapsedTime ;
   struct timeval currentTime       ;
 
-  float          MsgSendPerS;
-  float          MsgRecvPerS;
   float          AverageMsgRecvPerS;
   float          AverageMsgSendPerS;
-  float          AverageCurrentCallPerS ;
-
-  unsigned long  numberOfCall;
-  float          realInstantCallRate ;
-  float          averageCallRate ;
-
-  //  int            L_i             ;
-  unsigned long  L_PD_successful_call ;
+ 
   unsigned long  L_C_successful_call ;
-
-  
 
 
   // CRITICAL SECTION:
   // First of call: copy all accessible counters
 
+
+//    m_mutexTable[CPT_C_CurrentCall].lock();
+//    m_remoteCounters[CPT_C_CurrentCall] 
+//      = m_counters [CPT_C_CurrentCall];
+//    m_mutexTable[CPT_C_CurrentCall].unlock();
+
+//    m_mutexTable[CPT_C_FailedCallCannotSendMessage].lock() ;
+//    m_remoteCounters[CPT_C_FailedCallCannotSendMessage] 
+//      = m_counters [CPT_C_FailedCallCannotSendMessage];
+//    m_remoteCounters[CPT_PD_FailedCallCannotSendMessage] 
+//      = m_counters [CPT_PD_FailedCallCannotSendMessage];
+//    m_mutexTable[CPT_C_FailedCallCannotSendMessage].unlock() ;
+
+//    m_mutexTable[CPT_C_FailedCallUnexpectedMessage].lock() ;
+//    m_remoteCounters[CPT_C_FailedCallUnexpectedMessage] 
+//      = m_counters [CPT_C_FailedCallUnexpectedMessage];
+//    m_remoteCounters[CPT_PD_FailedCallUnexpectedMessage] 
+//      = m_counters [CPT_PD_FailedCallUnexpectedMessage];
+//    m_mutexTable[CPT_C_FailedCallUnexpectedMessage].unlock() ;
+
+//    m_mutexTable[CPT_C_RefusedCall].lock() ;
+//    m_remoteCounters[CPT_C_RefusedCall] 
+//      = m_counters [CPT_C_RefusedCall];
+//    m_remoteCounters[CPT_PD_RefusedCall] 
+//      = m_counters [CPT_PD_RefusedCall];
+//    m_mutexTable[CPT_C_RefusedCall].unlock() ;
+
+//    m_mutexTable[CPT_C_FailedCallAborted].lock() ;
+//    m_remoteCounters[CPT_C_FailedCallAborted] 
+//      = m_counters [CPT_C_FailedCallAborted];
+//    m_remoteCounters[CPT_PD_FailedCallAborted] 
+//      = m_counters [CPT_PD_FailedCallAborted];
+//    m_mutexTable[CPT_C_FailedCallAborted].unlock() ;
+
+
+
+//    m_mutexTable[CPT_C_FailedCallTimeout].lock() ;
+//    m_remoteCounters[CPT_C_FailedCallTimeout] 
+//      = m_counters [CPT_C_FailedCallTimeout];
+//    m_mutexTable[CPT_C_FailedCallTimeout].unlock() ;
+
+
   m_mutexTable[CPT_C_IncomingCallCreated].lock() ;
   m_remoteCounters[CPT_C_IncomingCallCreated] 
     = m_counters [CPT_C_IncomingCallCreated];
-  m_remoteCounters[CPT_PD_IncomingCallCreated] 
-    = m_counters [CPT_PD_IncomingCallCreated];
   m_mutexTable[CPT_C_IncomingCallCreated].unlock() ;
 
-  m_mutexTable[CPT_C_CurrentCall].lock();
-  m_remoteCounters[CPT_C_CurrentCall] 
-    = m_counters [CPT_C_CurrentCall];
-  m_mutexTable[CPT_C_CurrentCall].unlock();
+  m_mutexTable[CPT_C_OutgoingCallCreated].lock() ;
+  m_remoteCounters[CPT_C_OutgoingCallCreated] 
+    = m_counters [CPT_C_OutgoingCallCreated];
+  m_mutexTable[CPT_C_OutgoingCallCreated].unlock() ;
 
-  m_mutexTable[CPT_C_MsgSend].lock() ;
-  m_remoteCounters[CPT_C_MsgSend] 
-    = m_counters [CPT_C_MsgSend];
-  m_remoteCounters[CPT_PD_MsgSend] 
-    = m_counters [CPT_PD_MsgSend];
-  m_mutexTable[CPT_C_MsgSend].unlock() ;
-
-  m_mutexTable[CPT_C_MsgRecv].lock() ;
-  m_remoteCounters[CPT_C_MsgRecv] 
-    = m_counters [CPT_C_MsgRecv];
-  m_remoteCounters[CPT_PD_MsgRecv] 
-    = m_counters [CPT_PD_MsgRecv];
-  m_mutexTable[CPT_C_MsgRecv].unlock() ;
-  
-  m_mutexTable[CPT_C_FailedCall].lock() ;
-  m_remoteCounters[CPT_C_FailedCall] 
-    = m_counters [CPT_C_FailedCall];
-  m_remoteCounters[CPT_PD_FailedCall] 
-    = m_counters [CPT_PD_FailedCall];
-  m_mutexTable[CPT_C_FailedCall].unlock() ;
-    
   m_mutexTable[CPT_C_InitSuccessfulCall].lock() ;
   m_remoteCounters[CPT_C_InitSuccessfulCall] 
     = m_counters [CPT_C_InitSuccessfulCall];
-  m_remoteCounters[CPT_PD_InitSuccessfulCall] 
-    = m_counters [CPT_PD_InitSuccessfulCall];
   m_mutexTable[CPT_C_InitSuccessfulCall].unlock() ;
 
   m_mutexTable[CPT_C_TrafficSuccessfulCall].lock() ;
   m_remoteCounters[CPT_C_TrafficSuccessfulCall] 
     = m_counters [CPT_C_TrafficSuccessfulCall];
-  m_remoteCounters[CPT_PD_TrafficSuccessfulCall] 
-    = m_counters [CPT_PD_TrafficSuccessfulCall];
   m_mutexTable[CPT_C_TrafficSuccessfulCall].unlock() ;
 
   m_mutexTable[CPT_C_DefaultSuccessfulCall].lock() ;
   m_remoteCounters[CPT_C_DefaultSuccessfulCall] 
     = m_counters [CPT_C_DefaultSuccessfulCall];
-  m_remoteCounters[CPT_PD_DefaultSuccessfulCall] 
-    = m_counters [CPT_PD_DefaultSuccessfulCall];
   m_mutexTable[CPT_C_DefaultSuccessfulCall].unlock() ;
 
   m_mutexTable[CPT_C_AbortSuccessfulCall].lock() ;
   m_remoteCounters[CPT_C_AbortSuccessfulCall] 
     = m_counters [CPT_C_AbortSuccessfulCall];
-  m_remoteCounters[CPT_PD_AbortSuccessfulCall] 
-    = m_counters [CPT_PD_AbortSuccessfulCall];
   m_mutexTable[CPT_C_AbortSuccessfulCall].unlock() ;
 
-  m_mutexTable[CPT_C_FailedCallCannotSendMessage].lock() ;
-  m_remoteCounters[CPT_C_FailedCallCannotSendMessage] 
-    = m_counters [CPT_C_FailedCallCannotSendMessage];
-  m_remoteCounters[CPT_PD_FailedCallCannotSendMessage] 
-    = m_counters [CPT_PD_FailedCallCannotSendMessage];
-  m_mutexTable[CPT_C_FailedCallCannotSendMessage].unlock() ;
+  m_mutexTable[CPT_C_FailedCall].lock() ;
+  m_remoteCounters[CPT_C_FailedCall] 
+    = m_counters [CPT_C_FailedCall];
+  m_mutexTable[CPT_C_FailedCall].unlock() ;
 
-  m_mutexTable[CPT_C_FailedCallUnexpectedMessage].lock() ;
-  m_remoteCounters[CPT_C_FailedCallUnexpectedMessage] 
-    = m_counters [CPT_C_FailedCallUnexpectedMessage];
-  m_remoteCounters[CPT_PD_FailedCallUnexpectedMessage] 
-    = m_counters [CPT_PD_FailedCallUnexpectedMessage];
-  m_mutexTable[CPT_C_FailedCallUnexpectedMessage].unlock() ;
+  m_mutexTable[CPT_C_MsgSend].lock() ;
+  m_remoteCounters[CPT_C_MsgSend] 
+    = m_counters [CPT_C_MsgSend];
+  m_mutexTable[CPT_C_MsgSend].unlock() ;
 
-  m_mutexTable[CPT_C_RefusedCall].lock() ;
-  m_remoteCounters[CPT_C_RefusedCall] 
-    = m_counters [CPT_C_RefusedCall];
-  m_remoteCounters[CPT_PD_RefusedCall] 
-    = m_counters [CPT_PD_RefusedCall];
-  m_mutexTable[CPT_C_RefusedCall].unlock() ;
-
-  m_mutexTable[CPT_C_FailedCallAborted].lock() ;
-  m_remoteCounters[CPT_C_FailedCallAborted] 
-    = m_counters [CPT_C_FailedCallAborted];
-  m_remoteCounters[CPT_PD_FailedCallAborted] 
-    = m_counters [CPT_PD_FailedCallAborted];
-  m_mutexTable[CPT_C_FailedCallAborted].unlock() ;
-
-  m_mutexTable[CPT_C_FailedCallTimeout].lock() ;
-  m_remoteCounters[CPT_C_FailedCallTimeout] 
-    = m_counters [CPT_C_FailedCallTimeout];
-  m_remoteCounters[CPT_PD_FailedCallTimeout] 
-    = m_counters [CPT_PD_FailedCallTimeout];
-  m_mutexTable[CPT_C_FailedCallTimeout].unlock() ;
-
-  m_mutexTable[CPT_C_OutgoingCallCreated].lock() ;
-  m_remoteCounters[CPT_C_OutgoingCallCreated] 
-    = m_counters [CPT_C_OutgoingCallCreated];
-  m_remoteCounters[CPT_PD_OutgoingCallCreated] 
-    = m_counters [CPT_PD_OutgoingCallCreated];
-  m_mutexTable[CPT_C_OutgoingCallCreated].unlock() ;
+  m_mutexTable[CPT_C_MsgRecv].lock() ;
+  m_remoteCounters[CPT_C_MsgRecv] 
+    = m_counters [CPT_C_MsgRecv];
+  m_mutexTable[CPT_C_MsgRecv].unlock() ;
 
   // END CRITICAL SECTION
 
   GET_TIME (&currentTime);
   // computing the real call rate
   globalElapsedTime   = ms_difftime (&currentTime, &m_startTime);
-  localElapsedTime    = ms_difftime (&currentTime, &m_pdStartTime);
+
+    
+
+  L_C_successful_call = 
+    m_remoteCounters[CPT_C_InitSuccessfulCall] +
+    m_remoteCounters[CPT_C_TrafficSuccessfulCall] +
+    m_remoteCounters[CPT_C_DefaultSuccessfulCall] +
+    m_remoteCounters[CPT_C_AbortSuccessfulCall] ;
 
 
-  numberOfCall        
-    = m_remoteCounters[CPT_C_IncomingCallCreated] 
-    + m_remoteCounters[CPT_C_OutgoingCallCreated];
-
-  averageCallRate     
-    = (globalElapsedTime > 0 ? 
-       1000*(float)numberOfCall/(float)globalElapsedTime : 0.0);
-
-  numberOfCall        
-    = m_remoteCounters[CPT_PD_IncomingCallCreated] 
-    + m_remoteCounters[CPT_PD_OutgoingCallCreated];
-
-  realInstantCallRate 
-    = (localElapsedTime  > 0 ? 
-       1000*(float)numberOfCall / (float)localElapsedTime :
-       0.0);
-
-  MsgRecvPerS = (localElapsedTime  > 0 ? 
-		    1000*((float)m_remoteCounters[CPT_PD_MsgRecv]) / (float)localElapsedTime :
-		    0.0);
-
-  MsgSendPerS = (localElapsedTime  > 0 ? 
-		    1000*((float)m_remoteCounters[CPT_PD_MsgSend]) / (float)localElapsedTime :
-		    0.0);
 
   AverageMsgRecvPerS = (globalElapsedTime  > 0 ? 
 		    1000*((float)m_remoteCounters[CPT_C_MsgRecv]) / (float)globalElapsedTime :
@@ -1906,23 +1861,8 @@ char* C_GeneratorStats::dumpCounters() {
 		    1000*((float)m_remoteCounters[CPT_C_MsgSend]) / (float)globalElapsedTime :
 		    0.0);
 
-  AverageCurrentCallPerS = (globalElapsedTime  > 0 ? 
-			    1000*((float)m_remoteCounters[CPT_C_CurrentCall]) / (float)globalElapsedTime :
-			    0.0);
-
+    
   
-  L_PD_successful_call = 
-    m_remoteCounters[CPT_PD_InitSuccessfulCall] +
-    m_remoteCounters[CPT_PD_TrafficSuccessfulCall] +
-    m_remoteCounters[CPT_PD_DefaultSuccessfulCall] +
-    m_remoteCounters[CPT_PD_AbortSuccessfulCall] ;
-
-  L_C_successful_call = 
-    m_remoteCounters[CPT_C_InitSuccessfulCall] +
-    m_remoteCounters[CPT_C_TrafficSuccessfulCall] +
-    m_remoteCounters[CPT_C_DefaultSuccessfulCall] +
-    m_remoteCounters[CPT_C_AbortSuccessfulCall] ;
-
   ALLOC_TABLE(L_result_data, char*, sizeof(char), 1024);
   
 
@@ -1936,68 +1876,42 @@ char* C_GeneratorStats::dumpCounters() {
 
 
     
-  sprintf(L_result_data, "%s%s%s", 
-          (char*)"Elapsed Time",
-          msToHHMMSSmmm(localElapsedTime),
+  sprintf(L_result_data, "%s%s\r\n", 
+          (char*)"elapsed_time=",
           msToHHMMSSmmm(globalElapsedTime));
-  
+  //  strcat(L_result_data, L_buffer);
+
+  sprintf(L_buffer, "%s%8ld\r\n",
+          (char*)"incoming_calls=",
+          m_remoteCounters[CPT_C_IncomingCallCreated]);
   strcat(L_result_data, L_buffer);
-  
-  sprintf(L_buffer, "%s;", msToHHMMSSmmm(globalElapsedTime));
+
+
+  sprintf(L_buffer, "%s%8ld\r\n",
+          (char*)"outgoing_calls=",
+          m_remoteCounters[CPT_C_OutgoingCallCreated]);
   strcat(L_result_data, L_buffer);
 
+  sprintf(L_buffer, "%s%8ld\r\n",
+          (char*)"successful_calls=",
+          L_C_successful_call);
+  strcat(L_result_data, L_buffer);
 
-//     DISPLAY_VAL_RATEF_TPS ("Call rate (/s)",  realInstantCallRate, averageCallRate);
+  sprintf(L_buffer, "%s%8ld\r\n",
+          (char*)"failed_calls=",
+          m_remoteCounters[CPT_C_FailedCall]);
+  strcat(L_result_data, L_buffer);
 
-//    snprintf(P_buf, 100, (char*)"%f;%f;", m_data.m_x, 
-//	     m_data.m_y);
-//      DISPLAY_2VAL  ("Incoming calls", 
-//  		   m_remoteCounters[CPT_PD_IncomingCallCreated],
-//  		   m_remoteCounters[CPT_C_IncomingCallCreated]);
-    
-//      DISPLAY_2VAL  ("Outgoing calls", 
-//  		   m_remoteCounters[CPT_PD_OutgoingCallCreated],
-//  		   m_remoteCounters[CPT_C_OutgoingCallCreated]);
-    
-    
-//      DISPLAY_2VAL_RATEF ( "Msg Recv/s" ,
-//  			 MsgRecvPerS,
-//  			 AverageMsgRecvPerS);
-    
-//      DISPLAY_2VAL_RATEF ( "Msg Sent/s" ,
-//  			 MsgSendPerS,
-//  			 AverageMsgSendPerS);
-    
-//      DISPLAY_2VAL  ("Unexpected msg",      
-//  		   m_remoteCounters[CPT_PD_FailedCallUnexpectedMessage], 
-//  		   m_remoteCounters[CPT_C_FailedCallUnexpectedMessage]);
-    
-//      DISPLAY_2VAL_CURRENTF ("Current calls",       
-//  			   m_remoteCounters[CPT_C_CurrentCall],
-//  			   AverageCurrentCallPerS);
-    
+  sprintf(L_buffer, "%s%8.3f\r\n",
+          (char*)"msg_recv_s=",
+          AverageMsgRecvPerS);
+  strcat(L_result_data, L_buffer);
 
-//      DISPLAY_2VAL  ("Successful calls", 
-//  		   L_PD_successful_call,
-//  		   L_C_successful_call);
+  sprintf(L_buffer, "%s%8.3f\r\n",
+          (char*)"msg_sent_s=",
+          AverageMsgSendPerS);
+  strcat(L_result_data, L_buffer);
 
-    
-//      DISPLAY_2VAL  ("Failed calls",      
-//  		   m_remoteCounters[CPT_PD_FailedCall], 
-//  		   m_remoteCounters[CPT_C_FailedCall]);
-    
-//      DISPLAY_2VAL  ("Refused calls",      
-//  		   m_remoteCounters[CPT_PD_RefusedCall], 
-//  		   m_remoteCounters[CPT_C_RefusedCall]);
-    
-//      DISPLAY_2VAL  ("Aborted calls",      
-//  		   m_remoteCounters[CPT_PD_FailedCallAborted], 
-//  		   m_remoteCounters[CPT_C_FailedCallAborted]);
-    
-//      DISPLAY_2VAL  ("Timeout calls",      
-//  		   m_remoteCounters[CPT_PD_FailedCallTimeout], 
-//  		   m_remoteCounters[CPT_C_FailedCallTimeout]);
-    
 
   return(L_result_data);
 }

@@ -21,6 +21,9 @@
 #define _C_GENERATOR_H
 
 #include "C_TaskControl.hpp"
+
+#include "cmd_line_t.hpp"
+
 #include "C_GeneratorConfig.hpp"
 #include "GeneratorXmlData.hpp"
 #include "C_ReadControl.hpp"
@@ -54,7 +57,8 @@
 class C_Generator : public C_TaskControl {
 
 public:
-   C_Generator(int P_argc, char**P_argv);
+   C_Generator(cmd_line_pt P_cmd_line);
+
   ~C_Generator();
 
   void set_screen (char P_key) ;

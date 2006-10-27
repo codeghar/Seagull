@@ -425,8 +425,6 @@ T_GeneratorError C_RemoteControl::receiveControl () {
         case C_TransportEvent::E_TRANS_CLOSED: {
           GEN_DEBUG(1, "C_RemoteControl::receiveControl() E_TRANS_CLOSED id["
                     << L_event_id << "]");
-          stop() ;
-          
           break ;
         }
         
@@ -533,6 +531,10 @@ void C_RemoteControl::createRampThread(unsigned long P_duration,
                    P_increase);
   
   L_rampThread = start_thread_control(L_rampCtrl);
+}
+
+void C_RemoteControl::quit() {
+  m_gen->stop() ;
 }
 
 void C_RemoteControl::ramp(unsigned long P_value, unsigned long P_duration) {
@@ -667,37 +669,34 @@ char* C_RemoteControl::find_value (char *P_buf, char *P_dir) {
   string_t   L_string = "" ;
 
 
-  L_string  = "([ &]*" ;
+  L_string  = "([[:blank:]&]*" ;
   L_string += P_dir ;
-  L_string += "[^ =]*[ ]*[=][ ]*)([^&]*)";
-
-  //    L_string  = "([[:blank:]]*" ;
-  //    L_string += P_dir ;
-  //    L_string += "[[:blank:]]*=[[:blank:]]*)([^[:blank:]&]+)";
+  L_string += "[^[:blank:]=]*[[:blank:]]*=[[:blank:]]*)([^&]*)";
   
   if ((P_buf[0] == '?') && (P_buf+1)) { 
     P_buf++;
-  L_status = regcomp (&L_reg_expr, 
-		      L_string.c_str(),
-		      REG_EXTENDED) ;
-
-  if (L_status != 0) {
-    regerror(L_status, &L_reg_expr, L_buffer, 100);
-    regfree (&L_reg_expr) ;
-
-  } else {
-  
-    L_status = regexec (&L_reg_expr, P_buf, 3, L_pmatch, 0) ;
-    regfree (&L_reg_expr) ;
-
-    if (L_status == 0) {
+    
+    L_status = regcomp (&L_reg_expr, 
+                        L_string.c_str(),
+                        REG_EXTENDED) ;
+    
+    if (L_status != 0) {
+      regerror(L_status, &L_reg_expr, L_buffer, 100);
+      regfree (&L_reg_expr) ;
       
-      L_size = L_pmatch[2].rm_eo - L_pmatch[2].rm_so ;
-      ALLOC_TABLE(L_value, char*, sizeof(char), L_size+1);
-      memcpy(L_value, &(P_buf[L_pmatch[2].rm_so]), L_size);
-      L_value[L_size]='\0' ;
-    } 
-  }
+    } else {
+      
+      L_status = regexec (&L_reg_expr, P_buf, 3, L_pmatch, 0) ;
+      regfree (&L_reg_expr) ;
+      
+      if (L_status == 0) {
+        
+        L_size = L_pmatch[2].rm_eo - L_pmatch[2].rm_so ;
+        ALLOC_TABLE(L_value, char*, sizeof(char), L_size+1);
+        memcpy(L_value, &(P_buf[L_pmatch[2].rm_so]), L_size);
+        L_value[L_size]='\0' ;
+      } 
+    }
   }
 
   return (L_value);
@@ -717,7 +716,9 @@ char* C_RemoteControl::decode_put_uri(char *P_uri) {
   if (L_ptr) {
     L_ptr = find_directory(L_ptr,(char*)"command");
     if (L_ptr) {
+
       char *L_file ;
+
       L_file = find_file(L_ptr,(char*)"rate");
       if (L_file) {
         L_ptr_value = find_value(L_file,(char*)"value");
@@ -729,31 +730,44 @@ char* C_RemoteControl::decode_put_uri(char *P_uri) {
             L_result = resultOK() ;
           }
           FREE_TABLE(L_ptr_value);
-        } 
-      } else {
-        L_file = find_file(L_ptr, (char*)"ramp");
-        if (L_file) {
-          L_ptr_value = find_value(L_file, (char*)"value");
-          if (L_ptr_value) {
-            L_value = strtoul_f(L_ptr_value, &L_end_str,10) ;
+        }
+        return (L_result);
+      }  
+
+      L_file = find_file(L_ptr, (char*)"ramp");
+      if (L_file) {
+        L_ptr_value = find_value(L_file, (char*)"value");
+        if (L_ptr_value) {
+          L_value = strtoul_f(L_ptr_value, &L_end_str,10) ;
+          if (L_end_str[0] != '\0') { // not a number
             FREE_TABLE(L_ptr_value);
-            if (L_end_str[0] != '\0') { // not a number
-            } else {
-              L_ptr_value = find_value(L_file, (char*)"duration");
-              if (L_ptr_value) {
-                L_duration = strtoul_f(L_ptr_value, &L_end_str,10) ;
+          } else {
+            FREE_TABLE(L_ptr_value);
+            L_ptr_value = find_value(L_file, (char*)"duration");
+            if (L_ptr_value) {
+              L_duration = strtoul_f(L_ptr_value, &L_end_str,10) ;
+              if (L_end_str[0] != '\0') { // not a number
                 FREE_TABLE(L_ptr_value);
-                if (L_end_str[0] != '\0') { // not a number
-                } else {
-                  ramp(L_value, L_duration);
-                  L_result = resultOK() ;
-                }
+              } else {
+                ramp(L_value, L_duration);
+                FREE_TABLE(L_ptr_value);
+                L_result = resultOK() ;
               }
             }
-          } // find value
+          }
+        } // find value
+        return (L_result);
+      } // find_file for ramp 
 
-        } // find_file for ramp 
-      } // else 
+      
+      L_file = find_file(L_ptr,(char*)"stop");
+      if (L_file) {
+        L_result = resultOK() ;
+        quit();
+        return (L_result);
+      }  
+
+
     } // if (L_ptr) for command
   } // if (L_ptr) for seagull
 
@@ -788,7 +802,6 @@ char * C_RemoteControl::execute_command(char *P_cmd, char *P_uri,
   if (P_cmd != NULL) {
 
     if (strcmp(P_cmd, (char*)"PUT")==0) {
-      // std::cerr << "PUT" << std::endl ;
       L_result = decode_put_uri (P_uri) ;
     } else if (strcmp(P_cmd, (char*)"GET")==0) {
       L_result = decode_get_uri (P_uri,P_result_data) ;

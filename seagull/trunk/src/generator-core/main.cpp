@@ -22,6 +22,9 @@
 #include "GeneratorTrace.hpp"
 #include "TimeUtils.hpp"
 
+
+#include "cmd_line_t.hpp"
+
 #include <sys/time.h>
 
 // #include <sys/resource.h>
@@ -55,6 +58,8 @@ int main_tool(int P_argc, char**P_argv) {
   struct sigaction L_sig_usr1   ;
   T_pC_Generator   L_Generator  ;
   T_GeneratorError L_error_code ;
+  
+  cmd_line_pt      L_cmd_line   ;
 
 //   struct rlimit    L_rlimit     ;
 
@@ -82,7 +87,14 @@ int main_tool(int P_argc, char**P_argv) {
 //     GEN_FATAL(1, "RLIMIT_NOFILE modification failed");
 //   }
 
-  NEW_VAR(L_Generator, C_Generator(P_argc, P_argv));
+
+  L_cmd_line = create_cmd_line((P_argc+2)) ;
+  copy_cmd_line(L_cmd_line, P_argc, P_argv);
+
+
+  //   NEW_VAR(L_Generator, C_Generator(P_argc, P_argv));
+  NEW_VAR(L_Generator, C_Generator(L_cmd_line));
+
   L_main = L_Generator ;
  
   L_error_code = L_Generator -> init () ;
@@ -92,6 +104,11 @@ int main_tool(int P_argc, char**P_argv) {
   
   // Clean Generator main object
   DELETE_VAR(L_Generator);
+
+
+  destroy_cmd(L_cmd_line);
+  L_cmd_line->m_nb_args += 2 ;
+  DELETE_VAR(L_cmd_line);
 
   // Close trace
   close_trace () ;
@@ -106,4 +123,11 @@ int main(int P_argc, char**P_argv) {
 
   return L_nRet;
 }
+
+
+
+
+
+
+
 

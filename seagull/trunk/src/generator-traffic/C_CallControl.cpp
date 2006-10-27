@@ -54,6 +54,8 @@ C_CallControl::C_CallControl(C_GeneratorConfig   *P_config,
   m_call_created = 0 ;
   m_pause = false ;
 
+  m_type = E_TRAFFIC_UNKNOWN ;
+
   m_nb_wait_values = 0 ;
   m_wait_values = NULL ;
 
@@ -365,6 +367,9 @@ void C_CallControl::messageReceivedControl () {
             // move to list 2 times
             if (L_scenario->get_exe_end_code() != E_EXE_IGNORE ) {
               m_stat -> executeStatAction (C_GeneratorStats::E_CREATE_INCOMING_CALL);
+              if (m_type == E_TRAFFIC_SERVER) {
+                m_call_created ++ ;
+              }
             }
 	  } else {
 	    // no more call context available
@@ -1043,7 +1048,7 @@ T_GeneratorError C_CallControl::InitProcedure() {
   if (L_scenario == NULL) {
     GEN_WARNING("no init scenario defined");
   } else {
-    
+    m_type = L_type ;
     switch(L_type) {
     
     case E_TRAFFIC_CLIENT:
@@ -1336,8 +1341,9 @@ void C_CallControlClient::newCallControl() {
       GEN_WARNING("No more call context available");
       break ;
     }
-
+    
     m_call_created ++ ;
+
     L_nbNewCalls -- ;
   }
 

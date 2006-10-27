@@ -63,6 +63,8 @@
 #define DEF_RETRANS_ENABLED                                  false
 #define DEF_MODEL_TRAFFIC_SELECT           E_MODEL_TRAFFIC_UNIFORM
 #define DEF_OPTION_REMOTE_CMD                                 NULL
+#define DEF_REMOTE_DICO_PATH (char*)"/usr/local/share/seagull/config"
+
 
 
 #endif

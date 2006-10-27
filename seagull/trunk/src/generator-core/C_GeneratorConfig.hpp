@@ -74,6 +74,7 @@ typedef enum {
   E_CMDLINE_timestamp_log,
   E_CMDLINE_check_msg,
   E_CMDLINE_remote_cmd,
+  E_CMDLINE_remote_dico_path,
 
   E_CMDLINE_nbOptions
 } T_GeneratorCmdLineOption ;
@@ -159,6 +160,8 @@ class C_GeneratorConfig:public C_CommandLine<T_GeneratorCmdLineOption> {
 
   char*        get_remote_cmd() ;
 
+  char*        get_remote_dico_path() ;
+
 
   bool         get_display_protocol_stat () ;
   bool         get_display_scenario_stat () ;
@@ -190,7 +193,9 @@ private:
   bool         m_option_bg_mode       ;
   bool         m_option_timestamp_log ;
   bool         m_option_check_msg     ;
+
   char        *m_option_remote_cmd    ;
+  char        *m_option_remote_dico_path    ;
   
 
   bool            *m_conf_opt_set ; // config option setted
@@ -214,6 +219,7 @@ private:
   unsigned int   m_external_data_select ;
 
   unsigned int   m_model_traffic_select ;
+
 
   unsigned int   m_check_level_mask ;
   unsigned int   m_check_behaviour  ;

@@ -91,6 +91,8 @@ private :
   void ramp(unsigned long P_value, unsigned long P_duration);
   char* dump_stat();
 
+  void quit();
+
   char* resultOK();
   char* resultKO();
 
