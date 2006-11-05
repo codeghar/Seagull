@@ -76,7 +76,7 @@ C_Generator::C_Generator(cmd_line_pt P_cmd_line) : C_TaskControl() {
 
 
   for (L_i = 0 ; L_i < P_cmd_line->m_nb_args ; L_i ++) {
-    if ((P_cmd_line->m_args[L_i]) && (strcmp(P_cmd_line->m_args[L_i],(char*)"-remotecontrol")== 0)) {
+    if ((P_cmd_line->m_args[L_i]) && (strcmp(P_cmd_line->m_args[L_i],(char*)"-ctrl")== 0)) {
       P_cmd_line->m_nb_args += 2 ;
       
       ALLOC_TABLE(P_cmd_line->m_args[P_cmd_line->m_nb_args-2],
@@ -88,9 +88,9 @@ C_Generator::C_Generator(cmd_line_pt P_cmd_line) : C_TaskControl() {
       ALLOC_TABLE(P_cmd_line->m_args[P_cmd_line->m_nb_args-1],
                   char*,
                   sizeof(char),
-                  strlen((char*)"cmd-control-text-dictionnary.xml")+1);
+                  strlen((char*)"remote-ctrl.xml")+1);
       strcpy(P_cmd_line->m_args[P_cmd_line->m_nb_args-1],
-             (char*)"cmd-control-text-dictionnary.xml");
+             (char*)"remote-ctrl.xml");
       break;
     }
   }
@@ -497,7 +497,7 @@ T_GeneratorError C_Generator::InitProcedure() {
 	 L_it != L_dico_file_list->end();
 	 L_it++) {
       
-      if ((L_remote_cmd) && (strcmp(*L_it,(char*)"cmd-control-text-dictionnary.xml")== 0)) {
+      if ((L_remote_cmd) && (strcmp(*L_it,(char*)"remote-ctrl.xml")== 0)) {
         char      L_name_dico[80];
         snprintf(L_name_dico, 80, 
                  "%s/%s",L_remote_dico_path,*L_it); 

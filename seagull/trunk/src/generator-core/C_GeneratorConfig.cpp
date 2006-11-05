@@ -258,15 +258,15 @@ C_GeneratorConfig::C_GeneratorConfig (int P_argc, char** P_argv) {
        (char*)"", 
        (char*)"check the field of the messages received (default no check)"},
 
-     { E_CMDLINE_remote_cmd, (char*)"remotecontrol",
+     { E_CMDLINE_remote_cmd, (char*)"ctrl",
        C_GeneratorConfig::E_OT_OPTIONAL, 1,  one_value_string,
        (char*)"", 
-       (char*)"remote control active @IP:port (default no remote)"},
+       (char*)"remote control active on @IP:port (default no remote)"},
 
-     { E_CMDLINE_remote_dico_path, (char*)"remote_dico_path",
+     { E_CMDLINE_remote_dico_path, (char*)"ctrldicopath",
        C_GeneratorConfig::E_OT_OPTIONAL, 1,  one_value_string,
        (char*)"", 
-       (char*)"remote dictionnary path (default /usr/local/share/seagull/config)"}
+       (char*)"remote dictionary path (default remote-ctrl.xml in\n                   /usr/local/share/seagull/config)"}
 
   } ;
 
