@@ -734,6 +734,63 @@ Seagull will look at parameters indicated by
           (in particular, this is how Diameter Hop-by-hop Id and End-To-End Id are handled.</li>
         </ul>
       </section>
+      <section id="store_restore">
+        <title>Store and restore of protocol parameters</title>
+        <p>Some of the most useful actions are the store and restore actions.
+        In the following example, we will explain how to use the store
+        and restore actions for 3 protocols: SIP (text), Diameter (binary)
+        and TCAP (api).</p>
+        <note>A store action is generally executed as a post-action, while
+        a restore action is generally executed as a pre-action.</note>
+        <ul><li><u>SIP (text)</u>. There are several ways to use
+        the store action for a text protocol:
+        <ul><li><strong>You want the entire value of a protocol field</strong>: 
+        in this case, the store action can simply be used as:
+        <source><![CDATA[<store name="MYVAR" entity="via"></store>]]></source>
+        The variable "MYVAR" contains the value of the Via header.<br/>Similarly, 
+        the Via header value can be restored using:
+        <source><![CDATA[<restore name="MYVAR" entity="via"></restore>]]></source>
+        Which will put the value of "MYVAR" in the Via header field (as declared
+        in the dictionary).</li>
+        <li><strong>You want part of the value of a protocol field, using a regular expression</strong>:
+        in this case, the store action can include a regular expression:
+        <source><![CDATA[<store name="MYVAR" entity="via">
+  <regexp name="viabranch"
+    expr="[Vv][Ii][Aa][    ]*:[  ]SIP/2.0/(UDP|TCP) ([A-Za-z0-9.:_-]*)(;branch=(.*))*"
+    nbexpr="5"
+    subexpr="4">
+  </regexp></store>]]></source>
+        The variable "MYVAR" contains the value of the branch field in the SIP via header.<br/>Similarly, 
+        the Via branch value can be restored using:
+        <source><![CDATA[<restore name="MYVAR" entity="via-branch"></restore>]]></source>
+        Which will put the value of "MYVAR" in the via-branch header field (it will
+        need to be declared in the dictionary).</li>
+        </ul>
+        </li>
+        <li><u>Diameter (binary)</u>: in a binary protocol, store and restore
+        actions can be done using directly the fields declared in the XML dictionary, 
+        like this:
+        <source><![CDATA[<store name="MYVAR" entity="via"></store>]]></source>
+        and then:
+        <source><![CDATA[<restore name="MYVAR" entity="via"></restore>]]></source>
+        <note>store and restore actions on Diameter Grouped AVPs are
+        currently not supported. Use <a href="http://gull.sourceforge.net/wiki/index.php/Tips#Reading_input_values_of_Grouped_AVPs_in_Diameter_messages">this workaround</a> instead.</note>
+        </li>
+        <li><u>OCTCAP (API)</u>: to store and restore
+        fields, you must identify which field you want to store and restore like this:
+        <source><![CDATA[<store name="MYVAR" entity="TC_INVOKE" sub-entity="operation-data"
+   instance="InitialDP-data" begin="5" end="10"></store>]]></source>
+        Note that begin and end attributes are used to extract part of the operation-data 
+        (like correlation-id or called party number).
+        Same for the restore:
+        <source><![CDATA[<restore name="MYVAR" entity="TC_CONTINUE" sub-entity="operation-data"
+   instance="ApplyCharging-data" begin="9" end="14"></restore>]]></source>
+        This will set the value of the operation-data field (starting octet 9, ending octet 14) 
+        in the TC_CONTINUE named "ApplyCharging-data"
+        with the content of "MYVAR".
+        </li>
+        </ul>
+      </section>
     </section>
     <section id="control">
       <title>Message and parameters control</title>
