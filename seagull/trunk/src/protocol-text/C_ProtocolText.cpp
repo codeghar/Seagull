@@ -1128,7 +1128,6 @@ C_ProtocolText::check_field(T_pFieldDef P_field_def, bool P_header) {
                                 L_reg_str->m_nb_match,
                                 L_reg_str->m_sub_match,
                                 L_reg_str->m_line));
-
     if (L_error_comp == 0) {
       (L_ret->m_reg_exp_lst)->push_back(L_cRegExp);
 
@@ -1161,7 +1160,11 @@ C_ProtocolText::check_field(T_pFieldDef P_field_def, bool P_header) {
     if (L_value == NULL) {
       GEN_ERROR(E_GEN_FATAL_ERROR, "In field [" 
                 << P_field_def->m_name 
-                << "] bad format expression: need $(field-value) presence");
+                << "] the format expression ["
+                << P_field_def->m_format
+                << "] is not matched by the regexp ["
+                << L_reg_str->m_expr
+                << "]");
       return (NULL);
     } else {
       ALLOC_VAR(L_ret->m_format, T_pValueData, sizeof(T_ValueData));
