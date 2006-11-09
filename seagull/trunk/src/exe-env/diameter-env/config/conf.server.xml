@@ -39,7 +39,7 @@
   <define entity="traffic-param" name="display-period" value="1"></define>
   <define entity="traffic-param" name="log-stat-period" value="1"></define>
   <define entity="traffic-param" name="log-stat-file" value="../logs/server-stat.csv"></define>
-  <define entity="traffic-param" name="call-timeout-ms" value="1000"></define>
+  <define entity="traffic-param" name="call-timeout-ms" value="10000"></define>
   <define entity="traffic-param" name="display-scenario-stat" value="true"></define>
   <define entity="traffic-param" name="display-protocol-stat" value="true"></define>
   <define entity="traffic-param" name="log-protocol-stat-period" value="5"></define>
@@ -56,7 +56,7 @@
   <define entity="traffic-param" name="max-send" value="2000"></define>
   <define entity="traffic-param" name="max-receive" value="2000"></define>
   <define entity="traffic-param" name="max-simultaneous-calls" value="2000"></define>
-  <define entity="traffic-param" name="select-timeout-ms" value="1000"></define>
+  <define entity="traffic-param" name="select-timeout-ms" value="50"></define>
 
 <!--
  <define entity="traffic-param" name="files-no-timestamp" value="true"></define>

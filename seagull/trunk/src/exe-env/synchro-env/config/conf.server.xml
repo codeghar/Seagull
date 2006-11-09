@@ -57,7 +57,7 @@
   <define entity="traffic-param" name="max-send" value="2000"></define>
   <define entity="traffic-param" name="max-receive" value="2000"></define>
   <define entity="traffic-param" name="max-simultaneous-calls" value="2000"></define>
-  <define entity="traffic-param" name="select-timeout-ms" value="1000"></define>
+  <define entity="traffic-param" name="select-timeout-ms" value="50"></define>
   <define entity="traffic-param" name="msg-check-level" value="P"></define>
   <define entity="traffic-param" name="msg-check-behaviour" value="E"></define>
 
