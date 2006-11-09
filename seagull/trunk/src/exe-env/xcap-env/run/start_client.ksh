@@ -20,5 +20,5 @@
 
 export LD_LIBRARY_PATH=/usr/local/bin
 
-seagull -conf ../config/conf.client.xml -dico ../config/xcap-dictionnary.xml -scen ../scenario/client.xml -log ../logs/client.log -llevel ET
+seagull -conf ../config/conf.client.xml -dico ../config/xcap-dictionary.xml -scen ../scenario/client.xml -log ../logs/client.log -llevel ET
 
