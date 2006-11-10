@@ -21,6 +21,9 @@
 #define _TRAFFIC_DISTRIB_POISSON_H_
 
 #include "C_TrafficModel.hpp"
+#include "stocc.h"
+#include <stdlib.h>
+
 
 
 class C_TrafficDistribPoisson : public C_TrafficModel {
@@ -31,6 +34,8 @@ public:
   int  authorize_new_call ();
   
 private:
+  long  m_LastFctCallTS;
+  StochasticLib1 *m_sto;
 
 };
 
