@@ -131,6 +131,11 @@ C_ProtocolFrame::T_MsgError C_MessageText::DecodeBodyWithContentLength (int P_in
 
   GEN_DEBUG(1, "C_MessageText::DecodeBodyWithContentLength() start");
 
+  if (*P_size == 0) {
+    // there is no body 
+    return (L_error);
+  }
+
   L_value = m_protocol->get_field_value(this,(m_methods[P_index]->m_param_decode).m_id) ;
   
   if (L_value != NULL) {
