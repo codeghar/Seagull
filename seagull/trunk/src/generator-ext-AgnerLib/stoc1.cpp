@@ -49,7 +49,7 @@ double LnFac(int32 n) {
       // make table of ln(n!)
       double sum = fac_table[0] = 0.;
       for (int i=1; i<FAK_LEN; i++) {
-        sum += log(i);
+        sum += log(float(i));
         fac_table[i] = sum;}
       initialized = 1;}
     return fac_table[n];}
