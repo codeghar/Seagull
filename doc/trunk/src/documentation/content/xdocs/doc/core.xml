@@ -1658,6 +1658,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
                   <li>cert_chain_file=xxx : indicates the name of the certificate</li>
                   <li>private_key_file=yyy  : indicates the name of the private key</li>
 		  <li>passwd=zzz            : this password protects the private key</li>
+                  <li>secure              : indicates if the mode is secure at the begining of the traffic (yes/no , default:yes)
                   <li>decode-buf-len (default=4096): size of the reception buffer (maximum message size after re-assembly)</li>
                   <li>encode-buf-len (default=4096): size of the sending buffer (maximum message size to be sent (can be segmented))</li>
                   <li>read-buf-len (default=1024): amount of bytes to read on the IP socket at a time - several reads 
@@ -2589,6 +2590,33 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             <td>New value to use to identify the session (like the value of a protocol field)</td>
             <td>name="transaction-id"</td>
           </tr>
+          <tr>
+            <th>
+              <anchor id="transport-option"/>
+              <strong>&lt;transport-option&gt;</strong>
+            </th>
+            <th>&nbsp;</th>
+            <th>
+              Change the mode from no secure to secure transport during execution.
+				  A "wait-ms" (with value="1000" at least) command is needed after this action 
+              to let systems synchronize the secure mode.</th>
+            <th>
+              <code><![CDATA[<transport-option channel="channel-1" value="secure-mode"></transport-option>]]></code>
+            </th>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>channel</td>
+            <td>Value that was used to identify the channel.</td>
+            <td>channel="channel-1"</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>value</td>
+            <td>"secure-mode" indicates that the mode will changed to secure one. (the only agreed value) </td>
+            <td>value="secure-mode"</td>
+          </tr>
+
         </table>
       </section>
       <!--
