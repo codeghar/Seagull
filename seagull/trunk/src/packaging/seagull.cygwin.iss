@@ -91,6 +91,8 @@ Source: ..\INSTALL.txt; DestDir: {app}; Flags: ignoreversion
 Source: ..\HISTORY.txt; DestDir: {app}; Flags: ignoreversion
 Source: ..\exe-env\diameter-env\config\base_cc.xml; DestDir: {app}\diameter-env\config
 Source: ..\exe-env\diameter-env\config\base_cx.xml; DestDir: {app}\diameter-env\config
+Source: ..\exe-env\diameter-env\config\base_ro.xml; DestDir: {app}\diameter-env\config
+Source: ..\exe-env\diameter-env\config\base_rf.xml; DestDir: {app}\diameter-env\config
 Source: ..\exe-env\diameter-env\config\base_draft08.xml; DestDir: {app}\diameter-env\config
 Source: ..\exe-env\diameter-env\config\base_sh.xml; DestDir: {app}\diameter-env\config
 Source: ..\exe-env\diameter-env\config\conf.client.xml; DestDir: {app}\diameter-env\config
