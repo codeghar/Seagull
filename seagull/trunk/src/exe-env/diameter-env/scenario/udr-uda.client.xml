@@ -79,6 +79,10 @@
           <avp name="Public-Identity" value="sip:subscriber@seagull"></avp>
         </avp>
         <avp name="Data-Reference" value="10"></avp> <!-- IMS_PUBLIC_IDENTITY -->
+        <avp name="Vendor-Specific-Application-Id">
+          <avp name="Vendor-Id" value="10415"></avp>
+          <avp name="Auth-Application-Id" value="16777217"></avp>
+        </avp>
       </command>
       <action>
         <start-timer></start-timer>
