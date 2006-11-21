@@ -21,7 +21,8 @@ To compile Seagull from the source:
 - Edit build.conf to fit your needs (default should be OK)
 - run "./build.ksh -target clean"
 - run "./build.ksh -target all"
-- Seagull binaries are in build-x.y.z/: copy all of them in /usr/local/bin/
+- run "./install.ksh" to copy Seagull binaries and config files _or_
+  Seagull binaries are in build-x.y.z/: copy all of them in /usr/local/bin/
 - Add /usr/local/bin in your PATH environment variable 
   (eg. export "PATH=$PATH:/usr/local/bin")
 - Execution environment are in exe-env/XXX-env/, XXX being the protocol
