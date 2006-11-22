@@ -152,179 +152,263 @@ seagull is /usr/local/bin/seagull</source>
     <section>
       <title>Using Seagull</title>
       <section>
-        <title>Traffic shape</title>
-        <p>In current version of Seagull, the traffic shape is a constant call rate traffic. 
-        In addition, some parameters
-        can be tuned for a more advanced control of the traffic. 
-        Refer to the <a href="#ref_traffic_param">traffic
-        parameters reference</a> for more information on those parameters.</p>
-        <p>
-          <img alt="Steady call rate" src="images/callrate.png"/>
-        </p>
+        <title>Traffic profile</title>
+        <p>The traffic profile is the evolution of the scenario attempts 
+        rate (also known as call rate). By default, the traffic profile is constant,
+        meaning that you set the rate at x, and it will remain x until you quit
+        Seagull. You can change the scenario attempt rate interactively (using
+        <a href="#control_keyboard">keyboard</a>) or using the <a href="#control_remote">remote
+        control interface</a>.</p>
+        <p>A simple Perl script (<a href="http://gull.svn.sourceforge.net/viewvc/gull/seagull/trunk/src/tool-ctrl/ctrl.pl?view=markup">ctrl.pl</a>) is provided with Seagull to demonstrate
+        the capabilities of the remote control interface as well as providing
+        a way to create a repeatable traffic profile.</p>
+        <p><a href="http://gull.svn.sourceforge.net/viewvc/gull/seagull/trunk/src/tool-ctrl/ctrl.pl?view=markup">ctrl.pl</a> takes two arguments: Seagull's remote control address 
+        (as specified on the controlled Seagull through "-ctrl IP:PORT" command line option) and
+        the traffic profile scenario to execute.</p>
+        <p>A sample scenario (scenario.txt) is also provided:</p>
+        <source># Comment 1
+' Comment 2
+SET RATE 20 CPS
+WAIT 2S
+DUMP
+WAIT 2S
+DUMP
+SET RATE 40 CPS
+WAIT 2S
+DUMP
+WAIT 2S
+DUMP
+RAMP 100 IN 30S
+WAIT 10S
+DUMP
+WAIT 10S
+DUMP
+WAIT 10S
+DUMP</source>
+        <p>This scenario will set the scenario attempt per seconds rate to 20, wait 2 seconds (this 
+        is done at ctrl.pl level, not at Seagull level), dump the counters, wait another 2
+        seconds, dump the counters again, set the scenario attempt per seconds rate to 40, and 
+        so on. It creates the following traffic profile:</p>
+        <p><img alt="Remote control" src="images/remote_ctrl_scen.png"/></p>
+        <note>ctrl.pl is an example of the <a href="#control_remote">remote
+        control interface</a>. If you modify ctrl.pl to add more features,
+        we would appreciate that you post your findings back to 
+        <a href="http://lists.sourceforge.net/lists/listinfo/gull-users">Seagull
+        users mailing list</a>.</note>
       </section>
       <p class="pageBreakBefore"></p>
       <section>
         <title>Controlling Seagull</title>
-        <p>Seagull can be controlled using the keyboard. Many keys have a 
-        function. That's why there is an help screen, with the list of the useful 
-        keys that can be displayed by pressing the "h" key at any time in Seagull:</p>
-        <source><![CDATA[|-----------------------------------------------------------------------------|
-| Key: Description                                                            |
-|-----------------------------------------------------------------------------|
-|+ : Increase call rate by call-rate-scale (default 1)                        |
-|- : Decrease call rate by call-rate-scale (default 1)                        |
-|c : Command mode (format : set var value)                                    |
-|    set call-rate      50 : call-rate become 50 c/s                          |
-|    set call-rate-scale 5 : use ± key to increase/decrease call-rate by 5    |
-|q : Tool exit (forced when pressed two times)                                |
-|p : Pause traffic                                                            |
-|r : Resume traffic (after pause)                                             |
-|f : Force init scenario (switch to traffic)                                  |
-|d : Reset cumulative counters for each stat set in config file               |
-|a : activate/deactivate: percentage in Response time screen                  |
-|1 : Traffic screen                                                           |
-|2 : Response time screen                                                     |
-|h : Help screen                                                              |
-|3 : Protocol octcap-itu screen(s)                                            |
-|A : Scenario traffic stats                                                   |
-|B : Scenario default 0 stats                                                 |
-|C : Scenario default 1 stats                                                 |
-|D : Scenario default 2 stats                                                 |
-|E : Scenario default 3 stats                                                 |
-|--- Select a key ----------------------- Next screen : Press the same key ---|]]></source>
-        <p></p>
-        <p>Notice that all the lines after "h : Help screen" are optional. 
-	  They only appear if you have set the protocol statistics on ("3 : Protocol octcap-itu screen(s)" 
-	  in our example) and the scenario statistics (lines from A to E in our example).</p>
-    <note>
-	  In case there is not enough space on the screen to display all the 
-	  optional lines, you have to press the h key again to display the end of 
-	  the help list.</note>
-        <p>Description of the key functions:</p>
-        <p></p>
-        <table id="ref_keys">
-          <caption>Control keys</caption>
-          <tr>
-            <th>Key</th>
-            <th>Short description</th>
-            <th>Long description</th>
-          </tr>
-          <tr>
-            <td>+</td>
-            <td>Increase the call rate</td>
-            <td>This key allows to increase the call rate from the call-rate-scale value. 
-              The default value of the call-rate-scale is 1.<br/>
-              Usable only in client mode. It has no effect in server mode.</td>
-          </tr>
-          <tr>
-            <td>-</td>
-            <td>Decrease the call rate</td>
-            <td>This key allows to decrease the call rate from the call-rate-scale value. 
-              The default value of the call-rate-scale is 1.<br/>
-              Usable only in client mode. It has no effect in server mode.</td>
-          </tr>
-          <tr>
-            <td>c</td>
-            <td>Command</td>
-            <td>This key allows to change any parameter in the configuration during traffic.<br/>
-	      For example:<br/>
-	      * press 'c', then 'set call-rate 10' to change the value of the call rate to 10.<br/>
-	      * press 'c', then 'set call-rate-scale 5' to change the value of the call-rate-scale to 5.<br/>
-              Usable only in client mode. It has no effect in server mode.</td>
-          </tr>
-          <tr>
-            <td>q</td>
-            <td>Stop the traffic and quit the tool</td>
-            <td>In <strong>server</strong> mode, Seagull will not accept any
-              new incoming call. Once all ongoing calls are finished, the
-              tool will exit.<br/>
-              In <strong>client</strong> mode, Seagull will not place any
-              new call. Once all ongoing calls are finished, Seagull will exit<br/>
-              Pressing the q/ctrl-C key a second time forces Seagull to quit, even if
-              all ongoing calls are not finished.</td>
-          </tr>
-          <tr>
-            <td>p</td>
-            <td>Pause the traffic</td>
-            <td>In <strong>server</strong> mode, Sagull will not accept any
-              new incoming call. Default scenarios will still be active.<br/>
-              In <strong>client</strong> mode, Seagull will not place any
-              new call. Ongoing calls are processed normally.<br/>
-              <strong>Note:</strong> Un-pausing the traffic can trigger a traffic burst
-              as Seagul will try to cope with the call-rate that has been set. For
-              a smooth restart, the 'r' key should be used.</td>
-          </tr>
-          <tr>
-            <td>r</td>
-            <td>Restart the traffic</td>
-            <td>Once the traffic is paused, restart will smoothly restart the 
-              traffic, to go back to the call rate asked.</td>
-          </tr>
-          <tr>
-            <td>f</td>
-            <td>Force without init</td>
-            <td>This key allows to jump directly to the "traffic" section
-              of a <a href="#config_scenario">scenario</a>, without waiting for the "init" section to be
-              completed.</td>
-          </tr>
-          <tr>
-            <td>d</td>
-            <td>Reset cumulative counters for each statistics set in config file</td>
-            <td>Reset the counters. This option is available only if log-stat, log-protocol, display-protocol 
-	      or display-scenario statistics options are set in the configuration file.</td>
-          </tr>
-          <tr>
-            <td>1</td>
-            <td>Display the main screen</td>
-            <td>Display the main screen with the general statistics. Press "1" 
-	      again to display the statistics per scenario.</td>
-          </tr>
-          <tr>
-            <td>2</td>
-            <td>Display the response time screen</td>
-            <td>The second column gives the percentage of the calls for each 
-	      response time range, if the percentages are activated (see 'a' key). 
-	      This screen is relevant only if you set the proper options in the 
-	      configuration files and if you set the start and stop of the timer 
-	      in the scenario (see the <a href="#statistics">statistics</a> chapter).</td>
-          </tr>
-          <tr>
-            <td>a</td>
-            <td>Activate/deactivate the percentage computation</td>
-            <td>This key activates or deactivates the computation of the percentages 
-	      of the response time screen, only if the log-stat is set in the 
-	      configuration file and if you set the start and stop of the timer 
-	      in the scenario (see the <a href="#statistics">statistics</a> chapter).</td>
-          </tr>
-          <tr>
-            <td>h</td>
-            <td>Show the help screen</td>
-            <td>Press on h to show the help screen. <br/>
-	      If you see "Next screen: press the same key", press h again to see the second help screen.</td>
-          </tr>
-          <tr>
-            <td>Numbers above or equal to 3</td>
-            <td>Show protocol statistics screen</td>
-            <td>If you asked for statistics at the protocol level, you can reach the corresponding screen by pressing the 
-	      corresponding number.<br/>
-	      3 is for the first protocol, 4 for the second one, 5 for the third one, and so on for all the protocols used.<br/>
-	      The possible values go from 3 to 0, so there are a maximum of 8 protocol statistics screens.</td>
-          </tr>
-          <tr>
-            <td>Uppercase letters (starting with A)</td>
-            <td>Show scenario section statistics</td>
-            <td>If you asked for statistics at the scenario level, you can reach the corresponding screen by pressing the 
-	      corresponding letter.<br/>
-	      A is for the first section in the scenario, B for the second one, C for the third one, 
-	      and so on for all the sections in your scenario used.<br/>
-	      The number of scenario section statistics screens is limited to 26.</td>
-          </tr>
-        </table>
-        <p>It is also possible to stop the traffic using POSIX signals. This
-          is especially useful when running Seagull in background mode 
-          (<code>-bg</code> option, see the <a href="#cli_help">command line help</a>). 
-	  <code>kill -SIGUSR1 pid</code> has the same effect as the 'q' key. You
-          can force the traffic to stop by issuing a second <code>kill -SIGUSR1 pid</code>.</p>
+        <p>Seagull can be controlled in three ways:</p>
+        <ul><li><a href="#control_keyboard">Interactively</a>: using the keyboard
+        attached to the terminal running Seagull</li>
+        <li><a href="#control_remote">Remotely</a>: using the http server embedded in Seagull</li>
+        <li><a href="#control_signal">Posix signals</a>: using Posix signals 
+        to stop the traffic</li>
+        </ul>
+         <section id="control_keyboard">
+          <title>Keyboard control</title>
+          <p>Seagull can be controlled interactively using the keyboard.
+          As there are many keys available to control Seagull, you can press "h"
+          at any time to see the keys available and their function:</p>
+          <source><![CDATA[
+  |-----------------------------------------------------------------------------|
+  | Key: Description                                                            |
+  |-----------------------------------------------------------------------------|
+  |+ : Increase call rate by call-rate-scale (default 1)                        |
+  |- : Decrease call rate by call-rate-scale (default 1)                        |
+  |c : Command mode (format : set var value)                                    |
+  |    set call-rate      50 : call-rate become 50 c/s                          |
+  |    set call-rate-scale 5 : use ± key to increase/decrease call-rate by 5    |
+  |q : Tool exit (forced when pressed two times)                                |
+  |p : Pause traffic                                                            |
+  |r : Resume traffic (after pause)                                             |
+  |f : Force init scenario (switch to traffic)                                  |
+  |d : Reset cumulative counters for each stat set in config file               |
+  |a : activate/deactivate: percentage in Response time screen                  |
+  |1 : Traffic screen                                                           |
+  |2 : Response time screen                                                     |
+  |h : Help screen                                                              |
+  |3 : Protocol octcap-itu screen(s)                                            |
+  |A : Scenario traffic stats                                                   |
+  |B : Scenario default 0 stats                                                 |
+  |C : Scenario default 1 stats                                                 |
+  |D : Scenario default 2 stats                                                 |
+  |E : Scenario default 3 stats                                                 |
+  |--- Select a key ----------------------- Next screen : Press the same key ---|]]></source>
+          <p></p>
+          <p>Notice that all the lines after "h : Help screen" are optional. 
+      They only appear if you have set the protocol statistics on ("3 : Protocol octcap-itu screen(s)" 
+      in our example) and the scenario statistics (lines from A to E in our example).</p>
+      <note>
+      In case there is not enough space on the screen to display all the 
+      optional lines, you have to press the h key again to display the end of 
+      the help list.</note>
+          <p>Description of the key functions:</p>
+          <p></p>
+          <table id="ref_keys">
+            <caption>Control keys</caption>
+            <tr>
+              <th>Key</th>
+              <th>Short description</th>
+              <th>Long description</th>
+            </tr>
+            <tr>
+              <td>+</td>
+              <td>Increase the call rate</td>
+              <td>This key allows to increase the call rate from the call-rate-scale value. 
+                The default value of the call-rate-scale is 1.<br/>
+                Usable only in client mode. It has no effect in server mode.</td>
+            </tr>
+            <tr>
+              <td>-</td>
+              <td>Decrease the call rate</td>
+              <td>This key allows to decrease the call rate from the call-rate-scale value. 
+                The default value of the call-rate-scale is 1.<br/>
+                Usable only in client mode. It has no effect in server mode.</td>
+            </tr>
+            <tr>
+              <td>c</td>
+              <td>Command</td>
+              <td>This key allows to change any parameter in the configuration during traffic.<br/>
+          For example:<br/>
+          * press 'c', then 'set call-rate 10' to change the value of the call rate to 10.<br/>
+          * press 'c', then 'set call-rate-scale 5' to change the value of the call-rate-scale to 5.<br/>
+                Usable only in client mode. It has no effect in server mode.</td>
+            </tr>
+            <tr>
+              <td>q</td>
+              <td>Stop the traffic and quit the tool</td>
+              <td>In <strong>server</strong> mode, Seagull will not accept any
+                new incoming call. Once all ongoing calls are finished, the
+                tool will exit.<br/>
+                In <strong>client</strong> mode, Seagull will not place any
+                new call. Once all ongoing calls are finished, Seagull will exit<br/>
+                Pressing the q/ctrl-C key a second time forces Seagull to quit, even if
+                all ongoing calls are not finished.</td>
+            </tr>
+            <tr>
+              <td>p</td>
+              <td>Pause the traffic</td>
+              <td>In <strong>server</strong> mode, Sagull will not accept any
+                new incoming call. Default scenarios will still be active.<br/>
+                In <strong>client</strong> mode, Seagull will not place any
+                new call. Ongoing calls are processed normally.<br/>
+                <strong>Note:</strong> Un-pausing the traffic can trigger a traffic burst
+                as Seagul will try to cope with the call-rate that has been set. For
+                a smooth restart, the 'r' key should be used.</td>
+            </tr>
+            <tr>
+              <td>r</td>
+              <td>Restart the traffic</td>
+              <td>Once the traffic is paused, restart will smoothly restart the 
+                traffic, to go back to the call rate asked.</td>
+            </tr>
+            <tr>
+              <td>f</td>
+              <td>Force without init</td>
+              <td>This key allows to jump directly to the "traffic" section
+                of a <a href="#config_scenario">scenario</a>, without waiting for the "init" section to be
+                completed.</td>
+            </tr>
+            <tr>
+              <td>d</td>
+              <td>Reset cumulative counters for each statistics set in config file</td>
+              <td>Reset the counters. This option is available only if log-stat, log-protocol, display-protocol 
+          or display-scenario statistics options are set in the configuration file.</td>
+            </tr>
+            <tr>
+              <td>1</td>
+              <td>Display the main screen</td>
+              <td>Display the main screen with the general statistics. Press "1" 
+          again to display the statistics per scenario.</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>Display the response time screen</td>
+              <td>The second column gives the percentage of the calls for each 
+          response time range, if the percentages are activated (see 'a' key). 
+          This screen is relevant only if you set the proper options in the 
+          configuration files and if you set the start and stop of the timer 
+          in the scenario (see the <a href="#statistics">statistics</a> chapter).</td>
+            </tr>
+            <tr>
+              <td>a</td>
+              <td>Activate/deactivate the percentage computation</td>
+              <td>This key activates or deactivates the computation of the percentages 
+          of the response time screen, only if the log-stat is set in the 
+          configuration file and if you set the start and stop of the timer 
+          in the scenario (see the <a href="#statistics">statistics</a> chapter).</td>
+            </tr>
+            <tr>
+              <td>h</td>
+              <td>Show the help screen</td>
+              <td>Press on h to show the help screen. <br/>
+          If you see "Next screen: press the same key", press h again to see the second help screen.</td>
+            </tr>
+            <tr>
+              <td>Numbers above or equal to 3</td>
+              <td>Show protocol statistics screen</td>
+              <td>If you asked for statistics at the protocol level, you can reach the corresponding screen by pressing the 
+          corresponding number.<br/>
+          3 is for the first protocol, 4 for the second one, 5 for the third one, and so on for all the protocols used.<br/>
+          The possible values go from 3 to 0, so there are a maximum of 8 protocol statistics screens.</td>
+            </tr>
+            <tr>
+              <td>Uppercase letters (starting with A)</td>
+              <td>Show scenario section statistics</td>
+              <td>If you asked for statistics at the scenario level, you can reach the corresponding screen by pressing the 
+          corresponding letter.<br/>
+          A is for the first section in the scenario, B for the second one, C for the third one, 
+          and so on for all the sections in your scenario used.<br/>
+          The number of scenario section statistics screens is limited to 26.</td>
+            </tr>
+          </table>
+         </section>
+         <section id="control_remote">
+          <title>Remote control</title>
+          <section><title>Description</title>
+            <p>Seagull can be remote controlled through a remote connection. The 
+            protocol used is HTML, through a dictionary provided at run time (-ctrldicopath command line option),
+            the default being /usr/local/share/seagull/config/remote-ctrl.xml.</p>
+            <p>Using HTTP makes it very easy to remote control Seagull, either directly from
+            a browser or from high level languages like Perl or Python.</p>
+            <p>In particular, this allow to:</p>
+            <ul>
+              <li>Control a cluster of Seagull instances (on one host or spread in
+              a Seagull cluster farm)</li>
+              <li>Control the traffic profile over time (see the example with ctrl.pl
+              Perl script)</li>
+              <li>Automate benchmark test sessions</li>
+              <li>Easily create a Graphical User Interface for Seagull control and monitoring (through http,
+              AJAX, Eclipse plugin, ...)</li>
+              <li>Create real time graphs with Seagull statistics (dump command)</li>
+            </ul>
+            <p>The following configurations are possible:<br/>
+            <img alt="Remote control" src="images/remote_ctrl.png"/></p>
+          </section>
+          <section><title>Control commands</title>
+          <p>The following remote control commands are implemented:</p>
+          <ul>
+            <li><strong>Set rate</strong>: to set the scenario attempt per seconds rate. This is done by sending
+            an HTTP "<code>PUT</code>" with URI: <source>http://x.y.z.t:p/seagull/command/rate?value=n</source></li>
+            <li><strong>Dump</strong>: to dump the statistics counters. This is done by sending
+            an HTTP "<code>GET</code>" with URI: <source>http://x.y.z.t:p/seagull/counters/all</source></li>
+            <li><strong>Ramp</strong>: to linearly increase or decrease the scenario attempts per second rate,
+            from the current value to a target value in a number of second.<br/> This is done by sending
+            an HTTP "<code>PUT</code>" with URI: <source>http://x.y.z.t:p/seagull/command/ramp?value=n&amp;duration=d</source></li>
+          </ul>
+          </section>
+         </section>
+         <section id="control_signal">
+            <title>Posix signal control</title>
+            <p>It is also possible to stop the traffic using POSIX signals. This
+            is especially useful when running Seagull in background mode 
+            (<code>-bg</code> option, see the <a href="#cli_help">command line help</a>). 
+            <code>kill -SIGUSR1 pid</code> has the same effect as the 'q' key. You
+            can force the traffic to stop by issuing a second <code>kill -SIGUSR1 pid</code>.</p>
+         </section>
+        
       </section>
       <section>
         <title>Navigating through the screens</title>
@@ -1658,7 +1742,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
                   <li>cert_chain_file=xxx : indicates the name of the certificate</li>
                   <li>private_key_file=yyy  : indicates the name of the private key</li>
 		  <li>passwd=zzz            : this password protects the private key</li>
-                  <li>secure              : indicates if the mode is secure at the begining of the traffic (yes/no , default:yes)
+                  <li>secure              : indicates if the mode is secure at the begining of the traffic (yes/no , default:yes)</li>
                   <li>decode-buf-len (default=4096): size of the reception buffer (maximum message size after re-assembly)</li>
                   <li>encode-buf-len (default=4096): size of the sending buffer (maximum message size to be sent (can be segmented))</li>
                   <li>read-buf-len (default=1024): amount of bytes to read on the IP socket at a time - several reads 
