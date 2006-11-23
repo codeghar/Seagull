@@ -7,27 +7,392 @@
   <body>
     <section>
       <title>SIP protocol details</title>
-      <fixme author="Olivier">To write</fixme>
+      <p>The implementation of SIP in Seagull conforms to <a href="http://www.packetizer.com/voip/sip/standards.html">SIP standards</a></p>
+    <note>Seagull doesn't currently support "optional" messages. The messages actually exchanged must exactly match the scenario.</note>
     </section>
     <section>
       <title>Getting started with SIP</title>
       <section>
         <title>First try</title>
+        <p>So that you can get familiar with Seagull in the context of SIP, here is an example that will launch the following SIP scenario:</p>
+      <source><![CDATA[   
+    |(1) INVITE            |
+    |--------------------->|   
+    |(2) 180 Ringing       |
+    |<---------------------|   
+    |(3) 200 OK            |
+    |<---------------------|   
+    |(4) ACK               |
+    |--------------------->|
+    |                      |
+    |(5) PAUSE             |
+    |                      |
+    |(6) BYE               |
+    |--------------------->|  
+    |(7) 200 OK            |
+    |<---------------------|]]></source>
+    <p>You can also see the <a href="http://gull.svn.sourceforge.net/viewvc/gull/seagull/trunk/src/exe-env/sip-env/scenario/client.xml?view=markup">client XML scenario.</a></p>
       </section>
       <section>
         <title>First try explained</title>
-      </section>
+        <p>Here is the commented version of the SIP client</p>
+        <table>
+          <tr>
+            <th>Scenario</th>
+            <th>Comments</th>
+          </tr>
+          <tr>
+            <td>
+            <source><![CDATA[<?xml version="1.0" encoding="ISO-8859-1" ?>
+<scenario>
+
+<counter>
+  <counterdef name="callid-counter" init="0"> </counterdef>
+</counter>
+
+<traffic>
+   <send channel="channel-1">
+     <action>
+    
+       <inc-counter name="callid-counter"> </inc-counter>
+    
+       <set-value name="call-id"
+                  format="$(callid-counter)@255.255.255.255"></set-value>
+
+     
+       <restore-from-external field="1" entity="call-id-addr"></restore-from-external>
+
+     
+       <store  name="local_ip"  entity="call-id-addr"></store>
+
+   
+       <set-value name="via"
+                  format="SIP/2.0/UDP 255.255.255.255"></set-value>
+       <restore name="local_ip" entity="via-addr"></restore>
+      
+       <restore-from-external field="4" entity="via-transport"></restore-from-external>
+
+     
+       <set-value name="from"
+                  format="seagull <sip:seagull@255.255.255.255&gt;;tag=1"></set-value>
+      
+       <restore-from-external field="0" entity="from-name"></restore-from-external>
+
+       
+       <store name="local_name"  entity="from-name"></store>
+
+       <restore name="local_ip" entity="from-addr"></restore>
+
+     
+       <set-value name="to"
+                  format="sut <sip:service@255.255.255.255:5060&gt;"></set-value>
+      
+       <restore-from-external field="2" entity="to-name"></restore-from-external>
+
+       <restore-from-external field="3" entity="to-addr"></restore-from-external>
+
+  
+       <restore name="local_name" entity="invite-name"></restore>
+       <restore name="local_ip" entity="invite-addr"></restore>
+
+     </action>
+     <message>
+
+     <! [ CDATA[INVITE sip:schooler@cs.caltech.edu SIP/2.0
+         Via: SIP/2.0/UDP north.east.isi.edu
+         From: Mark Handley $lt;sip:mjh@isi.edu>
+         To: Eve Schooler <sip:schooler@caltech.edu>
+         Call-ID: 2963313058@north.east.isi.edu
+         CSeq: 1 INVITE
+         Subject: SIP will be discussed, too
+         Content-Type: application/sdp
+         Content-Length: 187]] >
+
+     <![CDATA[v=0
+              o=user1 53655765 2353687637 IN IP4 155.208.221.173
+              s=Mbone Audio
+              i=Discussion of Mbone Engineering Issues
+              e=mbone@somewhere.com
+              c=IN IP4 155.208.221.173
+              t=0 0
+              m=audio 3456 RTP/AVP 0
+              a=rtpmap:0 PCMU/8000]] >
+     </message>
+     <action>
+       
+       <store name="SID" entity="call-id"></store>
+       <store name="VIA" entity="via"></store>
+       <store name="FROM" entity="from"></store>
+       <store name="TO" entity="to"></store>
+       </action>
+   </send>
+
+   <receive channel="channel-1">
+    <message>
+    
+      <! [CDATA[SIP/2.0 180 Ringing
+         Via: SIP/2.0/UDP north.east.isi.edu
+         From: Mark Handley <sip:mjh@isi.edu>
+         To: Eve Schooler <sip:schooler@caltech.edu> ;tag=9883472
+         Call-ID: 2963313058@north.east.isi.edu
+         CSeq: 1 INVITE]] >
+    </message>
+   </receive>
+
+   <receive channel="channel-1">
+    <message>
+    
+     <! [CDATA[SIP/2.0 200 OK
+              Via: SIP/2.0/UDP north.east.isi.edu
+              From: Mark Handley <sip:mjh@isi.edu>
+              To: Eve Schooler <sip:schooler@caltech.edu> ;tag=9883472
+              Call-ID: 2963313058@north.east.isi.edu
+              CSeq: 1 INVITE
+              Contact: sip:es@jove.cs.caltech.edu]] >
+    </message>
+   </receive>
+<send channel="channel-1">
+    <action>
+     
+      <restore name="SID" entity="call-id"></restore>
+      <restore name="VIA" entity="via"></restore>
+      <restore name="FROM" entity="from"></restore>
+      <restore name="TO" entity="to"></restore>
+    
+      <restore name="local_name" entity="ack-name"></restore>
+      <restore name="local_ip" entity="ack-addr"></restore>
+    </action>
+    <message>
+      
+     <! [ CDATA[ACK sip:es@jove.cs.caltech.edu SIP/2.0
+         Via: SIP/2.0/UDP north.east.isi.edu
+         From: Mark Handley <sip:mjh@isi.edu>
+         To: Eve Schooler <sip:schooler@caltech.edu> ;tag=9883472
+         Call-ID: 2963313058@north.east.isi.edu
+         CSeq: 1 ACK]] >
+    </message>
+   </send>
+
+   <send channel="channel-1">
+     <action>
+     
+       <restore name="SID" entity="call-id"></restore>
+       <restore name="VIA" entity="via"></restore>
+       <restore name="FROM" entity="from"></restore>
+       <restore name="TO" entity="to"></restore>
+       
+       <restore name="local_name" entity="bye-name"></restore>
+       <restore name="local_ip" entity="bye-addr"></restore>
+     </action>    
+     <message>
+     
+     <! [ CDATA[BYE sip:watson@y.bell-tel.com SIP/2.0
+         Via:      SIP/2.0/UDP c.bell-tel.com
+         From:     A. Bell <sip:a.g.bell@bell-tel.com>
+         To:       T. Watson <sip:t.watson@ieee.org> ;tag=35253448
+         Call-ID:  2963313058@north.east.isi.edu
+         CSeq:     2 BYE]] >
+    </message>
+   </send>
+
+   <receive channel="channel-1">
+    <message>
+     
+     <! [CDATA[SIP/2.0 200 OK
+         Via:      SIP/2.0/UDP c.bell-tel.com
+         From:     A. Bell <sip:a.g.bell@bell-tel.com>
+         To:       T. Watson <sip:t.watson@ieee.org> ;tag=35253448
+         Call-ID:  2963313058@north.east.isi.edu
+         CSeq:     2 BYE]] >
+    </message>
+   </receive>
+
+</traffic>
+
+</scenario>
+]]></source>
+            </td>
+            <td>
+              <source><![CDATA[XML header
+
+
+
+The call id counter is declared and 
+will be incremented for each new call
+ 
+
+
+
+For each new call, increment the call-id and set the call-id field
+
+    
+       
+     
+       
+                  
+
+Get address from the external file
+       
+
+Store it for other fields
+       
+
+Set the VIA field
+       
+                 
+       
+Get protocol from external file
+       
+
+Set the From field
+       
+                  
+Get Name from external file
+       
+
+Store it for other fields 
+       
+
+       
+
+Set the To field 
+
+                  
+Get Name from external file
+       
+Get address from external file
+  
+
+Set the INVITE request address and name
+       
+       
+
+
+
+Header
+    
+         
+         
+         
+         
+         
+         
+
+
+Body
+
+              
+            
+              
+              
+             
+              
+              
+            
+
+
+Store completed fields for future msg
+       
+       
+       
+      
+      
+  
+
+   
+   
+Header
+      
+         
+        
+         
+         
+       
+
+
+
+
+
+Header
+
+    
+             
+              
+             
+             
+            
+    
+
+
+  
+    
+Restore fields
+      
+    
+     
+      
+Set name and address in the Ack request
+
+
+
+
+Header
+   
+         
+       
+         
+        
+       
+    
+ 
+
+
+
+Restore fields 
+
+
+     
+      
+Set name and address in the BYE request
+
+
+
+Header
+
+        
+        
+         
+        
+         
+    
+
+
+   
+    
+Header
+     
+         
+        
+         
+         
+       
+    
+
+]]></source>
+            </td>
+           </tr>
+          </table>      
     </section>
-    <section id="config_generic">
-      <title>Generic configuration</title>
-      <p>The generic configuration file describes the network environment
-        as well as traffic parameters.</p>
-    </section>
-    <section>
-      <title>XXXXX dictionary</title>
-    </section>
-    <section id="prepostactions_XXXXX">
-      <title>Actions in scenario commands for XXXX</title>
+   </section>
+    <section id="misc">
+      <title>Miscellaneous considerations</title>
+      <p>Users must be aware of the fact that Seagull currently works only with "perfect" SIP scenarios. It means that the following messages are not properly handled:</p>
+      <ul>
+         <li>Retransmissions</li>
+         <li>INFO and NOTIFY messages</li>
+         <li>Optional responses</li>
+      </ul>
+      <p> These points are currently in progress. </p>      
     </section>
   </body>
 </document>
