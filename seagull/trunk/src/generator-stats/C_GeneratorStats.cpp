@@ -1739,12 +1739,17 @@ char* C_GeneratorStats::dumpCounters() {
 
 
   long           globalElapsedTime ;
+  long           localElapsedTime  ;
   struct timeval currentTime       ;
 
   float          AverageMsgRecvPerS;
   float          AverageMsgSendPerS;
+
+  unsigned long  L_numberOfCall    ;
+
  
   unsigned long  L_C_successful_call ;
+  float          realInstantCallRate ;
 
 
   // CRITICAL SECTION:
@@ -1795,11 +1800,15 @@ char* C_GeneratorStats::dumpCounters() {
   m_mutexTable[CPT_C_IncomingCallCreated].lock() ;
   m_remoteCounters[CPT_C_IncomingCallCreated] 
     = m_counters [CPT_C_IncomingCallCreated];
+  m_remoteCounters[CPT_PD_IncomingCallCreated] 
+    = m_counters [CPT_PD_IncomingCallCreated];
   m_mutexTable[CPT_C_IncomingCallCreated].unlock() ;
 
   m_mutexTable[CPT_C_OutgoingCallCreated].lock() ;
   m_remoteCounters[CPT_C_OutgoingCallCreated] 
     = m_counters [CPT_C_OutgoingCallCreated];
+  m_remoteCounters[CPT_PD_OutgoingCallCreated] 
+    = m_counters [CPT_PD_OutgoingCallCreated];
   m_mutexTable[CPT_C_OutgoingCallCreated].unlock() ;
 
   m_mutexTable[CPT_C_InitSuccessfulCall].lock() ;
@@ -1842,6 +1851,7 @@ char* C_GeneratorStats::dumpCounters() {
   GET_TIME (&currentTime);
   // computing the real call rate
   globalElapsedTime   = ms_difftime (&currentTime, &m_startTime);
+  localElapsedTime    = ms_difftime (&currentTime, &m_pdStartTime);
 
     
 
@@ -1851,6 +1861,14 @@ char* C_GeneratorStats::dumpCounters() {
     m_remoteCounters[CPT_C_DefaultSuccessfulCall] +
     m_remoteCounters[CPT_C_AbortSuccessfulCall] ;
 
+  L_numberOfCall        
+    = m_remoteCounters[CPT_PD_IncomingCallCreated] 
+    + m_remoteCounters[CPT_PD_OutgoingCallCreated];
+
+  realInstantCallRate 
+    = (localElapsedTime  > 0 ? 
+       1000*(float)L_numberOfCall / (float)localElapsedTime :
+       0.0);
 
 
   AverageMsgRecvPerS = (globalElapsedTime  > 0 ? 
@@ -1866,20 +1884,14 @@ char* C_GeneratorStats::dumpCounters() {
   ALLOC_TABLE(L_result_data, char*, sizeof(char), 1024);
   
 
-//      sprintf(repartitionHeader, "%s;", P_repartitionName);
-//      for(int i=0; i<(sizeOfTab-1); i++) {   
-//        sprintf(L_buffer, "<%d;", tabRepartition[i].borderMax);
-//        strcat(repartitionHeader, buffer);
-//      }
-//      sprintf(L_buffer, ">=%d;", tabRepartition[sizeOfTab-1].borderMax);
-//      strcat(repartitionHeader, L_buffer);
-
-
-    
   sprintf(L_result_data, "%s%s\r\n", 
           (char*)"elapsed_time=",
           msToHHMMSSmmm(globalElapsedTime));
-  //  strcat(L_result_data, L_buffer);
+
+  sprintf(L_buffer, "%s%8.3f\r\n",
+          (char*)"real_instant_call_rate_s=",
+          realInstantCallRate);
+  strcat(L_result_data, L_buffer);
 
   sprintf(L_buffer, "%s%8ld\r\n",
           (char*)"incoming_calls=",
