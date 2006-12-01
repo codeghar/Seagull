@@ -48,6 +48,8 @@ public:
   C_CommandAction(T_CmdAction        P_ActionData,
                   T_pControllers     P_controllers) ;
 
+  void update_log_controller(C_DataLogControl *P_log) ;
+
   virtual ~C_CommandAction() ;
 
   virtual T_exeCode execute (T_pCmd_scenario P_pCmd,

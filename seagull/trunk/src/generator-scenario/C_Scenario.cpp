@@ -154,8 +154,20 @@ C_Scenario::~C_Scenario () {
 }
 
 void C_Scenario::set_data_log_controller (C_DataLogControl *P_log) {
+  int L_i, L_j ;
   GEN_DEBUG(1, "C_Scenario::set_data_log_controller start");
   m_log = P_log ;
+
+  for(L_i=0; L_i < m_sequence_max; L_i++) {
+    for (L_j = 0 ; L_j < m_cmd_sequence[L_i].m_pre_action; L_j ++) {
+      m_cmd_sequence[L_i].m_pre_action_table[L_j]
+        ->update_log_controller(P_log);
+    }
+    for (L_j = 0 ; L_j < m_cmd_sequence[L_i].m_post_action; L_j ++) {
+      m_cmd_sequence[L_i].m_post_action_table[L_j]
+        ->update_log_controller(P_log);
+    }
+  }
   GEN_DEBUG(1, "C_Scenario::set_data_log_controller m_log is" << m_log);
   GEN_DEBUG(1, "C_Scenario::set_data_log_controller end");
 }

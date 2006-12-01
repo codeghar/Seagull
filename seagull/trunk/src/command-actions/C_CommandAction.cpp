@@ -43,6 +43,11 @@ C_CommandAction::C_CommandAction(T_CmdAction        P_ActionData,
 
 } 
 
+void C_CommandAction::update_log_controller(C_DataLogControl *P_log) {
+  m_controllers.m_log = P_log ;
+}
+
+
 C_CommandAction::~C_CommandAction() {
   DELETE_VAR(m_regexp_data);
 }
