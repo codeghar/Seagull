@@ -40,6 +40,8 @@ public:
 
   int data (char *P_data);
   virtual void do_log () ;
+  virtual void do_log_cumul () ;
+
   virtual int data (double P_time, double P_data);
 
   int time_data (struct timeval *P_begin, struct timeval *P_end);
@@ -66,9 +68,6 @@ protected:
 
   T_pLogValuePList   m_values, m_available, m_log ;
   fstream_output    *m_output_stream ;
-
-  bool               m_dump_end_procedure ;
-
 
 } ;
 

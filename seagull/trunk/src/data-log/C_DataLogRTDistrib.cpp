@@ -108,33 +108,35 @@ int C_DataLogRTDistrib::data (double P_time, double P_value) {
   return (1);
 }
 
+void C_DataLogRTDistrib::do_log_cumul () {
+
+  size_t         L_i ;
+
+  m_sem_rt->P();
+  (*m_output_stream) << "Dump Cumulative;" << iostream_endl << iostream_flush ;
+      
+  for(L_i = m_c_min_rt_distrib ; L_i <= m_c_max_rt_distrib ; L_i++) {
+    if(m_c_rt_distrib[L_i] != 0) {
+      (*m_output_stream) << L_i << ";"
+                         << m_c_rt_distrib[L_i] << ";" ;
+      (*m_output_stream) << iostream_endl << iostream_flush ;
+    }
+  }
+  m_sem_rt->V();
+}
+
 void C_DataLogRTDistrib::do_log () {
 
   size_t         L_i ;
-  unsigned long *L_tab ;
-  unsigned long  L_min ;
-  unsigned long  L_max ;
-  
   
   m_sem_rt->P();
   if (m_counter_rt) {
-    if (m_dump_end_procedure == false) {
-      (*m_output_stream) << "Dump Periodic;" << iostream_endl << iostream_flush ;
-      L_tab = m_p_rt_distrib ;
-      L_min = m_p_min_rt_distrib ;
-      L_max = m_p_max_rt_distrib ;
-    } else {
-      (*m_output_stream) << "Dump Cumulative;" << iostream_endl << iostream_flush ;
-      L_tab = m_c_rt_distrib ;
-      L_min = m_c_min_rt_distrib ;
-      L_max = m_c_max_rt_distrib ;
-    }
-    
-    for(L_i = L_min ; L_i <= L_max ; L_i++) {
+    (*m_output_stream) << "Dump Periodic;" << iostream_endl << iostream_flush ;    
+    for(L_i = m_p_min_rt_distrib ; L_i <= m_p_max_rt_distrib ; L_i++) {
       
-      if(L_tab[L_i] != 0) {
+      if(m_p_rt_distrib[L_i] != 0) {
 	(*m_output_stream) << L_i << ";"
-			   << L_tab[L_i] << ";" ;
+			   << m_p_rt_distrib[L_i] << ";" ;
 	(*m_output_stream) << iostream_endl << iostream_flush ;
       }
     }
@@ -148,7 +150,7 @@ void C_DataLogRTDistrib::do_log () {
     m_counter_rt = 0 ;
   }
   m_sem_rt->V();
-
+  
 }
 
 

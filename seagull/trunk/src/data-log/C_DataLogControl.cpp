@@ -59,8 +59,6 @@ C_DataLogControl::C_DataLogControl(size_t         P_max_data,
   }
   
   m_time_ref = 0.0 ;
-  m_dump_end_procedure = false ;
-
 }
 
 C_DataLogControl::~C_DataLogControl() {
@@ -129,8 +127,8 @@ T_GeneratorError C_DataLogControl::EndProcedure () {
   T_GeneratorError L_err = E_GEN_NO_ERROR ;
 
   GEN_DEBUG(0, "C_DataLogControl::EndProcedure()");
-  m_dump_end_procedure = true ;
   do_log () ;
+  do_log_cumul () ;
   return (L_err);
 }
 
@@ -214,6 +212,10 @@ int C_DataLogControl::data (char* P_data) {
     
     return (L_ret);
 }
+
+void C_DataLogControl::do_log_cumul () {
+}
+
 
 void C_DataLogControl::do_log () {
 

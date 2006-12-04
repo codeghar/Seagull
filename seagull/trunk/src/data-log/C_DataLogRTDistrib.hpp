@@ -41,6 +41,8 @@ public:
   int data (double P_time, double P_value);
   int data (char *P_data);
   void do_log () ;
+  void do_log_cumul () ;
+
 
 private:
   unsigned long     m_rtdistrib ; 
