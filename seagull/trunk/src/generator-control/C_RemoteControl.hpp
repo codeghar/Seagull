@@ -83,6 +83,8 @@ private :
   char* decode_put_uri(char *P_uri);
   char* decode_get_uri(char *P_uri, char **P_result_data);
 
+  char* decode_uri(char *P_uri);
+
   char* find_directory(char *P_buf,char *P_dir) ;
   char* find_file(char *P_buf,char *P_dir) ;
   char* find_value(char *P_buf,char *P_dir) ;

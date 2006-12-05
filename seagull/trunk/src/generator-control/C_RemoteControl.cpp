@@ -28,8 +28,6 @@
 #include "ProtocolData.hpp"
 #include <regex.h>
 
-// #include "C_RegExp.hpp"
-
 #include "C_Generator.hpp"
 #include "C_SemaphoreTimed.hpp"
 
@@ -39,6 +37,16 @@
 
 #include <cstdlib>
 #include <pthread.h> // for sched_yield()
+
+
+void _gen_log_error_control(char *P_data) {
+  GEN_ERROR(E_GEN_FATAL_ERROR, P_data);
+}
+
+void _gen_log_info_control(char *P_data) {
+  GEN_LOG_EVENT_FORCE(P_data);
+}
+
 
 class C_RampControl : public C_TaskControl {
 
@@ -198,8 +206,8 @@ T_GeneratorError C_RemoteControl::InitProcedure() {
     m_protocol_frame = m_protocol_ctrl->get_protocol(L_ret);
     m_protocol_text  = dynamic_cast<C_ProtocolText*> (m_protocol_frame);
 
-    m_command_id = m_protocol_text->find_field_id("type");
-    m_uri_id = m_protocol_text->find_field_id("uri");
+    m_command_id = m_protocol_text->find_field_id((char*)"type");
+    m_uri_id = m_protocol_text->find_field_id((char*)"uri");
 
   } else {
     L_error_code= E_GEN_FATAL_ERROR;
@@ -257,7 +265,9 @@ T_GeneratorError C_RemoteControl::InitProcedure() {
   }
 
   if (L_error_code == E_GEN_NO_ERROR) {
-    if (m_transport->init((char*)"type=tcp", NULL, NULL) != 0) {
+    if (m_transport->init((char*)"type=tcp", 
+                          _gen_log_error_control, 
+                          _gen_log_info_control) != 0) {
       L_error_code = E_GEN_FATAL_ERROR ;
     }
 
@@ -269,10 +279,7 @@ T_GeneratorError C_RemoteControl::InitProcedure() {
     }
   }
 
-
-  
  GEN_DEBUG(0, "C_RemoteControl::doInit() end");
-
   return (L_error_code);
 }
 
@@ -444,11 +451,8 @@ T_GeneratorError C_RemoteControl::receiveControl () {
         default :
           break;
         } // switch L_event_occured
-        
       } // for L_i
-      
     } // if L_error
-    
   } // if L_n > 0
 
   GEN_DEBUG(1, "C_RemoteControl::receiveControl() end");
@@ -651,10 +655,8 @@ char *C_RemoteControl::find_file(char *P_buf,char *P_dir) {
       }
     }
   }
-
   return(L_value);
 }
-
 
 char* C_RemoteControl::find_value (char *P_buf, char *P_dir) {
 
@@ -706,90 +708,103 @@ char* C_RemoteControl::decode_put_uri(char *P_uri) {
 
   char *L_result = NULL ;
   char *L_ptr = P_uri ;
-  char *L_ptr_value = NULL ;
-
-  unsigned long L_value = 0 ;
-  unsigned long L_duration = 0 ;
-  char *L_end_str = NULL ;
   
   L_ptr = find_directory(L_ptr,(char*)"seagull");
   if (L_ptr) {
     L_ptr = find_directory(L_ptr,(char*)"command");
     if (L_ptr) {
+      L_result = decode_uri(L_ptr);
+    } 
+  }
+  return (L_result);
+}
 
-      char *L_file ;
+char* C_RemoteControl::decode_uri(char *P_uri) {
 
-      L_file = find_file(L_ptr,(char*)"rate");
-      if (L_file) {
-        L_ptr_value = find_value(L_file,(char*)"value");
+  char *L_result = NULL ;
+  char *L_ptr = P_uri ;
+  char *L_ptr_value = NULL ;
+
+  unsigned long L_value = 0 ;
+  unsigned long L_duration = 0 ;
+  char *L_end_str = NULL ;
+  char *L_file ;  
+
+
+  L_file = find_file(L_ptr,(char*)"rate");
+  if (L_file) {
+    L_ptr_value = find_value(L_file,(char*)"value");
+    if (L_ptr_value) {
+      L_value = strtoul_f(L_ptr_value, &L_end_str,10) ;
+      if (L_end_str[0] != '\0') { // not a number
+      } else {
+        rate(L_value);
+        L_result = resultOK() ;
+      }
+      FREE_TABLE(L_ptr_value);
+    }
+    return (L_result);
+  }  
+    
+  L_file = find_file(L_ptr, (char*)"ramp");
+  if (L_file) {
+    L_ptr_value = find_value(L_file, (char*)"value");
+    if (L_ptr_value) {
+      L_value = strtoul_f(L_ptr_value, &L_end_str,10) ;
+      if (L_end_str[0] != '\0') { // not a number
+        FREE_TABLE(L_ptr_value);
+      } else {
+        FREE_TABLE(L_ptr_value);
+        L_ptr_value = find_value(L_file, (char*)"duration");
         if (L_ptr_value) {
-          L_value = strtoul_f(L_ptr_value, &L_end_str,10) ;
+          L_duration = strtoul_f(L_ptr_value, &L_end_str,10) ;
           if (L_end_str[0] != '\0') { // not a number
+            FREE_TABLE(L_ptr_value);
           } else {
-            rate(L_value);
+            ramp(L_value, L_duration);
+            FREE_TABLE(L_ptr_value);
             L_result = resultOK() ;
           }
-          FREE_TABLE(L_ptr_value);
         }
-        return (L_result);
-      }  
+      }
+    } // find value
+    return (L_result);
+  } // find_file for ramp 
+  
+  L_file = find_file(L_ptr,(char*)"stop");
+  if (L_file) {
+    L_result = resultOK() ;
+    quit();
+    return (L_result);
+  }  
 
-      L_file = find_file(L_ptr, (char*)"ramp");
-      if (L_file) {
-        L_ptr_value = find_value(L_file, (char*)"value");
-        if (L_ptr_value) {
-          L_value = strtoul_f(L_ptr_value, &L_end_str,10) ;
-          if (L_end_str[0] != '\0') { // not a number
-            FREE_TABLE(L_ptr_value);
-          } else {
-            FREE_TABLE(L_ptr_value);
-            L_ptr_value = find_value(L_file, (char*)"duration");
-            if (L_ptr_value) {
-              L_duration = strtoul_f(L_ptr_value, &L_end_str,10) ;
-              if (L_end_str[0] != '\0') { // not a number
-                FREE_TABLE(L_ptr_value);
-              } else {
-                ramp(L_value, L_duration);
-                FREE_TABLE(L_ptr_value);
-                L_result = resultOK() ;
-              }
-            }
-          }
-        } // find value
-        return (L_result);
-      } // find_file for ramp 
-
-      
-      L_file = find_file(L_ptr,(char*)"stop");
-      if (L_file) {
-        L_result = resultOK() ;
-        quit();
-        return (L_result);
-      }  
-
-
-    } // if (L_ptr) for command
-  } // if (L_ptr) for seagull
 
   return (L_result);
 }
 
+
 char* C_RemoteControl::decode_get_uri(char *P_uri, char **P_result_data) {
-  char *L_result = NULL ;
-  char *L_ptr = P_uri ;
+  char *L_result        = NULL  ;
+  char *L_ptr           = P_uri ;
+  char *L_result_ptr    = NULL  ;
 
   L_ptr = find_directory(L_ptr,(char*)"seagull");
   if (L_ptr) {
-    L_ptr = find_directory(L_ptr,(char*)"counters");
-    if (L_ptr) {
-      L_ptr = find_file(L_ptr,(char*)"all");
-      if (L_ptr) {
+    L_result_ptr = find_directory(L_ptr,(char*)"counters");
+    if (L_result_ptr) {
+      L_ptr = L_result_ptr ;
+      L_result_ptr = find_file(L_ptr,(char*)"all");
+      if (L_result_ptr) {
         (*P_result_data) = dump_stat();
         L_result = resultOK();
       }
+    } else {
+      L_result_ptr = find_directory(L_ptr,(char*)"command");
+      if (L_result_ptr) {
+        L_result = decode_uri(L_result_ptr);
+      }
     }
   }
-
   return (L_result);
 }
 
@@ -848,6 +863,8 @@ C_MessageFrame* C_RemoteControl::analyze_command(C_MessageFrame *P_msg) {
   if (L_result != NULL) {
     L_msg_send = m_protocol_text -> create (m_protocol_text,
                                             L_result,
+                                            (L_result_data == NULL) ? 
+                                            (char*)"Command Success" :
                                             L_result_data) ;
   }
 
