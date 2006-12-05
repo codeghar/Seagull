@@ -35,10 +35,43 @@
 #endif
 
 #define GEN_ERROR(l,a) iostream_error << a << iostream_endl << iostream_flush ; 
-//#define GEN_ERROR(l,a) m_logError((char*)a)
-//#define GEN_INFO(l,a) m_logInfo((char*)a)
+
+#define LOG_ERROR(m) { \
+ char L_err [100] ; \
+ snprintf(L_err, 100, (m)) ; \
+(*m_logError)(L_err); \
+}
+
+#define LOG_ERROR_P1(m,P1) { \
+ char L_err [100] ; \
+ snprintf(L_err, 100, (m), (P1)) ; \
+(*m_logError)(L_err); \
+}
+
+#define LOG_ERROR_P2(m,P1,P2) { \
+ char L_err [100] ; \
+ snprintf(L_err, 100, (m), (P1),(P2)) ; \
+(*m_logError)(L_err); \
+}
 
 
+#define LOG_ALL(m) { \
+ char L_msg [100] ; \
+ snprintf(L_msg, 100, (m)) ; \
+(*m_logInfo)(L_msg); \
+}
+
+#define LOG_ALL_P1(m,P1) { \
+ char L_msg [100] ; \
+ snprintf(L_msg, 100, (m), (P1)) ; \
+(*m_logInfo)(L_msg); \
+}
+
+#define LOG_ALL_P2(m,P1,P2) { \
+ char L_msg [100] ; \
+ snprintf(L_msg, 100, (m), (P1),(P2)) ; \
+(*m_logInfo)(L_msg); \
+}
 
 #define DEFAULT_BUFFER_SIZE 65535
 
@@ -104,8 +137,8 @@ int C_TransIP::init (char *P_buf,
 
 int C_TransIP::config (T_pConfigValueList P_config_param_list) {
   GEN_DEBUG(1, "C_TransIP::config  ()");
-  m_logInfo = NULL ;
-  m_logError = NULL ;
+  // m_logInfo = NULL ;
+  // m_logError = NULL ;
   return(0);
 }
 
@@ -124,7 +157,8 @@ int C_TransIP::open (int   P_channel_id,
   // check protocol compatibility
   if ((P_protocol->get_type() != C_ProtocolFrame::E_PROTOCOL_BINARY) && 
       (P_protocol->get_type() != C_ProtocolFrame::E_PROTOCOL_TEXT) ) {
-    GEN_ERROR(1, "Protocol not compatible with transport (must be binary or text)");
+    // GEN_ERROR(1, "Protocol not compatible with transport (must be binary or text)");
+    LOG_ALL("Protocol not compatible with transport (must be binary or text)");
     return (-1) ;
   }
 
@@ -251,6 +285,7 @@ int C_TransIP::post_select (int                 P_n,
       case C_TransportEvent::E_TRANS_CLOSED:
 	GEN_DEBUG(0, "C_TransIP::post_select() E_TRANS_CLOSED");
 	L_id = (L_socket)->get_id() ;
+        LOG_ALL_P1("Connection closed: [%d]", L_id);
 	(L_socket)->_close() ;
 	m_delete_list.push_back(L_it) ;
 	DELETE_VAR(L_socket);
@@ -510,7 +545,8 @@ C_Socket* C_TransIP::open (int              P_channel_id,
 
   case E_IP_USAGE_MODE_UNKNOWN:
 
-    GEN_ERROR(1, "OPEN failed: Unsupported mode");
+    // GEN_ERROR(1, "OPEN failed: Unsupported mode");
+    LOG_ALL("OPEN failed: Unsupported mode");
     *P_status = E_OPEN_FAILED ;
     break ;
   }
@@ -704,7 +740,6 @@ int C_TransIP::extract_ip_addr(T_pIpAddr P_pIpAddr) {
 
   GEN_DEBUG(0, "C_TransIP::extract_ip_addr()");
 
-
   if (P_pIpAddr == NULL) { return (-1) ; }
   if (P_pIpAddr->m_open == NULL) { return (0) ; }
 
@@ -718,7 +753,8 @@ int C_TransIP::extract_ip_addr(T_pIpAddr P_pIpAddr) {
   if (L_status != 0) {
     regerror(L_status, &L_regExpr, L_buffer, 1024);
     regfree (&L_regExpr) ;
-    GEN_ERROR(0, "regcomp error: [" << L_buffer << "]");
+    LOG_ALL_P1("regcomp error: [%s]", L_buffer);
+    // GEN_ERROR(0, "regcomp error: [" << L_buffer << "]");
     return (-1);
   }
   
@@ -734,7 +770,9 @@ int C_TransIP::extract_ip_addr(T_pIpAddr P_pIpAddr) {
     if (L_status != 0) {
       regerror(L_status, &L_regExpr, L_buffer, 1024);
       regfree (&L_regExpr) ;
-      GEN_ERROR(0, "regcomp error: [" << L_buffer << "]");
+      LOG_ALL_P1("regcomp error: [%s]", L_buffer);
+
+      // GEN_ERROR(0, "regcomp error: [" << L_buffer << "]");
       return (-1);
     }
 
@@ -751,7 +789,9 @@ int C_TransIP::extract_ip_addr(T_pIpAddr P_pIpAddr) {
       GEN_DEBUG(1, "C_TransIP::extract_ip_addr() IPV6 addr [" << L_buffer << "]");
       
     } else {
-      GEN_ERROR(0, "regexec error character [" << ']' << "] not found" );
+      LOG_ALL_P1("regexec error character: [%c] not found", ']');
+
+      // GEN_ERROR(0, "regexec error character [" << ']' << "] not found" );
       return (-1);
     }
 
@@ -811,7 +851,8 @@ int C_TransIP::extract_ip_addr(T_pIpAddr P_pIpAddr) {
     if (L_status != 0) {
       regerror(L_status, &L_regExpr, L_buffer, 1024);
       regfree (&L_regExpr) ;
-      GEN_ERROR(0, "regcomp error: [" << L_buffer << "]");
+      LOG_ALL_P1("regcomp error: [%s]", L_buffer);
+      // GEN_ERROR(0, "regcomp error: [" << L_buffer << "]");
       return (-1);
     }
   
@@ -827,7 +868,8 @@ int C_TransIP::extract_ip_addr(T_pIpAddr P_pIpAddr) {
       if (L_status != 0) {
         regerror(L_status, &L_regExpr, L_buffer, 1024);
         regfree (&L_regExpr) ;
-        GEN_ERROR(0, "regcomp error: [" << L_buffer << "]");
+        LOG_ALL_P1("regcomp error: [%s]", L_buffer);
+        // GEN_ERROR(0, "regcomp error: [" << L_buffer << "]");
         return (-1);
       }
       
@@ -844,7 +886,8 @@ int C_TransIP::extract_ip_addr(T_pIpAddr P_pIpAddr) {
         GEN_DEBUG(1, "C_TransIP::extract_ip_addr() IPV6 addr [" << L_buffer << "]");
       
       } else {
-        GEN_ERROR(0, "regexec error character [" << ']' << "] not found" );
+        LOG_ALL_P1("regexec error character: [%c] not found", ']');
+        // GEN_ERROR(0, "regexec error character [" << ']' << "] not found" );
         return (-1);
       }
 
@@ -930,7 +973,8 @@ int C_TransIP::resolve_addr(T_pIpAddr P_pIpAddr) {
 
   if (L_host == NULL) {
     if (gethostname(L_local_host, 255)) {
-      GEN_ERROR(1, "Unable to get local IP address");
+      LOG_ALL("Unable to get local IP address");
+      // GEN_ERROR(1, "Unable to get local IP address");
       return(-1);
     } else {
       ALLOC_TABLE(L_host, char*, sizeof(char),
@@ -946,7 +990,8 @@ int C_TransIP::resolve_addr(T_pIpAddr P_pIpAddr) {
 		  NULL,
 		  &L_hints,
 		  &L_local_addr) != 0) {
-    GEN_ERROR(1, "Unknown host [" << L_host << "]");
+    LOG_ALL_P1("Unknown host: [%s]", L_host);
+    // GEN_ERROR(1, "Unknown host [" << L_host << "]");
     return (-1);
   }
 
@@ -963,7 +1008,8 @@ int C_TransIP::resolve_addr(T_pIpAddr P_pIpAddr) {
 	   L_local_addr->h_addr_list[0],
 	   L_local_addr->h_length);
   } else {
-    GEN_ERROR(1, "Unknown host [" << L_host << "]");
+    LOG_ALL_P1("Unknown host: [%s]", L_host);
+    // GEN_ERROR(1, "Unknown host [" << L_host << "]");
     return (-1);
   }
 #endif
@@ -980,11 +1026,14 @@ int C_TransIP::resolve_addr(T_pIpAddr P_pIpAddr) {
     break ;
 #endif
   default:
-    GEN_ERROR(1, "Unsupported network");
+    LOG_ALL("Unsupported network");
+    //    GEN_ERROR(1, "Unsupported network");
     return(-1);
   }
   if (inet_addr((char**)&(P_pIpAddr->m_ip), L_resolved_sockaddr) == -1) {
-    GEN_ERROR(1, "Address not supported");
+    LOG_ALL("Address not supported");
+
+    // GEN_ERROR(1, "Address not supported");
   }
 
 #ifndef USE_IPV4_ONLY
@@ -1015,7 +1064,8 @@ int C_TransIP::resolve_addr(T_pIpAddr P_pIpAddr) {
 
   if (L_host == NULL) {
     if (gethostname(L_local_host, 255)) {
-      GEN_ERROR(1, "Unable to get local IP address");
+      LOG_ALL("Unable to get local IP address");
+      // GEN_ERROR(1, "Unable to get local IP address");
       return(-1);
     } else {
       ALLOC_TABLE(L_host, char*, sizeof(char),
@@ -1031,7 +1081,8 @@ int C_TransIP::resolve_addr(T_pIpAddr P_pIpAddr) {
 		  NULL,
 		  &L_hints,
 		  &L_local_addr) != 0) {
-    GEN_ERROR(1, "Unknown host [" << L_host << "]");
+    LOG_ALL_P1("Unknown host: [%s]", L_host);
+    // GEN_ERROR(1, "Unknown host [" << L_host << "]");
     return (-1);
   }
 
@@ -1048,7 +1099,8 @@ int C_TransIP::resolve_addr(T_pIpAddr P_pIpAddr) {
 	   L_local_addr->h_addr_list[0],
 	   L_local_addr->h_length);
   } else {
-    GEN_ERROR(1, "Unknown host [" << L_host << "]");
+    LOG_ALL_P1("Unknown host: [%s]", L_host);
+    // GEN_ERROR(1, "Unknown host [" << L_host << "]");
     return (-1);
   }
 #endif
@@ -1065,11 +1117,14 @@ int C_TransIP::resolve_addr(T_pIpAddr P_pIpAddr) {
     break ;
 #endif
   default:
-    GEN_ERROR(1, "Unsupported network");
+    LOG_ALL("Unsupported network");
+
+    // GEN_ERROR(1, "Unsupported network");
     return(-1);
   }
   if (inet_addr((char**)&(P_pIpAddr->m_ip_src), L_resolved_sockaddr) == -1) {
-    GEN_ERROR(1, "Address not supported");
+    LOG_ALL("Address not supported");
+    // GEN_ERROR(1, "Address not supported");
   }
 
 #ifndef USE_IPV4_ONLY
@@ -1190,8 +1245,9 @@ void C_TransIP::decode_from_protocol (C_Socket *P_socket) {
 	default:
 	  // TO BE DONE : 
 	  // more complex synchronization algorithm !!!!!
-	  GEN_ERROR(E_GEN_FATAL_ERROR, 
-		    "*** Unrecognized message received ***") ;
+          LOG_ALL("*** Unrecognized message received ***") ;
+	  // GEN_ERROR(E_GEN_FATAL_ERROR, 
+          //    "*** Unrecognized message received ***") ;
 	  L_decode->reset_buffer() ;
 	  L_data_size = 0 ;
 	  L_ret = 0 ;
@@ -1224,7 +1280,8 @@ bool C_TransIP::get_message (int P_id, T_pReceiveMsgContext P_ctxt) {
       L_list->erase(L_list->begin()) ;
     }
   } else {
-    GEN_ERROR(0, "transport id [" << P_id << "] incorrect");
+    LOG_ALL_P1("transport id: [%d] incorrect", P_id);
+    //    GEN_ERROR(0, "transport id [" << P_id << "] incorrect");
   }
 
   GEN_DEBUG(0, "C_TransIP::get_message() end with " << L_ret);
