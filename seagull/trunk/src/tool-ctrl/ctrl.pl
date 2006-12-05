@@ -25,6 +25,7 @@
 # WAIT n[M|S]     : wait n minutes or n seconds
 # DUMP            : Dump available counters
 # RAMP n IN o[M|S]: Go to scenario-rate n in o minutes or o seconds
+# QUIT            : Quit Seagull
 # 
 # A sample scenario could be:
 # SET RATE 20 CPS
@@ -44,6 +45,7 @@
 # DUMP
 # WAIT 10S
 # DUMP
+# QUIT
 #
 # Note: if you enhance this tool, please provide back any changes
 #       on the Seagull-users mailing list (gull-users@lists.sourceforge.net)
@@ -116,7 +118,7 @@ sub executeScenario {
     if ($G_scenario[$i] =~ m/^[\#\']/) {
       # Comment: do nothing
     } elsif ($G_scenario[$i] =~ m/^SET RATE ([0-9]*)/) {
-      sendRequest("PUT", $myBase . "seagull/command/rate?value=$1") || return 0;
+      sendRequest("GET", $myBase . "seagull/command/rate?value=$1") || return 0;
     } elsif ($G_scenario[$i] =~ m/^WAIT ([0-9]*)([MS]*)/) {
       if ($2 eq "M") {
         sleep($1*60);
@@ -138,7 +140,9 @@ sub executeScenario {
         print "Don't know how to ramp for $2$3\n";
 	return 0;
       }
-      sendRequest("PUT", $myBase . "seagull/command/ramp?value=$1&duration=$duration") || return 0;
+      sendRequest("GET", $myBase . "seagull/command/ramp?value=$1&duration=$duration") || return 0;
+    } elsif ($G_scenario[$i] =~ m/^QUIT/) {
+      sendRequest("GET", $myBase . "seagull/command/quit") || return 0;
     } else {
       print "Don't know how to execute scenario line '$G_scenario[$i]'\n";
       return 0;
