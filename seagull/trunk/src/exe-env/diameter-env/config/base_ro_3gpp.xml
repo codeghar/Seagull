@@ -267,7 +267,7 @@
         <setfield name="flags" value="64"></setfield>
       </define>
 
-      <!-- Diameter RFC 4006 AVPs -->
+      <!-- Diameter Ro (3GPP TS 29.329 V7.1.0) AVPs -->
       <define name="Service-Context-Id" type="OctetString">
         <setfield name="avp-code" value="461"></setfield>
         <setfield name="flags" value="64"></setfield>
@@ -458,19 +458,19 @@
         <setfield name="protocol-version" value="1"></setfield>
       </define>
 
-      <!-- Diameter RFC 4006 commands -->
+      <!-- Diameter Ro (3GPP TS 29.329 V7.1.0) commands -->
       <define name="CCR">
         <!-- It's a request, R bit is set -->
         <setfield name="flags" value="128"></setfield>
         <setfield name="cmd-code" value="4"></setfield>
-        <setfield name="application-id" value="4"></setfield>
+        <setfield name="application-id" value="16777218"></setfield>
         <setfield name="protocol-version" value="1"></setfield>
       </define>
       <define name="CCA">
         <!-- It's an answer, R bit is unset -->
         <setfield name="flags" value="0"></setfield>
         <setfield name="cmd-code" value="4"></setfield>
-        <setfield name="application-id" value="4"></setfield>
+        <setfield name="application-id" value="16777218"></setfield>
         <setfield name="protocol-version" value="1"></setfield>
       </define>
     </command>
