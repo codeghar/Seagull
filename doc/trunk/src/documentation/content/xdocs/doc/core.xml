@@ -2135,6 +2135,25 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
               </td>
             </tr>
             <tr>
+              <td>model-traffic-select</td>
+              <td>Specify which distribution is selected to create new calls.Three different types are implemented: <br/>
+                  -uniform : for each interval, seagull tries to reach the expected call rate, 
+                   regardless on what happened during the last interval. With this value, 
+                   the max-receive and max-send options are automaticly set. This is the default value. <br/>
+                  -best-effort : seagull tries to maintain the expected average call rate by 
+                   ajusting the instantaneous call rate using the rates reached during the last interval.  <br/>
+                  -poisson : the real call rate vary around the expected call rate according 
+                   to the Poisson distribution
+              </td>
+              <td>uniform</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param"
+            name="model-traffic-select"
+            value="uniform">
+            </define>]]></code>
+              </td>
+            </tr>
+            <tr>
               <td>external-data-file</td>
               <td>File from which the data are taken for the external data management.</td>
               <td>external_data.csv</td>
