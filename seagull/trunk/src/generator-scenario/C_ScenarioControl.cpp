@@ -939,7 +939,7 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
   T_pActionRegExpStr        L_regexp_data            = NULL  ;
   C_RegExp                 *L_cRegExp                = NULL  ;
   int                       L_error_comp             = 0     ;
-
+  int                       L_value_set_bit                  ;
 
   GEN_DEBUG(1, "C_ScenarioControl::add_actions() start");
 
@@ -1436,173 +1436,19 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 	      L_ret = -1 ;
 	      break;
 	    }
-	    
-	    L_actionArg2 = L_action -> find_value((char*) "entity");
-	    if (L_actionArg2 == NULL) {
-	      GEN_ERROR(E_GEN_FATAL_ERROR, "entity value mandatory for action ["
-			<< L_actionName << "]");
-	      L_ret = -1 ;
-	      break ; 
-	    }
-	    
-	    L_entityFieldFound = false ;
-	    L_actionData->m_id 
-	      = P_protocol->find_field (L_actionArg2) ;
-	    if (L_actionData->m_id == -1) {
-	      GEN_ERROR(E_GEN_FATAL_ERROR,
-			"No definition found for ["
-			<< L_actionArg2 << "]");
-	      L_ret = -1 ;
-	      break ;
-	    } else {
-	      L_entityFieldFound = true ;
-	      
-	    }
-	  
 
-	    L_actionArg = L_action -> find_value((char*) "instance");
+	    L_actionArg = L_action -> find_value((char*)"name");
 	    if (L_actionArg != NULL) {
-	      T_InstanceDataList::iterator L_instance_it ;
-	      bool L_instance_found = false ;
-	      for (L_instance_it = P_instance_list.begin();
-		   L_instance_it != P_instance_list.end();
-		   L_instance_it++) {
-		if (strcmp(L_actionArg, L_instance_it->m_instance_name)==0) {
-		  L_actionData->m_instance_id = L_instance_it->m_instance_id;
-		  L_instance_found = true ;
-		  break ;
-		}
-	      }
-	      if (L_instance_found == false) {
-		GEN_ERROR(E_GEN_FATAL_ERROR, "Unable to find instance name ["
-			  << L_actionArg << "]");
-		L_ret = -1 ;
-		break ;
-	      } else {
-		if (L_instance_it->m_id != L_actionData->m_id) {
-		  GEN_ERROR(E_GEN_FATAL_ERROR, "Bad instance name ["
-			    << L_actionArg << "]");
-		  L_ret = -1 ;
-		  break ;
-		}
-	      }
-	    }
-
-	    L_actionArg = L_action -> find_value((char*) "sub-entity");
-	    if (L_actionArg != NULL) {	
-
-	      
-	      L_actionData->m_sub_id 
-		= P_protocol->find_field (L_actionArg) ;
-	      if (L_actionData->m_sub_id == -1) {
-		GEN_ERROR(E_GEN_FATAL_ERROR,
-			  "No definition found for ["
-			  << L_actionArg << "]");
-		L_ret = -1 ;
-		break ;
-	      }
-	    } 
-
-	    if (P_protocol->check_sub_entity_needed(L_actionData->m_id) == true) {
-	      if (L_actionData->m_sub_id == -1) {
-		GEN_ERROR(E_GEN_FATAL_ERROR,
-			  "sub entity needed for  ["
-			  << L_actionArg2 
-			  << "]");
-
-		L_ret = -1 ;
-		break ;
-	      }
-	    }
-
-	    L_actionArg = L_action -> find_value((char*) "begin");
-	    if (L_actionArg != NULL) {
-
-	      // check type field == STRING || BINARY	      
-
-	      if (P_protocol->get_field_type(L_actionData->m_id, 
-					     L_actionData->m_sub_id)
-		  != E_TYPE_STRING ) {
-		GEN_ERROR(E_GEN_FATAL_ERROR,
-			  "Type field of entity ["
-			  << L_actionArg2 
-			  << "] is not STRING");
-		L_ret = -1 ;
-		break ;
-	      }
-	      
-	      unsigned long  L_begin ;
-	      char          *L_end_str = NULL ;
-	      L_begin = strtoul_f (L_actionArg, &L_end_str, 10);
-	      if (L_end_str[0] != '\0') {
-		GEN_ERROR(E_GEN_FATAL_ERROR, "bad format, ["
-			  << L_actionArg << "] not a number");
-		L_ret = -1 ;
-		break ;
-	      } else {
-		L_actionData->m_begin = (int)L_begin ;
-		L_begin_present = true ;
-	      }
-	    }
-	    
-	    L_actionArg = L_action -> find_value((char*) "end");
-	    if (L_actionArg != NULL) {
-	      
-	      if (L_begin_present == true) {
-		
-		unsigned long  L_end ;
-		char          *L_end_str = NULL ;
-		L_end = strtoul_f (L_actionArg, &L_end_str, 10);
-		if (L_end_str[0] != '\0') {
-		  GEN_ERROR(E_GEN_FATAL_ERROR, "bad format, ["
-			    << L_actionArg << "] not a number");
-		  L_ret = -1 ;
-		  break ;
-		} else {
-		  if ((int)L_end > L_actionData->m_begin) {
-
-		    L_actionData->m_size = L_end - L_actionData->m_begin ;
-
-		  } else {
-		    GEN_ERROR(E_GEN_FATAL_ERROR, "End before begin index");
-		    L_ret = -1 ;
-		    break ;
-		  }
-		}
-	      } else {
-		GEN_ERROR(E_GEN_FATAL_ERROR, "End index defined without begin index");
-		L_ret = -1 ;
-		break ;
-	      }
-	    }
-	  
-
-
-	    // ctrl type of field
-	    if (P_protocol->get_field_type(L_actionData->m_id, 
-					   L_actionData->m_sub_id)
-		!= m_external_data->get_field_type(L_field_id)) {
-	      // P_sub_id
-	      T_TypeType L_type=P_protocol->get_field_type(L_actionData->m_id, 
-							   L_actionData->m_sub_id);
-	      GEN_ERROR(E_GEN_FATAL_ERROR,
-			"Incompatible type between external data field ["
-			<< m_external_data->get_field_type(L_field_id)
-			<< "] and entity ["
-			<< L_type
-			<< "]");
-	      L_ret = -1 ;
-	      break ;
-	    }
-	    
-	    
-	    if (L_entityFieldFound == true) {
-	      
+              L_actionData -> m_type = E_ACTION_SCEN_GET_EXTERNAL_DATA_TO_MEM  ;
+              
+              L_actionData->m_mem_id = 
+                add_memory (L_actionArg);
+              
 	      if (*P_selectLine_added == false) {
 		
                 L_select_line_action = no_cmd_action ;
 		// Add a new action for select data line
-		L_select_line_action . m_type = E_ACTION_SCEN_SELECT_EXTERNAL_DATA_LINE ;
+		L_select_line_action.m_type = E_ACTION_SCEN_SELECT_EXTERNAL_DATA_LINE ;
 		P_CommandActionLst.push_back
                   (P_CmdActionFactory.create(L_select_line_action));
 		P_nb_action++ ;
@@ -1611,19 +1457,195 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 		*(P_selectLine_added) = true ;
 	      }
 	      m_external_data_used = true ;
-	      
 	      L_actionData->m_field_data_num = L_field_id;
-	      
-	    } else {
-	      GEN_ERROR(E_GEN_FATAL_ERROR, "Unable to find definition for ["
-			<< L_actionArg2 << "]");
-	      L_ret = -1 ;
-	    }
-	  } else {
-	    GEN_ERROR(E_GEN_FATAL_ERROR, 
-		      "Using restore-from-external action with no external data defined");
-	    L_ret = -1 ;
-	  }
+
+	    } else {    
+              L_actionArg2 = L_action -> find_value((char*) "entity");
+              if (L_actionArg2 == NULL) {
+                GEN_ERROR(E_GEN_FATAL_ERROR, "entity value mandatory for action ["
+                          << L_actionName << "]");
+                L_ret = -1 ;
+                break ; 
+              }
+              
+              L_entityFieldFound = false ;
+              L_actionData->m_id 
+                = P_protocol->find_field (L_actionArg2) ;
+              if (L_actionData->m_id == -1) {
+                GEN_ERROR(E_GEN_FATAL_ERROR,
+                          "No definition found for ["
+                          << L_actionArg2 << "]");
+                L_ret = -1 ;
+                break ;
+              } else {
+                L_entityFieldFound = true ;
+                
+              }
+              
+              
+              L_actionArg = L_action -> find_value((char*) "instance");
+              if (L_actionArg != NULL) {
+                T_InstanceDataList::iterator L_instance_it ;
+                bool L_instance_found = false ;
+                for (L_instance_it = P_instance_list.begin();
+                     L_instance_it != P_instance_list.end();
+                     L_instance_it++) {
+                  if (strcmp(L_actionArg, L_instance_it->m_instance_name)==0) {
+                    L_actionData->m_instance_id = L_instance_it->m_instance_id;
+                    L_instance_found = true ;
+                    break ;
+                  }
+                }
+                if (L_instance_found == false) {
+                  GEN_ERROR(E_GEN_FATAL_ERROR, "Unable to find instance name ["
+                            << L_actionArg << "]");
+                  L_ret = -1 ;
+                  break ;
+                } else {
+                  if (L_instance_it->m_id != L_actionData->m_id) {
+                    GEN_ERROR(E_GEN_FATAL_ERROR, "Bad instance name ["
+                              << L_actionArg << "]");
+                    L_ret = -1 ;
+                    break ;
+                  }
+                }
+              }
+              
+              L_actionArg = L_action -> find_value((char*) "sub-entity");
+              if (L_actionArg != NULL) {	
+                
+                
+                L_actionData->m_sub_id 
+                  = P_protocol->find_field (L_actionArg) ;
+                if (L_actionData->m_sub_id == -1) {
+                  GEN_ERROR(E_GEN_FATAL_ERROR,
+                            "No definition found for ["
+                            << L_actionArg << "]");
+                  L_ret = -1 ;
+                  break ;
+                }
+              } 
+              
+              if (P_protocol->check_sub_entity_needed(L_actionData->m_id) == true) {
+                if (L_actionData->m_sub_id == -1) {
+                  GEN_ERROR(E_GEN_FATAL_ERROR,
+                            "sub entity needed for  ["
+                            << L_actionArg2 
+                            << "]");
+                  
+                  L_ret = -1 ;
+                  break ;
+                }
+              }
+              
+              L_actionArg = L_action -> find_value((char*) "begin");
+              if (L_actionArg != NULL) {
+                
+                // check type field == STRING || BINARY	      
+                
+                if (P_protocol->get_field_type(L_actionData->m_id, 
+                                               L_actionData->m_sub_id)
+                    != E_TYPE_STRING ) {
+                  GEN_ERROR(E_GEN_FATAL_ERROR,
+                            "Type field of entity ["
+                            << L_actionArg2 
+                            << "] is not STRING");
+                  L_ret = -1 ;
+                  break ;
+                }
+                
+                unsigned long  L_begin ;
+                char          *L_end_str = NULL ;
+                L_begin = strtoul_f (L_actionArg, &L_end_str, 10);
+                if (L_end_str[0] != '\0') {
+                  GEN_ERROR(E_GEN_FATAL_ERROR, "bad format, ["
+                            << L_actionArg << "] not a number");
+                  L_ret = -1 ;
+                  break ;
+                } else {
+                  L_actionData->m_begin = (int)L_begin ;
+                  L_begin_present = true ;
+                }
+              }
+              
+              L_actionArg = L_action -> find_value((char*) "end");
+              if (L_actionArg != NULL) {
+                
+                if (L_begin_present == true) {
+                  
+                  unsigned long  L_end ;
+                  char          *L_end_str = NULL ;
+                  L_end = strtoul_f (L_actionArg, &L_end_str, 10);
+                  if (L_end_str[0] != '\0') {
+                    GEN_ERROR(E_GEN_FATAL_ERROR, "bad format, ["
+                              << L_actionArg << "] not a number");
+                    L_ret = -1 ;
+                    break ;
+                  } else {
+                    if ((int)L_end > L_actionData->m_begin) {
+                      
+                      L_actionData->m_size = L_end - L_actionData->m_begin ;
+                      
+                    } else {
+                      GEN_ERROR(E_GEN_FATAL_ERROR, "End before begin index");
+                      L_ret = -1 ;
+                      break ;
+                    }
+                  }
+                } else {
+                  GEN_ERROR(E_GEN_FATAL_ERROR, "End index defined without begin index");
+                  L_ret = -1 ;
+                  break ;
+                }
+              }
+	  
+              // ctrl type of field
+              if (P_protocol->get_field_type(L_actionData->m_id, 
+                                             L_actionData->m_sub_id)
+                  != m_external_data->get_field_type(L_field_id)) {
+                // P_sub_id
+                T_TypeType L_type=P_protocol->get_field_type(L_actionData->m_id, 
+                                                             L_actionData->m_sub_id);
+                GEN_ERROR(E_GEN_FATAL_ERROR,
+                          "Incompatible type between external data field ["
+                          << m_external_data->get_field_type(L_field_id)
+                          << "] and entity ["
+                          << L_type
+                          << "]");
+                L_ret = -1 ;
+                break ;
+              }
+              
+              
+              if (L_entityFieldFound == true) {
+                
+                if (*P_selectLine_added == false) {
+                  
+                  L_select_line_action = no_cmd_action ;
+                  // Add a new action for select data line
+                  L_select_line_action . m_type = E_ACTION_SCEN_SELECT_EXTERNAL_DATA_LINE ;
+                  P_CommandActionLst.push_back
+                    (P_CmdActionFactory.create(L_select_line_action));
+                  P_nb_action++ ;
+                  
+                  // once time
+                  *(P_selectLine_added) = true ;
+                }
+                m_external_data_used = true ;
+                
+                L_actionData->m_field_data_num = L_field_id;
+                
+              } else {
+                GEN_ERROR(E_GEN_FATAL_ERROR, "Unable to find definition for ["
+                          << L_actionArg2 << "]");
+                L_ret = -1 ;
+              }
+            }
+          } else {
+            GEN_ERROR(E_GEN_FATAL_ERROR, 
+                      "Using restore-from-external action with no external data defined");
+            L_ret = -1 ;
+          }
 	  
 	  break ;
 	  
@@ -1847,6 +1869,276 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 	    break ;
 	  }
 	  break ;
+          
+	case E_ACTION_SCEN_SET_BIT : 
+          
+	  L_actionArg = L_action -> find_value((char*) "name");
+	  if (L_actionArg == NULL) {
+	    GEN_ERROR(E_GEN_FATAL_ERROR, "name value mandatory for action ["
+		      << L_actionName << "]");
+	    L_ret = -1 ;
+	    break ; 
+	  }
+          
+	  L_actionArg2 = L_action -> find_value((char*) "entity");
+	  if (L_actionArg2 == NULL) {
+	    GEN_ERROR(E_GEN_FATAL_ERROR, "entity value mandatory for action ["
+		      << L_actionName << "]");
+	    L_ret = -1 ;
+	    break ; 
+	  }
+	  L_memoryRefFound = false ;
+	  
+	  L_actionData->m_id 
+	    = P_protocol->find_field (L_actionArg2) ;
+	  if (L_actionData->m_id != -1) {
+	    L_memoryRefFound = true ;
+	  }
+          
+	  if (L_memoryRefFound == true) {
+	    L_actionData->m_mem_id = 
+	      add_memory (L_actionArg);
+	  } else {
+	    GEN_ERROR(E_GEN_FATAL_ERROR, "Unable to find definition for ["
+		      << L_actionArg2 << "]");
+	    L_ret = -1 ;
+	    break;
+	  }
+          
+	  L_actionArg = L_action -> find_value((char*) "instance");
+	  if (L_actionArg != NULL) {
+  	    T_InstanceDataList::iterator L_instance_it ;
+  	    bool L_instance_found = false ;
+  	    for (L_instance_it = P_instance_list.begin();
+  		 L_instance_it != P_instance_list.end();
+  		 L_instance_it++) {
+  	      if (strcmp(L_actionArg, L_instance_it->m_instance_name)==0) {
+  		L_actionData->m_instance_id = L_instance_it->m_instance_id;
+  		L_instance_found = true ;
+		break ;
+  	      }
+  	    }
+  	    if (L_instance_found == false) {
+  	      GEN_ERROR(E_GEN_FATAL_ERROR, "Unable to find instance name ["
+  			<< L_actionArg << "]");
+  	      L_ret = -1 ;
+	      break ;
+  	    } else {
+	      if (L_instance_it->m_id != L_actionData->m_id) {
+		GEN_ERROR(E_GEN_FATAL_ERROR, "Bad instance name ["
+			  << L_actionArg << "]");
+		L_ret = -1 ;
+		break ;
+	      }
+	    }
+	  }
+          
+	  L_actionArg = L_action -> find_value((char*) "sub-entity");
+	  if (L_actionArg != NULL) {	    
+	    L_actionData->m_sub_id 
+	      = P_protocol->find_field (L_actionArg) ;
+	    if (L_actionData->m_sub_id == -1) {
+	      GEN_ERROR(E_GEN_FATAL_ERROR,
+			"No definition found for ["
+			<< L_actionArg << "]");
+	      L_ret = -1 ;
+	      break ;
+	    }
+	  }
+          
+          
+	  if (P_protocol->check_sub_entity_needed(L_actionData->m_id) == true) {
+            
+	    if (L_actionData->m_sub_id == -1) {
+	      GEN_ERROR(E_GEN_FATAL_ERROR,
+			"sub entity needed for  ["
+			<< L_actionArg2 
+			<< "]");
+	      L_ret = -1 ;
+	      break ;
+	    }
+	  }
+          
+          // check type field == STRING || BINARY
+//  	  if (P_protocol->get_field_type(L_actionData->m_id, 
+//                                           L_actionData->m_sub_id)
+//                != E_TYPE_STRING ) {
+//              GEN_ERROR(E_GEN_FATAL_ERROR,
+//                        "Type field of entity ["
+//                        << L_actionArg2 
+//                        << "] is not STRING");
+//              L_ret = -1 ;
+//              break ;
+//  	  }
+          
+	  L_actionArg = L_action -> find_value((char*) "position");
+	  if (L_actionArg == NULL) {
+	    GEN_ERROR(E_GEN_FATAL_ERROR, "position value mandatory for action ["
+		      << L_actionName << "]");
+	    L_ret = -1 ;
+	    break ; 
+	  } 
+          
+  	  L_position = (int)strtoul_f (L_actionArg, &L_end_str, 10);
+  	  if (L_end_str[0] != '\0') {
+  	    GEN_ERROR(E_GEN_FATAL_ERROR, "bad format, ["
+  		      << L_actionArg << "] not a number");
+  	    L_ret = -1 ;
+  	    break;
+  	  }
+          
+	  L_actionData->m_position = L_position ;
+          
+	  L_actionArg = L_action -> find_value((char*) "value");
+	  if (L_actionArg == NULL) {
+	    GEN_ERROR(E_GEN_FATAL_ERROR, "value mandatory for action ["
+		      << L_actionName << "]");
+	    L_ret = -1 ;
+	    break ; 
+	  } 
+          
+  	  L_value_set_bit = (int)strtoul_f (L_actionArg, &L_end_str, 10);
+  	  if (L_end_str[0] != '\0') {
+  	    GEN_ERROR(E_GEN_FATAL_ERROR, "bad format, ["
+  		      << L_actionArg << "] not a number");
+  	    L_ret = -1 ;
+  	    break;
+  	  }
+          
+          if ((L_value_set_bit != 0) && (L_value_set_bit !=1)) {
+  	    GEN_ERROR(E_GEN_FATAL_ERROR, "bad format, ["
+  		      << L_actionArg << "] value must be 0 or 1");
+  	    L_ret = -1 ;
+  	    break;
+  	  }
+          
+          L_actionData->m_field_data_num = L_value_set_bit;
+          break;
+
+	case E_ACTION_SCEN_SET_VALUE_BIT : 
+          
+	  L_actionArg = L_action -> find_value((char*) "entity");
+	  if (L_actionArg == NULL) {
+	    GEN_ERROR(E_GEN_FATAL_ERROR, "entity value mandatory for action ["
+		      << L_actionName << "]");
+	    L_ret = -1 ;
+	    break ; 
+	  }
+	  
+	  L_actionData->m_id 
+	    = P_protocol->find_field (L_actionArg) ;
+          
+	  L_actionArg = L_action -> find_value((char*) "instance");
+	  if (L_actionArg != NULL) {
+  	    T_InstanceDataList::iterator L_instance_it ;
+  	    bool L_instance_found = false ;
+  	    for (L_instance_it = P_instance_list.begin();
+  		 L_instance_it != P_instance_list.end();
+  		 L_instance_it++) {
+  	      if (strcmp(L_actionArg, L_instance_it->m_instance_name)==0) {
+  		L_actionData->m_instance_id = L_instance_it->m_instance_id;
+  		L_instance_found = true ;
+		break ;
+  	      }
+  	    }
+  	    if (L_instance_found == false) {
+  	      GEN_ERROR(E_GEN_FATAL_ERROR, "Unable to find instance name ["
+  			<< L_actionArg << "]");
+  	      L_ret = -1 ;
+	      break ;
+  	    } else {
+	      if (L_instance_it->m_id != L_actionData->m_id) {
+		GEN_ERROR(E_GEN_FATAL_ERROR, "Bad instance name ["
+			  << L_actionArg << "]");
+		L_ret = -1 ;
+		break ;
+	      }
+	    }
+	  }
+          
+	  L_actionArg = L_action -> find_value((char*) "sub-entity");
+	  if (L_actionArg != NULL) {	    
+	    L_actionData->m_sub_id 
+	      = P_protocol->find_field (L_actionArg) ;
+	    if (L_actionData->m_sub_id == -1) {
+	      GEN_ERROR(E_GEN_FATAL_ERROR,
+			"No definition found for ["
+			<< L_actionArg << "]");
+	      L_ret = -1 ;
+	      break ;
+	    }
+	  }
+          
+          
+	  if (P_protocol->check_sub_entity_needed(L_actionData->m_id) == true) {
+            
+	    if (L_actionData->m_sub_id == -1) {
+	      GEN_ERROR(E_GEN_FATAL_ERROR,
+			"sub entity needed for  ["
+			<< L_actionArg2 
+			<< "]");
+	      L_ret = -1 ;
+	      break ;
+	    }
+	  }
+          
+          // check type field == STRING || BINARY
+//  	  if (P_protocol->get_field_type(L_actionData->m_id, 
+//                                           L_actionData->m_sub_id)
+//                != E_TYPE_STRING ) {
+//              GEN_ERROR(E_GEN_FATAL_ERROR,
+//                        "Type field of entity ["
+//                        << L_actionArg2 
+//                        << "] is not STRING");
+//              L_ret = -1 ;
+//              break ;
+//  	  }
+          
+          
+	  L_actionArg = L_action -> find_value((char*) "position");
+	  if (L_actionArg == NULL) {
+	    GEN_ERROR(E_GEN_FATAL_ERROR, "position value mandatory for action ["
+		      << L_actionName << "]");
+	    L_ret = -1 ;
+	    break ; 
+	  } 
+          
+  	  L_position = (int)strtoul_f (L_actionArg, &L_end_str, 10);
+  	  if (L_end_str[0] != '\0') {
+  	    GEN_ERROR(E_GEN_FATAL_ERROR, "bad format, ["
+  		      << L_actionArg << "] not a number");
+  	    L_ret = -1 ;
+  	    break;
+  	  }
+          
+	  L_actionData->m_position = L_position ;
+          
+	  L_actionArg = L_action -> find_value((char*) "value");
+	  if (L_actionArg == NULL) {
+	    GEN_ERROR(E_GEN_FATAL_ERROR, "value mandatory for action ["
+		      << L_actionName << "]");
+	    L_ret = -1 ;
+	    break ; 
+	  } 
+          
+  	  L_value_set_bit = (int)strtoul_f (L_actionArg, &L_end_str, 10);
+  	  if (L_end_str[0] != '\0') {
+  	    GEN_ERROR(E_GEN_FATAL_ERROR, "bad format, ["
+  		      << L_actionArg << "] not a number");
+  	    L_ret = -1 ;
+  	    break;
+  	  }
+          
+          if ((L_value_set_bit != 0) && (L_value_set_bit !=1)) {
+  	    GEN_ERROR(E_GEN_FATAL_ERROR, "bad format, ["
+  		      << L_actionArg << "] value must be 0 or 1");
+  	    L_ret = -1 ;
+  	    break;
+  	  }
+          
+          L_actionData->m_field_data_num = L_value_set_bit;
+          break;
+
 
 	default:
 	  GEN_ERROR(E_GEN_FATAL_ERROR, "Action not implemented");
@@ -1885,7 +2177,6 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
     } // for (L_actionListIt
     
     if (L_ret != -1) {
-    
       if ((P_pre_action == true) && (P_pre_action_done == false)) {
 	
   	// pre actions settings
@@ -1911,11 +2202,9 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 	  P_nb_action = 0 ;
 	  P_CommandActionTable = NULL ;
   	}
-  	P_pre_action_done = true ;
+  	P_pre_action_done = true ;	
 	
-	
-      } else {
-	
+      } else {	
   	// post actions settings
   	// post actions in the command => add in call map added if needed 
   	// (== if not already inserted for this channel)
@@ -1928,10 +2217,39 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
   	  P_CommandActionLst.push_back(P_CmdActionFactory.create(L_action_map));
   	  P_nb_action++ ;
   	  P_inserted = true ;
-  	}
+
+          for (L_actionListIt  = L_actionList->begin();
+               L_actionListIt != L_actionList->end();
+               L_actionListIt++) {
+            L_action = *L_actionListIt ;
+            L_actionName = L_action -> get_name() ;
+            L_actionFound = false ;
+            for(L_i=0;
+                L_i< (T_action_type)E_NB_ACTION_SCEN ;
+                L_i++) {
+              
+              if (strcmp(L_actionName, action_name_table[L_i])==0) {
+                L_actionType=(T_action_type)L_i ;
+                L_actionFound = true ;
+                break ;
+              }
+            }
+            if (L_actionFound == true) {
+              if (L_actionType == E_ACTION_SCEN_SET_NEW_SESSION_ID) {
+                GEN_ERROR(E_GEN_FATAL_ERROR, "Action ["
+                          << L_actionName << "] is not allowed on the first command");
+                L_ret = -1 ;
+                break ; 
+              }
+            }
+          }
+          if (L_ret == -1) {
+            return (L_ret);
+          }
+        }
+
 	
   	if (P_nb_action != 0) {
- 
   	  T_CommandActionLst::iterator L_cmdActionIt ;
   	  int                          L_actionIdx = 0 ;
 	  
@@ -2154,7 +2472,6 @@ int C_ScenarioControl::check_expression (T_pCmdAction  P_action,
   L_ret = (P_action->m_type != E_ACTION_SCEN_SET_VALUE) ? -1 : 0 ;
 
   if (L_ret == 0) {
-    // P_sub_id
     switch (P_protocol->get_field_type(P_action->m_id,0)) {
 
     case E_TYPE_NUMBER:

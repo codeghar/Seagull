@@ -53,6 +53,8 @@ const char* action_name_table [] = {
   "check-order",
   "set-new-session-id",
   "transport-option",
+  "set-bit",
+  "set-value-bit",
   "E_NB_ACTION_SCEN",  // internal actions after this value
   "E_ACTION_SCEN_INTERNAL_INIT_DONE",
   "E_ACTION_SCEN_CHECK_ALL_MSG",
