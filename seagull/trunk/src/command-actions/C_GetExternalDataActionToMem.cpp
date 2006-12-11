@@ -17,58 +17,41 @@
  *
  */
 
-#include "C_SetNewSessionIdAction.hpp"
+#include "C_GetExternalDataActionToMem.hpp"
 #include "GeneratorTrace.hpp"
 #include "GeneratorError.h"
-#include "C_CallControl.hpp"
 
-C_SetNewSessionIdAction::C_SetNewSessionIdAction(T_CmdAction        P_cmdAction,
-                                                 T_pControllers P_controllers)
-  : C_CommandAction (P_cmdAction, P_controllers) {
+C_GetExternalDataActionToMem::C_GetExternalDataActionToMem(T_CmdAction        P_cmdAction,
+                                                           T_pControllers P_controllers)
+  : C_GetExternalDataAction(P_cmdAction, P_controllers) {
 }
 
-C_SetNewSessionIdAction::~C_SetNewSessionIdAction() {
+C_GetExternalDataActionToMem::~C_GetExternalDataActionToMem() {
 }
 
 
-T_exeCode    C_SetNewSessionIdAction::execute(T_pCmd_scenario P_pCmd,
+T_exeCode    C_GetExternalDataActionToMem::execute(T_pCmd_scenario P_pCmd,
                                               T_pCallContext  P_callCtxt,
                                               C_MessageFrame *P_msg,
                                               C_MessageFrame *P_ref) {
 
   T_exeCode           L_exeCode    = E_EXE_NOERROR ;
+  T_pValueData        L_value      = NULL ;
+  T_pValueData        L_mem        = NULL ;
 
-  T_pValueData          L_mem      ;
-  T_ValueData           L_val      ;
   
-  T_CallMap::iterator   L_call_it  ;
-  T_pValueData          L_value_id ;
-  
-  T_pCallMap *L_map = P_callCtxt->m_call_control->get_call_map();
+  P_callCtxt->reset_memory(m_mem_id) ;
     
-  L_val.m_type = E_TYPE_NUMBER ;
-  
   L_mem = P_callCtxt->get_memory(m_mem_id);
+  
 
-  if (P_msg -> get_field_value(m_id, 
-                               m_instance_id,
-                               m_sub_id,
-                               &L_val) == true) {
-    if (*L_mem == L_val ) {
-      //break;
-    } else {
-      L_call_it = L_map[P_pCmd->m_channel_id]
-        ->find (T_CallMap::key_type(P_callCtxt->m_id_table[P_pCmd->m_channel_id]));
-      if (L_call_it != L_map[P_pCmd->m_channel_id]->end()) {
-        L_map[P_pCmd->m_channel_id]->erase (L_call_it);
-        P_callCtxt->reset_id (P_pCmd->m_channel_id);
-        L_value_id = P_callCtxt->set_id (P_pCmd->m_channel_id,L_mem);
-        L_map[P_pCmd->m_channel_id]
-          ->insert(T_CallMap::value_type(*L_value_id, P_callCtxt));
-        // resetMemory(L_val);
-      } 
-    }
-    resetMemory(L_val);
+      
+  L_value = m_controllers.m_external_data->get_value(P_callCtxt->m_selected_line, 
+                                       m_field_data_num);
+
+  if (L_value != NULL) {
+      L_mem->m_type = E_TYPE_NUMBER ;       
+      copyValue(*L_mem,*L_value, false);
   } else {
     GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
                   action_name_table[m_type] 
@@ -77,15 +60,9 @@ T_exeCode    C_SetNewSessionIdAction::execute(T_pCmd_scenario P_pCmd,
     GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
                   "error on call with session-id ["
                   << P_callCtxt->m_id_table[P_pCmd->m_channel_id] << "]");
-    
     L_exeCode = E_EXE_ERROR;
   }
   
-  
   return (L_exeCode);
 }
-
-
-
-
 

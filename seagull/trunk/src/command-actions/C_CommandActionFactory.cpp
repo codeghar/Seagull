@@ -38,6 +38,9 @@
 #include "C_OpenAction.hpp"
 #include "C_CloseAction.hpp"
 #include "C_TransportOptionAction.hpp"
+#include "C_SetBitAction.hpp"
+#include "C_SetValueBitAction.hpp"
+#include "C_GetExternalDataActionToMem.hpp"
 
 
 
@@ -132,6 +135,21 @@ C_CommandAction* C_CommandActionFactory::create(T_CmdAction P_cmdAction) {
   case E_ACTION_SCEN_TRANSPORT_OPTION:
     NEW_VAR(L_action, 
             C_TransportOptionAction(P_cmdAction,&m_controllers));
+    break ;
+
+  case E_ACTION_SCEN_SET_BIT:
+    NEW_VAR(L_action, 
+            C_SetBitAction(P_cmdAction,&m_controllers));
+    break ;
+
+  case E_ACTION_SCEN_SET_VALUE_BIT:
+    NEW_VAR(L_action, 
+            C_SetValueBitAction(P_cmdAction,&m_controllers));
+    break ;
+
+  case E_ACTION_SCEN_GET_EXTERNAL_DATA_TO_MEM:
+    NEW_VAR(L_action, 
+            C_GetExternalDataActionToMem(P_cmdAction,&m_controllers));
     break ;
 
   default :

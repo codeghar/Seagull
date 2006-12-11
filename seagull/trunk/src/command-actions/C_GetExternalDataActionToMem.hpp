@@ -17,35 +17,32 @@
  *
  */
 
-#ifndef  _C_GETEXTERNALDATAACTION_H
-#define  _C_GETEXTERNALDATAACTION_H
+#ifndef  _C_GETEXTERNALDATAACTIONTOMEM_H
+#define  _C_GETEXTERNALDATAACTIONTOMEM_H
 
-#include "C_CommandAction.hpp"
+#include "C_GetExternalDataAction.hpp"
 
-class C_GetExternalDataAction : public C_CommandAction { 
+class C_GetExternalDataActionToMem : public C_GetExternalDataAction { 
+
 
 public:
 
-  C_GetExternalDataAction (T_CmdAction        P_cmdAction,
-                           T_pControllers P_controllers);
+  C_GetExternalDataActionToMem (T_CmdAction    P_cmdAction,
+                                T_pControllers P_controllers);
+  
+  ~C_GetExternalDataActionToMem() ;
 
-  ~C_GetExternalDataAction() ;
-
-
-  virtual T_exeCode execute (T_pCmd_scenario P_pCmd,
+  T_exeCode execute (T_pCmd_scenario P_pCmd,
                      T_pCallContext  P_callCtxt,
                      C_MessageFrame *P_msg,
                      C_MessageFrame *P_ref) ;
 
-protected:
-
-
 } ;
 
-typedef C_GetExternalDataAction *T_pC_GetExternalDataAction ;
+typedef C_GetExternalDataActionToMem *T_pC_GetExternalDataActionToMem ;
 
 
-#endif  // _C_GETEXTERNALDATAACTION_H
+#endif  // _C_GETEXTERNALDATAACTIONTOMEM_H
 
 
 

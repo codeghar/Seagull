@@ -17,22 +17,22 @@
  *
  */
 
-#ifndef  _C_GETEXTERNALDATAACTION_H
-#define  _C_GETEXTERNALDATAACTION_H
+#ifndef    _C_SETVALUEBITACTION_H
+#define    _C_SETVALUEBITACTION_H
 
 #include "C_CommandAction.hpp"
 
-class C_GetExternalDataAction : public C_CommandAction { 
+class C_SetValueBitAction : public C_CommandAction { 
 
 public:
 
-  C_GetExternalDataAction (T_CmdAction        P_cmdAction,
-                           T_pControllers P_controllers);
+  C_SetValueBitAction (T_CmdAction        P_cmdAction,
+                   T_pControllers P_controllers);
 
-  ~C_GetExternalDataAction() ;
+  ~C_SetValueBitAction() ;
 
 
-  virtual T_exeCode execute (T_pCmd_scenario P_pCmd,
+  T_exeCode execute (T_pCmd_scenario P_pCmd,
                      T_pCallContext  P_callCtxt,
                      C_MessageFrame *P_msg,
                      C_MessageFrame *P_ref) ;
@@ -42,10 +42,10 @@ protected:
 
 } ;
 
-typedef C_GetExternalDataAction *T_pC_GetExternalDataAction ;
+typedef C_SetValueBitAction *T_pC_SetValueBitAction ;
 
 
-#endif  // _C_GETEXTERNALDATAACTION_H
+#endif  // _C_SETVALUEBITACTION_H
 
 
 
