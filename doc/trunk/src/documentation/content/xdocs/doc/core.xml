@@ -2137,13 +2137,13 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             </tr>
             <tr>
               <td>model-traffic-select</td>
-              <td>Specify which distribution is selected to create new calls.Three different types are implemented: <br/>
+              <td>Specifies which distribution is selected to create new calls.Three different types are implemented: <br/>
                   -uniform : for each interval, seagull tries to reach the expected call rate, 
-                   regardless on what happened during the last interval. With this value, 
-                   the max-receive and max-send options are automaticly set. This is the default value. <br/>
+                   regardless of what happened during the lastest interval. With this value, 
+                   the max-receive and max-send options are automatically set. This is the default value. <br/>
                   -best-effort : seagull tries to maintain the expected average call rate by 
-                   ajusting the instantaneous call rate using the rates reached during the last interval.  <br/>
-                  -poisson : the real call rate vary around the expected call rate according 
+                   adjusting the instantaneous call rate using the rates reached during the previous intervals.  <br/>
+                  -poisson : the real call rate varies around the expected call rate according 
                    to the Poisson distribution
               </td>
               <td>uniform</td>
