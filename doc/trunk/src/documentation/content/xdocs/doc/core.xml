@@ -2114,6 +2114,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
               <td>select-timeout-ms (tuning)</td>
               <td>Defines the value of the timer set when listening to the system, 
 	    waiting for the messages. Counter in milliseconds.<br/>
+	    For low call-rate, set a value at least lower than the smallest "wait" in the scenario.<br/>  
 	    Be careful, the lower the value, the more CPU time will used.</td>
               <td>1000</td>
               <td>
