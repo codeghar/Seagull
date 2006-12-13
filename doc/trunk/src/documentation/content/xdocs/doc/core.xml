@@ -370,7 +370,9 @@ DUMP</source>
           <section><title>Description</title>
             <p>Seagull can be remote controlled through a remote connection. The 
             protocol used is HTML, through a dictionary provided at run time (-ctrldicopath command line option),
-            the default being /usr/local/share/seagull/config/remote-ctrl.xml.</p>
+            the default being /usr/local/share/seagull/config/remote-ctrl.xml.<br/>
+            This feature is actived with the option at run time : -ctrl address:port 
+            ("address:port" : the address and the port on which seagull listen for remote control commands)</p>
             <p>Using HTTP makes it very easy to remote control Seagull, either directly from
             a browser or from high level languages like Perl or Python.</p>
             <p>In particular, this allow to:</p>
@@ -390,13 +392,15 @@ DUMP</source>
           <section><title>Control commands</title>
           <p>The following remote control commands are implemented:</p>
           <ul>
-            <li><strong>Set rate</strong>: to set the scenario attempt per seconds rate. This is done by sending
-            an HTTP "<code>PUT</code>" with URI: <source>http://x.y.z.t:p/seagull/command/rate?value=n</source></li>
             <li><strong>Dump</strong>: to dump the statistics counters. This is done by sending
             an HTTP "<code>GET</code>" with URI: <source>http://x.y.z.t:p/seagull/counters/all</source></li>
+            <li><strong>Set rate</strong>: to set the scenario attempt per seconds rate. This is done by sending
+            an HTTP "<code>PUT</code>" with URI: <source>http://x.y.z.t:p/seagull/command/rate?value=n</source></li>
             <li><strong>Ramp</strong>: to linearly increase or decrease the scenario attempts per second rate,
             from the current value to a target value in a number of second.<br/> This is done by sending
             an HTTP "<code>PUT</code>" with URI: <source>http://x.y.z.t:p/seagull/command/ramp?value=n&amp;duration=d</source></li>
+            <li><strong>Stop</strong>: to ask seagull to quit . This is done by sending
+            an HTTP "<code>PUT</code>" with URI: <source>http://x.y.z.t:p/seagull/command/stop</source></li>
           </ul>
           </section>
          </section>
