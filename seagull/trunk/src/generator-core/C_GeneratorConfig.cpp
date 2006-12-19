@@ -1216,12 +1216,17 @@ iostream_output& operator<< (iostream_output& P_ostream,
   P_ostream << GEN_HEADER_LOG << GEN_HEADER_NO_LEVEL << "call rate scale  ["
 	    << P_conf.m_call_rate_scale << "]" << iostream_endl ;
 
+  L_value = (char*)(_model_traffic_select[P_conf.m_model_traffic_select]); 
+  P_ostream << GEN_HEADER_LOG << GEN_HEADER_NO_LEVEL << "model traffic    ["
+       << L_value << "]" << iostream_endl ;
+
   L_value = (P_conf.m_external_data_file == NULL) 
     ? (char*)novalue : P_conf.m_external_data_file ;
   P_ostream << GEN_HEADER_LOG << GEN_HEADER_NO_LEVEL << "external data file    ["
 	    << L_value 
 	    << "]" << iostream_endl ;
 
+  
   L_value = (char*)novalue ;
   if (P_conf.m_external_data_select == 0) {
     L_value = (char*)seqselect ;
