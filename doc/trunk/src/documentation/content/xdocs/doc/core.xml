@@ -674,6 +674,54 @@ Seagull will look at parameters indicated by
         <p/>
         <p>For more details, see "<a href="#transport_config">Transport Configuration</a>".</p>
       </section>
+      <section id="traffic_models">
+      <title>Traffic Models</title>
+      <p>Seagull generates traffic using different model type:</p>
+      <li><strong>Uniform</strong> : for each interval, seagull tries to reach the expected call rate, 
+        regardless of what happened during the lastest interval. With this value, the max-receive and 
+        max-send options are automatically set. It is not recommended for low call-rate. To reach high 
+        call-rate, it is necessary to inscrease the call-rate slowly (with keyboard control or remote) 
+        to avoid burst phenomenon.<br/>
+        Exemple of traffic generated for:<br/>
+        <u>1 call/s </u><br/>
+        <img src="images/uniform_1cs.jpg" alt="Uniform 1 c/s"/>
+        <br/>
+        <u>10 calls/s</u> <br/>
+        <img src="images/uniform_10cs.jpg" alt="Uniform 10 c/s"/>
+        <br/>
+        <u>100 calls/s</u> <br/>
+        <img src="images/uniform_100cs.jpg" alt="Uniform 100 c/s"/>
+      </li>
+      <li><strong>Best-effort</strong>: seagull tries to maintain the expected average 
+        call rate by adjusting the instantaneous call rate using the rates reached during the previous 
+        intervals<br/>
+        Exemple of traffic generated for:<br/>
+        <u>1 call/s </u><br/>
+        <img src="images/best_1cs.jpg" alt="Best 1 c/s"/>
+        <br/>
+        <u>10 calls/s</u> <br/>
+        <img src="images/best_10cs.jpg" alt="Best 10 c/s"/>
+        <br/>
+        <u>100 calls/s</u> <br/>
+        <img src="images/best_100cs.jpg" alt="Best 100 c/s"/>
+      </li>
+      <li><strong>Poisson</strong>: the real call rate varies around the expected call rate according
+         to the Poisson distribution<br/>
+         Exemple of traffic generated for:<br/>
+        <u>1 call/s </u><br/>
+        <img src="images/poisson_1cs.jpg" alt="Poisson 1 c/s"/>
+        <br/>
+        <u>10 calls/s</u> <br/>
+        <img src="images/poisson_10cs.jpg" alt="Poisson 10 c/s"/>
+        <br/>
+        <u>100 calls/s</u> <br/>
+        <img src="images/poisson_100cs.jpg" alt="Poisson 100 c/s"/>
+        <br/>
+      </li>
+         
+      <p>This parameter is set in the configuration file of the client.</p>
+      <p>For more details, see "<a href="#generic_config">Generic configuration</a>".</p>
+      </section>
     </section>
     <section id="config_scenario">
       <title>Seagull scenario</title>
