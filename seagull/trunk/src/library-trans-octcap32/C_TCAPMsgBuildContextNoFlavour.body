@@ -337,14 +337,6 @@ bool C_TCAPMsgBuildContextNoFlavour::get_component_code (T_pValueData P_data) {
       (m_component_current->operation.op_specifier & 0xff);
   }
 
-  if ( m_component_current->c_type == TC_RESULT_L  ||
-      m_component_current->c_type == TC_RESULT_NL ) {
-    // in this case the message contains only the correlation id 
-    // to retrieve the operation code, search the last TC_INVOKE_L
-    // sent in the scenario
-  }
-
-  
 #endif
 
   return(true);
@@ -388,11 +380,11 @@ bool C_TCAPMsgBuildContextNoFlavour::get_component_data (T_pValueData P_data) {
 #else
   if (m_component_current->c_type == TC_INVOKE_L  ||
       m_component_current->c_type == TC_INVOKE_NL ||
+      m_component_current->c_type == TC_RESULT_L  ||
+      m_component_current->c_type == TC_RESULT_NL ||
       m_component_current->c_type == TC_U_ERROR ) {
     L_found = true ;
   }
-
-
 #endif
 
   if (L_found == true) {
@@ -680,11 +672,10 @@ bool C_TCAPMsgBuildContextNoFlavour::set_component_data (T_pValueData P_data) {
     P_data->m_value.m_val_binary.m_size = 8 ;
   }
 #else
- 
+
   if (m_component_current->c_type == TC_U_REJECT) {
      return(true);
   }
-
 
   if (P_data->m_value.m_val_binary.m_size == 0 ) {
     if (m_component_current->c_type == TC_RESULT_L || 
@@ -1499,11 +1490,5 @@ bool C_TCAPMsgBuildContextNoFlavour::component_operation_code_tag_from_string (c
   }
   return (L_ret);
 }
-
-
-
-
-
-
 
 
