@@ -663,19 +663,11 @@ bool C_TCAPMsgBuildContextNoFlavour::set_component_data (T_pValueData P_data) {
   tcx_buffer       *L_buffer_ptr = NULL ;
 
 #ifdef _ANSI_STANDARD
-  if (m_component_current->c_type == TC_U_REJECT) {
-    m_component_current->parameter = NULL;
-    return(true);
-  }
 
   if (P_data->m_value.m_val_binary.m_size == 0 ) {
     P_data->m_value.m_val_binary.m_size = 8 ;
   }
 #else
-
-  if (m_component_current->c_type == TC_U_REJECT) {
-     return(true);
-  }
 
   if (P_data->m_value.m_val_binary.m_size == 0 ) {
     if (m_component_current->c_type == TC_RESULT_L || 
