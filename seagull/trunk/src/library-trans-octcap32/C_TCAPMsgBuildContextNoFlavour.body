@@ -638,7 +638,16 @@ bool C_TCAPMsgBuildContextNoFlavour::set_component_code (T_pValueData P_data) {
   return(true);
 }
 
-
+bool C_TCAPMsgBuildContextNoFlavour::set_component_error_tag (T_pValueData P_data) {
+  m_component_current->operation.tag = (
+#ifdef _ANSI_STANDARD
+    tc_type
+#else
+    tc_tag
+#endif
+    ) P_data->m_value.m_val_number ;
+  return(true);
+}
 
 bool C_TCAPMsgBuildContextNoFlavour::set_component_operation_code_tag (T_pValueData P_data) {
   m_component_current->operation.tag = (
@@ -665,12 +674,14 @@ bool C_TCAPMsgBuildContextNoFlavour::set_component_data (T_pValueData P_data) {
 #ifdef _ANSI_STANDARD
 
   if (P_data->m_value.m_val_binary.m_size == 0 ) {
-    m_component_current->parameter = NULL;    
-    return(true);
+    m_component_current->parameter = NULL;
+    return(true) ;
+
   }
 #else
 
   if (P_data->m_value.m_val_binary.m_size == 0 ) {
+    m_component_current->parameter = NULL;
     if (m_component_current->c_type == TC_RESULT_L || 
         m_component_current->c_type == TC_RESULT_NL ) {    
       m_component_current->operation.length = 0;
@@ -741,7 +752,6 @@ unsigned long L_val_number = P_data->m_value.m_val_number ;
   int    L_indDe=10;
 
   if (m_component_current->c_type == TC_U_ERROR ) {
-    m_component_current->error.tag = LOCAL_TYPE ;
 
     L_indDe=10;
     L_indice=0;
@@ -765,7 +775,6 @@ unsigned long L_val_number = P_data->m_value.m_val_number ;
 
 #else
   if (m_component_current->c_type == TC_U_ERROR ) {
-    m_component_current->error.tag  = NATIONAL ;
     m_component_current->error.code = (unsigned char) L_val_number ;
   } 
 #endif
@@ -1484,4 +1493,53 @@ bool C_TCAPMsgBuildContextNoFlavour::component_operation_code_tag_from_string (c
   return (L_ret);
 }
 
+bool C_TCAPMsgBuildContextNoFlavour::component_error_tag_to_string (char **P_string, 
+                                                                    T_pValueData P_data) {
+
+  bool L_ret = true ;
+  char* L_error_tag_name[2] = { 
+
+#ifdef _ITU_STANDARD
+    (char*)"LOCAL_TYPE", 
+    (char*)"GLOBAL_TYPE"
+#else
+    (char*)"NATIONAL", 
+    (char*)"PRIVATE" 
+    
+#endif 
+  };
+  
+  if (P_data->m_value.m_val_number < 2) {
+    (*P_string) = L_error_tag_name[P_data->m_value.m_val_number] ;
+  } else {
+    L_ret = false ;
+  }
+  return (L_ret);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::component_error_tag_from_string (char **P_string, 
+                                                                      T_pValueData P_data) {
+  char* L_error_tag_name[2] = { 
+
+#ifdef _ITU_STANDARD
+    (char*)"LOCAL_TYPE", 
+    (char*)"GLOBAL_TYPE"
+#else
+    (char*)"NATIONAL", 
+    (char*)"PRIVATE" 
+    
+#endif 
+  };
+  int  L_i = 0 ;
+  bool L_ret = false ; 
+  
+  for (L_i = 0 ; L_i < 2 ; L_i ++) {
+    if (strcmp((*P_string), L_error_tag_name[L_i]) == 0) {
+      P_data->m_value.m_val_number = L_i ;
+      L_ret = true ;
+      break ;
+    }
+  }
+  return (L_ret);
+}
 

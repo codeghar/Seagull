@@ -139,10 +139,14 @@ public:
   bool component_parameter_type_from_string(char **P_string, T_pValueData P_data);
 #endif // _ANSI_STANDARD
 
-
+  bool set_component_error_tag(T_pValueData P_data) ;
+  bool get_component_error_tag(T_pValueData P_data) ;
   bool set_component_operation_code_tag(T_pValueData P_data) ;
   bool get_component_operation_code_tag(T_pValueData P_data) ;
 
+
+  bool component_error_tag_to_string(char **P_string, T_pValueData P_data);
+  bool component_error_tag_from_string (char **P_string, T_pValueData P_data);
 
   bool component_operation_code_tag_to_string(char **P_string, T_pValueData P_data);
   bool component_operation_code_tag_from_string (char **P_string, T_pValueData P_data);
