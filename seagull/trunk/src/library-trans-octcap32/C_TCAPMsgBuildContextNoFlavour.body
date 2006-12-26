@@ -665,7 +665,8 @@ bool C_TCAPMsgBuildContextNoFlavour::set_component_data (T_pValueData P_data) {
 #ifdef _ANSI_STANDARD
 
   if (P_data->m_value.m_val_binary.m_size == 0 ) {
-    P_data->m_value.m_val_binary.m_size = 8 ;
+    m_component_current->parameter = NULL;    
+    return(true);
   }
 #else
 
