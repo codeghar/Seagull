@@ -52,6 +52,7 @@ static const T_CmdAction no_cmd_action = {
   NULL,
   E_CHECK_BEHAVIOUR_WARNING,
   -1,
+  NULL,
   NULL
 } ;
   
@@ -1307,6 +1308,23 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
             } 
           }
 
+	  if (L_ret != -1) {
+            L_actionArg2 = L_action -> find_value((char*)"method");
+            if (L_actionArg2 != NULL) {
+              L_actionData->m_external_method = 
+                P_protocol->find_method_extern(L_actionArg2);
+              if (L_actionData->m_external_method == NULL) {
+                GEN_ERROR(E_GEN_FATAL_ERROR,
+                          "No method extern found for ["
+                          << L_actionArg2 << "]");
+                L_ret = -1 ;
+                break ;
+              } else {
+                L_actionData->m_type =  E_ACTION_SCEN_SET_VALUE_METHOD_EXTERN ;
+              }
+            } 
+          }
+
 	  L_ret = check_expression (L_actionData, P_protocol) ;
 	  if (L_ret == -1) {
 	    GEN_ERROR(E_GEN_FATAL_ERROR,
@@ -1458,7 +1476,6 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 	      }
 	      m_external_data_used = true ;
 	      L_actionData->m_field_data_num = L_field_id;
-
 	    } else {    
               L_actionArg2 = L_action -> find_value((char*) "entity");
               if (L_actionArg2 == NULL) {
@@ -1509,7 +1526,7 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
                     break ;
                   }
                 }
-              }
+              } // ctrl instance
               
               L_actionArg = L_action -> find_value((char*) "sub-entity");
               if (L_actionArg != NULL) {	
@@ -2365,11 +2382,20 @@ int C_ScenarioControl::add_expression (char       *P_arg,
 	  L_string_val->m_data.m_id 
 	    = get_counter_id (L_value) ;
 	  if (L_string_val->m_data.m_id == -1) {
-	    GEN_ERROR(E_GEN_FATAL_ERROR,
-		  "Unable to find definition for ["
-		  << L_value << "]");
-	    L_ret = -1 ;
-	    break ;
+            L_string_val->m_data.m_id 
+              = check_memory (L_value) ;
+            if (L_string_val->m_data.m_id == -1) {
+              GEN_ERROR(E_GEN_FATAL_ERROR,
+                        "Unable to find definition for ["
+                        << L_value << "]");
+              L_ret = -1 ;
+              break ;
+            } else {
+              L_string_val->m_type = E_STR_MEMORY ;
+              L_list.push_back(L_string_val);
+              L_value_size = 0 ;
+
+            }
 	  } else {
 	    L_list.push_back(L_string_val);
 	    L_value_size = 0 ;
@@ -2388,8 +2414,6 @@ int C_ScenarioControl::add_expression (char       *P_arg,
 	// add static value ;
 	L_value[L_value_size] = L_ptr[L_i] ;
 	L_value_size++ ;
-
-
         // std::cerr << "L_i " << L_i << "and L_value_size *****" << L_value_size << std::endl;
 	break ;
       case 1:
@@ -2429,7 +2453,7 @@ int C_ScenarioControl::add_expression (char       *P_arg,
     L_string_expr->m_nb_portion = L_list.size() ;
 
 
-    // std::cerr << "m_nb_portion *****" << L_string_expr->m_nb_portion << std::endl;
+    //    std::cerr << "m_nb_portion *****" << L_string_expr->m_nb_portion << std::endl;
 
     if (L_string_expr->m_nb_portion != 0) {
       ALLOC_TABLE(L_string_expr->m_portions,
@@ -2469,7 +2493,9 @@ int C_ScenarioControl::check_expression (T_pCmdAction  P_action,
   char       L_buffer[1024] ;
   char      *L_search       ;
 
-  L_ret = (P_action->m_type != E_ACTION_SCEN_SET_VALUE) ? -1 : 0 ;
+  L_ret = ((P_action->m_type != E_ACTION_SCEN_SET_VALUE) &&
+           (P_action->m_type != E_ACTION_SCEN_SET_VALUE_METHOD_EXTERN))
+           ? -1 : 0 ;
 
   if (L_ret == 0) {
     switch (P_protocol->get_field_type(P_action->m_id,0)) {
@@ -2671,23 +2697,37 @@ T_pC_Scenario C_ScenarioControl::init_scenario_defined (T_pTrafficType P_type) {
   return (m_init_scen);
 }
 
-int C_ScenarioControl::add_memory (char *P_mem_name) {
 
-  int L_mem_id ;
-  T_MemoryIdMap::iterator L_it ;
+int C_ScenarioControl::check_memory (char *P_mem_name) {
 
-  L_it = m_memory_map->find (T_MemoryIdMap::key_type(P_mem_name)) ;
-			     
+  int L_mem_id = -1 ;
+  T_MemoryIdMap::iterator
+    L_it = m_memory_map->find (T_MemoryIdMap::key_type(P_mem_name)) ;
+
+
   if (L_it != m_memory_map->end()) {
     L_mem_id = L_it->second ;
-  } else {
+  }
+
+  return (L_mem_id) ;
+
+}
+
+
+int C_ScenarioControl::add_memory (char *P_mem_name) {
+
+  int L_mem_id = check_memory (P_mem_name) ;
+
+  if (L_mem_id == -1) {
     L_mem_id = m_memory_max ;
     m_memory_map->insert(T_MemoryIdMap::value_type(P_mem_name, L_mem_id));
     m_memory_max++;
   }
+
   return (L_mem_id) ;
 
 }
+
 
 void C_ScenarioControl::switch_to_init () {
   GEN_DEBUG(1, "C_ScenarioControl::switch_to_init() start");

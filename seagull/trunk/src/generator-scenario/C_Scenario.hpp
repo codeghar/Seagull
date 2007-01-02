@@ -42,7 +42,7 @@
 #include "C_ScenarioStats.hpp"
 
 #include "C_RegExp.hpp"
-
+#include "ExternalMethod.h"
 
 
 
@@ -88,14 +88,16 @@ typedef enum _action_scenario_type {
    E_ACTION_SCEN_CHECK_ALL_MSG,
    E_ACTION_SCEN_ADD_IN_CALL_MAP,
    E_ACTION_SCEN_SELECT_EXTERNAL_DATA_LINE,
-   E_ACTION_SCEN_GET_EXTERNAL_DATA_TO_MEM
+   E_ACTION_SCEN_GET_EXTERNAL_DATA_TO_MEM,
+   E_ACTION_SCEN_SET_VALUE_METHOD_EXTERN
 
 }  T_action_type,
   *T_pAction_type ;
 
 typedef enum _enum_string_type {
   E_STR_STATIC,
-  E_STR_COUNTER
+  E_STR_COUNTER,
+  E_STR_MEMORY
 } T_ValueStringType ;
 
 typedef struct _union_string_data {
@@ -129,6 +131,7 @@ typedef struct _xml_cmd_action {
   T_CheckBehaviour    m_check_behaviour ;
   int                 m_field_data_num  ;
   C_RegExp           *m_regexp_data     ;
+  T_ExternalMethod    m_external_method ;
 } T_CmdAction, *T_pCmdAction ;
 
 typedef list_t<T_pCmdAction> T_CmdActionList, 

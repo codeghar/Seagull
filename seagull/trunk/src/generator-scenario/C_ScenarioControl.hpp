@@ -243,7 +243,9 @@ private:
 			  int            P_primary_channel_id,
 			  int            P_nb_channel);
   
-  int add_memory  (char *P_mem_name) ;
+  int add_memory    (char *P_mem_name) ;
+  int check_memory  (char *P_mem_name) ;
+
 
 
 } ;
