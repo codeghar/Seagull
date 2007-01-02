@@ -26,7 +26,7 @@
 #include "C_RegExp.hpp"
 #include "list_t.hpp"
 #include "map_t.hpp"
-
+#include "ExternalMethod.h"
 #include "C_ProtocolStats.hpp"
 
 #include "TextDef.hpp"
@@ -34,6 +34,7 @@
 #include "C_ContextFrame.hpp"
 #include "ParserFrame.hpp"
 #include "FilterFrame.hpp"
+#include "ExternalMethodDef.hpp"
 
 class C_MessageText ;
 
@@ -212,9 +213,14 @@ private:
   int analyze_dictionnary_from_xml (C_XmlData *P_def); 
   int analyze_sessions_id_from_xml (C_XmlData *P_def) ;
 
+  int analyze_extern_method_from_xml(C_XmlData *P_data, 
+                                     T_DefMethodExternList *P_def_method_list);
+
+  T_ExternalMethod find_method_extern(char *P_name) ;
+
+
   int analyze_body_method_param (int P_index, char *P_body_method_param);
   int set_filter_method (char *P_filter_method) ;
-  char* find_text_value (char *P_buf, char *P_field);
 
   int analyze_body_method_from_xml (C_XmlData *P_data, 
 				    T_DefMethodList *P_def_method_list) ;
@@ -273,6 +279,11 @@ private:
   int                              m_value_sessions_table_size ;
 
   T_pDefMethodList                 m_def_method_list           ;
+
+  T_pDefMethodExternList           m_def_method_extern_list    ;
+  T_pDefMethodExternal             m_method_external_table     ;
+  int                              m_nb_method_external_table  ;
+  
 
 private:
   char                            *m_body_separator            ;

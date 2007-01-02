@@ -85,6 +85,10 @@ public:
                                 int P_sub_id,
                                 T_pValueData P_value) ;
 
+  int          get_buffer (T_pValueData P_dest,
+                           T_MessagePartType P_header_body_type) ;
+
+
   bool         set_field_value (T_pValueData P_value, 
                                 int P_id,
                                 int P_instance,

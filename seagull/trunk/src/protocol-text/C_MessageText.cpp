@@ -881,10 +881,25 @@ unsigned long C_MessageText::decode(unsigned char               *P_buf,
   return (L_remaining) ;
 }
 
-
-
-
-
-
 void C_MessageText::update_message_stats () {
+}
+
+int  C_MessageText::get_buffer (T_pValueData P_dest ,
+                                T_MessagePartType P_header_body_type) {
+
+  int               L_ret   = 0    ;
+
+  switch (P_header_body_type) {
+  case E_HEADER_TYPE :
+    copyValue(*P_dest, *m_header, false);
+    break;
+  case E_BODY_TYPE   :
+    copyValue(*P_dest, *m_body, false);
+    break;
+  case E_ALL_TYPE    :
+  default:
+    L_ret = -1 ;
+    break ;
+  }
+  return (L_ret) ;
 }

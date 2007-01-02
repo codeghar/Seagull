@@ -28,6 +28,7 @@
 #include "dlfcn_t.hpp"
 #include "ParserFrame.hpp"
 #include "FilterFrame.hpp"
+#include "TextUtils.hpp"
 
 #include <regex.h>
 
@@ -64,6 +65,9 @@ C_ProtocolText::C_ProtocolText() : C_ProtocolTextFrame() {
   m_def_method_list         = NULL    ;  
   m_filter_function         = NULL    ;
 
+  m_def_method_extern_list   = NULL    ;  
+  m_method_external_table    = NULL   ;
+  m_nb_method_external_table = 0      ;
 }
 
 void  C_ProtocolText::analyze_data( C_XmlData            *P_def, 
@@ -468,6 +472,18 @@ C_ProtocolText::~C_ProtocolText() {
     m_def_method_list -> erase (m_def_method_list->begin(), m_def_method_list->end());
   }
   DELETE_VAR (m_def_method_list) ;
+  
+  if((m_def_method_extern_list) && (!m_def_method_extern_list -> empty())) {
+  
+    m_def_method_extern_list-> erase (m_def_method_extern_list->begin(), 
+                                      m_def_method_extern_list->end());
+  }
+  DELETE_VAR (m_def_method_extern_list) ;
+
+  if (m_nb_method_external_table) {
+    FREE_TABLE(m_method_external_table);
+    m_nb_method_external_table  = 0    ;
+  }
 
   
 }
@@ -1216,7 +1232,8 @@ int C_ProtocolText::xml_interpretor(C_XmlData *P_def,
   int                           L_id                         ;
   T_FieldHeaderList::iterator   L_message_it                 ;
   int                           L_i                          ;
-
+  T_DefMethodExternList::iterator L_def_method_extern_it     ;
+  T_DefMethodExtern               L_defmethod_extern_data    ;
 
   GEN_DEBUG(1, "C_ProtocolText::xml_interpretor() start");
 
@@ -1242,7 +1259,44 @@ int C_ProtocolText::xml_interpretor(C_XmlData *P_def,
     }
   }
 
+  if (L_ret != -1) {
+    for (L_it = L_data->begin();
+	 L_it != L_data->end();
+	 L_it++) {
+      if (strcmp((*L_it)->get_name(), "external-method") == 0) {
+	NEW_VAR(m_def_method_extern_list, T_DefMethodExternList());
+	L_ret = analyze_extern_method_from_xml (*L_it,m_def_method_extern_list); 
+	break ;
+      }
+    }
 
+    if (L_ret != -1) {
+      L_id = 0;
+      if((m_def_method_extern_list) &&
+         (!m_def_method_extern_list-> empty()) && 
+         (m_def_method_extern_list->size()> 0)) {
+       
+        m_nb_method_external_table = m_def_method_extern_list->size() ;
+
+        ALLOC_TABLE(m_method_external_table,
+                    T_pDefMethodExternal,
+                    sizeof(T_DefMethodExternal),
+                    m_nb_method_external_table);
+  
+        for (L_def_method_extern_it = m_def_method_extern_list->begin();
+             L_def_method_extern_it != m_def_method_extern_list->end();
+             L_def_method_extern_it++) {
+         
+          L_defmethod_extern_data = *L_def_method_extern_it ;
+
+          m_method_external_table[L_id].m_id = L_id ;
+          m_method_external_table[L_id].m_method
+            = create_external_method (L_defmethod_extern_data.m_param) ;
+          L_id++ ;
+        }
+      }
+    }
+  }
 
   if (L_ret != -1) {
     for(L_it  = L_data->begin() ;
@@ -1740,50 +1794,56 @@ iostream_output& C_ProtocolText::print_data_msg(iostream_output& P_stream,
 
 }
 
+int C_ProtocolText::analyze_extern_method_from_xml(C_XmlData             *P_data, 
+                                                   T_DefMethodExternList *P_def_method_list) {
+
+  int                       L_ret                = 0        ;
+  T_pXmlData_List           L_defmethod_xml_list = NULL     ;
+  C_XmlData                *L_defmethod          = NULL     ;
+  T_XmlData_List::iterator  L_defmethod_it                  ;
+
+  T_DefMethodExtern         L_defmethod_data                ;
 
 
-char* C_ProtocolText::find_text_value (char *P_buf, char *P_field) {
+  GEN_DEBUG(1, "C_ProtocolText::analyze_extern_method_from_xml() start");
 
-  char *L_value = NULL ;
+  L_defmethod_xml_list = P_data->get_sub_data() ;
 
-  regex_t    L_reg_expr ;
-  int        L_status ;
-  char       L_buffer[100];
-  regmatch_t L_pmatch[3] ;
-  size_t     L_size = 0 ;
+  for(L_defmethod_it  = L_defmethod_xml_list->begin() ;
+      L_defmethod_it != L_defmethod_xml_list->end() ;
+      L_defmethod_it++) {
 
-  string_t   L_string = "" ;
-  
-  L_string  = "([[:blank:]]*" ;
-  L_string += P_field ;
-  L_string += "[[:blank:]]*=[[:blank:]]*)([^[:blank:];]+)";
-
-  L_status = regcomp (&L_reg_expr, 
-		      L_string.c_str(),
-		      REG_EXTENDED) ;
-
-  if (L_status != 0) {
-    regerror(L_status, &L_reg_expr, L_buffer, 100);
-    regfree (&L_reg_expr) ;
-
-  } else {
-  
-    L_status = regexec (&L_reg_expr, P_buf, 3, L_pmatch, 0) ;
-    regfree (&L_reg_expr) ;
-
-    if (L_status == 0) {
+    L_defmethod = *L_defmethod_it ;
+    
+    if (strcmp(L_defmethod->get_name(), (char*)"defmethod") == 0) {
+      L_defmethod_data.m_name = L_defmethod->find_value((char*)"name") ;
+      if (L_defmethod_data.m_name == NULL) {
+	GEN_ERROR(E_GEN_FATAL_ERROR, 
+		  "defmehod name value is mandatory");
+	L_ret = -1 ;
+	break ;
+      }
       
-      L_size = L_pmatch[2].rm_eo - L_pmatch[2].rm_so ;
-      
-      ALLOC_TABLE(L_value, char*, sizeof(char), L_size+1);
-      memcpy(L_value, &(P_buf[L_pmatch[2].rm_so]), L_size);
-      L_value[L_size]='\0' ;
-      
-    } 
+      L_defmethod_data.m_param = L_defmethod->find_value((char*)"param") ;
+      if (L_defmethod_data.m_param == NULL) {
+	GEN_ERROR(E_GEN_FATAL_ERROR, 
+		  "defmehod param value is mandatory");
+	L_ret = -1 ;
+	break ;
+      }
+
+      if (L_ret == -1) { 
+	break ; 
+      } else {
+	P_def_method_list->push_back(L_defmethod_data);
+      }
+
+    } // strcmp defmethod
   }
 
+  GEN_DEBUG(1, "C_ProtocolText::analyze_extern_method_from_xml() end");
 
-  return (L_value);
+  return (L_ret);
 }
 
 int C_ProtocolText::analyze_body_method_from_xml(C_XmlData *P_data, 
@@ -2042,7 +2102,28 @@ void C_ProtocolText::use_open_id () {
 }
 
 
+T_ExternalMethod C_ProtocolText::find_method_extern(char *P_name) {
+
+  int L_i ;
+  T_ExternalMethod                L_ret = NULL               ;
+  T_DefMethodExternList::iterator L_def_method_extern_it     ;
+  T_DefMethodExtern               L_defmethod_extern_data    ;
 
 
-
+  if (m_nb_method_external_table > 0 ) {
+    L_i = 0 ;
+    for (L_def_method_extern_it = m_def_method_extern_list->begin();
+         L_def_method_extern_it != m_def_method_extern_list->end();
+         L_def_method_extern_it++) {
+      
+      L_defmethod_extern_data = *L_def_method_extern_it ;
+      if (strcmp(P_name, L_defmethod_extern_data.m_name) == 0){
+        L_ret = m_method_external_table[L_i].m_method ;
+        break ;
+      }
+      L_i ++;
+    }
+  }
+  return (L_ret);
+}
 
