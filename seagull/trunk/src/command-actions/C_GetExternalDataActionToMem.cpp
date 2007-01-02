@@ -43,14 +43,12 @@ T_exeCode    C_GetExternalDataActionToMem::execute(T_pCmd_scenario P_pCmd,
   P_callCtxt->reset_memory(m_mem_id) ;
     
   L_mem = P_callCtxt->get_memory(m_mem_id);
-  
-
       
   L_value = m_controllers.m_external_data->get_value(P_callCtxt->m_selected_line, 
                                        m_field_data_num);
 
   if (L_value != NULL) {
-      L_mem->m_type = E_TYPE_NUMBER ;       
+      L_mem->m_type = E_TYPE_NUMBER ; 
       copyValue(*L_mem,*L_value, false);
   } else {
     GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
@@ -65,4 +63,10 @@ T_exeCode    C_GetExternalDataActionToMem::execute(T_pCmd_scenario P_pCmd,
   
   return (L_exeCode);
 }
+
+
+
+
+
+
 

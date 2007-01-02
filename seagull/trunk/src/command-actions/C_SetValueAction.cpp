@@ -44,13 +44,9 @@ C_SetValueAction::~C_SetValueAction() {
   FREE_VAR(m_string_expr);
 }
 
-
-T_exeCode    C_SetValueAction::execute(T_pCmd_scenario P_pCmd,
-                                       T_pCallContext  P_callCtxt,
-                                       C_MessageFrame *P_msg,
-                                       C_MessageFrame *P_ref) {
-  
-  T_exeCode           L_exeCode    = E_EXE_NOERROR ;
+T_ValueData  C_SetValueAction::search_memory(T_pCallContext  P_callCtxt,
+                                             C_MessageFrame *P_msg,
+                                             bool           &P_reset_value) {
 
   T_ValueData         L_mem                        ;
   char               *L_values, *L_chr, *L_end_ptr ;
@@ -59,10 +55,8 @@ T_exeCode    C_SetValueAction::execute(T_pCmd_scenario P_pCmd,
   char               *L_ptr                        ;
   size_t              L_size, L_current_size       ;
 
-  bool                L_reset_value = false        ;
   static char         L_tmp_string [250]           ;
   static char         L_tmp_string_filled [250]    ;
-
 
 
   L_mem.m_type = E_TYPE_NUMBER ;
@@ -105,6 +99,17 @@ T_exeCode    C_SetValueAction::execute(T_pCmd_scenario P_pCmd,
         L_size += L_current_size;
         L_ptr += L_current_size;
         break ;
+
+      case E_STR_MEMORY: {
+        T_pValueData L_memory ;
+        L_memory = P_callCtxt->get_memory(m_string_expr
+                                          ->m_portions[L_j].m_data.m_id);
+        L_current_size = 250 - L_size ;
+        valueToString(*L_memory, L_ptr, L_current_size);
+        L_size += L_current_size ;
+        L_ptr += L_current_size ;
+      }
+      break ;
       }
     }
     L_mem.m_value.m_val_binary.m_size = L_size ;
@@ -132,7 +137,7 @@ T_exeCode    C_SetValueAction::execute(T_pCmd_scenario P_pCmd,
       }
     }
     
-    L_reset_value = true ;
+    P_reset_value = true ;
     
     break;
     
@@ -232,7 +237,25 @@ T_exeCode    C_SetValueAction::execute(T_pCmd_scenario P_pCmd,
     GEN_FATAL(E_GEN_FATAL_ERROR, "Unsupported type for action execution");
     break ;
   }
+
+  return (L_mem);
+}
+
+T_exeCode    C_SetValueAction::execute(T_pCmd_scenario P_pCmd,
+                                       T_pCallContext  P_callCtxt,
+                                       C_MessageFrame *P_msg,
+                                       C_MessageFrame *P_ref) {
   
+
+
+
+
+  T_exeCode           L_exeCode    = E_EXE_NOERROR ;
+  T_ValueData         L_mem                        ;
+  bool                L_reset_value = false        ;
+
+  L_mem = search_memory(P_callCtxt, P_msg, L_reset_value) ;
+
   
   if (P_msg->set_field_value(&L_mem, 
                              m_id,

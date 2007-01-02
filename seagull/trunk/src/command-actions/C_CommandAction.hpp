@@ -74,6 +74,8 @@ protected:
   T_CheckBehaviour    m_check_behaviour ;
   int                 m_field_data_num  ;
   C_RegExp           *m_regexp_data     ;
+  T_ExternalMethod    m_external_method ;
+
   
   T_Controllers       m_controllers     ;
   

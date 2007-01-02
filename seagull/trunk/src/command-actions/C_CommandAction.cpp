@@ -38,6 +38,8 @@ C_CommandAction::C_CommandAction(T_CmdAction        P_ActionData,
   m_check_behaviour = P_ActionData.m_check_behaviour ;
   m_field_data_num = P_ActionData.m_field_data_num  ;
   m_regexp_data = P_ActionData.m_regexp_data     ;
+  m_external_method  = P_ActionData.m_external_method ;
+
 
   m_controllers = *P_controllers ;
 

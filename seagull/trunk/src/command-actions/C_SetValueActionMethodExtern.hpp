@@ -17,21 +17,21 @@
  *
  */
 
-#ifndef    _C_SETVALUEACTION_H
-#define    _C_SETVALUEACTION_H
+#ifndef    _C_SETVALUEACTIONMETHOD_EXTERN_H
+#define    _C_SETVALUEACTIONMETHOD_EXTERN_H
 
 
-#include "C_CommandAction.hpp"
+#include "C_SetValueAction.hpp"
 
 
-class C_SetValueAction : public C_CommandAction { 
+class C_SetValueActionMethodExtern : public C_SetValueAction { 
 
 public:
 
-  C_SetValueAction (T_CmdAction        P_cmdAction,
-                    T_pControllers P_controllers);
+  C_SetValueActionMethodExtern (T_CmdAction        P_cmdAction,
+                                T_pControllers P_controllers);
   
-  ~C_SetValueAction() ;
+  ~C_SetValueActionMethodExtern() ;
 
 
   T_exeCode execute (T_pCmd_scenario P_pCmd,
@@ -40,17 +40,14 @@ public:
                      C_MessageFrame *P_ref) ;
 
 protected:
-  T_ValueData  search_memory(T_pCallContext  P_callCtxt,
-                             C_MessageFrame *P_msg,
-                             bool           &P_reset_value) ;
 
 
 } ;
 
-typedef C_SetValueAction *T_pC_SetValueAction ;
+typedef C_SetValueActionMethodExtern *T_pC_SetValueActionMethodExtern ;
 
 
-#endif  // _C_SETVALUEACTION_H
+#endif  // _C_SETVALUEACTIONMETHOD_EXTERN_H
 
 
 
