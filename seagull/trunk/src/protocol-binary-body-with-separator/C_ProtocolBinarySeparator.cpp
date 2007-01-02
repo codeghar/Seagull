@@ -269,7 +269,16 @@ C_MessageFrame* C_ProtocolBinarySeparator::create_new_message(void              
 		}
 		
 	      }
-		
+            } else if (strcmp(L_bodyData->get_name(),
+                              (char*)"setfield")==0) {
+              unsigned long   L_val_setfield = 0 ;
+              int             L_id_setfield   = 0 ;
+	      L_msgOk = (analyze_setfield(L_bodyData, &L_id_setfield ,&L_val_setfield) == -1) 
+                ? false : true  ;
+              if (L_msgOk) {
+                L_msg->C_MessageBinary::set_header_value(L_id_setfield, L_val_setfield);
+              }
+              
 	    } else {
 	      GEN_ERROR(E_GEN_FATAL_ERROR, 
 			"Unkown section ["
