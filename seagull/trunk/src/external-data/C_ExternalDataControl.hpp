@@ -66,6 +66,7 @@ protected:
   bool  analyze () ; // determine the types of fields
   int   get_line (char *P_line);
   char* get_field (char *P_line, size_t *P_size, size_t *P_next);
+  char* field_filtered(char *P_char, size_t P_size) ;
   bool  analyze_first_data (char*P_line);
   bool  analyze_data (char*P_line);
 

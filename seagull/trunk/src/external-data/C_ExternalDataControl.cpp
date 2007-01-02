@@ -518,6 +518,39 @@ bool C_ExternalDataControl::analyze_first_data (char*P_line) {
 
 }
 
+char* C_ExternalDataControl::field_filtered(char *P_char, size_t P_size) {
+  char *L_result = NULL ;
+  char *L_tmp = NULL ;
+  
+  size_t L_i, L_j, L_size ;
+
+  ALLOC_TABLE(L_tmp, char*, sizeof(char), P_size+1);
+  L_i = 0 ;
+  L_j = 0 ;
+  while (L_j < P_size) {
+    if ((L_j) && (P_char[L_j] == STOP_FIELD)) {
+      if (P_char[L_j-1] == '\\') {
+        L_tmp[L_i-1] = P_char[L_j] ;
+      } else {
+        L_tmp[L_i] = P_char[L_j] ;
+        L_i++ ;
+      }
+    } else {
+      L_tmp[L_i] = P_char[L_j] ;
+      L_i++ ;
+    }
+    L_j ++ ;
+  }
+  L_tmp[L_i] = '\0' ;
+  L_size = L_i ;
+
+  ALLOC_TABLE(L_result, char*, sizeof(char), L_size+1);
+  strcpy(L_result, L_tmp);
+  FREE_TABLE(L_tmp);
+
+  return (L_result);
+}
+
 bool C_ExternalDataControl::analyze_data (char*P_line) {
 
   bool  L_ret = true ;
@@ -534,9 +567,7 @@ bool C_ExternalDataControl::analyze_data (char*P_line) {
   while ((L_ptrField = get_field (L_ptr, &L_size, &L_next)) != NULL) {
 
 
-    ALLOC_TABLE(L_field_value, char*, sizeof(char), L_size+1);
-    memcpy(L_field_value, L_ptrField, L_size);
-    L_field_value[L_size]= '\0';
+    L_field_value = field_filtered (L_ptrField, L_size) ;
 
     GEN_DEBUG(1, "C_ExternalDataControl::analyze_data() " 
 	      << "found: field = " << L_field_value);
@@ -744,7 +775,8 @@ bool C_ExternalDataControl::analyze_data (char*P_line) {
     GEN_ERROR(E_GEN_FATAL_ERROR, 
 	      "Illegal number of field for line ["
 	      << P_line << "] expected [" 
-	      << m_nb_field << "] in texternal data file ["
+	      << m_nb_field << "] found [" << L_nb_field
+              << "] in texternal data file ["
 	      << m_file_name << "]");
     L_ret = false ;
   } 
@@ -757,6 +789,7 @@ char* C_ExternalDataControl::get_field(char *P_line, size_t *P_size, size_t *P_n
   
   char      *L_ptr = P_line ;
   char      *L_ptr_end ;
+  char      *L_init = NULL ;
   char      *L_search = NULL ;
   size_t     L_size ;
   int        L_status = 0 ;
@@ -769,16 +802,17 @@ char* C_ExternalDataControl::get_field(char *P_line, size_t *P_size, size_t *P_n
   // field value
   if (L_ptr[0] == START_FIELD) {
     L_search = L_ptr + 1 ;
-
+    L_init = L_search ;
     if (*L_search != '\0') {
       while ((L_ptr_end = strchr(L_search, STOP_FIELD)) != NULL) {
 	if (*(L_ptr_end-1) != '\\') break ;
-	if ((L_search = L_ptr_end + 1) == '\0') { return (NULL) ; }
+        L_search = L_ptr_end + 1 ;
+	if (*L_search == '\0') { return (NULL) ; }
       }
       if (L_ptr_end == NULL) { 
 	return (NULL); 
       } else {
-	*P_size = L_ptr_end - L_search ;
+	*P_size = L_ptr_end - L_init ;
       }
     } else {
       return (NULL);
