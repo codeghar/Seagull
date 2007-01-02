@@ -65,13 +65,15 @@ public:
   } T_HeaderValue, *T_pHeaderValue ;
 
   typedef struct _struct_header_body_value {
-    int           m_id     ;
-    char         *m_name   ;
-    int           m_type_id;
-    int           m_nb_set ;
-    bool         *m_value_setted ;
-    int          *m_id_value_setted ;
-    T_pValueData  m_values ;
+    int            m_id              ;
+    char          *m_name            ;
+    int            m_type_id         ;
+    int            m_nb_set          ;
+    bool          *m_value_setted    ;
+    int           *m_id_value_setted ;
+    T_pValueData   m_values          ;
+    unsigned long *m_size            ; 
+    bool          *m_present         ; 
   } T_HeaderBodyValue, *T_pHeaderBodyValue ;
 
   typedef struct _struct_body_value {
@@ -274,6 +276,12 @@ public:
   char* get_header_body_field_separator();
 
 
+  int analyze_setfield(C_XmlData          *P_data,
+                       int                *P_fieldId,
+                       unsigned long      *P_fieldValueUl) ;
+
+
+
 protected:
 
   // header definition variables
@@ -290,6 +298,7 @@ protected:
   unsigned long  m_nb_field_header, m_max_nb_field_header ;
   unsigned long  m_header_size ;
 
+  int            m_transport_type ;
 
   unsigned long  m_msg_length_start ;
   bool           m_msg_length_start_detected ;

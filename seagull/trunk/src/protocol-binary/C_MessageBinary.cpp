@@ -261,7 +261,6 @@ unsigned long C_MessageBinary::decode (unsigned char *P_buffer,
   int            L_ret_decode ;
 
   GEN_DEBUG(1, "C_MessageBinary::decode() start");
-
   L_size_to_decode = m_protocol->get_header_size() ;
 
   GEN_DEBUG(1, "C_MessageBinary::decode() header size [" << L_size_to_decode << "]");
@@ -280,12 +279,10 @@ unsigned long C_MessageBinary::decode (unsigned char *P_buffer,
       L_body_size 
         = m_protocol->decode_msg_size (P_buffer, P_size) ;
     } else {
-
       L_body_size 
         = m_protocol->decode_msg_size (P_buffer, P_size)
         - L_size_to_decode + m_protocol->get_msg_length_start() ;
     }
-
 
     GEN_DEBUG(1, "C_MessageBinary::decode() body size [" << L_body_size << "]");
 
@@ -395,7 +392,6 @@ void C_MessageBinary::encode (unsigned char* P_buffer,
       if(m_protocol->get_header_length_excluded () ) { 
         m_protocol->update_length(P_buffer, L_size_body);
       } else {
-        
         m_protocol->update_length(P_buffer, (L_size_all-(m_protocol->get_msg_length_start())));
       }
       *P_size = L_size_all ;
@@ -560,7 +556,7 @@ T_pValueData C_MessageBinary::get_session_id (C_ContextFrame *P_ctxt) {
   GEN_DEBUG(1, "C_MessageBinary::get_session_id() end");
 
   if (L_id_value == NULL) {
-	   L_id_value = get_out_of_session_id();
+    L_id_value = get_out_of_session_id();
   }
 
   return (L_id_value) ;
@@ -958,4 +954,9 @@ bool C_MessageBinary::get_field_value(int P_id,
 
 
 void   C_MessageBinary::update_message_stats  () {
+}
+
+int    C_MessageBinary::get_buffer (T_pValueData P_dest,
+                                    T_MessagePartType P_header_body_type) {
+  return (0) ;
 }

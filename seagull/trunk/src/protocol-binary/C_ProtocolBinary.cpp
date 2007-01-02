@@ -110,7 +110,6 @@ C_ProtocolBinary::get_type_description (char *P_name) {
   return (L_result) ;
 }
 
-
 unsigned long C_ProtocolBinary::decode_msg_size (unsigned char* P_buffer, 
 					         unsigned long P_size   ) {
   unsigned long  L_ret = 0 ;
@@ -121,11 +120,16 @@ unsigned long C_ProtocolBinary::decode_msg_size (unsigned char* P_buffer,
   // check the size of buffer according to the
   // protocol definition => already done
 
+  if (m_transport_type == 1) {
+    L_ret = P_size;
+  } else {
+
   // extract the length value
   L_buf += m_header_length_index ;
   L_ret = convert_bin_network_to_ul
     (L_buf, m_header_field_table[m_header_length_id].m_size);
 
+  }
   GEN_DEBUG(1, "C_ProtocolBinary::decode_msg_size() end return: " << L_ret);
 
   return (L_ret) ;
@@ -256,6 +260,13 @@ int C_ProtocolBinary::get_header_from_xml (C_XmlData *P_def) {
   T_IdMap::iterator         L_IdMapIt   ;
   int                       L_typeId ;
 
+  char                     *L_transport_field       ;
+  char                     *L_value_mask            ;
+  unsigned long             L_mask                  ;
+  T_pCondPresence           L_presence_mask = NULL  ;
+  bool                      L_mask_present  = false ; 
+
+
 
   GEN_DEBUG(1, "C_ProtocolBinary::get_header_from_xml() start");
 
@@ -275,7 +286,9 @@ int C_ProtocolBinary::get_header_from_xml (C_XmlData *P_def) {
     GEN_ERROR(E_GEN_FATAL_ERROR,"length definition value is mandatory");
     L_ret = -1 ;
   }
-  GEN_DEBUG(1, "C_ProtocolBinary::get_header_from_xml() m_header_length_name is " << L_value_field_length );
+
+  GEN_DEBUG(1, "C_ProtocolBinary::get_header_from_xml() m_header_length_name is " 
+            << L_value_field_length );
 
   // Search the Name of protocol exchange element
   m_header_name = P_def->find_value((char*)"name");
@@ -285,6 +298,17 @@ int C_ProtocolBinary::get_header_from_xml (C_XmlData *P_def) {
   }
   GEN_DEBUG(1, "C_ProtocolBinary::get_header_from_xml() m_header_name is " << m_header_name );
 
+
+  L_transport_field = P_def->find_value((char*)"transport-driven");
+  if (L_transport_field != NULL) {
+    if (strcmp(L_transport_field,(char*)"yes") == 0) {
+      m_transport_type = 1 ;
+    } else {
+      GEN_ERROR(E_GEN_FATAL_ERROR, "Unknown transport type [" 
+                << L_transport_field << "]");
+      L_ret = -1 ;
+    }
+  }
 
   L_subList = P_def->get_sub_data() ;
   L_fieldDefCpt = 0;
@@ -296,27 +320,31 @@ int C_ProtocolBinary::get_header_from_xml (C_XmlData *P_def) {
     L_data = *L_listIt ;
     L_value = L_data->get_name() ;
 
+    L_mask_present  = false ; 
+
     if (strcmp(L_value, (char*)"fielddef") == 0) {
       char *L_endstr ;
-
+      
       GEN_DEBUG(1, "C_ProtocolBinary::get_header_from_xml() fielddef definition:" );
-
+      
       L_value = L_data->find_value((char*)"name") ;
       if (L_value == NULL) {
 	GEN_ERROR(E_GEN_FATAL_ERROR, "fielddef [" << L_fieldDefCpt << "] name value is mandatory");
 	L_ret = -1 ;
 	break ;
       }
-      GEN_DEBUG(1, "C_ProtocolBinary::get_header_from_xml() field name ["<< L_fieldDefCpt <<"] is " << L_value );
+      GEN_DEBUG(1, "C_ProtocolBinary::get_header_from_xml() field name ["
+                << L_fieldDefCpt <<"] is " << L_value );
 
       L_value_unit = L_data->find_value((char*)"unit") ;
       if (L_value_unit != NULL) {
-        GEN_DEBUG(1, "C_ProtocolBinary::get_header_from_xml() field unit ["<< L_fieldDefCpt <<"] is " << L_value_unit );
-
+        GEN_DEBUG(1, "C_ProtocolBinary::get_header_from_xml() field unit ["
+                  << L_fieldDefCpt <<"] is " << L_value_unit );
+        
         // temporary
         if (strcmp(L_value_unit, (char*)"octet") != 0) {
 	  GEN_ERROR(E_GEN_FATAL_ERROR, "Unsupported unit ["
-	        << L_value_unit << "] value on fielddef [" << L_fieldDefCpt << "] defintion");
+                    << L_value_unit << "] value on fielddef [" << L_fieldDefCpt << "] defintion");
 	  L_ret = -1 ;
 	  break;
         }
@@ -325,24 +353,26 @@ int C_ProtocolBinary::get_header_from_xml (C_XmlData *P_def) {
         if (L_value_size == NULL) {
 	  GEN_ERROR(E_GEN_FATAL_ERROR, 
 	        "fielddef [" << L_fieldDefCpt << "] size value is mandatory ["
-	        << L_value << "]");
+                    << L_value << "]");
 	  L_ret = -1 ;
 	  break ;
         }
         L_size = strtoul_f (L_value_size, &L_endstr,10) ;
-        GEN_DEBUG(1, "C_ProtocolBinary::get_header_from_xml() field length ["<< L_fieldDefCpt <<"] is " << L_size );
+        GEN_DEBUG(1, "C_ProtocolBinary::get_header_from_xml() field length ["
+                  << L_fieldDefCpt <<"] is " << L_size );
 
         if (L_endstr[0] != '\0') {
-           L_size = strtoul_f (L_value_size, &L_endstr,16) ;
-	   if (L_endstr[0] != '\0') {
-	      GEN_ERROR(E_GEN_FATAL_ERROR, "typedef size value ["
-		        << L_value_size << "] bad format  on fielddef [" << L_fieldDefCpt << "] defintion");
-	      L_ret = -1 ;
-	      break ;
-	   }
+          L_size = strtoul_f (L_value_size, &L_endstr,16) ;
+          if (L_endstr[0] != '\0') {
+            GEN_ERROR(E_GEN_FATAL_ERROR, "typedef size value ["
+                      << L_value_size << "] bad format  on fielddef [" << L_fieldDefCpt << "] defintion");
+            L_ret = -1 ;
+            break ;
+          }
         }
         if ( L_size > sizeof(unsigned long)) {
-	  GEN_ERROR(E_GEN_FATAL_ERROR, "fielddef [" << L_fieldDefCpt << "] max size value ["  << sizeof(unsigned long) << "]");
+	  GEN_ERROR(E_GEN_FATAL_ERROR, "fielddef [" << L_fieldDefCpt 
+                    << "] max size value ["  << sizeof(unsigned long) << "]");
 	  L_ret = -1 ;
 	  break ;
         }
@@ -350,17 +380,39 @@ int C_ProtocolBinary::get_header_from_xml (C_XmlData *P_def) {
         if (m_msg_length_start_detected == false) {
           m_msg_length_start += L_size ;
         }
-
+        
         // Set default unset type
         L_typeId = -1;
+
+        L_value_mask = L_data->find_value((char*)"mask") ;
+        if (L_value_mask != NULL) {
+          L_mask =  strtoul_f (L_value_mask, &L_endstr,10) ;
+          if (L_endstr[0] != '\0') {
+            L_mask = strtoul_f (L_value_mask, &L_endstr,16) ;
+            if (L_endstr[0] != '\0') {
+              GEN_ERROR(E_GEN_FATAL_ERROR, "typedef mask value ["
+                        << L_value_mask 
+                        << "] bad format  on fielddef [" 
+                        << L_fieldDefCpt << "] defintion");
+              L_ret = -1 ;
+              break ;
+            }
+          }
+          if (L_ret != -1) {
+            L_mask_present  = true ; 
+          }
+        }
+
       } else {
         L_value_type = L_data->find_value((char*)"type") ;
         if (L_value_type == NULL) {
-          GEN_ERROR(E_GEN_FATAL_ERROR, "fielddef [" << L_fieldDefCpt << "] unit or type definition is mandatory");
+          GEN_ERROR(E_GEN_FATAL_ERROR, "fielddef [" << L_fieldDefCpt 
+                    << "] unit or type definition is mandatory");
           L_ret = -1 ;
           break ;
         }
-        GEN_DEBUG(1, "C_ProtocolBinary::get_header_from_xml() field type ["<< L_fieldDefCpt <<"] is " << L_value_type );
+        GEN_DEBUG(1, "C_ProtocolBinary::get_header_from_xml() field type ["
+                  << L_fieldDefCpt <<"] is " << L_value_type );
 
         // retrieve size of type
         L_IdMapIt =
@@ -375,11 +427,11 @@ int C_ProtocolBinary::get_header_from_xml (C_XmlData *P_def) {
           break;
         }
         L_size = m_type_def_table[L_typeId].m_size;
-        GEN_DEBUG(1, "C_ProtocolBinary::get_header_from_xml() field length ["<< L_fieldDefCpt <<"] is " << L_size );
+        GEN_DEBUG(1, "C_ProtocolBinary::get_header_from_xml() field length ["
+                  << L_fieldDefCpt <<"] is " << L_size );
       }
 
       if (L_ret != -1) {
- 	
  	L_id = add_header_field (L_value, 
 				 L_size,
 				 &m_nb_field_header,
@@ -388,15 +440,23 @@ int C_ProtocolBinary::get_header_from_xml (C_XmlData *P_def) {
 				 m_header_id_map,
                                  NULL,
                                  L_typeId) ;
-
+        
   	if (strcmp(L_value, L_value_field_type) == 0) {
   	  set_header_type_id(L_id) ;
   	}
-
+        
    	if (strcmp(L_value, L_value_field_length) == 0) {
    	  set_header_length_id(L_id) ;
    	}
-	
+        
+
+        if (L_mask_present) {
+          ALLOC_VAR(L_presence_mask, T_pCondPresence, sizeof(T_CondPresence)) ;
+          L_presence_mask->m_mask = L_mask ;
+          L_presence_mask->m_f_id = L_id ;
+          m_header_field_table[L_id].m_cond_presence = L_presence_mask ;
+        }
+
       }
     } //     if (strcmp(L_value, (char*)"fielddef") == 0) 
 
@@ -410,6 +470,9 @@ int C_ProtocolBinary::get_header_from_xml (C_XmlData *P_def) {
     m_msg_length_start = 0 ;
   }
 
+  if (m_header_length_id == -1) {
+    GEN_WARNING("length field name not defined in protocol");
+  }
 
   GEN_DEBUG(1, "C_ProtocolBinary::get_header_from_xml() end");
 
@@ -753,6 +816,9 @@ C_ProtocolBinary::C_ProtocolBinary() {
   m_max_nb_field_header_body = 0;
   m_header_body_field_table = NULL;
 
+  m_header_length_id = -1 ;
+  m_transport_type = 0 ;
+
   m_header_body_type_id = -1 ;
   m_header_body_length_id = -1;
   
@@ -868,12 +934,20 @@ C_ProtocolBinary::~C_ProtocolBinary() {
   }
 
   m_header_size = (unsigned long) 0 ;
+
+
+  for (L_i = 0 ; L_i < (int)m_max_nb_field_header; L_i++) {
+    FREE_VAR(m_header_field_table[L_i].m_cond_presence);
+  }
   FREE_TABLE(m_header_field_table);
 
   m_nb_field_header = 0 ;
   m_max_nb_field_header = 0 ;
   m_header_type_id = -1 ;
   m_header_length_id = -1 ;
+
+  m_header_body_length_id = -1;
+
 
   if (m_header_id_map != NULL) {
     if (!m_header_id_map->empty()) {
@@ -884,10 +958,12 @@ C_ProtocolBinary::~C_ProtocolBinary() {
 
   m_header_body_size = (unsigned long) 0 ;
   
-  for (L_i = 0 ; L_i < (int)m_max_nb_field_header_body; L_i++) {
-    FREE_VAR(m_header_body_field_table[L_i].m_cond_presence);
+  if (m_header_body_field_table != NULL) {
+    for (L_i = 0 ; L_i < (int)m_max_nb_field_header_body; L_i++) {
+      FREE_VAR(m_header_body_field_table[L_i].m_cond_presence);
+    }
+    FREE_TABLE(m_header_body_field_table);
   }
-  FREE_TABLE(m_header_body_field_table);
 
   FREE_TABLE(m_type_def_table);
 
@@ -910,6 +986,7 @@ C_ProtocolBinary::~C_ProtocolBinary() {
     FREE_TABLE(m_header_body_value_table[L_i].m_id_value_setted);
     FREE_TABLE(m_header_body_value_table[L_i].m_value_setted);
     FREE_TABLE(m_header_body_value_table[L_i].m_values);
+    FREE_TABLE(m_header_body_value_table[L_i].m_size);
   }
   FREE_TABLE(m_header_body_value_table);
 
@@ -991,6 +1068,7 @@ C_ProtocolBinary::~C_ProtocolBinary() {
 
   m_header_body_field_separator = NULL ;
   m_session_id_position = -1 ;
+  m_transport_type = 0 ;
 
   GEN_DEBUG(1, "C_ProtocolBinary::~C_ProtocolBinary() end");
 
@@ -1231,6 +1309,7 @@ int C_ProtocolBinary::get_header_body_from_xml (C_XmlData *P_def) {
   int                       L_ret = 0 ;
   unsigned long             L_size    ;
   int                       L_id      ;
+
   
   GEN_DEBUG(1, "C_ProtocolBinary::get_header_body_from_xml() start");
 
@@ -1245,7 +1324,7 @@ int C_ProtocolBinary::get_header_body_from_xml (C_XmlData *P_def) {
   m_header_body_field_separator = P_def->find_value((char*)"field-separator");
   if (m_header_body_field_separator == NULL) { // no separator defined 
                                                // => type and length mandatory
-
+    
     L_value_field_type   = P_def->find_value((char*)"type");
     if (L_value_field_type == NULL) {
       GEN_ERROR(E_GEN_FATAL_ERROR,"type definition value is mandatory");
@@ -1256,7 +1335,6 @@ int C_ProtocolBinary::get_header_body_from_xml (C_XmlData *P_def) {
       GEN_ERROR(E_GEN_FATAL_ERROR,"length definition value is mandatory");
       L_ret = -1 ;
     }
-
   } 
 
   L_subList = P_def->get_sub_data() ;
@@ -1298,6 +1376,7 @@ int C_ProtocolBinary::get_header_body_from_xml (C_XmlData *P_def) {
 	    break ;
 	 }
       }
+
       L_value_unit = L_data->find_value((char*)"unit") ;
       if (L_value_unit == NULL) {
 	GEN_ERROR(E_GEN_FATAL_ERROR, "fielddef unit value is mandatory");
@@ -1320,7 +1399,7 @@ int C_ProtocolBinary::get_header_body_from_xml (C_XmlData *P_def) {
       }
 
       if (L_ret != -1) {
- 	
+
  	L_id = add_header_field (L_value, 
 				 L_size,
 				 &m_nb_field_header_body,
@@ -1333,8 +1412,7 @@ int C_ProtocolBinary::get_header_body_from_xml (C_XmlData *P_def) {
 	    set_header_body_type_id(L_id) ;
 	  }
 	}
-
-	if (L_value_field_type) {
+	if (L_value_field_length) {
 	  if (strcmp(L_value, L_value_field_length) == 0) {
 	    set_header_body_length_id(L_id) ;
 	  }
@@ -1691,7 +1769,6 @@ int C_ProtocolBinary::get_header_values_from_xml (C_XmlData *P_def) {
 	  if (L_ret == -1) break ;
 	  
 	  m_header_value_table[L_id].m_nb_set 
-	    //	    = L_subListSetField->size() ;
 	    = L_nb_setfield ;
 	  
 
@@ -1748,7 +1825,6 @@ int C_ProtocolBinary::get_header_values_from_xml (C_XmlData *P_def) {
 		      L_data->get_name() );
 
 	    if (strcmp(L_data->get_name(), (char*)"setfield") == 0) {
-
 	      L_fieldName = L_data->find_value((char*)"name") ;
 	      if (L_fieldName == NULL) {
 		GEN_ERROR(E_GEN_FATAL_ERROR, "setfield name value is mandatory");
@@ -1780,6 +1856,7 @@ int C_ProtocolBinary::get_header_values_from_xml (C_XmlData *P_def) {
               GEN_DEBUG(1, "C_ProtocolBinary::get_header_values_from_xml() L_fieldValue is " << 
 		            L_fieldValue );
 
+
 	      L_fieldValueUl = strtoul_f (L_fieldValue, &L_endstr,10) ;
 
 
@@ -1800,6 +1877,7 @@ int C_ProtocolBinary::get_header_values_from_xml (C_XmlData *P_def) {
                   GEN_DEBUG(1, "C_ProtocolBinary::get_header_values_from_xml()  "
 			    << "L_fieldValueUl is " << 
 			    L_fieldValueUl );
+
 		  GEN_DEBUG(1, "C_ProtocolBinary::get_header_values_from_xml() " 
 			    << "L_fieldId is " << 
 			    L_fieldId << " and m_header_type_id " 
@@ -1956,6 +2034,13 @@ int C_ProtocolBinary::get_header_body_values_from_xml (C_XmlData *P_def) {
 
   int                       L_i ;
 
+  int                       L_nb_setfield = 0 ;
+
+  int                       L_nb_setsize  = 0 ;
+  int                       L_nb_notpresent  = 0 ;
+  bool                      L_setsizeFound = false ;
+
+
   GEN_DEBUG(1, "C_ProtocolBinary::get_header_body_values_from_xml() start");
 
 
@@ -2002,6 +2087,7 @@ int C_ProtocolBinary::get_header_body_values_from_xml (C_XmlData *P_def) {
 	break;
       }
 
+
       m_header_body_value_table[L_id].m_id = L_id ;
       m_header_body_value_table[L_id].m_name = L_name ;
       m_header_body_value_table[L_id].m_type_id = L_typeId ;
@@ -2022,14 +2108,34 @@ int C_ProtocolBinary::get_header_body_values_from_xml (C_XmlData *P_def) {
 		  "m_header_type_name = " << 
 		  m_header_type_name);
 
+
   	L_subListSetField = L_data->get_sub_data() ;
+
+	if (L_subListSetField != NULL) {
+	  // setfield and header_body_name section 
+
+	  for (L_listFieldIt = L_subListSetField->begin();
+	       L_listFieldIt != L_subListSetField->end();
+	       L_listFieldIt++) {
+	    L_data = *L_listFieldIt ;
+            
+	    if (strcmp(L_data->get_name(), (char*)"setfield") == 0) {
+	      L_nb_setfield++ ;
+	    } else if (strcmp(L_data->get_name(), (char*)"setsize") == 0) {
+	      L_nb_setsize++;
+            } else if (strcmp(L_data->get_name(), (char*)"not-present") == 0) {
+              L_nb_notpresent++;   
+            }
+	  }
+        }
+
+
         if (L_subListSetField != NULL) {
 	  m_header_body_value_table[L_id].m_nb_set 
-	    = L_subListSetField->size();
+	    = L_nb_setfield ; 
         } else {
           m_header_body_value_table[L_id].m_nb_set=0;
         }
-
 
 	if (m_header_body_value_table[L_id].m_nb_set != 0) {
 
@@ -2047,22 +2153,123 @@ int C_ProtocolBinary::get_header_body_values_from_xml (C_XmlData *P_def) {
                       int*,
                       sizeof(int),
                       m_max_nb_field_header_body);
+
+          ALLOC_TABLE(m_header_body_value_table[L_id].m_size,
+                      unsigned long *,
+                      sizeof(unsigned long),
+                      m_max_nb_field_header_body);
+
+          ALLOC_TABLE(m_header_body_value_table[L_id].m_present,
+                      bool*,
+                      sizeof(bool),
+                      m_max_nb_field_header_body);
+          
+          
           
           for(L_i = 0; L_i < (int)m_max_nb_field_header_body; L_i++) {
             m_header_body_value_table[L_id].m_value_setted[L_i] = false ;
             m_header_body_value_table[L_id].m_id_value_setted[L_i] = -1 ;
+            m_header_body_value_table[L_id].m_size[L_i] =  
+              m_header_body_field_table[L_i].m_size ;
+            m_header_body_value_table[L_id].m_present[L_i] =  true ;
           }
           
 
           L_fieldIdx = 0 ;
           L_codeFound = false ;
+          L_setsizeFound = false ;
+
           
           for (L_listFieldIt = L_subListSetField->begin();
                L_listFieldIt != L_subListSetField->end();
                L_listFieldIt++) {
             
             L_data = *L_listFieldIt ;
-            
+
+            if (strcmp(L_data->get_name(), (char*)"setsize") == 0) {
+              
+              L_fieldName = L_data->find_value((char*)"name") ;
+              if (L_fieldName == NULL) {
+                GEN_ERROR(E_GEN_FATAL_ERROR, "setsize name value is mandatory");
+                L_ret = -1 ;
+                break ;
+              }
+              
+              L_IdMapIt = 
+                m_header_body_id_map->find(T_IdMap::key_type(L_fieldName));
+              
+              if (L_IdMapIt != m_header_id_map->end()) {
+                L_fieldId = L_IdMapIt->second ;
+              } else {
+                GEN_ERROR(E_GEN_FATAL_ERROR, 
+                          "Field ["
+                          << L_fieldName << "] not defined");
+                L_ret = -1 ;
+                break;
+              }
+              
+              L_fieldValue = L_data->find_value((char*)"value") ;
+              if (L_fieldValue == NULL) {
+                GEN_ERROR(E_GEN_FATAL_ERROR, "setsize value is mandatory");
+                L_ret = -1 ;
+                break ;
+              }
+              L_fieldValueUl = strtoul_f (L_fieldValue, &L_endstr,10) ;
+              if (L_endstr[0] != '\0') {
+                L_fieldValueUl = strtoul_f (L_fieldValue, &L_endstr,16) ;
+                if (L_endstr[0] != '\0') {
+                  GEN_ERROR(E_GEN_FATAL_ERROR, "typedef size value ["
+                            << L_fieldValue << "] bad format");
+                  L_ret = -1 ;
+                  break ;
+                }
+              }
+              if (L_ret == -1) break ;
+              m_header_body_value_table[L_id].m_size[L_fieldId] =  L_fieldValueUl ;
+              if (L_fieldId < m_header_body_type_id) {
+                
+                GEN_ERROR(E_GEN_FATAL_ERROR, 
+                          "setsize for ["
+                          << m_header_body_name 
+                          << "] is not possible."
+                          << "setsize defined after type"); 
+                L_ret = -1 ;
+                break; 
+                     
+              } 
+              if (L_fieldId == m_header_body_length_id) {
+                L_setsizeFound = true;
+              }
+
+            } // if (strcmp(L_data->get_name(), (char*)"setsize") == 0)  
+
+            if (L_ret == -1) break ;
+
+            if (strcmp(L_data->get_name(), (char*)"not-present") == 0) {
+              L_fieldName = L_data->find_value((char*)"name") ;
+              if (L_fieldName == NULL) {
+                GEN_ERROR(E_GEN_FATAL_ERROR, "not-present name value is mandatory");
+                L_ret = -1 ;
+                break ;
+              }
+              
+              L_IdMapIt = 
+                m_header_body_id_map->find(T_IdMap::key_type(L_fieldName));
+              
+              if (L_IdMapIt != m_header_id_map->end()) {
+                L_fieldId = L_IdMapIt->second ;
+              } else {
+                GEN_ERROR(E_GEN_FATAL_ERROR, 
+                          "Field ["
+                          << L_fieldName << "] not defined");
+                L_ret = -1 ;
+                break;
+              }
+              
+              if (L_ret == -1) break ;
+              m_header_body_value_table[L_id].m_present[L_fieldId] = false ;
+            } // if (strcmp(L_data->get_name(), (char*)"not-present") == 0)  
+
             if (strcmp(L_data->get_name(), (char*)"setfield") == 0) {
               
               L_fieldName = L_data->find_value((char*)"name") ;
@@ -2132,11 +2339,19 @@ int C_ProtocolBinary::get_header_body_values_from_xml (C_XmlData *P_def) {
 
                 L_fieldIdx++ ;
               }
-            }
+            } // if (strcmp(L_data->get_name(), (char*)"setfield") == 0) 
             if (L_ret == -1) break ;
+          } // for (L_listFieldIt = L_subListSetField->begin();
+
+          if ((m_header_body_field_table[m_header_body_length_id].m_size == 0) && 
+              (L_setsizeFound == false)) {
+            GEN_ERROR(E_GEN_FATAL_ERROR, 
+                      "setsize for ["
+                      << m_header_body_name << "] code is mandatory");
+            L_ret = -1 ;
+            break ;
           }
-          
-        } else {
+        } else { // if (m_header_body_value_table[L_id].m_nb_set == 0) 
 	  GEN_ERROR(E_GEN_FATAL_ERROR, 
 		    "setfield for ["
 		    << m_header_body_name << "] code is mandatory");
@@ -2165,7 +2380,7 @@ int C_ProtocolBinary::get_header_body_values_from_xml (C_XmlData *P_def) {
     m_header_body_value_id_map
       ->insert(T_IdMap::value_type(L_name, L_id));
     L_id ++ ;
-  }
+  } // L_listIt
   GEN_DEBUG(1, "C_ProtocolBinary::get_header_body_values_from_xml() end");
   
   return (L_ret);
@@ -2589,19 +2804,16 @@ void C_ProtocolBinary::reset_grouped_body_value(T_pBodyValue P_res) {
 }
 
 void C_ProtocolBinary::update_length (unsigned char *P_buf,
-				size_t         P_size) {
+                                      size_t         P_size) {
 
   unsigned long L_new_size ;
 
-  L_new_size = (unsigned long) P_size ;
-
-
-  convert_ul_to_bin_network(P_buf+m_header_length_index,
-			    m_header_field_table[m_header_length_id].m_size,
-			    L_new_size);
-  
-
-
+  if (!m_transport_type) {
+    L_new_size = (unsigned long) P_size ;
+    convert_ul_to_bin_network(P_buf+m_header_length_index,
+                              m_header_field_table[m_header_length_id].m_size,
+                              L_new_size);
+  }  
 }
 
 int  C_ProtocolBinary::decode_header (unsigned char *P_buf, 
@@ -2618,6 +2830,7 @@ int  C_ProtocolBinary::decode_header (unsigned char *P_buf,
   int                   L_ret = -1 ;
 
   GEN_DEBUG(1, "C_ProtocolBinary::decode_header() start");
+
 
   for(L_fieldIdx=0; L_fieldIdx < m_nb_field_header; L_fieldIdx++) {
 
@@ -2651,6 +2864,11 @@ int  C_ProtocolBinary::decode_header (unsigned char *P_buf,
 
           // Store the current number value for decoding
           L_current_value =  P_valDec[L_fieldIdx].m_value.m_val_number;
+
+          if (L_fieldDescr -> m_cond_presence != NULL) {
+            L_current_value = (L_fieldDescr->m_cond_presence)->m_mask & L_current_value ;
+            P_valDec[L_fieldIdx].m_value.m_val_number = L_current_value ;
+          }
 
           GEN_DEBUG(1, "Number value = " << P_valDec[L_fieldIdx].m_value.m_val_number);
           break ;
@@ -2735,6 +2953,7 @@ int  C_ProtocolBinary::decode_header (unsigned char *P_buf,
     // m_header_type_id_body
     if (m_header_type_id != -1) {
       if (L_fieldIdx == (unsigned long) m_header_type_id) {
+
         // retrieve type defined
         L_decodeIt = m_header_decode_map
 	  ->find(T_DecodeMap::key_type(L_current_value));
@@ -2772,7 +2991,6 @@ int C_ProtocolBinary::decode_body(unsigned char *P_buf,
   T_pHeaderBodyValue    L_body_fieldValues  ;
   unsigned long         L_body_fieldIdx, L_current_size, L_current_value ;
   unsigned long         L_total_size, L_data_size, L_data_type, L_padding ;
-  unsigned long         L_optional_size ;
   T_DecodeMap::iterator L_decodeIt ;
   int                   L_body_value_id ;
   int                   L_type_id ;
@@ -2787,6 +3005,12 @@ int C_ProtocolBinary::decode_body(unsigned char *P_buf,
 
   int                   L_header_type_id = get_header_type_id();
 
+  unsigned long         L_body_fieldIdx2  ;
+  bool                  L_header_body_type_id_present ;
+  unsigned long         L_header_body_size ;
+ 
+
+
   GEN_DEBUG(1, "\nC_ProtocolBinary::decode_body() start");
   GEN_DEBUG(1, "C_ProtocolBinary::decode_body() P_size: " << P_size);
   GEN_DEBUG(1, "C_ProtocolBinary::decode_body() P_nbValDec: " << *P_nbValDec);
@@ -2795,82 +3019,76 @@ int C_ProtocolBinary::decode_body(unsigned char *P_buf,
   L_total_size = 0 ;
   *P_nbValDec  = 0 ;
 
+
   while (L_total_size < P_size) {
-
+    
     GEN_DEBUG(1, "\nField Nb: " << L_nbValDec);
-
+    
     L_data_size = 0  ;
     L_data_type = 0  ;
-
+    L_header_body_type_id_present = false ;
+    L_header_body_size  = 0 ;
+    
     if (L_nbValDec == L_max_values) {
       GEN_FATAL(E_GEN_FATAL_ERROR, "Maximum number of values reached ["
-	    << L_max_values << "]");
+                << L_max_values << "]");
       break ;
     }
-
+    
     // Decode field header 
     for(L_body_fieldIdx=0; 
 	L_body_fieldIdx < m_nb_field_header_body; 
 	L_body_fieldIdx++) {
       
       L_body_fieldDescr = &m_header_body_field_table[L_body_fieldIdx];
-      
       L_current_size  = L_body_fieldDescr -> m_size ;
+      L_header_body_size  += L_current_size ;
+
       L_current_value = convert_bin_network_to_ul(L_ptr, L_current_size);
-
       L_body_found_val[L_body_fieldIdx] = L_current_value ;
-      
-      GEN_DEBUG(1, "body field (" << L_body_fieldIdx << ") "
-	           << L_body_fieldDescr->m_name 
-	           << " = " << L_current_value
-	           << " (size " << L_current_size << ")");
-
-      // Check if the field is the body length id
-      if (L_body_fieldIdx == (unsigned long)m_header_body_length_id) {
-
-        GEN_DEBUG(1, "body field (" << L_body_fieldIdx << ") "
-	           << L_body_fieldDescr->m_name 
-	           << " = " << L_current_value
-	           << " is body length id (" << m_header_body_length_id << ")");
-
-	if(get_header_length_excluded ()) {
-	  L_data_size = L_current_value ;
-	} else {
-	  L_data_size = L_current_value - m_header_body_size ;
-	} 
-
-        GEN_DEBUG(1, "body field (" << L_body_fieldIdx << ") "
-	             << L_body_fieldDescr->m_name 
-	             << " = " << L_current_value
-	             << " (data size " << L_data_size << " = " 
-	             << L_current_value << " - " << m_header_body_size << ")");
-
-      }
-
-      // Check if the field is the body type id
-      if (L_body_fieldIdx == (unsigned long)m_header_body_type_id) {
-
-        GEN_DEBUG(1, "body field (" << L_body_fieldIdx << ") "
-	           << L_body_fieldDescr->m_name 
-	           << " = " << L_current_value
-	           << " is body type id (" << m_header_body_type_id << ")");
-
-	L_data_type = L_current_value ;
-
-        GEN_DEBUG(1, "body field (" << L_body_fieldIdx << ") "
-	             << L_body_fieldDescr->m_name 
-	             << " = " << L_current_value
-	             << " (data type " << L_data_size << ")");
-
+      if (L_body_fieldIdx == (unsigned long)m_header_body_type_id) {        
+        L_decodeIt = 
+          m_header_body_decode_map->find (T_DecodeMap::key_type(L_current_value));
+        
+        if (L_decodeIt != m_header_body_decode_map->end()) {
+          L_body_value_id = L_decodeIt->second ;
+          L_body_fieldValues = &m_header_body_value_table[L_body_value_id] ;
+          L_header_body_type_id_present = true;
+        } else {
+          GEN_WARNING("Unknown body value type [" << L_data_type 
+                      << "] with size ["
+                      << L_current_value << "]");
+        }
       }
 
       L_total_size += L_current_size ;
       if (L_total_size >= P_size) break ;
       L_ptr += L_current_size ;
+      if (L_header_body_type_id_present) break;
+
     }
 
+    for(L_body_fieldIdx2 = L_body_fieldIdx +1 ; 
+	L_body_fieldIdx2 < m_nb_field_header_body; 
+	L_body_fieldIdx2++) {
+      
+      if (L_body_fieldValues-> m_present[L_body_fieldIdx2]) {
+      L_current_size  = L_body_fieldValues-> m_size[L_body_fieldIdx2] ;
+      L_header_body_size  += L_current_size ;
+      L_current_value = convert_bin_network_to_ul(L_ptr, L_current_size);
+      L_body_found_val[L_body_fieldIdx2] = L_current_value ;
+      
+      if (L_body_fieldIdx2 == (unsigned long)m_header_body_length_id) {
+        L_data_size = L_current_value ;
+      }
+      
+      L_total_size += L_current_size ;
+      if (L_total_size >= P_size) break ;
+      L_ptr += L_current_size ;
+      }
+    } // for
+
     // Retrieve optional fields
-    L_optional_size = 0 ;
     if (m_header_body_start_optional_id != -1) {
       for(L_body_fieldIdx=m_header_body_start_optional_id; 
 	  L_body_fieldIdx < m_max_nb_field_header_body; 
@@ -2879,19 +3097,20 @@ int C_ProtocolBinary::decode_body(unsigned char *P_buf,
 	L_body_fieldDescr = &m_header_body_field_table[L_body_fieldIdx];
 	if (check_presence_needed(L_body_fieldDescr->m_cond_presence,
 				  L_body_found_val) == true) {
-	  L_current_size = L_body_fieldDescr -> m_size ;
+	  // L_current_size = L_body_fieldDescr -> m_size ;
+          L_current_size = L_body_fieldValues-> m_size[L_body_fieldIdx] ;
+          L_header_body_size += L_current_size ;
+          
 	  L_current_value = convert_bin_network_to_ul(L_ptr, L_current_size);
 	  L_total_size += L_current_size ;
-	  L_optional_size += L_current_size ;
 	  if (L_total_size >= P_size) break ;
 	  L_ptr += L_current_size ;
 	}
       }
-    }
-
-    // Update data size
-    if (L_optional_size) {
-      L_data_size -= L_optional_size ;
+    } // if (m_header_body_start_optional_id != -1)
+    
+    if(! get_header_length_excluded ()) {
+      L_data_size -= L_header_body_size ;
     }
 
     // padding ?
@@ -2906,104 +3125,93 @@ int C_ProtocolBinary::decode_body(unsigned char *P_buf,
 
     // now retrieve data type and value
     if ((L_total_size + L_data_size) <= P_size) {
+      if (m_stats) {
+        m_stats->updateStats (E_MESSAGE_COMPONENT,
+                              E_RECEIVE,
+                              L_body_value_id);
+      }
       
-      // retrieve value definition with type
-      L_decodeIt = 
-	m_header_body_decode_map->find (T_DecodeMap::key_type(L_data_type));
-
-      if (L_decodeIt != m_header_body_decode_map->end()) {
-
-	// header value recognized
-	L_body_value_id = L_decodeIt->second ;
-
-
-	if (m_stats) {
-	  m_stats->updateStats (E_MESSAGE_COMPONENT,
-				E_RECEIVE,
-				L_body_value_id);
-	}
-
-
-	L_body_fieldValues = &m_header_body_value_table[L_body_value_id] ;
-	L_type_id = L_body_fieldValues->m_type_id ;
-	L_type = m_type_def_table[L_type_id].m_type ;
-
-	GEN_DEBUG(1, "body value ["
-	      << L_body_fieldValues->m_name << "] with type [" 
-	      << m_type_def_table[L_type_id].m_name
-	      << " ("<<L_type<<")]");
-
-	switch (L_type) {
-	case E_TYPE_NUMBER:
-	  GEN_DEBUG(1, "  Number value decoding (" << L_nbValDec << ")");
- 	  P_valDec[L_nbValDec].m_id = L_body_value_id ;
- 	  P_valDec[L_nbValDec].m_value.m_val_number 
- 	    = convert_bin_network_to_ul(L_ptr, L_data_size) ;
-
-	  GEN_DEBUG(1, "  Number value = " 
-		       << P_valDec[L_nbValDec].m_value.m_val_number);
-	  L_nbValDec ++ ;
-	  break ;
-
-	case E_TYPE_SIGNED:
-	  GEN_DEBUG(1, "  Signed value decoding (" << L_nbValDec << ")");
-	  // GEN_DEBUG(1, "L_body_value_id " << L_body_value_id << " L_data_size " << L_data_size );
- 	  // GEN_DEBUG(1, "Val value = " << L_ptr[0] << " ");
- 	  P_valDec[L_nbValDec].m_id = L_body_value_id ;
-
- 	  P_valDec[L_nbValDec].m_value.m_val_signed 
-	    = convert_bin_network_to_l(L_ptr, L_data_size) ;
-
- 	  GEN_DEBUG(1, "  Signed value = " 
-		       << P_valDec[L_nbValDec].m_value.m_val_signed);
-	  L_nbValDec ++ ;
-	  break ;
-
-	case E_TYPE_STRING:
-	  GEN_DEBUG(1, "  String value decoding (" << L_nbValDec << ")");
-	  P_valDec[L_nbValDec].m_id = L_body_value_id ;
-	  P_valDec[L_nbValDec].m_value.m_val_binary.m_size = L_data_size ;
-
-	  ALLOC_TABLE(P_valDec[L_nbValDec].m_value.m_val_binary.m_value,
-		      unsigned char*,
-		      sizeof(unsigned char),
-		      L_data_size);
-	  memcpy(P_valDec[L_nbValDec].m_value.m_val_binary.m_value,
-		 L_ptr,
-		 L_data_size);
-	  GEN_DEBUG(1, "  String value size = " 
-		<< P_valDec[L_nbValDec].m_value.m_val_binary.m_size);
-	  L_nbValDec ++ ;
-	  break ;
-
-	case E_TYPE_STRUCT: {
-	  GEN_DEBUG(1, "  Struct value decoding (" << L_nbValDec << ")");
-	  size_t   L_sub_size = L_data_size/2 ;
- 	  P_valDec[L_nbValDec].m_id = L_body_value_id ;
-
- 	  P_valDec[L_nbValDec].m_value.m_val_struct.m_id_1 
- 	    = convert_bin_network_to_ul(L_ptr, L_sub_size) ;
-
- 	  P_valDec[L_nbValDec].m_value.m_val_struct.m_id_2 
- 	    = convert_bin_network_to_ul(L_ptr + L_sub_size, L_sub_size) ;
-
-
-	  GEN_DEBUG(1, "  Number value 1 = " 
-		       << P_valDec[L_nbValDec].m_value.m_val_struct.m_id_1);
-	  GEN_DEBUG(1, "  Number value 2 = " 
-		       << P_valDec[L_nbValDec].m_value.m_val_struct.m_id_2);
-	  L_nbValDec ++ ;
-          }
-	  break ;
-
-        case E_TYPE_GROUPED:
+      
+      // L_body_fieldValues = &m_header_body_value_table[L_body_value_id] ;
+      L_type_id = L_body_fieldValues->m_type_id ;
+      L_type = m_type_def_table[L_type_id].m_type ;
+      
+      GEN_DEBUG(1, "body value ["
+                << L_body_fieldValues->m_name << "] with type [" 
+                << m_type_def_table[L_type_id].m_name
+                << " ("<<L_type<<")]");
+      
+      switch (L_type) {
+      case E_TYPE_NUMBER:
+        GEN_DEBUG(1, "  Number value decoding (" << L_nbValDec << ")");
+        P_valDec[L_nbValDec].m_id = L_body_value_id ;
+        P_valDec[L_nbValDec].m_value.m_val_number 
+          = convert_bin_network_to_ul(L_ptr, L_data_size) ;
+        
+        GEN_DEBUG(1, "  Number value = " 
+                  << P_valDec[L_nbValDec].m_value.m_val_number);
+        L_nbValDec ++ ;
+        break ;
+        
+      case E_TYPE_SIGNED:
+        GEN_DEBUG(1, "  Signed value decoding (" << L_nbValDec << ")");
+        // GEN_DEBUG(1, "L_body_value_id " << L_body_value_id << " L_data_size " << L_data_size );
+        // GEN_DEBUG(1, "Val value = " << L_ptr[0] << " ");
+        P_valDec[L_nbValDec].m_id = L_body_value_id ;
+        
+        P_valDec[L_nbValDec].m_value.m_val_signed 
+          = convert_bin_network_to_l(L_ptr, L_data_size) ;
+        
+        GEN_DEBUG(1, "  Signed value = " 
+                  << P_valDec[L_nbValDec].m_value.m_val_signed);
+        L_nbValDec ++ ;
+        break ;
+        
+      case E_TYPE_STRING:
+        GEN_DEBUG(1, "  String value decoding (" << L_nbValDec << ")");
+        P_valDec[L_nbValDec].m_id = L_body_value_id ;
+        P_valDec[L_nbValDec].m_value.m_val_binary.m_size = L_data_size ;
+        
+        ALLOC_TABLE(P_valDec[L_nbValDec].m_value.m_val_binary.m_value,
+                    unsigned char*,
+                    sizeof(unsigned char),
+                    L_data_size);
+        memcpy(P_valDec[L_nbValDec].m_value.m_val_binary.m_value,
+               L_ptr,
+               L_data_size);
+        GEN_DEBUG(1, "  String value size = " 
+                  << P_valDec[L_nbValDec].m_value.m_val_binary.m_size);
+        L_nbValDec ++ ;
+        break ;
+        
+      case E_TYPE_STRUCT: {
+        GEN_DEBUG(1, "  Struct value decoding (" << L_nbValDec << ")");
+        size_t   L_sub_size = L_data_size/2 ;
+        P_valDec[L_nbValDec].m_id = L_body_value_id ;
+        
+        P_valDec[L_nbValDec].m_value.m_val_struct.m_id_1 
+          = convert_bin_network_to_ul(L_ptr, L_sub_size) ;
+        
+        P_valDec[L_nbValDec].m_value.m_val_struct.m_id_2 
+          = convert_bin_network_to_ul(L_ptr + L_sub_size, L_sub_size) ;
+        
+        
+        GEN_DEBUG(1, "  Number value 1 = " 
+                  << P_valDec[L_nbValDec].m_value.m_val_struct.m_id_1);
+        GEN_DEBUG(1, "  Number value 2 = " 
+                  << P_valDec[L_nbValDec].m_value.m_val_struct.m_id_2);
+        L_nbValDec ++ ;
+      }
+      break ;
+      
+      case E_TYPE_GROUPED:
 	{
 	  GEN_DEBUG(1, "  Grouped values decoding (" << L_nbValDec << ")");
 	  P_valDec[L_nbValDec].m_id = L_body_value_id ;
 	  // P_valDec[L_nbValDec].m_value.m_val_number = 50 ;
-
+          
 	  int L_val_nb = 50;
-
+          
 	  L_ret = decode_body(L_ptr, 
 			      (size_t)L_data_size, 
 			      L_body_val, 
@@ -3011,114 +3219,104 @@ int C_ProtocolBinary::decode_body(unsigned char *P_buf,
 			      P_headerId) ;
 	  if (L_ret == 0) {
 	    GEN_DEBUG(1, "  allocated nb values: " << L_val_nb 
-			 << " on grouped value (" << L_nbValDec << ")" );
-
-
+                      << " on grouped value (" << L_nbValDec << ")" );
+            
+            
 	    P_valDec[L_nbValDec].m_value.m_val_number = L_val_nb ;
             if (L_val_nb > 0){
-	    ALLOC_TABLE(P_valDec[L_nbValDec].m_sub_val,
-			T_pBodyValue,
-			sizeof(T_BodyValue),
-			L_val_nb);
-	    for (L_i = 0 ; L_i < (unsigned int) L_val_nb; L_i++) {
-	      set_body_value(&(P_valDec[L_nbValDec].m_sub_val[L_i]), 
-			     &(L_body_val[L_i]));
-	    }
-	    // Now do not forget to clean L_body_val
-            reset_body_values(L_val_nb, L_body_val);
+              ALLOC_TABLE(P_valDec[L_nbValDec].m_sub_val,
+                          T_pBodyValue,
+                          sizeof(T_BodyValue),
+                          L_val_nb);
+              for (L_i = 0 ; L_i < (unsigned int) L_val_nb; L_i++) {
+                set_body_value(&(P_valDec[L_nbValDec].m_sub_val[L_i]), 
+                               &(L_body_val[L_i]));
+              }
+              // Now do not forget to clean L_body_val
+              reset_body_values(L_val_nb, L_body_val);
             } else {
               P_valDec[L_nbValDec].m_sub_val = NULL ;
             }
-
+            
 	    L_nbValDec++;
 	    
 	  } else {
 	    GEN_ERROR (E_GEN_FATAL_ERROR, "Erroneous grouped value");
 	    L_ret = -1 ;
 	  }
-
+          
 	}
-	  break ;
-
-	case E_TYPE_NUMBER_64:
-	  GEN_DEBUG(1, "  Number64 value decoding (" << L_nbValDec << ")");
- 	  P_valDec[L_nbValDec].m_id = L_body_value_id ;
- 	  P_valDec[L_nbValDec].m_value.m_val_number_64 
- 	    = convert_bin_network_to_ull(L_ptr, L_data_size) ;
-
-	  GEN_DEBUG(1, "  Number64 value = " 
-		       << P_valDec[L_nbValDec].m_value.m_val_number_64);
-	  L_nbValDec ++ ;
-	  break ;
-
-	case E_TYPE_SIGNED_64:
-	  GEN_DEBUG(1, "  Signed64 value decoding (" << L_nbValDec << ")");
-	  // GEN_DEBUG(1, "L_body_value_id " << L_body_value_id << " L_data_size " << L_data_size );
- 	  // GEN_DEBUG(1, "Val value = " << L_ptr[0] << " ");
- 	  P_valDec[L_nbValDec].m_id = L_body_value_id ;
-
- 	  P_valDec[L_nbValDec].m_value.m_val_signed_64 
-	    = convert_bin_network_to_ll(L_ptr, L_data_size) ;
-
- 	  GEN_DEBUG(1, "  Signed64 value = " 
-		       << P_valDec[L_nbValDec].m_value.m_val_signed_64);
-	  L_nbValDec ++ ;
-	  break ;
-
-	default:
-	  GEN_ERROR(E_GEN_FATAL_ERROR, "value body type not implemented");
-	  break ;
-	}
-
-	// if (get_header_type_id() == -1) 
-        // Check if header type exist
-	if (L_header_type_id == -1) {
-		
-	  // Now check if the current field is the msg type one
-	  if (L_body_value_id == m_header_type_id_body) {
-
-	    L_type_id_val = P_valDec[L_nbValDec-1].m_value.m_val_number ;
-
-	    GEN_DEBUG(1, "body value ["
-	      << L_body_fieldValues->m_name << "] with id [" 
-	      << L_body_value_id 
-	      << "] specify the message type: " << L_type_id_val);
-
- 	    L_decodeIt = m_header_decode_map
- 	      ->find(T_DecodeMap::key_type(L_type_id_val));
- 	    if (L_decodeIt != m_header_decode_map->end()) {
- 	      // header recognized
- 	      (*P_headerId) = L_decodeIt->second ;
- 	    } else {
- 	      GEN_LOG_EVENT_FORCE("not found");
-	    }
-
-	  }
-	}
-	
-      } else {
-	// not recognized => just skip
-	GEN_WARNING("Unknown body value type [" << L_data_type 
-	        << "] with size ["
-		<< L_data_size << "]");
+        break ;
+        
+      case E_TYPE_NUMBER_64:
+        GEN_DEBUG(1, "  Number64 value decoding (" << L_nbValDec << ")");
+        P_valDec[L_nbValDec].m_id = L_body_value_id ;
+        P_valDec[L_nbValDec].m_value.m_val_number_64 
+          = convert_bin_network_to_ull(L_ptr, L_data_size) ;
+        
+        GEN_DEBUG(1, "  Number64 value = " 
+                  << P_valDec[L_nbValDec].m_value.m_val_number_64);
+        L_nbValDec ++ ;
+        break ;
+        
+      case E_TYPE_SIGNED_64:
+        GEN_DEBUG(1, "  Signed64 value decoding (" << L_nbValDec << ")");
+        P_valDec[L_nbValDec].m_id = L_body_value_id ;
+        P_valDec[L_nbValDec].m_value.m_val_signed_64 
+          = convert_bin_network_to_ll(L_ptr, L_data_size) ;
+        
+        GEN_DEBUG(1, "  Signed64 value = " 
+                  << P_valDec[L_nbValDec].m_value.m_val_signed_64);
+        L_nbValDec ++ ;
+        break ;
+        
+      default:
+        GEN_ERROR(E_GEN_FATAL_ERROR, "value body type not implemented");
+        break ;
       }
-    
+      
+      // if (get_header_type_id() == -1) 
+      // Check if header type exist
+      if (L_header_type_id == -1) {
+        
+        // Now check if the current field is the msg type one
+        if (L_body_value_id == m_header_type_id_body) {
+          
+          L_type_id_val = P_valDec[L_nbValDec-1].m_value.m_val_number ;
+          
+          GEN_DEBUG(1, "body value ["
+                    << L_body_fieldValues->m_name << "] with id [" 
+                    << L_body_value_id 
+                    << "] specify the message type: " << L_type_id_val);
+          
+          L_decodeIt = m_header_decode_map
+            ->find(T_DecodeMap::key_type(L_type_id_val));
+          if (L_decodeIt != m_header_decode_map->end()) {
+            // header recognized
+            (*P_headerId) = L_decodeIt->second ;
+          } else {
+            GEN_LOG_EVENT_FORCE("not found");
+          }
+          
+        }
+      }
+      
       L_ptr += L_data_size ;
       L_ptr += L_padding ;
       L_total_size += L_data_size + L_padding ;
-
+      
     } else {
       GEN_ERROR (E_GEN_FATAL_ERROR, "message size error (body size)");
       break ;
     }
-
+    
     if (L_ret == -1) break ;
-   
+    
   } // End while
-
+  
   *P_nbValDec = L_nbValDec ;
   if (L_total_size != P_size) { L_ret = -1 ; } 
-
+  
   GEN_DEBUG(1, "C_ProtocolBinary::decode_body() end nb Val: " << L_nbValDec
 	        << " ret: " << L_ret << "\n");
   return (L_ret) ;
@@ -3371,7 +3569,6 @@ void C_ProtocolBinary::encode_header (int            P_id,
 }
 
 
-
 C_ProtocolFrame::T_MsgError C_ProtocolBinary::encode_body (int            P_nbVal, 
                                                            T_pBodyValue   P_val,
                                                            unsigned char *P_buf, 
@@ -3382,7 +3579,6 @@ C_ProtocolFrame::T_MsgError C_ProtocolBinary::encode_body (int            P_nbVa
   int                L_valueIdx     ;
   size_t             L_total_size   = 0 ;
   size_t             L_current_size = 0 ;
-  size_t             L_optional_size = 0 ;
   T_pHeaderField     L_body_fieldDescr   ;
   T_pHeaderBodyValue L_body_fieldValues  ;
   T_pBodyValue       L_body_val ;
@@ -3391,13 +3587,14 @@ C_ProtocolFrame::T_MsgError C_ProtocolBinary::encode_body (int            P_nbVa
   T_TypeType         L_type ;
   unsigned long      L_current_value ;
 
+  unsigned long      L_header_body_size ;
+
   unsigned char *L_save_length_ptr = NULL;
   unsigned long  L_save_length = 0;
   size_t         L_length_size = 0;
 
   size_t         L_sub_size ;
   C_ProtocolFrame::T_MsgError  L_error = C_ProtocolFrame::E_MSG_OK;
-  
 
   GEN_DEBUG(1, "C_ProtocolBinary::encode_body() start");
 
@@ -3428,24 +3625,15 @@ C_ProtocolFrame::T_MsgError C_ProtocolBinary::encode_body (int            P_nbVa
 	m_type_def_table[L_type_id].m_size ;
     }
    
-    GEN_DEBUG(1, "C_ProtocolBinary::encode_body()  L_body_val = " 
-                 << L_body_val);
-    GEN_DEBUG(1, "C_ProtocolBinary::encode_body()  L_type = " 
-                 << L_type);
-    GEN_DEBUG(1, "C_ProtocolBinary::encode_body()  L_valueSize = " 
-                 << L_valueSize);
-    GEN_DEBUG(1, "C_ProtocolBinary::encode_body()  m_nb_field_header_body = " 
-                 << m_nb_field_header_body);
-      
-    // first add the header for a value of the body
-
+    L_header_body_size = 0 ;
+    L_save_length_ptr = NULL ;
     for(L_body_fieldIdx=0; 
 	L_body_fieldIdx < m_nb_field_header_body; 
 	L_body_fieldIdx++) {
 
-      L_body_fieldDescr = &m_header_body_field_table[L_body_fieldIdx];
-
-      L_current_size = L_body_fieldDescr -> m_size ;
+      if (L_body_fieldValues->m_present[L_body_fieldIdx]) {
+      L_current_size = L_body_fieldValues->m_size[L_body_fieldIdx] ;
+      L_header_body_size += L_current_size ;
       L_total_size += L_current_size ;
 
       if (L_total_size > *P_size) {
@@ -3457,22 +3645,8 @@ C_ProtocolFrame::T_MsgError C_ProtocolBinary::encode_body (int            P_nbVa
 
       if (L_body_fieldIdx == (unsigned long)m_header_body_length_id) {
 
-	if(get_header_length_excluded () ) {
-	   L_save_length = L_valueSize ;
-        } else {
-	   L_save_length = L_valueSize+m_header_body_size ;
-        }
-
-
-        GEN_DEBUG(1, "C_ProtocolBinary::encode_body()  L_current_size "
-	    << L_current_size);
-        GEN_DEBUG(1, "C_ProtocolBinary::encode_body()  L_total_size " 
-            << L_total_size ) ;
-
+        L_save_length = L_valueSize ;
 	L_length_size = L_current_size ;
-	convert_ul_to_bin_network(L_ptr,
-				  L_current_size,
-				  L_save_length) ;
 	L_save_length_ptr = L_ptr ;
 
       } else {
@@ -3492,15 +3666,14 @@ C_ProtocolFrame::T_MsgError C_ProtocolBinary::encode_body (int            P_nbVa
 	
       }
       L_ptr += L_current_size ;
+    }
     } // for(L_body_fieldIdx...
-
 
     if (L_error != C_ProtocolFrame::E_MSG_OK) {
       break ;
     }
 
     // optional field value management
-    L_optional_size = 0 ;
     if (m_header_body_start_optional_id != -1) { // optional part to be added
 
       for(L_body_fieldIdx=m_header_body_start_optional_id; 
@@ -3509,7 +3682,11 @@ C_ProtocolFrame::T_MsgError C_ProtocolBinary::encode_body (int            P_nbVa
 
 	L_body_fieldDescr = &m_header_body_field_table[L_body_fieldIdx];
 	if (L_body_fieldValues->m_value_setted[L_body_fieldIdx] == true) {
-	  L_current_size = L_body_fieldDescr -> m_size ;
+
+          L_current_size = L_body_fieldValues->m_size[L_body_fieldIdx] ;
+          L_header_body_size += L_current_size ;
+      
+	  // L_current_size = L_body_fieldDescr -> m_size ;
 	  L_total_size += L_current_size ;
 
           if (L_total_size > *P_size) {
@@ -3519,7 +3696,6 @@ C_ProtocolFrame::T_MsgError C_ProtocolBinary::encode_body (int            P_nbVa
             break ;
           }
 
-	  L_optional_size += L_current_size ;
 	  L_valueIdx = L_body_fieldValues
 	    ->m_id_value_setted[L_body_fieldIdx];
 	  L_current_value = L_body_fieldValues
@@ -3531,16 +3707,17 @@ C_ProtocolFrame::T_MsgError C_ProtocolBinary::encode_body (int            P_nbVa
 	}
       } // for (L_body_fieldIdx...
 
+    } // if (m_header_body_start_optional_id != -1)
 
-      if (L_error == C_ProtocolFrame::E_MSG_OK) {
-        if (L_optional_size != 0) {
-          L_save_length += L_optional_size ;
-          convert_ul_to_bin_network(L_save_length_ptr,
-                                    L_length_size,
-                                    L_save_length) ;
+    if (L_error == C_ProtocolFrame::E_MSG_OK) {
+      if (L_save_length_ptr) {
+        if(!get_header_length_excluded()) {
+          L_save_length += L_header_body_size ;
         }
+        convert_ul_to_bin_network(L_save_length_ptr,
+                                  L_length_size,
+                                  L_save_length) ;
       }
-
     }
 
     GEN_DEBUG(1, "C_ProtocolBinary::encode_body()  value encoding for = " 
@@ -3704,6 +3881,7 @@ C_ProtocolFrame::T_MsgError C_ProtocolBinary::encode_body (int            P_nbVa
 
   return (L_error);
 }
+
 
 int C_ProtocolBinary::find_header_field_id (char *P_name) {
 
@@ -4608,8 +4786,6 @@ C_MessageFrame* C_ProtocolBinary::decode_message(unsigned char *P_buffer,
   //  NEW_VAR(L_msg, C_MessageBinary(this));
   L_msg=(C_MessageBinary*)create_new_message(NULL);
 
-  // std::cerr << "L_size    " << L_size << std::endl; 
-
   (*P_size) = L_msg -> decode(P_buffer, L_size, P_error);
   // C_ProtocolBinaryFrame::E_MSG_OK:
 
@@ -4871,9 +5047,17 @@ C_MessageFrame* C_ProtocolBinary::create_new_message(void                *P_xml,
 		  L_msgOk = false ;
 		  break ;
 		}
-		
-	      }
-		
+	      } // end to else not grouped
+            } else if (strcmp(L_bodyData->get_name(),
+                              (char*)"setfield")==0) {
+              unsigned long   L_val_setfield = 0 ;
+              int             L_id_setfield   = 0 ;
+	      L_msgOk = (analyze_setfield(L_bodyData, &L_id_setfield ,&L_val_setfield) == -1) 
+                ? false : true  ;
+              if (L_msgOk) {
+                L_msg->set_header_value(L_id_setfield, L_val_setfield);
+              }
+              
 	    } else {
 	      GEN_ERROR(E_GEN_FATAL_ERROR, 
 			"Unkown section ["
@@ -4883,8 +5067,8 @@ C_MessageFrame* C_ProtocolBinary::create_new_message(void                *P_xml,
 	      break ;
 	    }
 	    if (L_msgOk == false) break ;
-	  }
-	}
+	  } // for (L_bodyValIt
+	} // if (L_listBodyVal != NULL)
       }
     }
   }
@@ -5366,7 +5550,62 @@ char* C_ProtocolBinary::get_header_body_field_separator() {
   return (m_header_body_field_separator);
 }
 
+int C_ProtocolBinary::analyze_setfield(C_XmlData          *P_data, 
+                                       int                *P_fieldId,
+                                       unsigned long      *P_fieldValueUl) {
+
+  int                       L_ret = 0       ;
+  C_XmlData                *L_data          ;
+  char                     *L_fieldName     ;
+  char                     *L_fieldValue    ;
+  T_IdMap::iterator         L_IdMapIt       ;
+  char                     *L_endstr        ;
+
+  unsigned long             L_fieldValueUl  ;  
+  int                       L_fieldId       ;
 
 
+  L_data = P_data ;
 
+  
+  L_fieldName = L_data->find_value((char*)"name") ;
+  if (L_fieldName == NULL) {
+    GEN_ERROR(E_GEN_FATAL_ERROR, "setfield name value is mandatory");
+    L_ret = -1 ;
+  }
+  
+  L_IdMapIt = 
+    m_header_id_map->find(T_IdMap::key_type(L_fieldName));
+  
+  if (L_IdMapIt != m_header_id_map->end()) {
+    L_fieldId = L_IdMapIt->second ;
+    (*P_fieldId) = L_fieldId ;
+  } else {
+    GEN_ERROR(E_GEN_FATAL_ERROR, 
+              "Field ["
+              << L_fieldName << "] not defined");
+    L_ret = -1 ;
+  }
+  
+  L_fieldValue = L_data->find_value((char*)"value") ;
+  if (L_fieldValue == NULL) {
+    GEN_ERROR(E_GEN_FATAL_ERROR, "setfield value is mandatory");
+    L_ret = -1 ;
+  }
+  
+  L_fieldValueUl = strtoul_f (L_fieldValue, &L_endstr,10) ;
+  
+  if (L_endstr[0] != '\0') {
+    L_fieldValueUl = strtoul_f (L_fieldValue, &L_endstr,16) ;
+    if (L_endstr[0] != '\0') {
+      GEN_ERROR(E_GEN_FATAL_ERROR, "typedef size value ["
+                << L_fieldValue << "] bad format");
+      L_ret = -1 ;
+    } else {
+      (*P_fieldValueUl) = L_fieldValueUl ;
+    }
+  }
+
+  return (L_ret) ;
+}
 
