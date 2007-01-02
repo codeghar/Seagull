@@ -845,3 +845,9 @@ bool C_MessageExternal::get_field_value(int P_id,
 
 void C_MessageExternal::update_message_stats () {
 }
+
+
+int C_MessageExternal::get_buffer (T_pValueData P_dest,
+                                   T_MessagePartType P_header_body_type) {
+  return (0) ;
+}

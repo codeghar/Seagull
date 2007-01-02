@@ -1481,9 +1481,6 @@ C_ProtocolExternal::analyze_header_value (C_XmlData          *P_data,
 	    = analyze_body_value(L_data, L_fielddef_header.m_list_body, false, P_ret); 
 	  if (*P_ret == -1) break ;
 	}
-
-
-
       } // for (L_listFieldIt ... )
     }
   }
