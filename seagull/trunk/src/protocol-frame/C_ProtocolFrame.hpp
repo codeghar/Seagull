@@ -22,7 +22,7 @@
 
 #include "C_MessageFrame.hpp"
 #include "list_t.hpp"
-
+#include "ExternalMethod.h"
 
 class C_ProtocolStatsFrame ;
 
@@ -95,6 +95,8 @@ public:
   void                     set_stats (C_ProtocolStatsFrame *P_stats) {
     m_stats = P_stats ;
   }
+
+  virtual T_ExternalMethod find_method_extern(char *P_name){return NULL;} 
 
 
   char* name() { return(m_name); }

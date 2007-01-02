@@ -29,6 +29,7 @@
 #include "C_ContextFrame.hpp"
 
 #include "C_RegExp.hpp"
+#include "message_header_body_t.h"
 
 class C_MessageFrame { // Message Definition Class
 
@@ -76,8 +77,8 @@ public:
 					int P_sub_id,
 					T_pValueData P_value) = 0 ;
 
-
-
+  virtual int         get_buffer (T_pValueData P_dest,
+                                  T_MessagePartType P_header_body_type) = 0 ;
 
   virtual bool         set_field_value (T_pValueData P_value, 
 					int P_id,
