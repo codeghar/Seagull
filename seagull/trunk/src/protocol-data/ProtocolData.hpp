@@ -63,6 +63,9 @@ iostream_output& operator<< (iostream_output& P_ostream,
 iostream_output& operator<< (iostream_output& P_ostream, 
 			     T_ValueData&     P_valueData);
 
+
+void valueToString (T_ValueData& P_value, char *P_result, size_t &P_size);
+
 typedef struct _internal_value_data : public T_ValueData {
   struct _internal_value_data* m_next_instance ;
   struct _internal_value_data* m_next ;

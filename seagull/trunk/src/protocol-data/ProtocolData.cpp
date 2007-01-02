@@ -679,3 +679,60 @@ bool compare_value(T_Value& P_left,
   return (L_ret);
 }
 
+void valueToString (T_ValueData& P_value, char *P_result, size_t& P_size) {
+  size_t L_size = 1 ;
+  static char L_tmp[250] ;
+  
+  L_tmp[0] = '\0' ;
+  
+  switch (P_value.m_type) {
+  case E_TYPE_NUMBER:
+    sprintf(L_tmp, "%ld",
+            P_value.m_value.m_val_number);
+    L_size = strlen(L_tmp);
+    memcpy (P_result, L_tmp, L_size);
+    P_size = L_size ;
+    break ;
+    
+  case E_TYPE_SIGNED:
+    sprintf(L_tmp, "%ld",
+            P_value.m_value.m_val_signed);
+    L_size = strlen(L_tmp);
+    memcpy (P_result, L_tmp, L_size);
+    P_size = L_size ;
+    break ;
+    
+  case E_TYPE_NUMBER_64:
+    sprintf(L_tmp, "%lld",
+            P_value.m_value.m_val_number_64);
+    L_size = strlen(L_tmp);
+    memcpy (P_result, L_tmp, L_size);
+    P_size = L_size ;
+    break ;
+    
+  case E_TYPE_SIGNED_64:
+    sprintf(L_tmp, "%lld",
+            P_value.m_value.m_val_signed_64);
+    L_size = strlen(L_tmp);
+    memcpy (P_result, L_tmp, L_size);
+    P_size = L_size ;
+    break ;
+    
+  case E_TYPE_STRING:
+    memcpy(P_result,
+           (char*)P_value.m_value.m_val_binary.m_value,
+           P_value.m_value.m_val_binary.m_size);
+    P_result[P_value.m_value.m_val_binary.m_size] = 0 ;
+    P_size = strlen(P_result);
+    break ;
+    
+  case E_TYPE_STRUCT:
+  case E_TYPE_GROUPED:
+  case E_UNSUPPORTED_TYPE:
+    GEN_FATAL(E_GEN_FATAL_ERROR,
+              "Unsupported type for string conversion ["
+              << P_value.m_type << "]");
+    break ;
+    
+  }
+}
