@@ -54,7 +54,8 @@ C_CallControl::C_CallControl(C_GeneratorConfig   *P_config,
   m_call_created = 0 ;
   m_pause = false ;
 
-  m_type = E_TRAFFIC_UNKNOWN ;
+  // m_type = E_TRAFFIC_UNKNOWN ;
+  m_type = E_TRAFFIC_SERVER ;
 
   m_nb_wait_values = 0 ;
   m_wait_values = NULL ;
@@ -1048,7 +1049,7 @@ T_GeneratorError C_CallControl::InitProcedure() {
   if (L_scenario == NULL) {
     GEN_WARNING("no init scenario defined");
   } else {
-    m_type = L_type ;
+    // m_type = L_type ;
     switch(L_type) {
     
     case E_TRAFFIC_CLIENT:
@@ -1190,6 +1191,7 @@ C_CallControlClient::C_CallControlClient(C_GeneratorConfig    *P_config,
   GEN_DEBUG (1, "C_CallControlClient::C_CallControlClient() start");
   m_traffic_scen = NULL ;
   m_update_param_traffic = NULL ;
+  m_type = E_TRAFFIC_CLIENT ;
 
   GEN_DEBUG (1, "C_CallControlClient::C_CallControlClient() end");
 
