@@ -2086,14 +2086,16 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             </tr>
             <tr>
               <td>number-calls</td>
-              <td>Number of calls to be done. Once the number of calls is reached,
-            no new calls are placed (note that some additional calls can be
-            placed, but no less).</td>
+              <td>Number of calls to be done. It is available for client and server. 
+            Once the number of calls is reached, no new calls are :<br/>
+            - placed by the client(note that some additional calls can be placed, but no less) <br/>
+            - accepted by the server.
+              </td>
               <td>-</td>
               <td>
                 <code><![CDATA[<define entity="traffic-param"
             name="number-calls"
-            value="1000">]]></code>: Place at least 1000 calls.</td>
+            value="1000">]]></code>: Placed (client) or accepted (server) at least 1000 calls.</td>
             </tr>
             <tr>
               <td>call-timeout-ms</td>
@@ -2535,6 +2537,103 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             <td>The format is a string that can contains call variables (identified by $(varname)).</td>
             <td>".;1096298391;$(session-counter)": fixed string with a variable part (value of "session-counter" call variable)</td>
           </tr>
+
+          <tr>
+            <th>
+              <anchor id="action_set-bit"/>
+              <strong>&lt;set-bit&gt;</strong>
+            </th>
+            <th>-</th>
+            <th>Set the value of a bit in a call variable (memory zone). This is only available for number or string variable type.
+                Value can only be 0 or 1. The position starts at 0 (second position is 1).</th>
+            <th>
+              <code><![CDATA[<set-bit name="call-variable" entity="field-from-dictionary"
+                              instance="InitialDP-data" sub-entity="operation-code"
+                              position="x" value="y"></set-bit>]]></code>
+            </th>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>name</td>
+            <td>Name of the call variable where to store the protocol entity.</td>
+            <td>sid</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>entity</td>
+            <td>Name of the protocol stored entity. Needed to determine the type of the call variable.</td>
+            <td>Session-Id</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>instance</td>
+            <td>Instance identifier of the component to be stored.</td>
+            <td>instance="InitialDP-data"</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>sub-entity</td>
+            <td>Identifier of parameter of the component to be stored.</td>
+            <td>sub-entity="operation-code"</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>position</td>
+            <td>Position of bit to be changed. Position starts at 0. Example for the second position:</td>
+            <td>position="1"</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>value</td>
+            <td>New value of the bit. Admited values are 0 or 1.</td>
+            <td>value="0"</td>
+          </tr>
+          
+                    <tr>
+            <th>
+              <anchor id="action_set-value-bit"/>
+              <strong>&lt;set-value-bit&gt;</strong>
+            </th>
+            <th>-</th>
+            <th>Set the value of a bit in a field of a message. This is only available for number or string variable type.
+                Value can only be 0 or 1. The position starts at 0 (second position is 1).</th>
+            <th>
+              <code><![CDATA[<set-value-bit entity="field-from-dictionary"
+                              instance="InitialDP-data" sub-entity="operation-code"
+                              position="x" value="y"> </set-value-bit>]]></code>
+            </th>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>entity</td>
+            <td>Name of the protocol stored entity. Needed to determine the type of the call variable.</td>
+            <td>Session-Id</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>instance</td>
+            <td>Instance identifier of the stored component.</td>
+            <td>instance="InitialDP-data"</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>sub-entity</td>
+            <td>Identifier of parameter of the stored component.</td>
+            <td>sub-entity="operation-code"</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>position</td>
+            <td>Position of bit to be changed. Position starts at 0. Example for the second position:</td>
+            <td>position="1"</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>value</td>
+            <td>New value of the bit. Admited values are 0 or 1.</td>
+            <td>value="0"</td>
+          </tr>
+
           <tr>
             <th>
               <anchor id="action_inc-counter"/>
@@ -2720,6 +2819,30 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
 	    count for the positions start at zero, and the last piece of data 
 	    injected is at end position minus one.</td>
             <td>end="9"</td>
+          </tr>
+          <tr>
+            <th>
+              <anchor id="restore-from-external"/>
+              <strong>&lt;restore-from-external&gt;</strong>
+            </th>
+            <th>&nbsp;</th>
+            <th>
+              Restore a value with data coming from a file into a call variable</th>
+            <th>
+              <code><![CDATA[<restore-from-external name="call_variable" field="1"> </restore-from-external>]]></code>
+            </th>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>name</td>
+            <td>The field of the message to which is assigned the new value</td>
+            <td>entity="Volume_requested"</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>field</td>
+            <td>The number of the data field used, in the data file</td>
+            <td>field="0" for the first field</td>
           </tr>
           <tr>
             <th>
