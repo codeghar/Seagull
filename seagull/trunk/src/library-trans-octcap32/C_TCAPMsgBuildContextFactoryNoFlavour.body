@@ -162,7 +162,15 @@ C_TCAPMsgBuildContextFactoryNoFlavour
     add_string_function (&L_list_s, (char*)"component_operation_code_tag_from_string",
 			 &C_TCAPMsgBuildContextNoFlavour::component_operation_code_tag_from_string);
 
+    add_build_function (&L_list, (char*)"set_component_error_tag",
+         &C_TCAPMsgBuildContextNoFlavour::set_component_error_tag) ;
+    add_build_function (&L_list, (char*)"get_component_error_tag",
+         &C_TCAPMsgBuildContextNoFlavour::get_component_error_tag) ;
 
+    add_string_function (&L_list_s, (char*)"component_error_tag_to_string",
+          &C_TCAPMsgBuildContextNoFlavour::component_error_tag_to_string);
+    add_string_function (&L_list_s, (char*)"component_error_tag_from_string",
+          &C_TCAPMsgBuildContextNoFlavour::component_error_tag_from_string);
 
     add_string_function (&L_list_s, (char*)"primitive_termination_to_string",
 			 &C_TCAPMsgBuildContextNoFlavour::primitive_termination_to_string);
