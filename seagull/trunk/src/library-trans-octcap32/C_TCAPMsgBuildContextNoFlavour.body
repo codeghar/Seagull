@@ -1396,8 +1396,7 @@ bool C_TCAPMsgBuildContextNoFlavour::primitive_dlg_abort_reason_from_string (cha
 
 #ifdef _ANSI_STANDARD
 bool C_TCAPMsgBuildContextNoFlavour::set_component_parameter_type(T_pValueData P_data) {
-  m_component_current->parameter_type = (tc_parm_type)P_data->m_value.m_val_number ;
-  
+  m_component_current->parameter_type = m_stack->m_parameter_type; 
   return(true) ;
 }
 bool C_TCAPMsgBuildContextNoFlavour::get_component_parameter_type(T_pValueData P_data) {
