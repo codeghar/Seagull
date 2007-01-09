@@ -541,6 +541,14 @@ void C_RemoteControl::quit() {
   m_gen->stop() ;
 }
 
+void C_RemoteControl::pause() {
+  m_gen->pause_traffic() ;
+}
+
+void C_RemoteControl::resume() {
+  m_gen->restart_traffic() ;
+}
+
 void C_RemoteControl::ramp(unsigned long P_value, unsigned long P_duration) {
 
   unsigned long L_current_rate ;
@@ -778,6 +786,19 @@ char* C_RemoteControl::decode_uri(char *P_uri) {
     return (L_result);
   }  
 
+  L_file = find_file(L_ptr,(char*)"pause");
+  if (L_file) {
+    L_result = resultOK() ;
+    pause();
+    return (L_result);
+  }  
+
+  L_file = find_file(L_ptr,(char*)"resume");
+  if (L_file) {
+    L_result = resultOK() ;
+    resume();
+    return (L_result);
+  }  
 
   return (L_result);
 }

@@ -94,6 +94,8 @@ private :
   char* dump_stat();
 
   void quit();
+  void pause();
+  void resume();
 
   char* resultOK();
   char* resultKO();
