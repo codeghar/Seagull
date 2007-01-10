@@ -246,57 +246,65 @@
 -->
 
     <fielddef name="operation-code-tag" type="number"
-            to-string="component_operation_code_tag_to_string"
-            from-string="component_operation_code_tag_from_string"
-            set-function="set_component_operation_code_tag" 
-	    get-function="get_component_operation_code_tag"
-	    default="NATIONAL">
+              to-string="component_operation_code_tag_to_string"
+              from-string="component_operation_code_tag_from_string"
+              set-function="set_component_operation_code_tag" 
+              get-function="get_component_operation_code_tag"
+              default="NATIONAL">
     </fielddef>
 
      <fielddef name="operation-code" type="number"
                set-function="set_component_code" 
-	       get-function="get_component_code"> 
+               get-function="get_component_code"> 
      </fielddef>
 
      <fielddef name="operation-data" type="string"
                set-function="set_component_data" 
-	       get-function="get_component_data"> 
+               get-function="get_component_data"> 
      </fielddef>
 
      <fielddef name="invoke-id" type="number"
                set-function="set_component_invoke_id" 
-	       get-function="get_component_invoke_id"> 
+               get-function="get_component_invoke_id"> 
      </fielddef>
 
      <fielddef name="error-code" type="number"
                set-function="set_component_error_code" 
-	       get-function="get_component_error_code"> 
+               get-function="get_component_error_code"> 
+     </fielddef>
+
+     <fielddef name="error-tag" type="number"
+               to-string="component_error_tag_to_string"
+               from-string="component_error_tag_from_string"
+               set-function="set_component_error_tag"
+               get-function="get_component_error_tag"
+               default="NATIONAL">
      </fielddef>
 
      <fielddef name="problem-code" type="number"
                to-string="component_problem_code_to_string"
-	       from-string="component_problem_code_from_string"
+               from-string="component_problem_code_from_string"
                set-function="set_component_problem_code" 
-	       get-function="get_component_problem_code">
+               get-function="get_component_problem_code">
      </fielddef>
 
-    <fielddef name="problem-code-identifier" type="number"
-              to-string="component_pb_code_identifier_to_string"
-	      from-string="component_pb_code_identifier_from_string"
-              set-function="set_component_problem_code_identifier" 
-	      get-function="get_component_problem_code_identifier">
-    </fielddef>
+     <fielddef name="problem-code-identifier" type="number"
+               to-string="component_pb_code_identifier_to_string"
+               from-string="component_pb_code_identifier_from_string"
+               set-function="set_component_problem_code_identifier" 
+               get-function="get_component_problem_code_identifier">
+     </fielddef>
 
      <fielddef name="correlation-id" type="signed"
                set-function="set_component_correlation_id" 
-	       get-function="get_component_correlation_id">
+               get-function="get_component_correlation_id">
      </fielddef>
 
      <fielddef name="parameter-type" type="number"
-              to-string="component_parameter_type_to_string"
-	      from-string="component_parameter_type_from_string"
-              set-function="set_component_parameter_type" 
-	      get-function="get_component_parameter_type">
+               to-string="component_parameter_type_to_string"
+               from-string="component_parameter_type_from_string"
+               set-function="set_component_parameter_type" 
+               get-function="get_component_parameter_type">
      </fielddef>
 
 </body>
@@ -311,6 +319,7 @@
     <not-present name="problem-code"></not-present>
     <not-present name="problem-code-identifier"></not-present>
     <not-present name="error-code"></not-present>
+    <not-present name="error-tag"></not-present>
   </component>
   
   <component name="TC_INVOKE_NL" component-type="1" >
@@ -319,6 +328,7 @@
      <not-present name="problem-code"></not-present>
      <not-present name="problem-code-identifier"></not-present>
      <not-present name="error-code"></not-present>
+     <not-present name="error-tag"></not-present>
   </component>
 
   <component name="TC_RESULT_L" component-type="2">
@@ -327,6 +337,7 @@
     <not-present name="problem-code"></not-present>
     <not-present name="problem-code-identifier"></not-present>
     <not-present name="error-code"> </not-present>
+    <not-present name="error-tag"></not-present>
   </component>
 
   <component name="TC_RESULT_NL" component-type="3">
@@ -335,6 +346,7 @@
     <not-present name="problem-code"></not-present>
     <not-present name="problem-code-identifier"></not-present>
     <not-present name="error-code"> </not-present>
+    <not-present name="error-tag"></not-present>
   </component>
 
   <component name="TC_U_ERROR"   component-type="4">
@@ -352,6 +364,7 @@
     <not-present name="problem-code-identifier"></not-present>
     <not-present name="error-code"> </not-present>
     <not-present name="parameter-type"> </not-present>
+    <not-present name="error-tag"></not-present>
   </component>
 
   <component name="TC_U_CANCEL"  component-type="6">
@@ -362,6 +375,7 @@
     <not-present name="problem-code-identifier"></not-present>
     <not-present name="error-code"> </not-present>
     <not-present name="parameter-type"> </not-present>
+    <not-present name="error-tag"></not-present>
   </component>
 
   <component name="TC_L_REJECT"  component-type="7">
@@ -369,6 +383,7 @@
     <not-present name="operation-code"></not-present>
     <not-present name="error-code"> </not-present>
     <not-present name="parameter-type"> </not-present>
+    <not-present name="error-tag"></not-present>
   </component>
 
   <component name="TC_R_REJECT"  component-type="8">
@@ -376,6 +391,7 @@
     <not-present name="operation-code"></not-present>
     <not-present name="error-code"> </not-present>
     <not-present name="parameter-type"> </not-present>
+    <not-present name="error-tag"></not-present>
   </component>
 
   <component name="TC_U_REJECT"  component-type="9">
@@ -383,6 +399,7 @@
     <not-present name="operation-code"></not-present>
     <not-present name="error-code"> </not-present>
     <not-present name="parameter-type"> </not-present>
+    <not-present name="error-tag"></not-present>
   </component>
 
   <primitive name="TC_UNI"

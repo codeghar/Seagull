@@ -639,7 +639,7 @@ bool C_TCAPMsgBuildContextNoFlavour::set_component_code (T_pValueData P_data) {
 }
 
 bool C_TCAPMsgBuildContextNoFlavour::set_component_error_tag (T_pValueData P_data) {
-  m_component_current->operation.tag = (
+  m_component_current->error.tag = (
 #ifdef _ANSI_STANDARD
     tc_type
 #else
@@ -648,6 +648,14 @@ bool C_TCAPMsgBuildContextNoFlavour::set_component_error_tag (T_pValueData P_dat
     ) P_data->m_value.m_val_number ;
   return(true);
 }
+
+
+bool C_TCAPMsgBuildContextNoFlavour::get_component_error_tag (T_pValueData P_data) {
+
+  P_data->m_value.m_val_number = m_component_current->error.tag ;
+  return(true);
+}
+
 
 bool C_TCAPMsgBuildContextNoFlavour::set_component_operation_code_tag (T_pValueData P_data) {
   m_component_current->operation.tag = (
