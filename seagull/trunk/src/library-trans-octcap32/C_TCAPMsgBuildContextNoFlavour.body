@@ -840,7 +840,19 @@ bool C_TCAPMsgBuildContextNoFlavour::get_primitive_p_abort_cause(T_pValueData P_
 }
 
 bool C_TCAPMsgBuildContextNoFlavour::set_primitive_u_abort_cause(T_pValueData P_data) {
+
   TC_P_UABORT(m_primitive).length = 0 ;
+  if (P_data->m_value.m_val_binary.m_size > 0) {
+    if (P_data->m_value.m_val_binary.m_size > 200) {
+      LOG_ERROR("abort cause too long (>200)");
+    } else {
+      TC_P_UABORT(m_primitive).length = P_data->m_value.m_val_binary.m_size;
+      memcpy(TC_P_UABORT(m_primitive).datas,
+             P_data->m_value.m_val_binary.m_value,
+             P_data->m_value.m_val_binary.m_size);
+    }
+  }
+
   return(true) ;
 }
 
