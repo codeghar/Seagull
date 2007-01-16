@@ -80,6 +80,8 @@ protected :
 extern "C" T_pTransport create_ciptlsio_instance () ;
 extern "C" void         delete_ciptlsio_instance (T_ppTransport) ;
 
+
+
 #endif // _C_TRANS_IP_TLS_H
 
 

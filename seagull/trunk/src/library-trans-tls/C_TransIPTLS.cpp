@@ -394,7 +394,7 @@ C_Socket* C_TransIPTLS::open (int              P_channel_id,
       *P_status = E_OPEN_FAILED ;
       break ;
     }
-  
+
   } else {
     L_socket_created = C_TransIP::open(P_channel_id, 
 				       P_Addr,
