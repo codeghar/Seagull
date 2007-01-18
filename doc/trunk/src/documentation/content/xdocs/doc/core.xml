@@ -1651,7 +1651,18 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
               <ul>
               <li><strong>padding</strong> (optional): padding to be used for message length. A padding of 4 will make sure that the message size is a multiple of 4 octets.</li>
               <li><strong>length</strong> (optional): by default, Seagull will include the headers to compute the message length. 
-              By putting length="header-excluded", Seagull will not include the headers to compute the message length.</li>
+              By putting length="header-excluded", Seagull will not include the headers to compute the message length. By adding &lt;start-length/&gt; in the header,
+	      the length will be computed starting from this point.</li>
+	      <source>Example:
+	      <![CDATA[
+<header name="Message" length="msg-length" type="message-type">
+    <fielddef name="some-field1" size="4" unit="octet"></fielddef>
+    <start-length/>	
+    <fielddef name="msg-length" size="2" unit="octet"></fielddef>
+    <fielddef name="message-type" size="4" unit="octet"></fielddef>
+</header>]]>	
+</source>
+
               </ul>
             </li>
             <li>text type
