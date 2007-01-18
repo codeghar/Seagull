@@ -1652,16 +1652,17 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
               <li><strong>padding</strong> (optional): padding to be used for message length. A padding of 4 will make sure that the message size is a multiple of 4 octets.</li>
               <li><strong>length</strong> (optional): by default, Seagull will include the headers to compute the message length. 
               By putting length="header-excluded", Seagull will not include the headers to compute the message length. By adding &lt;start-length/&gt; in the header,
-	      the length will be computed starting from this point.</li>
-	      <source>Example:
-	      <![CDATA[
+              the length will be computed starting from this point.</li>
+              <source>Example:
+             <![CDATA[
 <header name="Message" length="msg-length" type="message-type">
     <fielddef name="some-field1" size="4" unit="octet"></fielddef>
-    <start-length/>	
+    <start-length/>
     <fielddef name="msg-length" size="2" unit="octet"></fielddef>
     <fielddef name="message-type" size="4" unit="octet"></fielddef>
-</header>]]>	
+</header>]]>
 </source>
+
 
               </ul>
             </li>
@@ -1698,8 +1699,88 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
         <section>
           <title>Header</title>
           <p>"header" section contains the description of message header. An example of 
-            the Types section for Diameter protocol is available <a href="diameter.html#Header">there</a>.</p>
-          <fixme author="Olivier">Add text / fielddef explanations (regexp for reception, format for construction)</fixme>
+            the Header section for Diameter protocol is available <a href="diameter.html#Header">there</a>.<br/>
+            "fielddef" tags define elements of the header.<br/></p>
+            <p>For text protocol, all fields are string and they can have "regexp" tags to define it.<br/>
+            Example: (SIP protocol)<br/>
+            <source><![CDATA[<fielddef name="call-id"
+          format="call-id: $(field-value)\r\n">
+  <regexp name="call-id"
+          expr="[Cc][Aa][Ll][Ll]-[Ii][Dd][   ]*:[  ]*([!-}]*).*$"
+          nbexpr="2"
+          subexpr="1">
+  </regexp>
+</fielddef>]]></source></p>
+            <p>For other protocols, several attributes are needed.
+            Example: (OCTCAP protocol)<br/>
+            <source><![CDATA[<fielddef name="uid"  type="number"
+          set-function="set_primitive_uid"
+          get-function="get_primitive_uid">
+</fielddef>]]></source></p>
+          <table>
+            <caption>List of fielddef attributes</caption>
+            
+            <tr>
+              <th>Name</th>
+              <th>Description</th>
+              <th>Example</th>
+            </tr>
+            <tr>
+              <td>name</td>
+              <td>Name of the field. Any string without spaces.</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>size</td>
+              <td>size of the field.</td>
+              <td>2</td>
+            </tr>
+            <tr>
+              <td>unit</td>
+              <td>Unit of the size.</td>
+              <td>octet</td>
+            </tr>
+            <tr>
+              <td>type</td>
+              <td>Optional. Type of the size (number, string or a type define in the dictionary "types" section)</td>
+              <td>number</td>
+            </tr>
+            <tr>
+              <td>mask</td>
+              <td>Optional. For binary protocol. Mask of the field. If only a part of the field is significant, a mask can be apply to the value of the field.</td>
+              <td>124</td>
+            </tr>
+            <tr>
+              <td>to-string</td>
+              <td>Optional. For external protocol. Name of the function to convert the field from a string value to a interger value of the field.</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>from-string</td>
+              <td>Optional. For external protocol. Name of the function to convert the field from a integer value to a string value of the field.</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>set-function</td>
+              <td>Optional. For external protocol. Name of the function to set the value of the field.</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>get-function</td>
+              <td>Optional. For external protocol. Name of the function to get the value of the field.</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>default</td>
+              <td>Optional. Set a default value for the field.</td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td>config-field</td>
+              <td>Optional. If the value if set in the config file, set the name the parameter of the config file.</td>
+              <td>-</td>
+            </tr>
+         </table>   
         </section>
         <section>
           <title>Body</title>
@@ -1718,10 +1799,28 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             <li><strong>param</strong>: for "length" method: specify the parameter to be used to indicate body length 
             (example: param=Content-Length).
             For "parser" method, indicate the library to be used as well as the function to be used 
-            (example: for XCAP: "lib=libparser_xml.so;function=parse_xml", for H248: "lib=libparser_h248.so;function=parse_h248"</li>
+            (example: for XCAP: "lib=libparser_xml.so;function=parse_xml", for H248: "lib=libparser_h248.so;function=parse_h248")</li>
           </ul>
           <p>Example:</p>
           <fixme author="Olivier">Add body-method example</fixme>
+        </section>
+        <section>
+          <title>external-method</title>
+          <p>"external-method" section contains the methods to be used to encode fields. It is composed of several
+          "def-method" sections. The concerning fields must refer to this method in the action 'set-value' in the 
+          scenario with the attribut 'method' (see "<a href="#action_set-value">set_value</a>" action)</p>
+          <ul>
+            <li><strong>name</strong>: name of the method (can be anything)</li>
+            <li><strong>param</strong>: indicate the library to be used as well as the function to be used<br/> 
+            (example: "lib=libtrans_iptls.so;function=crypto_method")</li>
+          </ul>
+          <p>Example:</p>
+          <source><![CDATA[<external-method>
+  <defmethod name="authentication"
+             param="lib=libtrans_iptls.so;function=crypto_method">
+  </defmethod>
+</external-method>]]></source>
+
         </section>
         <section>
           <title>Dictionary</title>
@@ -2548,7 +2647,12 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             <td>The format is a string that can contains call variables (identified by $(varname)).</td>
             <td>".;1096298391;$(session-counter)": fixed string with a variable part (value of "session-counter" call variable)</td>
           </tr>
-
+          <tr>
+            <td>&nbsp;</td>
+            <td>method</td>
+            <td>Optional. The method refers to a "external-method" of the dictionary. It defines the function to encode the value.</td>
+            <td>"authentication"</td>
+          </tr>
           <tr>
             <th>
               <anchor id="action_set-bit"/>
@@ -2599,8 +2703,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             <td>New value of the bit. Admited values are 0 or 1.</td>
             <td>value="0"</td>
           </tr>
-          
-                    <tr>
+          <tr>
             <th>
               <anchor id="action_set-value-bit"/>
               <strong>&lt;set-value-bit&gt;</strong>
@@ -2644,7 +2747,30 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             <td>New value of the bit. Admited values are 0 or 1.</td>
             <td>value="0"</td>
           </tr>
-
+          <tr>
+            <th>
+              <anchor id="action_setfield"/>
+              <strong>&lt;setfield&gt;</strong>
+            </th>
+            <th>-</th>
+            <th>Set the value of a field of a message. This is only available for protocols 
+                external (header and body fields) and binaries (header fields only).</th>
+            <th>
+              <code><![CDATA[<setfield name="field-from-dictionary" value="XX"></setfield>]]></code>
+            </th>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>name</td>
+            <td>Name of the protocol field.</td>
+            <td>name="field-from-dictionary"</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>value</td>
+            <td>Value of the field.</td>
+            <td>value="XX"</td>
+          </tr>
           <tr>
             <th>
               <anchor id="action_inc-counter"/>
