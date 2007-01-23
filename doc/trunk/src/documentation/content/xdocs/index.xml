@@ -41,6 +41,7 @@
       <p>Entirely coded in C++, Seagull is optimized for performances.</p>
       <p>Ready to install packages are available for HP-UX (PARisc and IPF/IA64), Linux and Win32
       (Cygwin). Seagull can also be compiled from the source code.</p>
+      <p>A short white paper on Seagull "<a href="http://gull.sf.net/doc/WP_Seagull_Open_Source_tool_for_IMS_testing.pdf">Seagull - Open Source tool for IMS testing</a>" is available.</p>
     </section>
     <section>
       <title>Protocols currently supported</title>
@@ -62,24 +63,31 @@
       <title>Features</title>
       <p>Seagull has the following features:</p>
       <ul>
-        <li>Multi-protocol traffic generator</li>
-        <li>Protocols of the same family are described in an XML, user editable, dictionary (messages, parameters)</li>
-        <li>Existing protocol families: Binary/TLV (Type, Length, Value), Raw binary, Text, external API (first implementation: HP OpenCall SS7)</li>
-        <li>Scenarios are described using XML files</li>
-        <li>Command line tool with text interface</li>
-        <li>Multi-threaded for performances and reliability</li>
-        <li>Dynamically adjustable call rate</li>
-        <li>Pause and restart of traffic</li>
-        <li>Smooth (no new calls then wait for ongoing calls to end) or brutal end</li>
-        <li>Scenario display with message counters</li>
-        <li>Scenarios have init (executed once), main (repeated for traffic) sections</li>
-        <li>Scenarios have default sections for defense in case of unexpected messages</li>
-        <li>A scenario can be mono (most cases) or multi-protocol</li>
-        <li>Message and parameters checking possible (disabled by default)</li>
-        <li>Multiple Seagull instances can be synchronized in the middle of scenario</li>
-        <li>Statistics: timer between two messages, call length, call rate, successful calls, failed calls (with reason)</li>
-        <li>Protocol decoding and hexadecimal dump</li>
-        <li>Trace files with or without timestamps (for performances and automation)</li>
+	<li>Multi-protocol traffic generator</li>
+	<li>Command line tool with text interface</li>
+	<li>Protocols of the same family are described in an XML, user editable, dictionary (messages, parameters)</li>
+	<li>Existing protocol families: Binary/TLV (Type, Length, Value), Raw binary, Text, external API (first implementation: HP OpenCall SS7)</li>
+	<li>Support of IP (UDP/TCP), SCTP, SSL/TLS and SS7/TCAP transports</li>
+	<li>Portable programming (tested and supported on Linux x86, ia64, HPUX, SunOS and Windows)</li>
+	<li>Scenarios are described using XML files</li>
+	<li>Multi-threaded for performances and reliability</li>
+	<li>Dynamically adjustable scenario rate</li>
+	<li>Uniform, Poisson or Best-effort scenario arrival distribution</li>
+	<li>Remote-control (scenario-rate set, counter dump) through standard HTTP interface</li>
+	<li>Pause and restart of traffic</li>
+	<li>Support of automated traffic profile (varying scenario rate)</li>
+	<li>Smooth (no new scenarios then wait for ongoing scenarios to end) or brutal end</li>
+	<li>Scenario display with message counters</li>
+	<li>Scenarios have init (executed once), main (repeated for traffic) sections</li>
+	<li>Scenarios have default sections for defense in case of unexpected messages</li>
+	<li>A scenario can be mono (most cases) or multi-protocol</li>
+	<li>Message and parameters checking possible (disabled by default)</li>
+	<li>Support of parameter injection following a CSV like database</li>
+	<li>Multiple Seagull instances can be synchronized in the middle of scenario</li>
+	<li>Intra scenario synchronization using a synchronization protocol (example application provided in Java language)</li>
+	<li>Statistics: timer between two messages, scenario length, scenario rate, successful scenarios, failed scenarios (with reason)</li>
+	<li>Protocol decoding and hexadecimal dump</li>
+	<li>Trace files with or without timestamps (for performances and automation)</li>
         <li>...</li>
       </ul>
       <p>Better than a thousand words, see Seagull flying:</p>
