@@ -251,11 +251,13 @@ End of scenario
      <restore name="PARAM" entity="field-bin-2-data"></restore>
   </action>
   <command-synchro name="CMD_CALLCREATE">
+    <parameter name="field-bin-2-data" value="1234"> </parameter>
   </command-synchro>
   <action>
     <store name="SESSION-ID" entity="user-id-1"></store> 
   </action>
 </send>]]></source>
+          <p>"1234" can be replaced by any value, for it will be overwritten by the restore action.</p>
           <p>In the default dictionary, there are 4 parameters declared:</p>
           <ul><li>field-bin-1-data</li>
           <li>field-bin-2-data</li>
