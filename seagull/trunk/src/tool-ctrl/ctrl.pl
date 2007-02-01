@@ -141,8 +141,12 @@ sub executeScenario {
 	return 0;
       }
       sendRequest("GET", $myBase . "seagull/command/ramp?value=$1&duration=$duration") || return 0;
-    } elsif ($G_scenario[$i] =~ m/^QUIT/) {
-      sendRequest("GET", $myBase . "seagull/command/quit") || return 0;
+    } elsif ($G_scenario[$i] =~ m/^STOP/) {
+      sendRequest("GET", $myBase . "seagull/command/stop") || return 0;
+    } elsif ($G_scenario[$i] =~ m/^PAUSE/) {
+      sendRequest("GET", $myBase . "seagull/command/pause") || return 0;
+    } elsif ($G_scenario[$i] =~ m/^RESUME/) {
+      sendRequest("GET", $myBase . "seagull/command/resume") || return 0;
     } else {
       print "Don't know how to execute scenario line '$G_scenario[$i]'\n";
       return 0;
