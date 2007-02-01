@@ -41,7 +41,7 @@
       <p>Entirely coded in C++, Seagull is optimized for performances.</p>
       <p>Ready to install packages are available for HP-UX (PARisc and IPF/IA64), Linux and Win32
       (Cygwin). Seagull can also be compiled from the source code.</p>
-      <p>A short white paper on Seagull "<a href="http://gull.sf.net/doc/WP_Seagull_Open_Source_tool_for_IMS_testing.pdf">Seagull - Open Source tool for IMS testing</a>" is available.</p>
+      <p><img src="images/pdf.png"/> A short white paper on Seagull "<a href="http://gull.sf.net/doc/WP_Seagull_Open_Source_tool_for_IMS_testing.pdf">Seagull - Open Source tool for IMS testing</a>" is available.</p>
     </section>
     <section>
       <title>Protocols currently supported</title>
