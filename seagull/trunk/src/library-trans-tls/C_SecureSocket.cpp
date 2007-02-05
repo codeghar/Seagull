@@ -260,7 +260,9 @@ int C_SecureSocketClient::_secure_mode() {
       ssl_error(L_result);
       L_ret = -1 ;
     }
-  } 
+  } else {
+    L_ret = 0 ;
+  }
   return (L_ret);
   
 }
