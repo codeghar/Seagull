@@ -318,6 +318,23 @@ private:
   T_BodyDecodeData **m_methods ;
   int                m_nb_methods ;
 
+
+  T_pConfigValueList           m_config_value_list ;
+  
+  int xml_configuration_parameters (C_XmlData *P_data,
+                                    T_ParamDefList *P_paramdef_list) ;
+  
+  int  update_config_params(T_ParamDef& P_config_param_dico,
+                            T_pConfigValueList P_config_value_list);
+  
+  char* find_config_value(char* P_variable) ;
+  char* search_variable(char* P_varibleString) ;
+  unsigned long  calculate_size(char* P_varibleString) ;
+  
+  char* replace_variable_config(char* P_buffer, unsigned long P_size_config) ;
+  
+
+
   void set_body_separator (char*  P_body_separator) ;
   void set_field_separator (char*  P_field_separator) ;
   void set_message_type_field_id (int P_id) ;

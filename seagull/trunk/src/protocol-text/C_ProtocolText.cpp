@@ -68,6 +68,7 @@ C_ProtocolText::C_ProtocolText() : C_ProtocolTextFrame() {
   m_def_method_extern_list   = NULL    ;  
   m_method_external_table    = NULL   ;
   m_nb_method_external_table = 0      ;
+  m_config_value_list    = NULL ;
 }
 
 void  C_ProtocolText::analyze_data( C_XmlData            *P_def, 
@@ -83,6 +84,8 @@ void  C_ProtocolText::analyze_data( C_XmlData            *P_def,
 
 
   GEN_DEBUG(1, "C_ProtocolText::C_ProtocolText() start");
+
+  m_config_value_list = P_config_value_list ;
 
   if (P_def) {
     *P_name = P_def->find_value((char*)"name") ;
@@ -485,7 +488,7 @@ C_ProtocolText::~C_ProtocolText() {
     m_nb_method_external_table  = 0    ;
   }
 
-  
+  m_config_value_list    = NULL ;
 }
 
 
@@ -1235,6 +1238,9 @@ int C_ProtocolText::xml_interpretor(C_XmlData *P_def,
   T_DefMethodExternList::iterator L_def_method_extern_it     ;
   T_DefMethodExtern               L_defmethod_extern_data    ;
 
+  T_pParamDefList               L_config_params_dico = NULL  ;
+  T_ParamDefList::iterator      L_config_params_dico_it      ;
+  
   GEN_DEBUG(1, "C_ProtocolText::xml_interpretor() start");
 
   NEW_VAR(m_fields_name_map, T_FieldNameMap());
@@ -1246,6 +1252,39 @@ int C_ProtocolText::xml_interpretor(C_XmlData *P_def,
     L_ret = -1 ;
   } 
 
+  if (L_ret != -1) {
+    for (L_it = L_data->begin();
+  	 L_it != L_data->end();
+  	 L_it++) {
+      if (strcmp((*L_it)->get_name(), "configuration-parameters") == 0) {
+	NEW_VAR(L_config_params_dico, T_ParamDefList());
+  	L_ret = xml_configuration_parameters (*L_it, L_config_params_dico);
+  	break ;
+      }
+    }
+
+    if (L_ret != -1) {
+      if ((L_config_params_dico != NULL ) && (!L_config_params_dico->empty())) {
+	if (L_config_params_dico->size() > 0 ) {
+	  // ctrl between parameters from config and dico
+	  for (L_config_params_dico_it = L_config_params_dico->begin();
+	       L_config_params_dico_it != L_config_params_dico->end();
+	       L_config_params_dico_it++) {
+	    L_ret = update_config_params (*L_config_params_dico_it, P_config_value_list) ;
+	    if (L_ret == -1) { break;}
+	  }
+	}
+      } else {
+	GEN_WARNING("No definition found for configuration parameters definition for protocol ["
+		    << *P_name << "]");
+      }
+    } else {
+      GEN_ERROR(E_GEN_FATAL_ERROR, 
+                "Error in configuration parameters definition found for protocol ["
+		<< *P_name << "]");
+    }
+    DELETE_VAR(L_config_params_dico);
+  }
 
   if (L_ret != -1) {
     for (L_it = L_data->begin();
@@ -1480,59 +1519,6 @@ int C_ProtocolText::find_field_id (char*P_name) {
 
   return (L_id);
 }
-
-
-// analyze presence of configuration-parameters in dico
-// bool                     L_found = false ;
-// T_pParamDefList               L_config_params_dico = NULL ;
-// T_ParamDefList::iterator      L_config_params_dico_it     ;
-//    if (L_ret != -1) {
-//      for (L_it = L_data->begin();
-//  	 L_it != L_data->end();
-//  	 L_it++) {
-//        if (strcmp((*L_it)->get_name(), "configuration-parameters") == 0) {
-//  	L_found = true ;
-//  	NEW_VAR(L_config_params_dico, T_ParamDefList());
-//  	L_ret = xml_configuration_parameters (*L_it, L_config_params_dico);
-//  	break ;
-//        }
-//      }
-    
-
-//      if (L_ret != -1) {
-//        if (L_found == true) {
-//  	L_found = false ;
-//  	if ((L_config_params_dico != NULL ) && (!L_config_params_dico->empty())) {
-//  	  m_nb_config_params = L_config_params_dico->size();
-//  	  if (m_nb_config_params != 0) {
-//  	    // ctrl between parameters from config and dico
-//  	    for (L_config_params_dico_it = L_config_params_dico->begin();
-//  		 L_config_params_dico_it != L_config_params_dico->end();
-//  		 L_config_params_dico_it++) {
-//  	      L_ret = update_config_params (*L_config_params_dico_it, P_config_value_list) ;
-//  	      if (L_ret == -1) { break;}
-//  	    }
-
-//  	  }
-	
-//  	} else {
-//  	  GEN_ERROR(E_GEN_FATAL_ERROR, "Error in  configuration parameters definition for protocol ["
-//  		    << *P_name << "]");
-//  	  L_ret = -1 ;
-//  	}
-      
-//        } else {
-//  	GEN_ERROR(E_GEN_FATAL_ERROR, "No configuration parameters definition found for protocol ["
-//  		  << *P_name << "]");
-//  	L_ret = -1 ;
-//        }
-//      } else {
-//        GEN_ERROR(E_GEN_FATAL_ERROR, "Error in configuration parameters definition found for protocol ["
-//  		  << *P_name << "]");
-//  	L_ret = -1 ;
-//      }
-//    }
-
 
 int   C_ProtocolText::set_field_value(C_MessageText *P_msg, 
                                       int            P_id, 
@@ -1936,6 +1922,11 @@ C_MessageText* C_ProtocolText::create(C_ProtocolText *P_protocol,
 
   char                    *L_buffer_header          = NULL   ;
   char                    *L_buffer_body            = NULL   ;
+
+  char                    *L_new_buffer_header      = NULL   ;
+  char                    *L_new_buffer_body        = NULL   ;
+  unsigned long            L_size_variable_value    = 0      ;
+
     
   GEN_DEBUG(1, "C_ProtocolText::create() start");
 
@@ -1954,9 +1945,21 @@ C_MessageText* C_ProtocolText::create(C_ProtocolText *P_protocol,
     if (L_buffer_header == NULL) {
       L_result = -1 ;
     } else {
-      // std::cerr << "L_buffer_header " << L_buffer_header << std::endl;
-      *L_value_header = valueFromString(L_buffer_header, 
-                                        E_TYPE_STRING , L_result);
+
+      if ((strstr(L_buffer_header,(char*)"$(") == NULL) || 
+	  (m_config_value_list->empty())) {
+	L_new_buffer_header = L_buffer_header ;
+      } else {
+        L_size_variable_value = calculate_size(L_buffer_header);
+        L_new_buffer_header = replace_variable_config(L_buffer_header, L_size_variable_value);
+      }
+      
+      if (L_new_buffer_header != NULL ) {
+        *L_value_header = valueFromString(L_new_buffer_header, 
+                                          E_TYPE_STRING , L_result);
+      } else { 
+        L_result = -1 ;
+      }
     }
   }
 
@@ -1980,11 +1983,23 @@ C_MessageText* C_ProtocolText::create(C_ProtocolText *P_protocol,
     if (L_buffer_body == NULL) {
       L_result = -1 ;
     } else {
-      // std::cerr << "L_buffer_body " << L_buffer_body << std::endl;
-      *L_value_body = valueFromString(L_buffer_body, E_TYPE_STRING , L_result);
+      if ((strstr(L_buffer_body,(char*)"$(") == NULL) ||
+	  (m_config_value_list->empty())) {
+	L_new_buffer_body = L_buffer_body ;
+      } else {
+        L_size_variable_value = calculate_size(L_buffer_body);
+	L_new_buffer_body = replace_variable_config(L_buffer_body, L_size_variable_value);
+      }
+
+      if (L_new_buffer_body != NULL ) {
+        
+        *L_value_body = valueFromString(L_new_buffer_body, 
+                                        E_TYPE_STRING , L_result);
+      } else { 
+        L_result = -1 ;
+      }
     }
   }
-
 
   if (L_result == -1) { 
     FREE_VAR(L_value_header);
@@ -2126,4 +2141,311 @@ T_ExternalMethod C_ProtocolText::find_method_extern(char *P_name) {
   }
   return (L_ret);
 }
+
+int C_ProtocolText::xml_configuration_parameters(C_XmlData *P_data, 
+						 T_ParamDefList *P_paramdef_list) { 
+
+
+  int                       L_ret = 0 ;
+
+  T_pXmlData_List           L_paramdef_xml_list = NULL ;
+  C_XmlData                *L_paramdef = NULL          ;
+  T_XmlData_List::iterator  L_paramdef_it              ;
+
+  T_ParamDef                L_paramdef_data            ;
+  bool                      L_found_default = false    ;
+
+  GEN_DEBUG(1, "C_ProtocolText::xml_configuration_parameters() start");
+
+  L_paramdef_xml_list = P_data->get_sub_data() ;
+
+  for(L_paramdef_it  = L_paramdef_xml_list->begin() ;
+      L_paramdef_it != L_paramdef_xml_list->end() ;
+      L_paramdef_it++) {
+
+    L_paramdef = *L_paramdef_it ;
+
+    if (strcmp(L_paramdef->get_name(), (char*)"paramdef") == 0) {
+
+      L_found_default = false ;
+      L_paramdef_data.m_name = L_paramdef->find_value((char*)"name") ;
+      if (L_paramdef_data.m_name == NULL) {
+	GEN_ERROR(E_GEN_FATAL_ERROR, 
+		  "paramdef name value is mandatory");
+	L_ret = -1 ;
+	break ;
+      }
+
+      L_paramdef_data.m_default = L_paramdef->find_value((char*)"default") ;
+      if (L_paramdef_data.m_default != NULL) {
+	L_found_default = true ;
+      } 
+
+      L_paramdef_data.m_mandatory = L_paramdef->find_value((char*)"mandatory") ;
+
+      if ((L_paramdef_data.m_mandatory == NULL) ||
+	  (strcmp(L_paramdef_data.m_mandatory,"false") == 0 )) {
+	
+	if (L_found_default == false ) {
+	  GEN_ERROR(E_GEN_FATAL_ERROR, 
+		    "paramdef mandatory or default value is mandatory");
+	  L_ret = -1 ;
+	}
+      }
+
+      if (L_ret == -1) { 
+	break ; 
+      } else {
+	P_paramdef_list->push_back(L_paramdef_data);
+      }
+
+    } // strcmp paradef
+  }
+
+  GEN_DEBUG(1, "C_ProtocolText::xml_configuration_parameters() end");
+  return (L_ret);
+}
+
+
+int C_ProtocolText::update_config_params(T_ParamDef& P_config_param_dico,
+					 T_pConfigValueList P_config_value_list) {
+
+
+  int                          L_ret            = 0     ;
+  T_ConfigValueList::iterator  L_configValue_it         ;
+  bool                         L_found          = false ;
+  T_ConfigValue               L_configValue             ;
+
+  GEN_DEBUG(1, "C_ProtocolText::update_config_params() start");
+
+  if (!P_config_value_list->empty()) {
+    for (L_configValue_it = P_config_value_list->begin();
+	 L_configValue_it != P_config_value_list->end();
+	 L_configValue_it++) {
+      if (strcmp(L_configValue_it->m_name, P_config_param_dico.m_name) == 0) {
+	L_found = true ;
+	// the config file value is used
+	break;
+      }
+    }
+  }
+  
+  if (L_found == false) {
+    // ctrl mandatory => error , must be in the config
+    if ((P_config_param_dico.m_mandatory != NULL) && 
+	(strcmp(P_config_param_dico.m_mandatory,"true") == 0 )) {
+      GEN_ERROR(E_GEN_FATAL_ERROR, 
+		"paramdef mandatory value is mandatory for ["
+		<< P_config_param_dico.m_name << "]");
+      L_ret = -1 ;
+    } else {
+      // not mandatory, but a default value is known
+      // element not found in config list
+      // Add this element in the P_config_value_list
+      L_configValue.m_name = P_config_param_dico.m_name ;
+      L_configValue.m_value = P_config_param_dico.m_default ;
+      P_config_value_list->push_back(L_configValue);
+    }
+  } 
+ 
+  GEN_DEBUG(1, "C_ProtocolText::update_config_params() end");
+  return (L_ret);
+}
+
+char* C_ProtocolText::find_config_value(char* P_varible) {
+  
+  char* L_value = NULL ;
+
+  T_ConfigValueList::iterator  L_configValue_it         ;
+  GEN_DEBUG(1, "C_ProtocolText::find_config_value() start");    
+
+  if (!m_config_value_list->empty()) {
+    for (L_configValue_it = m_config_value_list->begin();
+	 L_configValue_it != m_config_value_list->end();
+	 L_configValue_it++) {
+      if (strcmp(L_configValue_it->m_name, P_varible) == 0) {
+	L_value = L_configValue_it->m_value ;
+	break ;
+      }
+    }
+  }
+    
+  GEN_DEBUG(1, "C_ProtocolText::find_config_value() end");    
+  return (L_value);
+
+}
+
+
+unsigned long  C_ProtocolText::calculate_size(char* P_varibleString) {
+
+  unsigned long     L_ret                  = 0               ;
+  unsigned long     L_size_variable_config = 0               ;
+  unsigned long     L_size_value_config    = 0               ;
+  unsigned long     L_size_buffer          = 0               ;
+
+  char             *L_ptr                  = P_varibleString ;
+  char             *L_pos                  = NULL            ;
+  char             *L_search               = NULL            ;
+  char             *L_value_conf           = NULL            ;
+
+  GEN_DEBUG(1, "C_ProtocolText::calculate_size() start");
+
+  if ((P_varibleString != NULL) && 
+      ((L_size_buffer = strlen(P_varibleString)) > 0 )) {
+    while((L_ptr) && ((L_pos = strstr(L_ptr,(char*)"$(")) != NULL)) {
+      if ((L_pos + 2) <= (P_varibleString+L_size_buffer)) { 
+	L_search = search_variable((L_pos + 2)) ;
+	if (L_search != NULL) {
+          L_size_variable_config += strlen(L_search);
+	  L_value_conf  = find_config_value(L_search);
+	  if (L_value_conf != NULL) {
+            L_size_value_config += strlen(L_value_conf);
+          }
+          L_ptr = L_pos + strlen(L_search) + 3 ;
+	  FREE_TABLE(L_search);
+        } 
+      } else {
+        L_ptr = NULL ; 
+      }
+    } // while
+    L_ret = L_size_buffer - L_size_variable_config + L_size_value_config ;
+  }
+  
+  GEN_DEBUG(1, "C_ProtocolText::calculate_size() end");
+  return (L_ret);
+}
+
+char* C_ProtocolText::search_variable(char* P_varibleString) {
+  
+  char *L_ptr     = P_varibleString ;
+  char *L_value   = NULL            ;
+  int   L_value_size                ;
+  char *L_pos_d   = NULL            ;
+  char *L_pos_p   = NULL            ;
+
+  if ((L_ptr == NULL)        ||
+      ((strlen(L_ptr)) <= 1)) {
+    return (L_value) ;
+  } 
+
+  L_pos_p = strchr(L_ptr,')') ;
+  if (L_pos_p == NULL) {
+    return (L_value) ;
+  } else {
+    L_value_size =  L_pos_p - L_ptr ; 
+  }
+
+  L_pos_d = strstr(L_ptr,(char*)"$(") ;
+
+  if (L_pos_d != NULL ) {
+    if ((L_pos_d - L_ptr) < L_value_size) {
+      return (L_value) ;
+    } 
+  }
+
+  ALLOC_TABLE(L_value,
+              char*, 
+              sizeof(char),
+              L_value_size+1);
+  memcpy(L_value, L_ptr, L_value_size);
+  L_value[L_value_size] = 0 ;
+
+  return (L_value);
+}
+
+char* C_ProtocolText::replace_variable_config(char* P_buffer, unsigned long P_size_config) {
+
+  size_t    L_size         = 0        ;
+  size_t    L_size_buffer  = 0        ;
+  size_t    L_size_end     = 0        ;
+  size_t    L_size_config  = 0        ;
+  
+  char     *L_pos          = NULL     ;
+  char     *L_ptr          = P_buffer ;
+  char     *L_result       = NULL     ;
+  char     *L_new          = NULL     ;
+  char     *L_search       = NULL     ;
+  char     *L_value_conf   = NULL     ;
+
+  if ((P_buffer != NULL) && (P_size_config > 0) && 
+      ((L_size_buffer = strlen(P_buffer)) > 0 )) {
+    L_size_end = L_size_buffer ;
+    ALLOC_TABLE(L_result, 
+		char*, 
+		sizeof(char), 
+		P_size_config);
+
+    L_new = L_result ; 
+
+    while((L_ptr) && (L_pos = strstr(L_ptr,(char*)"$(")) != NULL) {
+      L_size = L_pos - L_ptr ;
+      if (L_size > 0) {
+	memcpy(L_new, L_ptr, L_size);
+	L_new += L_size ;
+      }
+      
+      // test end needed ? for L_ptr
+      if ((L_pos + 2) <= (P_buffer+L_size_buffer)) { 
+	L_search = search_variable((L_pos + 2)) ;
+	if (L_search == NULL) {
+	  *(L_new) = '$' ;
+	  L_size++;
+	  L_new += 1 ;
+	  *(L_new) = '(' ;
+	  L_size++;
+	  L_new += 1 ;
+          L_size_config = 2 ;
+	} else {
+	  L_value_conf  = find_config_value(L_search);
+	  if (L_value_conf == NULL) {
+	    L_size_config = strlen(L_search);
+            memcpy(L_new, (char*)"$(", 2);
+	    memcpy(L_new+2, L_search, L_size_config);
+	    memcpy(L_new+2+strlen(L_search), (char*)")", 1);
+	    L_size_config = strlen(L_search) + 3 ;
+            L_size += L_size_config ;
+	    L_new  += L_size_config ;
+	  } else {
+	    L_size_config = strlen(L_value_conf) ;
+	    memcpy(L_new, L_value_conf, L_size_config);
+	    L_new  += L_size_config ;
+	    L_size_config = strlen(L_search) + 3 ;
+	    L_size += L_size_config ;
+	  }
+	  FREE_TABLE(L_search);
+	}
+	L_size_end -= L_size ;
+	L_ptr = L_pos + L_size_config ; 
+      } else { 
+	*(L_new) = '$' ;
+	L_size++;
+	L_new += 1 ;
+	*(L_new) = '(' ;
+	L_size++;
+	L_new += 1 ;
+	L_ptr = NULL ; 
+	L_size_end -= L_size ;
+      }
+    } // while
+    
+    // ctrl the end of buffer
+    if (L_size_end > 0) {
+      L_size = L_size_end ;
+      if (L_size) {
+	memcpy(L_new, L_ptr, L_size);
+	L_new += L_size ;
+	*L_new = '\0' ;
+      } else {
+	*L_new = '\0' ;
+      }
+    } else {
+      *L_new = '\0' ;
+    }
+  }
+
+  return (L_result);
+}
+
+
+
 
