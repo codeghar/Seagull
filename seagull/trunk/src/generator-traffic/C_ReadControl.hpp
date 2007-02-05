@@ -59,6 +59,8 @@ public:
   void change_rate_scale(unsigned long P_scale);
   void change_burst (unsigned long P_burst);
 
+  void process_event (C_Transport *P_transport, T_pC_TransportEvent P_event);
+
 protected:
 
 private:
@@ -102,6 +104,7 @@ private:
 
   void transport_table () ;
   void create_call_controller () ;
+  void start_call_controller () ;
 
 
 } ;

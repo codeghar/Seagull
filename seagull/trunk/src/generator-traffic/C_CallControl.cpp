@@ -95,6 +95,8 @@ T_pCallMap* C_CallControl::get_call_map () {
   return (m_call_map_table) ;
 }
 
+void C_CallControl::start_traffic() {
+}
 
 C_CallControl::~C_CallControl() {
 
@@ -215,6 +217,26 @@ T_pCallContext C_CallControl::makeCallContextUnavailable (C_Scenario *P_scen) {
 }
 
 
+void C_CallControlClient::start_traffic() {
+
+  T_pC_Scenario  L_scenario ;
+  T_TrafficType  L_type ;
+  T_pCallContext L_call_ctxt ;
+
+  L_scenario = m_scenario_control->init_scenario_defined(&L_type) ;
+  if (L_scenario != NULL) {
+    GEN_DEBUG (1, "C_CallControl::InitProcedure() E_TRAFFIC_CLIENT");
+    L_call_ctxt = C_CallControl::makeCallContextUnavailable(L_scenario);
+    if (L_call_ctxt == NULL) {
+      GEN_ERROR(E_GEN_FATAL_ERROR,
+		"No context available to execute init scenario");
+    }
+  } else {
+    m_outgoing_traffic = true ;
+    m_traffic_model->start();
+  }
+}
+
 T_pCallContext C_CallControlClient::makeCallContextUnavailable () {
 
   T_pCallContext     L_pCallContext = NULL ;
@@ -288,7 +310,7 @@ void C_CallControl::messageReceivedControl () {
   T_exeCode           L_exeResult ;
 
   int                 L_callContextIdx ;
-  // int                 L_channel_id ;
+
 
 
 #ifdef INIT_CALL_FILTER
@@ -297,7 +319,7 @@ void C_CallControl::messageReceivedControl () {
 #endif //INIT_CALL_FILTER
 
   T_pValueData   L_value_id = NULL ;
-  //  T_CallMap::iterator        L_call_it ;
+
 
   
   GEN_DEBUG (1, "C_CallControl::messageReceivedControl() start");
@@ -313,11 +335,9 @@ void C_CallControl::messageReceivedControl () {
     m_msg_rcv_ctxt_list -> erase (m_msg_rcv_ctxt_list->begin()) ;
 
     L_msg = L_rcvCtxt.m_msg ;
-    // L_channel_id = L_rcvCtxt.m_channel;
 
     L_value_id = L_msg -> get_session_id (&L_rcvCtxt) ;
     if (L_value_id == NULL) {
-      //L_value_id = L_msg ->get_out_of_session_id () ;
       GEN_DEBUG(1, "C_CallControl::messageReceivedControl() L_value_id == NULL and now is " << L_value_id);
 #ifdef INIT_CALL_FILTER
       L_filter = false ;
@@ -635,12 +655,10 @@ void C_CallControl::messageRetransControl () {
           break ; 
         } else { // retrans to do 
           if (L_pCallContext->m_nb_retrans_done[L_retrans_idx] <= (int)m_max_retrans) {
-            // std::cerr << "do retrans = " << L_pCallContext << std::endl ;
             execute_scenario_cmd_retrans (L_retrans_idx, L_pCallContext) ;
             L_doRetransList.push_back(L_retrans_ctxt);
             L_deleteList.push_back(L_it);
           } else {
-            // std::cerr << "stop (max retrans) = " << L_pCallContext << std::endl ;
             L_stopRetransList.push_back(L_pCallContext) ;
           }
         }
@@ -891,7 +909,7 @@ T_GeneratorError C_CallControl::InitProcedure() {
   unsigned long  L_config_value ;
   
   T_pC_Scenario  L_scenario ;
-  T_pCallContext L_call_ctxt ;
+  //  T_pCallContext L_call_ctxt ;
   T_TrafficType  L_type ;
 
   T_pWaitValuesSet         L_wait_values          ;
@@ -1046,33 +1064,33 @@ T_GeneratorError C_CallControl::InitProcedure() {
   }
 
   m_stat->init();
-  if (L_scenario == NULL) {
-    GEN_WARNING("no init scenario defined");
-  } else {
-    // m_type = L_type ;
-    switch(L_type) {
+//    if (L_scenario == NULL) {
+//      GEN_WARNING("no init scenario defined");
+//    } else {
+//      // m_type = L_type ;
+//      switch(L_type) {
     
-    case E_TRAFFIC_CLIENT:
-      GEN_DEBUG (1, "C_CallControl::InitProcedure() E_TRAFFIC_CLIENT");
-      L_call_ctxt = makeCallContextUnavailable(L_scenario);
-      if (L_call_ctxt == NULL) {
-	GEN_ERROR(E_GEN_FATAL_ERROR,
-	      "No context available to execute init scenario");
-	L_error = E_GEN_FATAL_ERROR ;
-      }
-      break ;
+//      case E_TRAFFIC_CLIENT:
+//        GEN_DEBUG (1, "C_CallControl::InitProcedure() E_TRAFFIC_CLIENT");
+//        L_call_ctxt = makeCallContextUnavailable(L_scenario);
+//        if (L_call_ctxt == NULL) {
+//  	GEN_ERROR(E_GEN_FATAL_ERROR,
+//  	      "No context available to execute init scenario");
+//  	L_error = E_GEN_FATAL_ERROR ;
+//        }
+//        break ;
 
-    case E_TRAFFIC_SERVER:
-      GEN_DEBUG (1, "C_CallControl::InitProcedure() E_TRAFFIC_SERVER:");
-      m_scenario_control->switch_to_init();
-      break ;
+//      case E_TRAFFIC_SERVER:
+//        GEN_DEBUG (1, "C_CallControl::InitProcedure() E_TRAFFIC_SERVER:");
+//        m_scenario_control->switch_to_init();
+//        break ;
 
-    default:
-      GEN_FATAL(E_GEN_FATAL_ERROR, "Unknown init scenario type");
-      break ;
-    }
+//      default:
+//        GEN_FATAL(E_GEN_FATAL_ERROR, "Unknown init scenario type");
+//        break ;
+//      }
     
-  }
+//    }
 
   GEN_DEBUG (1, "C_CallControl::InitProcedure() end");
   return (L_error);
@@ -1668,6 +1686,102 @@ T_pCallContext   C_CallControl::retrieve_call_context (int P_channel_id, T_pValu
   return (L_pCallContext);
 }
 
+
+
+C_CallControlServer::C_CallControlServer(C_GeneratorConfig    *P_config, 
+					 T_pC_ScenarioControl  P_scenControl,
+					 C_ChannelControl     *P_channel_ctrl) 
+  : C_CallControl(P_config, P_scenControl, P_channel_ctrl) {
+
+  GEN_DEBUG (1, "C_CallControlServer::C_CallControlServer() start");
+  GEN_DEBUG (1, "C_CallControlServer::C_CallControlServer() end");
+
+}
+
+C_CallControlServer::~C_CallControlServer() {
+  GEN_DEBUG (1, "C_CallControlServer::~C_CallControlServer() start");
+  GEN_DEBUG (1, "C_CallControlServer::~C_CallControlServer() end");
+}
+
+T_GeneratorError C_CallControlServer::InitProcedure() {
+
+  T_GeneratorError L_ret ;
+  T_pC_Scenario  L_scenario ;
+  T_TrafficType  L_type ;
+
+  L_ret = C_CallControl::InitProcedure() ;
+
+  L_scenario = m_scenario_control->init_scenario_defined(&L_type) ;
+  if (L_scenario == NULL) {
+    GEN_WARNING("no init scenario defined");
+  } else {
+    GEN_DEBUG (1, "C_CallControl::InitProcedure() E_TRAFFIC_SERVER:");
+    m_scenario_control->switch_to_init();
+  }
+
+  return (L_ret) ;
+}
+
+
+void C_CallControl::clean_mlist (long P_id) {
+  T_pCallContext L_pCallContext ;
+  int L_nbElem = m_call_ctxt_mlist -> getNbElements (P_id) ;
+  while (L_nbElem) {
+    L_pCallContext 
+      = m_call_ctxt_table[m_call_ctxt_mlist->getFirst(P_id)];
+    makeCallContextAvailable(&L_pCallContext);
+    m_stat->executeStatAction(C_GeneratorStats::E_CALL_FAILED);
+    L_nbElem-- ;
+  }
+}
+
+
+void C_CallControl::clean_traffic() {
+
+  long L_i ;
+
+  m_accept_new_call = false ;
+
+  if (!m_msg_rcv_ctxt_list->empty()) {
+    m_msg_rcv_ctxt_list->erase(m_msg_rcv_ctxt_list->begin(),
+			       m_msg_rcv_ctxt_list->end());
+  }
+  if (!m_event_list->empty()) {
+    m_event_list->erase(m_event_list->begin(),
+			m_event_list->end());
+  }
+  if (!m_call_suspended->empty()) {
+    m_call_suspended->erase(m_call_suspended->begin(), 
+			    m_call_suspended->end());
+  }
+
+  clean_mlist(E_CTXT_SEND);
+  {
+    int L_nbElem = m_call_ctxt_mlist -> getNbElements (E_CTXT_SUSPEND) ;
+    T_pCallContext L_pCallContext ;
+    while (L_nbElem) {
+      L_pCallContext 
+	= m_call_ctxt_table[m_call_ctxt_mlist->getFirst(E_CTXT_SUSPEND)];
+      L_pCallContext->clean_suspended() ;
+    }
+  }
+  clean_mlist(E_CTXT_SUSPEND);
+  clean_mlist(E_CTXT_RECEIVE);
+  for (L_i=0; L_i < (int)m_nb_wait_values; L_i++) {
+    clean_mlist(E_CTXT_WAIT + L_i);
+  }
+  m_stat->info_msg((char*)"Traffic cleaned (channel lost)");
+
+}
+
+void C_CallControlClient::clean_traffic() {
+  m_outgoing_traffic = false ;
+  C_CallControl::clean_traffic() ;
+}
+
+void C_CallControlServer::clean_traffic() {
+  C_CallControl::clean_traffic() ;
+}
 
 
 

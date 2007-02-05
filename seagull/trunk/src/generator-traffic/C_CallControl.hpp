@@ -88,9 +88,15 @@ public:
   virtual void change_rate_scale(unsigned long P_scale);
   virtual void change_burst (unsigned long P_burst);
 
+  virtual void clean_traffic () ;
+
+
   T_GeneratorError close() ;
 
   T_pCallMap* get_call_map () ;
+
+  virtual void start_traffic () ;
+
   
 protected:
 
@@ -157,7 +163,7 @@ protected:
   
   // TaskController related methods
   T_GeneratorError TaskProcedure();
-  T_GeneratorError InitProcedure();
+  virtual T_GeneratorError InitProcedure();
   T_GeneratorError EndProcedure();
   T_GeneratorError StoppingProcedure();
   T_GeneratorError ForcedStoppingProcedure();
@@ -191,6 +197,8 @@ protected:
   virtual void init_done() ;  // to be called when init scenario is executed
                               // => function also defined for the client
 
+  void clean_mlist (long P_id) ;
+
 
 } ;
 
@@ -202,9 +210,10 @@ public:
 		      C_ScenarioControl *P_scenControl,
 		      C_ChannelControl     *P_channel_ctrl) ;
   ~C_CallControlClient() ;
-  
+  virtual void start_traffic () ;
+
 protected:
-  T_GeneratorError InitProcedure();
+  virtual T_GeneratorError InitProcedure();
   T_GeneratorError TaskProcedure();
   T_GeneratorError StoppingProcedure();
 
@@ -213,6 +222,7 @@ protected:
   void             pause_traffic() ;
   void             restart_traffic() ;
 
+  virtual void clean_traffic () ;
 
   unsigned long    get_call_rate();
   void             change_call_rate(T_GenChangeOperation P_op,
@@ -238,6 +248,17 @@ protected:
 
   T_pCallContext  makeCallContextUnavailable ();
 
+} ;
+
+class C_CallControlServer : public C_CallControl {
+public:
+  C_CallControlServer(C_GeneratorConfig *P_config, 
+		      C_ScenarioControl *P_scenControl,
+		      C_ChannelControl     *P_channel_ctrl) ;
+  ~C_CallControlServer() ;
+protected:
+  virtual T_GeneratorError InitProcedure();
+  virtual void clean_traffic () ;
 } ;
 
 

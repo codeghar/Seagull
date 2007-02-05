@@ -28,7 +28,7 @@
 
 #include "dlfcn_t.hpp"
 
-#define MAX_CTXT_TRANS 1
+//#define MAX_CTXT_TRANS 1
 
 C_ReadControl::C_ReadControl(C_ChannelControl   *P_channel_ctrl,
 			     C_TransportControl *P_transport_ctrl) : C_TaskControl() {
@@ -53,6 +53,8 @@ C_ReadControl::C_ReadControl(C_ChannelControl   *P_channel_ctrl,
   m_transport_table_size = 0 ;
 
   m_nb_global_channel = 0 ;
+  m_call_controller = NULL ;
+
 
   GEN_DEBUG(1, "C_ReadControl::C_ReadControl() end");
 }
@@ -118,9 +120,12 @@ T_GeneratorError C_ReadControl::InitProcedure() {
   GEN_DEBUG(1, "C_ReadControl::InitProcedure() m_events: " << m_events);
 
   m_nb_global_channel = m_channel_ctrl->nb_global_channel() ;
-  transport_table () ;
+
 
   m_call_select = m_transport_ctrl -> get_call_select () ;
+
+  create_call_controller() ;
+  transport_table () ;
 
   GEN_DEBUG(1, "C_ReadControl::InitProcedure() end");
   return (E_GEN_NO_ERROR);
@@ -184,10 +189,6 @@ T_GeneratorError C_ReadControl::receiveControl () {
   size_t                    L_i                    ;
 
   int                       L_j                    ;
-
-  T_pC_TransportEvent       L_event_occured        ;
-  int                       L_event_id             ;
-  int                       L_channel_id           ;
 
   GEN_DEBUG(1, "C_ReadControl::receiveControl() start");
 
@@ -267,109 +268,7 @@ T_GeneratorError C_ReadControl::receiveControl () {
 	
 	for (L_i = 0 ; L_i < L_nb_event ; L_i++) {
 
-	  L_event_occured = &m_events [L_i];
-	  L_event_id      = L_event_occured->m_id ;
-	  L_channel_id    = L_event_occured->m_channel_id ;
-
-	  switch (L_event_occured->m_type) {
-
-	  case C_TransportEvent::E_TRANS_RECEIVED: {
-
-	    GEN_DEBUG(1, 
-		      "C_ReadControl::receiveControl() E_TRANS_RECEIVED id ["
-		      << L_event_id << "]");
-	    
-	    while ((m_transport_table[L_j]
-		    ->get_message(L_event_occured->m_id, &L_currentRcvCtxt)) == true) {
-	      m_call_controller
-		->messageReceived (&L_currentRcvCtxt) ;
-	    }
-	    break ;
-	  }
-
-	  case C_TransportEvent::E_TRANS_CLOSED: {
-	    GEN_DEBUG(1, "C_ReadControl::receiveControl() E_TRANS_CLOSED id["
-		      << L_event_id << "]");
-	    
-	    m_channel_ctrl->closed(L_channel_id, L_event_id);
-	    if (m_call_controller != NULL) {
-	      if (m_nb_global_channel != m_channel_ctrl->opened()) {
-		m_call_controller->stop() ;
-	      }
-	    } else {
-	      if (m_nb_global_channel != m_channel_ctrl->opened()) {
-		stop() ;
-	      }
-	    }
-	    
-	    if (m_last_traffic_type == E_TRAFFIC_CLIENT) {
-	      m_call_controller->stop();
-	      GEN_FATAL(E_GEN_FATAL_ERROR, "Connection closed (Client traffic stopped)");
-	    }
-	    break ;
-	  }
-
-	  case C_TransportEvent::E_TRANS_CONNECTION: {
-	    GEN_DEBUG(1, 
-		      "C_ReadControl::receiveControl() E_TRANS_CONNECTION id["
-		      << L_event_id << "]");
-	    break ;
-	  }
-
-	  case C_TransportEvent::E_TRANS_OPEN: {
-	    T_EventRecv L_event_recv ;
-
-	    GEN_DEBUG(1, 
-		      "C_ReadControl::receiveControl() E_TRANS_OPEN id ["
-		      << L_event_id << "]");
-
-	    m_channel_ctrl->opened(L_channel_id, L_event_id);
-
-	    if (m_call_controller != NULL) {
-	      L_event_recv.m_id = L_event_id ;
-	      L_event_recv.m_type = L_event_occured->m_type ;
-	      m_call_controller->eventReceived (&L_event_recv);
-	    } else {
-	      if (m_nb_global_channel == m_channel_ctrl->opened()) {
-		create_call_controller() ;
-	      }
-	    }
-
-	    break ;
-	  }
-
-
-	  case C_TransportEvent::E_TRANS_OPEN_FAILED: {
-
-	    
-	    GEN_DEBUG(1, 
-		      "C_ReadControl::receiveControl() E_TRANS_OPEN_FAILED id ["
-		      << L_event_id << "]");
-	    
-	    m_channel_ctrl->open_failed(L_channel_id, L_event_id);
-	    if (m_call_controller != NULL) {
-
-	      T_EventRecv L_event_recv ;
-	      L_event_recv.m_id = L_event_id ;
-	      L_event_recv.m_type = L_event_occured->m_type ;
-	      m_call_controller->eventReceived (&L_event_recv);
-
-	    } else {
-	      if (m_nb_global_channel != m_channel_ctrl->opened()) {
-		stop() ;
-	      }
-	    }
-	    break ;
-	  }
-
-	  case C_TransportEvent::E_TRANS_NO_EVENT: {
-	    GEN_DEBUG(1, 
-		      "C_ReadControl::receiveControl() E_TRANS_NO_EVENT id ["
-		      << L_event_id << "]");
-	    break ;
-	  }
-	    
-	  } // switch L_event_occured
+	  process_event (m_transport_table[L_j], &m_events[L_i]);
 
 	} // for L_i
 	
@@ -378,9 +277,128 @@ T_GeneratorError C_ReadControl::receiveControl () {
     
   } // if L_n > 0
 
+  m_channel_ctrl->check_global_channel() ;
+
+
   GEN_DEBUG(1, "C_ReadControl::receiveControl() end");
   return (E_GEN_NO_ERROR);
   
+}
+
+void C_ReadControl::process_event (C_Transport *P_transport, T_pC_TransportEvent P_event) {
+
+  int L_event_id      = P_event->m_id ;
+  int L_channel_id    = P_event->m_channel_id ;
+  
+  GEN_DEBUG(1, "C_ReadControl::process_event() start");
+
+  switch (P_event->m_type) {
+    
+  case C_TransportEvent::E_TRANS_RECEIVED: {
+    T_ReceiveMsgContext   L_currentRcvCtxt       ;
+    
+    GEN_DEBUG(1, 
+	      "C_ReadControl::receiveControl() E_TRANS_RECEIVED id ["
+	      << L_event_id << "]");
+    
+    while ((P_transport
+	    ->get_message(P_event->m_id, &L_currentRcvCtxt)) == true) {
+      m_call_controller
+	->messageReceived (&L_currentRcvCtxt) ;
+    }
+    break ;
+  }
+    
+  case C_TransportEvent::E_TRANS_CLOSED: {
+    
+    GEN_DEBUG(1, "C_ReadControl::receiveControl() E_TRANS_CLOSED id["
+	      << L_event_id << "]");
+
+    GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
+		  "channel ["
+		  << m_channel_ctrl->get_channel_name(L_channel_id) << "] closed");
+
+
+    m_channel_ctrl->closed(L_channel_id, L_event_id);
+    if (m_call_controller != NULL) {
+      if (! m_channel_ctrl->reconnect() ) {
+	if (m_nb_global_channel != m_channel_ctrl->opened()) {
+	  m_call_controller->stop() ;
+	}
+      } else {
+	// check global channel ?
+	// global channel lost
+	m_call_controller->clean_traffic();
+      }
+    } else {
+      if (m_nb_global_channel != m_channel_ctrl->opened()) {
+	stop() ;
+      }
+    }
+    
+    if (m_last_traffic_type == E_TRAFFIC_CLIENT) {
+      m_call_controller->stop();
+      GEN_FATAL(E_GEN_FATAL_ERROR, "Connection closed (Client traffic stopped)");
+    }
+    break ;
+  }
+    
+  case C_TransportEvent::E_TRANS_CONNECTION: {
+    GEN_DEBUG(1, 
+	      "C_ReadControl::receiveControl() E_TRANS_CONNECTION id["
+	      << L_event_id << "]");
+    break ;
+  }
+    
+  case C_TransportEvent::E_TRANS_OPEN: {
+    T_EventRecv L_event_recv ;
+    GEN_DEBUG(1, 
+	      "C_ReadControl::receiveControl() E_TRANS_OPEN id ["
+	      << L_event_id << "]");
+    
+    m_channel_ctrl->opened(L_channel_id, L_event_id);
+    
+    L_event_recv.m_id = L_event_id ;
+    L_event_recv.m_type = P_event->m_type ;
+    m_call_controller->eventReceived (&L_event_recv);
+
+    if (m_nb_global_channel == m_channel_ctrl->opened()) {
+      start_call_controller() ;
+    }
+    break ;
+  }
+    
+    
+  case C_TransportEvent::E_TRANS_OPEN_FAILED: {
+    
+    GEN_DEBUG(1, 
+	      "C_ReadControl::receiveControl() E_TRANS_OPEN_FAILED id ["
+	      << L_event_id << "]");
+
+    m_channel_ctrl->open_failed(L_channel_id, L_event_id);
+    if (m_call_controller != NULL) {
+      T_EventRecv L_event_recv ;
+      L_event_recv.m_id = L_event_id ;
+      L_event_recv.m_type = P_event->m_type ;
+      m_call_controller->eventReceived (&L_event_recv);
+    } else {
+      if (m_nb_global_channel != m_channel_ctrl->opened()) {
+	stop() ;
+      }
+    }
+    break ;
+  }
+    
+  case C_TransportEvent::E_TRANS_NO_EVENT: {
+    GEN_DEBUG(1, 
+	      "C_ReadControl::receiveControl() E_TRANS_NO_EVENT id ["
+	      << L_event_id << "]");
+    break ;
+  }
+    
+  } // switch P_event->m_type
+  
+  GEN_DEBUG(1, "C_ReadControl::process_event() end");
 }
 
 
@@ -491,12 +509,18 @@ void C_ReadControl::change_burst (unsigned long P_burst) {
 
 
 void C_ReadControl::transport_table () {
+  int L_nb_open ;
+
   GEN_DEBUG(1, "C_ReadControl::transport_table() start");
   m_transport_table = 
     m_channel_ctrl->get_transport_table(&m_transport_table_size);
-  if (m_channel_ctrl->open_global_channel()
+  L_nb_open = m_channel_ctrl->open_global_channel();
+  GEN_DEBUG(1, "C_ReadControl::transport_table() opened global channel ["
+	    << L_nb_open << "] expected [" << m_channel_ctrl->nb_global_channel()
+	    << "]");
+  if (L_nb_open
       == m_channel_ctrl->nb_global_channel()) {
-    create_call_controller () ;
+    start_call_controller () ;
   } 
   // TO DO by protocol
   //  else {
@@ -514,12 +538,17 @@ void C_ReadControl::create_call_controller () {
 						   m_scen_controller,
 						   m_channel_ctrl)) ;
   } else {
-    NEW_VAR(m_call_controller, C_CallControl(m_config, 
-					     m_scen_controller,
-					     m_channel_ctrl)) ;
+    NEW_VAR(m_call_controller, C_CallControlServer(m_config, 
+						   m_scen_controller,
+						   m_channel_ctrl)) ;
   }
   m_call_controller -> init () ;
 
   GEN_DEBUG(1, "C_ReadControl::create_call_controller() end");
 }
 
+void C_ReadControl::start_call_controller () {
+  GEN_DEBUG(1, "C_ReadControl::start_call_controller() start");
+  m_call_controller -> start_traffic () ;
+  GEN_DEBUG(1, "C_ReadControl::start_call_controller() end");
+}
