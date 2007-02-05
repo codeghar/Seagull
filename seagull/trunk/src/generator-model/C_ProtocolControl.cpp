@@ -28,6 +28,8 @@
 #include "C_ProtocolBinaryBodyNotInterpreted.hpp"
 #include "C_ProtocolBinarySeparator.hpp"
 #include "C_ProtocolText.hpp"
+#include "C_ProtocolTlv.hpp"
+
 
 #define XML_PROTOCOL_SECTION (char*)"protocol"
 #define XML_PROTOCOL_NAME    (char*)"name"
@@ -176,7 +178,43 @@ bool C_ProtocolControl::fromXml (C_XmlData *P_data,
 		  ->insert(T_ProtocolNameMap::value_type(L_protocol_name,
 							 L_protocol_id)) ;
 	      }
+	    } else if (strcmp(L_protocol_type, "binary-tlv") == 0) {
+	      // create protocol instance
+	      C_ProtocolTlv    *L_protocol_instance = NULL ;
+	      T_ConstructorResult  L_res ;
+
+	      NEW_VAR(L_protocol_instance,
+		      C_ProtocolTlv());
               
+              L_protocol_instance->construction_data(L_data, &L_protocol_name, &L_res) ;
+              
+	      if (L_res != E_CONSTRUCTOR_OK) {
+		GEN_ERROR(E_GEN_FATAL_ERROR,
+			  "Error found in protocol definition");
+		DELETE_VAR(L_protocol_instance);
+		L_ret = false ;
+		break ;
+	      } else {
+		// store new instance
+		if (P_display_protocol_stats == true) {
+		  C_ProtocolStats  *L_protocol_stats ;
+		  NEW_VAR(L_protocol_stats,C_ProtocolStats(L_protocol_instance));
+		  L_protocol_instance->set_stats(L_protocol_stats);
+		}
+                
+		L_protocol_id = m_id_gen->new_id() ;
+		ALLOC_VAR(L_protocol_info,
+			  T_pProtocolInstanceInfo,
+			  sizeof(T_ProtocolInstanceInfo));
+                
+		L_protocol_info->m_instance = L_protocol_instance ;
+		L_protocol_info->m_id = L_protocol_id ;
+		L_protocol_info->m_name = L_protocol_name ;
+		L_protocol_inst_list.push_back(L_protocol_info);
+		m_name_map
+		  ->insert(T_ProtocolNameMap::value_type(L_protocol_name,
+							 L_protocol_id)) ;
+	      }
 	    } else if (strcmp(L_protocol_type, "binary-body-not-interpreted") == 0) {
 	      // create protocol instance
 	      C_ProtocolBinaryBodyNotInterpreted    *L_protocol_instance = NULL ;

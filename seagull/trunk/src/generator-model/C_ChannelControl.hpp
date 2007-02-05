@@ -29,6 +29,8 @@
 #include "C_MessageFrame.hpp"
 #include "C_TransportControl.hpp"
 #include "C_ProtocolControl.hpp"
+#include "C_SemaphoreTimed.hpp"
+
 
 #define ERROR_CHANNEL_UNKNOWN -1
 typedef map_t<string_t, int> T_ChannelNameMap, *T_pChannelNameMap ;
@@ -43,6 +45,12 @@ public:
     E_CHANNEL_UNKNOWN
   } T_ChannelType, *T_pChannelType ;
 
+  typedef enum _channel_open_status {
+    E_CHANNEL_CLOSED,
+    E_CHANNEL_OPEN_IN_PROGESS,
+    E_CHANNEL_OPENED
+  } T_ChannelStatus, *T_pChannelStatus ;
+
   typedef struct _channel_data {
 
     int              m_id           ;
@@ -52,9 +60,12 @@ public:
     C_ProtocolFrame *m_protocol     ;
     C_Transport     *m_transport    ;
     char            *m_open_args    ;
-    bool             m_open_status  ;
+    //    bool             m_open_status  ;
+    T_ChannelStatus  m_open_status  ;
     int              m_open_id      ;
+    bool             m_reconnect    ;
 
+    char            *m_name         ;
     // response id list ?
 
   } T_ChannelData,  *T_pChannelData ;
@@ -66,21 +77,23 @@ public:
 		C_ProtocolControl  *P_protocol_ctrl,
 		C_TransportControl *P_transport_ctrl) ;
 
-  int            get_channel_id (char *P_name);
+  int            get_channel_id   (char *P_name);
+  char*          get_channel_name (int P_id);
   T_pChannelData get_channel_data (char *P_name);
   T_pChannelData get_channel_data (int P_id);
 
   int            open_global_channel () ;
-  int            open_local_channel (int P_id, 
-                                     char *P_args,
-				     int *P_table, 
+  int            check_global_channel () ;
+  int            open_local_channel (int           P_id, 
+                                     char         *P_args,
+				     int          *P_table, 
 				     T_pOpenStatus P_status);
 
-  //  int            set_option_global_channel (int P_Channel_Id, char *P_buf) ;
-  int            set_option_global_channel (int P_id,
-                                            char *P_args,
-                                            int *P_table) ;
 
+
+  int            set_option_global_channel (int   P_id,
+                                            char *P_args,
+                                            int  *P_table) ;
 
 
   void           close_local_channel (int P_id, int*P_table);
@@ -104,6 +117,8 @@ public:
 
   C_ProtocolFrame *get_channel_protocol (int P_id) ;
 
+  bool            reconnect() ;
+
 protected:
 private:
 
@@ -118,6 +133,9 @@ private:
 
   C_Transport        **m_transport_table ;
   int                  m_nb_transport    ;
+
+  bool                 m_reconnect ;
+  C_SemaphoreTimed    *m_sem_reconnect ;
 
   void create_context_channel () ;
   void create_transport_table (C_TransportControl *P_transport_ctrl) ;

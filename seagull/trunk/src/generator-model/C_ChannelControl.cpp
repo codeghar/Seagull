@@ -35,6 +35,8 @@
 #define XML_CHANNEL_PROTOCOL     (char*)"protocol"
 #define XML_CHANNEL_TRANSPORT    (char*)"transport"
 #define XML_CHANNEL_OPEN         (char*)"open-args"
+#define XML_CHANNEL_RECONNECT    (char*)"reconnect"
+
 
 typedef struct _channel_info {
   int                                m_id             ;
@@ -42,6 +44,8 @@ typedef struct _channel_info {
   char                              *m_protocol_name  ;
   char                              *m_transport_name ;
   char                              *m_open_args      ;
+  char                              *m_name           ;
+  char                              *m_reconnect      ;
 } T_ChannelInfo, *T_pChannelInfo ;
 typedef list_t<T_pChannelInfo> T_ChannelInfoList ;
 
@@ -59,7 +63,13 @@ C_ChannelControl::C_ChannelControl() {
   m_ctxt_to_channel_table = NULL ;
   m_transport_table = NULL ;
   m_nb_transport = 0 ;
+  m_reconnect = false ;
+  m_sem_reconnect = NULL ;
   GEN_DEBUG(1, "C_ChannelControl::C_ChannelControl() end");
+}
+
+bool C_ChannelControl::reconnect() {
+  return (m_reconnect);
 }
 
 C_ChannelControl::~C_ChannelControl() {
@@ -84,6 +94,7 @@ C_ChannelControl::~C_ChannelControl() {
   FREE_TABLE(m_ctxt_to_channel_table);
   m_nb_transport = 0 ;
   FREE_TABLE(m_transport_table);
+  DELETE_VAR(m_sem_reconnect);
   GEN_DEBUG(1, "C_ChannelControl::~C_ChannelControl() end");
 }
 
@@ -99,7 +110,8 @@ bool C_ChannelControl::fromXml (C_XmlData *P_data,
   char                         *L_name, 
                                *L_open_args,
                                *L_transport_name,
-                               *L_protocol_name ;
+                               *L_protocol_name ,
+                               *L_reconnect;
   int                           L_channel_id ;
   T_ChannelType                 L_channel_type ;
   T_pChannelInfo                L_channel_info = NULL ;
@@ -160,6 +172,9 @@ bool C_ChannelControl::fromXml (C_XmlData *P_data,
 		      L_ret = false ;
 		      break ;
 		    }
+
+		    L_reconnect = L_subSection->find_value(XML_CHANNEL_RECONNECT);
+
 		    L_transport_name = L_subSection->find_value(XML_CHANNEL_TRANSPORT);
 		    if (L_transport_name == NULL) {
 		      GEN_ERROR(E_GEN_FATAL_ERROR, "[" 
@@ -219,7 +234,8 @@ bool C_ChannelControl::fromXml (C_XmlData *P_data,
 		    L_channel_info->m_protocol_name = L_protocol_name ; 
 		    L_channel_info->m_transport_name = L_transport_name ; 
 		    L_channel_info->m_type = L_channel_type ;
-
+		    L_channel_info->m_name = L_name ;
+		    L_channel_info->m_reconnect = L_reconnect ;
 		    L_channel_info_list.push_back(L_channel_info);
 		    m_name_map
 		      ->insert(T_TransportNameMap::value_type(L_name,
@@ -260,7 +276,14 @@ bool C_ChannelControl::fromXml (C_XmlData *P_data,
 	    L_data->m_protocol = P_protocol_ctrl->get_protocol(L_channel_info->m_protocol_name) ;
 	    L_data->m_transport = P_transport_ctrl->get_transport(L_channel_info->m_transport_name) ;
 	    L_data->m_open_args = L_channel_info->m_open_args ;
-	    L_data->m_open_status = false ;
+	    L_data->m_open_status = E_CHANNEL_CLOSED ;
+
+	    L_data->m_reconnect = (L_channel_info->m_reconnect == NULL) ?
+	      false : (strcmp(L_channel_info->m_reconnect, "yes") == 0) ;
+
+	    if (L_data->m_reconnect == true) { m_reconnect = true ; }
+
+	    L_data->m_name = L_channel_info->m_name ;
 
 	    if (L_data->m_type == E_CHANNEL_GLOBAL) {
 	      m_nb_global_channel++ ;
@@ -308,6 +331,8 @@ bool C_ChannelControl::fromXml (C_XmlData *P_data,
     create_context_channel () ;
     create_transport_table (P_transport_ctrl) ;
   }
+
+  NEW_VAR(m_sem_reconnect, C_SemaphoreTimed(1));
   
   GEN_DEBUG(1, "C_ChannelControl::fromXml() end ret=" << L_ret);
   return (L_ret);
@@ -346,6 +371,58 @@ int C_ChannelControl::get_channel_id (char *P_name) {
   return (L_ret) ;
 }
 
+
+char* C_ChannelControl::get_channel_name (int P_id) {
+  return (m_channel_table[P_id]->m_name);
+}
+
+int C_ChannelControl::check_global_channel () {
+  int            L_ret = 0 ;
+  T_OpenStatus   L_status  ;
+  int            L_i       ;
+  T_pChannelData L_data    ;
+
+  for(L_i=0; L_i < m_channel_table_size; L_i++) {
+    L_data = m_channel_table[L_i] ;
+
+    if (L_data->m_type == E_CHANNEL_GLOBAL) {
+      if (L_data->m_open_status == E_CHANNEL_CLOSED) {
+	if (L_data->m_reconnect == true) {
+
+	  // wait
+	  m_sem_reconnect->P();
+	  m_sem_reconnect->P();
+
+	  L_data->m_open_id
+	    = (L_data->m_transport)
+	    ->open(L_data->m_id,
+		   L_data->m_open_args, 
+		   &L_status,
+		   L_data->m_protocol);
+	  GEN_DEBUG(0, "open channel [" << L_i << "] with [" 
+		    << L_data->m_open_id << "]");
+	  
+	  switch (L_status) {
+	  case E_OPEN_OK:
+	    L_ret ++ ; 
+	    L_data->m_open_status = E_CHANNEL_OPENED ;
+	    break ;
+	  case E_OPEN_DELAYED:
+	    L_data->m_open_status = E_CHANNEL_OPEN_IN_PROGESS ;
+	    break ;
+	  default:
+	    break;
+	  }
+	}
+      } else {
+	L_ret ++ ;
+      }
+    }
+  }
+  return (L_ret);
+}
+
+
 int C_ChannelControl::open_global_channel () {
 
   int            L_ret = 0 ;
@@ -355,7 +432,7 @@ int C_ChannelControl::open_global_channel () {
 
   for(L_i=0; L_i < m_channel_table_size; L_i++) {
     L_data = m_channel_table[L_i] ;
-    if ((L_data->m_open_status == false)
+    if ((L_data->m_open_status == E_CHANNEL_CLOSED)
 	&& (L_data->m_type == E_CHANNEL_GLOBAL)) {
       L_data->m_open_id
 	= (L_data->m_transport)
@@ -365,16 +442,24 @@ int C_ChannelControl::open_global_channel () {
 	       L_data->m_protocol);
       GEN_DEBUG(0, "open channel [" << L_i << "] with [" 
 		<< L_data->m_open_id << "]");
-      
-      if (L_status == E_OPEN_OK) { 
+
+      switch (L_status) {
+      case E_OPEN_OK:
 	L_ret ++ ; 
-	L_data->m_open_status = true ;
+	L_data->m_open_status = E_CHANNEL_OPENED ;
+	break ;
+      case E_OPEN_DELAYED:
+	//	L_ret ++ ; 
+	L_data->m_open_status = E_CHANNEL_OPEN_IN_PROGESS ;
+	break ;
+      default:
+	break;
       }
-   
     }
   }
   return (L_ret);
 }
+
 
 int C_ChannelControl::open_local_channel (int P_id,
                                           char *P_args,
@@ -388,7 +473,7 @@ int C_ChannelControl::open_local_channel (int P_id,
   if (P_id < m_channel_table_size) {
     L_data = m_channel_table [P_id] ;
 
-    if ((L_data->m_open_status == false)
+    if ((L_data->m_open_status == E_CHANNEL_CLOSED)
 	&& (L_data->m_type == E_CHANNEL_LOCAL)) {
       if (P_args != NULL ) {
         L_args = P_args ;
@@ -542,22 +627,34 @@ void C_ChannelControl::reset_channel(int *P_table) {
 void C_ChannelControl::opened(int P_id, int P_open_id) {
   if (m_channel_table[P_id]->m_open_id == P_open_id) {
     m_channel_table[P_id]->m_open_status 
-      = true ;
+      = E_CHANNEL_OPENED ;
   }
 }
 
 void C_ChannelControl::open_failed(int P_id, int P_open_id) {
-  if (m_channel_table[P_id]->m_open_id == P_open_id) {
-    m_channel_table[P_id]->m_open_status 
-      = false ;
-    GEN_ERROR(E_GEN_FATAL_ERROR, "Open channel failed");
+  T_pChannelData L_data = m_channel_table[P_id] ;
+
+  if (L_data) {
+    if (L_data->m_open_id == P_open_id) {
+      L_data->m_open_status 
+	= E_CHANNEL_CLOSED ;
+      (L_data->m_transport)
+	->close (L_data->m_open_id) ;
+      GEN_ERROR(E_GEN_FATAL_ERROR, "Open channel failed");
+    }
   }
 }
 
 void C_ChannelControl::closed(int P_id, int P_open_id) {
-  if (m_channel_table[P_id]->m_open_id == P_open_id) {
-    m_channel_table[P_id]->m_open_status 
-      = false ;
+
+  T_pChannelData L_data = m_channel_table[P_id] ;
+
+  if (L_data) {
+    if (L_data->m_open_id == P_open_id) {
+      L_data->m_open_status = E_CHANNEL_CLOSED ;
+      (L_data->m_transport)
+	->close (L_data->m_open_id) ;
+    }
   }
 }
 
@@ -569,12 +666,11 @@ int C_ChannelControl::opened () {
 
   for(L_i=0; L_i < m_channel_table_size; L_i++) {
     L_data = m_channel_table[L_i] ;
-    if ((L_data->m_open_status == true)
+    if ((L_data->m_open_status == E_CHANNEL_OPENED)
 	&& (L_data->m_type == E_CHANNEL_GLOBAL)) {
       L_nb ++ ;
     }
   }
-
   return (L_nb);
 }
 
