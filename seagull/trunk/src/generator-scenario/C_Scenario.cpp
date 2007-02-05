@@ -773,6 +773,8 @@ T_exeCode C_Scenario::execute_action(T_pCmd_scenario P_pCmd,
 
   C_CommandAction*    L_current_action;
 
+  bool                L_suspend = false 
+
 
   GEN_DEBUG(1, "C_Scenario::execute_action() start");
   GEN_DEBUG(1, "C_Scenario::execute_action() P_nbActions is " << 
@@ -785,8 +787,18 @@ T_exeCode C_Scenario::execute_action(T_pCmd_scenario P_pCmd,
                                           P_callCtxt,
                                           P_msg,
                                           P_ref);
+    
+    if (L_exeCode == E_EXE_SUSPEND ) {
+      L_suspend = true;
+    }
+
 
   } // for L_i
+
+
+  if ((L_exeCode == E_EXE_NOERROR) && (L_suspend == true)) {
+    L_exeCode = E_EXE_SUSPEND ;
+  }
 
   
   GEN_DEBUG(1, "C_Scenario::execute_action() end");
