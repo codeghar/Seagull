@@ -275,13 +275,19 @@ unsigned long C_MessageBinary::decode (unsigned char *P_buffer,
   } else {
     L_ptr += L_size_to_decode ;
 
-    if(m_protocol->get_header_length_excluded () ) {
-      L_body_size 
-        = m_protocol->decode_msg_size (P_buffer, P_size) ;
-    } else {
+    if (m_protocol->get_msg_length_start_detected()) {
       L_body_size 
         = m_protocol->decode_msg_size (P_buffer, P_size)
         - L_size_to_decode + m_protocol->get_msg_length_start() ;
+    } else {
+      if(m_protocol->get_header_length_excluded () ) {
+        L_body_size 
+          = m_protocol->decode_msg_size (P_buffer, P_size) ;
+      } else {
+        L_body_size 
+          = m_protocol->decode_msg_size (P_buffer, P_size)
+          - L_size_to_decode ;
+      }
     }
 
     GEN_DEBUG(1, "C_MessageBinary::decode() body size [" << L_body_size << "]");
@@ -310,6 +316,7 @@ unsigned long C_MessageBinary::decode (unsigned char *P_buffer,
       if ((m_header_id != -1) || (m_protocol->get_header_type_id() == -1)) {
 
 	m_nb_body_values = MAX_BODY_VALUES ;
+
 	L_ret_decode = m_protocol->decode_body(L_ptr,
 					       L_body_size,
 					       m_body_val,
@@ -388,12 +395,18 @@ void C_MessageBinary::encode (unsigned char* P_buffer,
 
     if (L_error == C_ProtocolFrame::E_MSG_OK) {
       L_size_all += L_size_body ;
-      
-      if(m_protocol->get_header_length_excluded () ) { 
-        m_protocol->update_length(P_buffer, L_size_body);
+
+      if (m_protocol->get_msg_length_start_detected()) {
+        m_protocol->update_length(P_buffer, 
+                                  (L_size_all-(m_protocol->get_msg_length_start())));
       } else {
-        m_protocol->update_length(P_buffer, (L_size_all-(m_protocol->get_msg_length_start())));
+        if(m_protocol->get_header_length_excluded () ) { 
+          m_protocol->update_length(P_buffer, L_size_body);
+        } else {
+          m_protocol->update_length(P_buffer, L_size_all);
+        }
       }
+
       *P_size = L_size_all ;
     }
 

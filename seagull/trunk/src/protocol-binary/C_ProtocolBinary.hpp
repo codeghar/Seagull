@@ -75,7 +75,7 @@ public:
     unsigned long *m_size            ; 
     bool          *m_present         ; 
   } T_HeaderBodyValue, *T_pHeaderBodyValue ;
-
+  
   typedef struct _struct_body_value {
     int                 m_id      ;
     T_Value             m_value   ;
@@ -271,6 +271,7 @@ public:
 
   unsigned long get_msg_length_start ();  
 
+  bool get_msg_length_start_detected ();  
 
   bool get_complex_header_presence ();
   char* get_header_body_field_separator();
