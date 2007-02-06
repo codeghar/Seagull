@@ -1955,6 +1955,11 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
               <td>The value must correspond to one transport defined previously.</td>
             </tr>
             <tr>
+              <td>reconnect</td>
+              <td>Optional. If set to "yes", seagull tries to re-connect if the connection is lost.</td>
+              <td>yes</td>
+            </tr>
+            <tr>
               <td>open-args</td>
               <td>Arguments to specify connexion parameters.<br/>
                 <ul>
@@ -1985,7 +1990,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
                   </li>
                 </ul>
                 </td>
-                <td> </td>
+                <td> - </td>
             </tr>
           </table>
         </section>
