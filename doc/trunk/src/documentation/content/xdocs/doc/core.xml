@@ -2964,7 +2964,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
           </tr>
           <tr>
             <th>
-              <anchor id="restore-from-external"/>
+              <anchor id="restore-from-external-variable"/>
               <strong>&lt;restore-from-external&gt;</strong>
             </th>
             <th>&nbsp;</th>
