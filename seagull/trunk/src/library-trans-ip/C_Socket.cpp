@@ -106,6 +106,10 @@ size_t C_SocketWithData::send_buffer(unsigned char     *P_data,
     }
   } else {
     L_size = P_size ;
+    if(L_size != (size_t)L_rc){
+       SOCKET_ERROR(0, "Sent message is incomplete");
+    }
+
   }
     
   SOCKET_DEBUG(0, "C_TransIP::send_buffer() return " << L_size);
