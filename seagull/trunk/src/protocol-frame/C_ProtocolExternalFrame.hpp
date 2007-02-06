@@ -27,17 +27,18 @@
 #include "C_MsgBuildContextFactory.hpp"
 #include "ReceiveMsgContext.h"
 
+
 class C_ProtocolExternalFrame : public C_ProtocolFrame { 
 
 public:
 
 
-typedef struct _paramdef_t {
-  char *m_name        ; 
-  char *m_default     ;
-  char *m_mandatory   ;
-} T_ParamDef, *T_pParamDef ;
-typedef list_t<T_ParamDef> T_ParamDefList, *T_pParamDefList ;
+//  typedef struct _paramdef_t {
+//    char *m_name        ; 
+//    char *m_default     ;
+//    char *m_mandatory   ;
+//  } T_ParamDef, *T_pParamDef ;
+//  typedef list_t<T_ParamDef> T_ParamDefList, *T_pParamDefList ;
 
 
            C_ProtocolExternalFrame() { m_type = E_PROTOCOL_EXTERNAL; } ;

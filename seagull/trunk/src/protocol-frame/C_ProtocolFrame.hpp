@@ -23,6 +23,8 @@
 #include "C_MessageFrame.hpp"
 #include "list_t.hpp"
 #include "ExternalMethod.h"
+#include "ParamDefConfig.h"
+
 
 class C_ProtocolStatsFrame ;
 
@@ -45,6 +47,8 @@ typedef list_t<T_NameAndId> T_NameAndIdList, *T_pNameAndIdList ;
 class C_ProtocolFrame { // Protocol Frame Definition Class
 
 public:
+
+
 
   typedef enum _protocol_type {
     E_PROTOCOL_BINARY,
