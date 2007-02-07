@@ -401,6 +401,10 @@ DUMP</source>
             an HTTP "<code>PUT</code>" with URI: <source>http://x.y.z.t:p/seagull/command/ramp?value=n&amp;duration=d</source></li>
             <li><strong>Stop</strong>: to ask seagull to quit . This is done by sending
             an HTTP "<code>PUT</code>" with URI: <source>http://x.y.z.t:p/seagull/command/stop</source></li>
+            <li><strong>Pause</strong>: to ask seagull to pause/restart the traffic. This is done by sending
+            an HTTP "<code>PUT</code>" with URI: <source>http://x.y.z.t:p/seagull/command/pause</source></li>
+            <li><strong>Resume</strong>: to ask seagull to resume the traffic. This is done by sending
+            an HTTP "<code>PUT</code>" with URI: <source>http://x.y.z.t:p/seagull/command/resume</source></li>
           </ul>
           </section>
          </section>
