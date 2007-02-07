@@ -653,7 +653,7 @@ End of scenario
    <p>Some examples:</p>
    <ul>
     <li>init-args="flavour=AAA": for an OCSS7 3.x+ with AAA (ANSI) flavour</li>
-    <li>init-args="flavour=WBB;path=/opt/HP-AIN/SS7_WBB/sharedlib;flavour=WBB;library=libSS7util.sl": for an OCSS7 2.2 with WBB (ITU) flavour</li>
+    <li>init-args="path=/opt/HP-AIN/SS7_WBB/sharedlib;flavour=WBB;library=libSS7util.sl": for an OCSS7 2.2 with WBB (ITU) flavour</li>
    </ul>
 	 <p>Then you can open one channel for the transport that you have defined.</p>
 	 <note>You can open only one TCAP channel !</note>
