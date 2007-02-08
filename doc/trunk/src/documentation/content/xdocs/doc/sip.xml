@@ -480,7 +480,7 @@ Header
          CSeq: 1 INVITE
          Subject: SIP will be discussed, too
          Content-Type: application/sdp
-         Content-Length: 187]]&gt
+         Content-Length: 187]] >
      <!-- body -->
      <![CDATA[v=0
               o=user1 53655765 2353687637 IN IP4 155.208.221.173
@@ -490,7 +490,7 @@ Header
               c=IN IP4 155.208.221.173
               t=0 0
               m=audio 3456 RTP/AVP 0
-         a=rtpmap:0 PCMU/8000]]&gt
+         a=rtpmap:0 PCMU/8000]] >
      </message>
      <action>
        <!-- Store completed fields for future msg-->
@@ -503,7 +503,11 @@ Header
     </source>
     <p>The external data file looks like that:</p>
     <source><![CDATA[    "string" ; "string"                                                                                                   ; "string" ; "string"             ; "string"                             ; "string"                             ; "string" ;
-    "joe"    ; "Digest realm=\"cosims.net\", nonce=\"b8Q2u9ZxyE3VKg6ZD3P07Wo6myth4AAArn7NvQlWWR4=\", algorithm=AKAv1-MD5" ; "INVITE" ; "sip:127.0.0.1:5061" ; "0xCDC202D5123E20F62B6D676AC72CB318" ; "0x465B5CE8B199B49FAA5F0A2EE238A6BC" ; "0xB9B9" ;]]>
+    "joe"    ; "Digest realm=\"cosims.net\", nonce=\"b8d2v9ZxfE3VHg6ZD3P87Wo1mfth4BBArn7VFQlWWR4=\", algorithm=AKAv1-MD5" ; "INVITE" ; "sip:127.0.0.1:5061" ; "0xCDC2458FEB3E20F62B6D676AC72CB318" ; "0x465B5CE8B199B4BA48D2B72EE238A6BC" ; "0xB9A3" ;
+    "xxxxxx" ; "Digest xxxxxxxx"                                                                                        " ; "XXXXXX" ; "xxxxxxxxxxxxxxxxxx" ; "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" ; "0xAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" ; "0xAAAA" ;
+    ...
+    ...]]>
+    
     </source>
     </section>
   </body>

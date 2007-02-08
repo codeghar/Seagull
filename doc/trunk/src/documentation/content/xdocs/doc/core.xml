@@ -2364,6 +2364,30 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
           </table>
         </section>
       </section>
+      <section id="config_param">
+        <title>Configuration parameters</title>
+        <p>For text protocol, it is possible to define configuration parameters. They are set in the configuration 
+        file and the value of the parameter can be used in the scenario.<br/>
+        In the configuration file, the configuration parameters are defined:
+        <source><![CDATA[<define entity="config-param"  name="]]><strong>param_ip</strong><![CDATA[" value="127.0.0.1"></define>
+<define entity="config-param"  name="]]><strong>service</strong><![CDATA["  value="schooler"></define>]]></source>
+        
+        </p>
+        <p>In the scenario, the value is restored in the message (example for SIP protocol):
+        <source><![CDATA[<message>
+  <![CDATA[INVITE sip:]]><strong>$(service)</strong><![CDATA[@]]><strong>$(param_ip)</strong><![CDATA[ SIP/2.0
+      Via: SIP/2.0/UDP north.east.isi.edu
+      From: Mark Handley <sip:mjh@isi.edu>
+      To: Eve Schooler <sip:schooler@caltech.edu>
+      Call-ID: 2963313058@north.east.isi.edu
+      CSeq: 1 INVITE
+      Subject: SIP will be discussed, too
+      Content-Type: application/sdp
+      Content-Length: 187 ]] >
+</message>
+      ]]></source>
+        </p>
+      </section>
       <section id="scenario_ref">
         <title>Scenario reference</title>
         <p>This section is the reference for Seagull scenarios.</p>
