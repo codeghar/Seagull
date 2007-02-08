@@ -1165,6 +1165,15 @@ Seagull will look at parameters indicated by
       </section>
     </section>
     <p class="pageBreakBefore"></p>
+    <section id="Authentication">
+    <title>Authentication</title>
+    <p>Authentication has been introduced in Seagull. Digest/MD5 and Digest/AKA are both supported. <br/>
+    To use it, an "external method" must be defined in the dictionary (refer to <a href="#external-method">"external-method"</a>) 
+    and the method must be defined in the set value of the field to be encoded (refer to <a href="#action_set-value">"set-value"</a>).
+    See <a href="sip.html#sip_authentication">SIP authentication</a> for further details.
+    </p>
+    </section>
+    <p class="pageBreakBefore"></p>
     <section id="statistics">
       <title>Statistics</title>
       <p>Statistics is an important part of a performance test tool. Seagull
@@ -1812,7 +1821,9 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
           <title>external-method</title>
           <p>"external-method" section contains the methods to be used to encode fields. It is composed of several
           "def-method" sections. The concerning fields must refer to this method in the action 'set-value' in the 
-          scenario with the attribut 'method' (see "<a href="#action_set-value">set_value</a>" action)</p>
+          scenario with the attribut 'method' (see "<a href="#action_set-value">set_value</a>" action). 
+          For now, "crypto_method" from "libtrans_iptls.so" library is the only available method.<br/>
+          An example is described on Protocol:sip : <a href="sip.html#sip_authentication">SIP authentication</a>. </p>
           <ul>
             <li><strong>name</strong>: name of the method (can be anything)</li>
             <li><strong>param</strong>: indicate the library to be used as well as the function to be used<br/> 

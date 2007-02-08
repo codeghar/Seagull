@@ -394,5 +394,117 @@ Header
       </ul>
       <p> These points are currently in progress. </p>      
     </section>
+    <section id="sip_authentication">
+      <title>SIP authentication</title>
+      <p>Seagull supports two authentication algorithm: Digest/MD5 ("algorithm="MD5") and Digest/AKA ("algorithm="AKAv1-MD5").<br/>
+      Computing the authorization header is done through the usage of the "method" in a "set-value" action in the scenario. <br/>
+      Depending on the algorithm ("MD5" or "AKAv1-MD5"), different parameters must be passed next to the www-authentication field:</p>
+
+    <ul>
+      <li>Digest/MD5:
+        <ul>
+          <li><strong>username</strong>: username</li>
+          <li><strong>password</strong>: password</li>
+          <li><strong>auth</strong>: authentication parameters (example auth=Digest realm="cosims.net", nonce="b8Q2u9ZxyE3VKg6ZD3P07Wo6myth4AAArn7NvQlWWR4=", algorithm=MD5)</li>
+          <li><strong>method</strong>: SIP method (example method=INVITE)</li>
+          <li><strong>uri</strong>: Uniform Resource Identifier (example uri=sip:127.0.0.1:5061)</li>
+        </ul>
+      </li>
+      <li>Digest/AKA:
+        <ul>
+          <li><strong>username</strong>: username (example : username=joe)</li>
+          <li><strong>aka_k</strong>: Permanent secret key (example : aka_k=0x465B5CE8B199B49FAA5F0A2EE238A6BC)</li>
+          <li><strong>aka_op</strong>: OPerator variant key (example : aka_op=0xCDC202D5123E20F62B6D676AC72CB318)</li>
+          <li><strong>aka_amf</strong>: Authentication Management Field (indicates the algorithm and key in use) (example aka_amf=0xB9B9)</li>
+          <li><strong>auth</strong>: authentication parameters (example auth=Digest realm="cosims.net", nonce="b8Q2u9ZxyE3VKg6ZD3P07Wo6myth4AAArn7NvQlWWR4=", algorithm=AKAv1-MD5)</li>
+          <li><strong>method</strong>: SIP method (example method=INVITE)</li>
+          <li><strong>uri</strong>: Uniform Resource Identifier (example uri=sip:127.0.0.1:5061)</li>
+        </ul>
+      </li>
+    </ul>
+    <p>In case of authentication (example for AKA):</p>
+    <ul>
+    <li>Add, in the dictionary, the external method:</li>
+    <source><![CDATA[<external-method>
+   <defmethod name="authentication"
+              param="lib=libtrans_iptls.so;function=crypto_method">
+   </defmethod>
+</external-method>]]></source>
+    For now, "crypto_method" is the only available method.
+    <br/><br/>
+    <li> and the field "www-authenfication" in the header:</li>
+    <source><![CDATA[<fielddef name="www-authentication"
+             format="www-authentication: $(field-value)\r\n">
+     <regexp name="auth"
+             expr="[wW][wW][wW]-[aA][uU][tT][hH][eE][nN][tT][iI][cC][aA][tT][iI][oO][nN][    ]*:[  ]*([!-}]*).*$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+    </fielddef>]]></source>
+    <li>then in the scenario, set the field "www-authentication" in the pre-action:</li>
+    <source><![CDATA[<set-value name="www-authentication" method="authentication"
+                format="username=$(USER_AUTH);aka_op=$(OP-AUTH);aka_k=$(K-AUTH);aka_amf=$(AMF-AUTH);auth=$(AUTH-AUTH);method=$(METHOD-AUTH);uri=$(URI-AUTH)"></set-value>]]>
+    </source>
+    The value of "USER_AUTH", OP-AUTH, K-AUTH, AMF-AUTH, AUTH-AUTH, METHOD-AUTH and URI-AUTH can be set with external data from a file with the action "restore-from-external"
+    or from a previous message with the action "store".
+    
+    </ul>
+    <br/>
+    <p><strong>Example</strong> of scenario which get external data from a file:</p>
+<source><![CDATA[ <send channel="channel-1">
+     <action>
+     <!-- For each new call, increment the callid counter -->
+       <inc-counter name="callid-counter"> </inc-counter>
+       <set-value name="call-id"
+                  format="$(callid-counter)@255.255.255.255"></set-value>
+        
+       <!-- Restore data for authentication -->
+       <restore-from-external field="0" name="USER-AUTH"></restore-from-external>
+       <restore-from-external field="1" name="AUTH-AUTH"></restore-from-external>
+       <restore-from-external field="2" name="METHOD-AUTH"></restore-from-external>
+       <restore-from-external field="3" name="URI-AUTH"></restore-from-external>
+       <restore-from-external field="4" name="OP-AUTH"></restore-from-external>
+       <restore-from-external field="5" name="K-AUTH"></restore-from-external>
+       <restore-from-external field="6" name="AMF-AUTH"></restore-from-external>
+       <set-value name="www-authentication" method="authentication"
+                  format="username=$(USER-AUTH);aka_op=$(OP-AUTH);aka_k=$(K-AUTH);aka_amf=$(AMF-AUTH);auth=$(AUTH-AUTH);method=$(METHOD-AUTH);uri=$(URI-AUTH)"></set-value>
+
+     </action>
+     <message>
+     <!-- header -->
+     <! [ CDATA[INVITE sip:schooler@cs.caltech.edu SIP/2.0
+         Via: SIP/2.0/UDP north.east.isi.edu
+         From: Mark Handley <sip:mjh@isi.edu>
+         To: Eve Schooler <sip:schooler@caltech.edu>
+         Call-ID: 2963313058@north.east.isi.edu
+         CSeq: 1 INVITE
+         Subject: SIP will be discussed, too
+         Content-Type: application/sdp
+         Content-Length: 187]]&gt
+     <!-- body -->
+     <![CDATA[v=0
+              o=user1 53655765 2353687637 IN IP4 155.208.221.173
+              s=Mbone Audio
+              i=Discussion of Mbone Engineering Issues
+              e=mbone@somewhere.com
+              c=IN IP4 155.208.221.173
+              t=0 0
+              m=audio 3456 RTP/AVP 0
+         a=rtpmap:0 PCMU/8000]]&gt
+     </message>
+     <action>
+       <!-- Store completed fields for future msg-->
+       <store name="SID" entity="call-id"></store>
+       <store name="VIA" entity="via"></store>
+       <store name="FROM" entity="from"></store>
+       <store name="TO" entity="to"></store>
+       </action>
+   </send>]]>
+    </source>
+    <p>The external data file looks like that:</p>
+    <source><![CDATA[    "string" ; "string"                                                                                                   ; "string" ; "string"             ; "string"                             ; "string"                             ; "string" ;
+    "joe"    ; "Digest realm=\"cosims.net\", nonce=\"b8Q2u9ZxyE3VKg6ZD3P07Wo6myth4AAArn7NvQlWWR4=\", algorithm=AKAv1-MD5" ; "INVITE" ; "sip:127.0.0.1:5061" ; "0xCDC202D5123E20F62B6D676AC72CB318" ; "0x465B5CE8B199B49FAA5F0A2EE238A6BC" ; "0xB9B9" ;]]>
+    </source>
+    </section>
   </body>
 </document>
