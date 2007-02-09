@@ -598,13 +598,6 @@ Seagull will look at parameters indicated by
   </table>
         <p>When a message is received and cannot be matched to
         an known session-id, then it is treated as a "new (incoming) call".</p>
-        <p></p>
-        <warning>Limitations: Following the session-id principles, multi-channel
-        scenarios are currently limited. For example, a scenario where the
-        first command is a message that is sent on channel-1 and the
-        second command is a message received on channel-2 will not be workable in
-        Seagull (this is planned to be addressed by a new feature that will
-        allow to describe how to map calls by a generic mapping method)</warning>
       </section>
       <section>
         <title>Transport protocols and channels</title>
@@ -677,6 +670,19 @@ Seagull will look at parameters indicated by
         </ul>
         <p/>
         <p>For more details, see "<a href="#transport_config">Transport Configuration</a>".</p>
+      </section>
+      <section>
+        <title>Multi-channels</title>
+        <p>Seagull supports several channels in one single scenario. This means that you can create
+	a scenario that will send a message on channel 1, receive the answer, on channel 1, then send a message
+	on channel 2 and receive the message on channel 2.</p>
+        <p></p>
+        <warning>Limitations: Following the session-id principles, multi-channel
+        scenarios are currently limited. For example, a scenario where the
+        first command is a message that is sent on channel-1 and the
+        second command is a message received on channel-2 will not be workable in
+        Seagull (this is planned to be addressed by a new feature that will
+        allow to describe how to map calls by a generic mapping method)</warning>
       </section>
       <section id="traffic_models">
       <title>Traffic Models</title>
