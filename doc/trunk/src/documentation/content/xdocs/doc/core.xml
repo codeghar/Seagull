@@ -1872,8 +1872,13 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
         <title>Generic configuration reference</title>
         <section id="transport_config">
           <title>Transport configuration</title>
+          <warning>The sending segmentation is not implemented yet in Seagull. If the message cannot send entirely, 
+          a log is put on the log-file to indicate it. No other particular treaments are done. <br/> 
+          The receiving segmentation is implemented. If a message is not complete, it is stored and 
+          the next buffer read is push at the end of stored 
+          incomplete message. </warning>
           <p>The following table is a list of transport channel parameters, that can be present in
-        the <a href="#config_generic">generic configuration file</a>.</p>
+          the <a href="#config_generic">generic configuration file</a>.</p>
           <anchor id="ref_transport"/>
           <table>
             <caption>List of transport channel parameters (transport entity)</caption>
