@@ -33,7 +33,7 @@ See http://xml.apache.org/forrest/linking.html for more info
 <!--     <rawbin label='Protocol: raw binary' href='rawbinary.html' /> -->
      <sync label='Protocol: sync' href='sync.html' />
      <faq label='FAQ' href='faq.html' />
-     <core label='Developer' href='dev.html' />
+     <core label='Developer' href='dev/' />
   </doc>
 <!--
   <all label="Whole site">
