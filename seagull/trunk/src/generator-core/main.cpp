@@ -17,6 +17,98 @@
  *
  */
 
+/**
+  * \mainpage Seagull code documentation
+  * Go back to user documentation: http://gull.sf.net/doc/
+  *
+  * \section sec_intro Introduction
+  * The purpose of this documentation is to explain Seagull interns. 
+  * It is a summary to help developers make their way through Seagull and 
+  * start contributing.
+  * 
+  * \section sec_modules Main modules
+  * - C_Generator: core of Seagull. Contains the main functions.
+  * - C_TrafficModel: internal model of Seagull to control the way new scenarios 
+  * are created. 
+  * - C_CallContext: Management of the call context
+  * - C_CallControl: Management of the calls. Pause, restart traffic, set call rate...  
+  * - C_ReadControl: Takes care of reading the protocol events, keyboard events 
+  * and associated scheduling.
+  * - generator-scenario: C_ScenarioControl provides methods relating to the 
+  * execution of the scenario. C_Scenario takes care of reading and 
+  * interpreting scenarios.
+  * - ProtocolData.cpp: definition of generic data types (string, number, 
+  * number64, ...) used by Seagull, as well as associated operator overloads.
+  * - C_ProtocolFrame: virtual definition of a protocol and its messages. It 
+  * contains the only objects that will be used by the generator
+  * - C_Transport: generic definition of a transport
+  * - C_CommandAction: Class from which derives all classes implementing an
+  * action. Start here if you want to add one.
+  * - C_DisplayObject: Class that displays various screens (statistics, help,
+  * traffic, ...)
+  * - 
+  * 
+  * \section sec_other_modules Other modules
+  * - common directory: contains all the .h files to adapt some system includes 
+  * to the target compilation platform
+  * - C_DataLogRTDistrib: deals with response time logs (csv file)
+  * - exe-env directory: execution environment for each protocol
+  * - C_ExternalDataControl: manage external data files, to insert data into 
+  * scenario messages during the call
+  * - generator-common: utils for the tool (buffer management, id, ...)
+  * - C_TransIP: IP v4 & v6 transport transport; daughter class of C_Transport
+  * - C_TransSCTP: SCTP transport library; daughter class of C_Transport
+  * - C_TransIPTLS: TLS transport; daughter class of C_TransIP
+  * - C_TransOCTcap32: OpenCall TCAP API transport; daughter class of C_Transport
+  * - C_ProtocolBinary: binary protocol definition (e.g. Diameter); daughter 
+  * class of C_ProtocolBinaryFrame, C_MessageFrame
+  * - statistics: stats management
+  * - C_XmlData and C_XmlParser to parse the xml files (dictionary, scenario 
+  * and configuration 
+  * file)
+  *
+  * \section sec_threads Threads
+  * There are 5 threads in Seagull:
+  *
+  * - One thread that handles the whole traffic,
+  * - One thread for the keyboard,
+  * - One thread for the tool display,
+  * - One thread for the logs,
+  * - One thread for the statistics.
+  * They are handled in generator-core module
+  *
+  * \section sec_proto_msg Protocol and messages
+  *
+  * - To implement a text protocol, you need to create a new implementation of 
+  * C_ProtocolFrame and C_MessageFrame like C_ProtocolBinary and C_MessageBinary
+  * - In those classes, you implement the management of the XML tags and the 
+  * protocol definition
+  * - You need to add them in C_ProtocolControl to be instantiated by the tool
+  *
+  * \section sec_xmlparse XML parsing
+  *
+  * - Handled in module xml-parser
+  * - XML files are parsed by C_XmlParser
+  * - XML data are represented as a tree of elements (based on stl types): 
+  * (<TAG (FIELD=“VALUE”)*> <\TAG>)*
+  * - Useful functions in C_XmlData allows to get the name of a tag, retrieve 
+  * the value of a field or the list (stl) of element under one element.
+  *
+  * \section sec_channel Channel creation
+  *
+  * - C_TransIP (module library-trans-ip) implements the transport, based on 
+  * virtual object C_Transport (module transport-frame)
+  * Done/Declared in conf file.
+  * - Channel = link between one protocol and one transport, with an open 
+  * command for the transport
+  *
+  * \section sec_multichan Multi-channel policy
+  *
+  * - Automatic session based: possible to open several channels (using same 
+  * or different protocols), but only the first channel used can be server.
+  * 
+  */
+ 
 #include "Utils.hpp"
 #include "C_Generator.hpp"
 #include "GeneratorTrace.hpp"

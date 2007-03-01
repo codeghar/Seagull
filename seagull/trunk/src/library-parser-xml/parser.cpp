@@ -23,6 +23,9 @@
 #include "string_t.hpp"
 #include "Utils.hpp"
 
+/** Method to parse XML like payload.
+ * 
+ */
 C_ProtocolFrame::T_MsgError parse_xml (char   *P_buf,
                                        size_t *P_size,
                                        char   *P_buf_header,

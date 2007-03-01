@@ -43,40 +43,45 @@ typedef struct _struct_name_id {
 } T_NameAndId, *T_pNameAndId ;
 typedef list_t<T_NameAndId> T_NameAndIdList, *T_pNameAndIdList ;
 
-
+/**
+ * Protocol frame class.
+ */
 class C_ProtocolFrame { // Protocol Frame Definition Class
 
 public:
 
 
-
+  /** Possible protocol types */
   typedef enum _protocol_type {
-    E_PROTOCOL_BINARY,
-    E_PROTOCOL_EXTERNAL,
-    E_PROTOCOL_TEXT,
-    E_PROTOCOL_UNKNOWN
+    E_PROTOCOL_BINARY, /** Used by Diameter, Radius and the like */
+    E_PROTOCOL_EXTERNAL, /** Used by OpenCall TCAP. Can be used for any external API */
+    E_PROTOCOL_TEXT, /** Used by SIP, HTTP, XCAP, H248 ascii and any "Ascii" based protocol */
+    E_PROTOCOL_UNKNOWN /** Unused */
   } T_ProtocolType, *T_pProtocolType ;
 
+  /** Error message code */
   typedef enum _msg_error_code {
     E_MSG_OK = 0,
-    E_MSG_ERROR_DECODING,
-    E_MSG_ERROR_DECODING_SIZE_LESS,
-    E_MSG_ERROR_ENCODING,
-    E_MSG_EXTERNAL_ERROR, // used for EXTERNAL protocol type
-    E_MSG_INTERNAL_ERROR  // used for EXTERNAL protocol type
+    E_MSG_ERROR_DECODING, /** Not able to decode the message */
+    E_MSG_ERROR_DECODING_SIZE_LESS, /** Need more data to decode the message. This is the case when a message is not received in one recv */
+    E_MSG_ERROR_ENCODING, /** Not able to encode the message*/
+    E_MSG_EXTERNAL_ERROR, /** used for EXTERNAL protocol type */
+    E_MSG_INTERNAL_ERROR  /** used for EXTERNAL protocol type */
   } T_MsgError, *T_pMsgError ;
 
 
            C_ProtocolFrame() {m_type = E_PROTOCOL_UNKNOWN; m_name=NULL; m_stats = NULL;} ;
   virtual ~C_ProtocolFrame() {} ;
 
+  /** Return the type of the protocol */
   T_ProtocolType get_type() { return (m_type); }
 
-
+  /** Create a new message */
   virtual C_MessageFrame* create_new_message (C_MessageFrame *P_msg) = 0 ;
 
   // void * for P_Xml parameter: 
   //     Xml internal format not exported for transport  
+  /** Create a new message */
   virtual C_MessageFrame* create_new_message (void               *P_xml,
 					      T_pInstanceDataList P_list,
 					      int                *P_nb_body_value) = 0 ;

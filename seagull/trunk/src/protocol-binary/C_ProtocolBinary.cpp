@@ -4800,6 +4800,12 @@ C_MessageFrame* C_ProtocolBinary::decode_message(unsigned char *P_buffer,
   return (L_msg);
 }
 
+/** Encode a binary message 
+  * \param P_msg points to the message the message to be coded
+  * \param P_buffer The destination buffer
+  * \param P_buffer_size The destination buffer size
+  * \return E_MSG_OK if OK
+  */
 C_ProtocolFrame::T_MsgError 
 C_ProtocolBinary::encode_message(C_MessageFrame *P_msg,
 				 unsigned char  *P_buffer,
