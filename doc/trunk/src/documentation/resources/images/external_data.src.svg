@@ -12,13 +12,15 @@
    height="744.09448"
    id="svg1921"
    sodipodi:version="0.32"
-   inkscape:version="0.44"
+   inkscape:version="0.45pre1"
    version="1.0"
-   sodipodi:docbase="C:\Documents and Settings\olja\My Documents\Test-Infra\tools\Seagull\SVN\doc\trunk\src\documentation\resources\images"
+   sodipodi:docbase="C:\Documents and Settings\olja\My Documents\TESTINFRA\tools\Seagull\SVN\doc\trunk\src\documentation\resources\images"
    sodipodi:docname="external_data.src.svg"
-   inkscape:export-filename="C:\Documents and Settings\olja\My Documents\Test-Infra\tools\Seagull\SVN\doc\trunk\src\documentation\resources\images\external_data.png"
+   inkscape:export-filename="C:\Documents and Settings\olja\My Documents\TESTINFRA\tools\Seagull\SVN\doc\trunk\src\documentation\resources\images\external_data.png"
    inkscape:export-xdpi="90.124748"
-   inkscape:export-ydpi="90.124748">
+   inkscape:export-ydpi="90.124748"
+   inkscape:output_extension="org.inkscape.output.svg.inkscape"
+   sodipodi:modified="TRUE">
   <defs
      id="defs1923" />
   <sodipodi:namedview
@@ -38,8 +40,8 @@
      inkscape:current-layer="layer1"
      inkscape:window-width="1280"
      inkscape:window-height="908"
-     inkscape:window-x="-4"
-     inkscape:window-y="-4" />
+     inkscape:window-x="0"
+     inkscape:window-y="58" />
   <metadata
      id="metadata1926">
     <rdf:RDF>
@@ -196,47 +198,47 @@
            x="59.153954"
            y="49.235645" /></flowRegion><flowPara
          id="flowPara1969"
-         style="font-family:Courier New;font-weight:bold">&lt;send channel=&quot;channel-1&quot;&gt;</flowPara><flowPara
+         style="font-weight:bold;font-family:Courier New">&lt;send channel=&quot;channel-1&quot;&gt;</flowPara><flowPara
          id="flowPara1971"
-         style="font-family:Courier New;font-weight:bold">  &lt;action&gt;</flowPara><flowPara
+         style="font-weight:bold;font-family:Courier New">  &lt;action&gt;</flowPara><flowPara
          id="flowPara1973"
-         style="font-family:Courier New;font-weight:bold">    &lt;set-value name=&quot;uid&quot; format=&quot;$(client-uid-counter)&quot;&gt;&lt;/set-value&gt;</flowPara><flowPara
+         style="font-weight:bold;font-family:Courier New">    &lt;set-value name=&quot;uid&quot; format=&quot;$(client-uid-counter)&quot;&gt;&lt;/set-value&gt;</flowPara><flowPara
          id="flowPara1975"
-         style="font-family:Courier New;font-weight:bold">    &lt;restore-from-external field=&quot;1&quot; entity=&quot;TC_INVOKE&quot; sub-entity=&quot;operation-data&quot;</flowPara><flowPara
+         style="font-weight:bold;font-family:Courier New">    &lt;restore-from-external field=&quot;1&quot; entity=&quot;TC_INVOKE&quot; sub-entity=&quot;operation-data&quot;</flowPara><flowPara
          id="flowPara1981"
-         style="font-family:Courier New;font-weight:bold">     begin=&quot;5&quot; end=&quot;10&quot;&gt;&lt;/restore-from-external&gt;</flowPara><flowPara
-         style="font-family:Courier New;font-weight:bold"
+         style="font-weight:bold;font-family:Courier New">     begin=&quot;5&quot; end=&quot;11&quot;&gt;&lt;/restore-from-external&gt;</flowPara><flowPara
+         style="font-weight:bold;font-family:Courier New"
          id="flowPara2013">  &lt;/action&gt;</flowPara><flowPara
          id="flowPara1983"
-         style="font-family:Courier New;font-weight:bold">  &lt;primitive name=&quot;TC_BEGIN&quot;&gt;</flowPara><flowPara
+         style="font-weight:bold;font-family:Courier New">  &lt;primitive name=&quot;TC_BEGIN&quot;&gt;</flowPara><flowPara
          id="flowPara1985"
-         style="font-family:Courier New;font-weight:bold">    &lt;component name=&quot;TC_INVOKE&quot; instance=&quot;InitialDP-data&quot;</flowPara><flowPara
+         style="font-weight:bold;font-family:Courier New">    &lt;component name=&quot;TC_INVOKE&quot; instance=&quot;InitialDP-data&quot;</flowPara><flowPara
          id="flowPara1987"
-         style="font-family:Courier New;font-weight:bold">      class=&quot;2&quot;</flowPara><flowPara
+         style="font-weight:bold;font-family:Courier New">      class=&quot;2&quot;</flowPara><flowPara
          id="flowPara1989"
-         style="font-family:Courier New;font-weight:bold">      timeout=&quot;60000&quot;</flowPara><flowPara
+         style="font-weight:bold;font-family:Courier New">      timeout=&quot;60000&quot;</flowPara><flowPara
          id="flowPara1991"
-         style="font-family:Courier New;font-weight:bold">      operation-code=&quot;0&quot;</flowPara><flowPara
+         style="font-weight:bold;font-family:Courier New">      operation-code=&quot;0&quot;</flowPara><flowPara
          id="flowPara1993"
-         style="font-family:Courier New;font-weight:bold">      invoke-id=&quot;1&quot;</flowPara><flowPara
+         style="font-weight:bold;font-family:Courier New">      invoke-id=&quot;1&quot;</flowPara><flowPara
          id="flowPara1995"
-         style="font-family:Courier New;font-weight:bold">      operation-data=&quot;0x3016a00e820c48656c6c6f2c20776f726c64810100820100&quot;&gt;</flowPara><flowPara
+         style="font-weight:bold;font-family:Courier New">      operation-data=&quot;0x3016a00e820c48656c6c6f2c20776f726c64810100820100&quot;&gt;</flowPara><flowPara
          id="flowPara1997"
-         style="font-family:Courier New;font-weight:bold">    &lt;/component&gt;</flowPara><flowPara
+         style="font-weight:bold;font-family:Courier New">    &lt;/component&gt;</flowPara><flowPara
          id="flowPara1999"
-         style="font-family:Courier New;font-weight:bold">  &lt;/primitive&gt;</flowPara><flowPara
-         style="font-family:Courier New;font-weight:bold"
+         style="font-weight:bold;font-family:Courier New">  &lt;/primitive&gt;</flowPara><flowPara
+         style="font-weight:bold;font-family:Courier New"
          id="flowPara2019">&lt;/send&gt;</flowPara><flowPara
          id="flowPara2001"
-         style="font-family:Courier New;font-weight:bold" /><flowPara
+         style="font-weight:bold;font-family:Courier New" /><flowPara
          id="flowPara2003"
-         style="font-family:Courier New;font-weight:bold" /><flowPara
+         style="font-weight:bold;font-family:Courier New" /><flowPara
          id="flowPara2005"
-         style="font-family:Courier New;font-weight:bold" /><flowPara
+         style="font-weight:bold;font-family:Courier New" /><flowPara
          id="flowPara2007"
-         style="font-family:Courier New;font-weight:bold" /><flowPara
+         style="font-weight:bold;font-family:Courier New" /><flowPara
          id="flowPara2009"
-         style="font-family:Courier New;font-weight:bold" /></flowRoot>    <path
+         style="font-weight:bold;font-family:Courier New" /></flowRoot>    <path
        style="fill:black;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
        id="path2071"
        d="M 304.93021,254.59931 C 305.98699,246.79605 304.30801,252.0551 320.17997,243.13919 C 325.0451,241.87911 329.97147,240.86502 334.86729,239.71999 C 340.42338,238.11255 346.17324,237.38037 351.83465,236.22055 L 339.7897,245.34351 C 334.11062,246.43307 328.38152,247.3141 322.81534,248.91327 C 317.8748,250.03778 312.82931,250.91766 308.08138,252.71641 C 335.38675,236.74265 321.46383,245.00048 318.26655,246.42679 L 304.93021,254.59931 z " />

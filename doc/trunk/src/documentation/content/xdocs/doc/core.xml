@@ -1145,9 +1145,9 @@ Seagull will look at parameters indicated by
         <source><![CDATA[<restore-from-external field="1" entity="FIELD_NAME"
        begin="1" end="3">
        </restore-from-external>]]></source>
-        <p>In this example, the data will be injected at the second position (0 is 
-      the first one, so 1 is the second one) and until the third position. 
-      So you inject 2 bytes of data: one at the second position and one at the third position.</p>
+        <p>In this example, the data (2 octets) will be injected starting at the second octet (0 is 
+      the first one, so 1 is the second one). 
+      So you inject 2 bytes of data: one at the second octet and one at the third octet.</p>
         <p>The field FIELD_NAME must exist in the message, as defined in the dictionary. Its value in the current message 
       will be changed to the data of the second column (second because field="1").</p>
         <note>When the size specified (difference between "begin" and "end") is larger than the injected buffer, 
@@ -1161,7 +1161,7 @@ Seagull will look at parameters indicated by
         <p/>
         <figure alt="Example of external data injection" src="images/external_data.png" width="967"/>
         <p>In this example, TCAP's operation-data with an initial value of "0x3016a00e820c48656c6c6f2c20776f726c64810100820100"
-        will be altered from octet 5 to octet 10 (first octet is 0) so that the values will be:</p>
+        will be altered from octet 5 to octet 11 (first octet is 0) so that the values will be:</p>
         <ul>
         <li>0x3016a00e82<strong>214365870921</strong>2c20776f726c64810100820100 for 1st scenario execution</li>
         <li>0x3016a00e82<strong>214365870931</strong>2c20776f726c64810100820100 for 2nd scenario execution</li>
