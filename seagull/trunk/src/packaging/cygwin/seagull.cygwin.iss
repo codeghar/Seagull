@@ -87,7 +87,7 @@ Source: start_http_client.bat; DestDir: {app}\http-env\run; DestName: start_clie
 Source: start_xcap_server.bat; DestDir: {app}\xcap-env\run; DestName: start_server.bat; Flags: ignoreversion; AfterInstall: ReplaceInstDirInFile
 Source: start_xcap_client.bat; DestDir: {app}\xcap-env\run; DestName: start_client.bat; Flags: ignoreversion; AfterInstall: ReplaceInstDirInFile
 Source: start_sip_server.bat; DestDir: {app}\sip-env\run; DestName: start_server.bat; Flags: ignoreversion; AfterInstall: ReplaceInstDirInFile
-Source: start_sip_server.bat; DestDir: {app}\sip-env\run; DestName: start_client.bat; Flags: ignoreversion; AfterInstall: ReplaceInstDirInFile
+Source: start_sip_client.bat; DestDir: {app}\sip-env\run; DestName: start_client.bat; Flags: ignoreversion; AfterInstall: ReplaceInstDirInFile
 
 
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
@@ -131,15 +131,12 @@ Source: ..\..\exe-env\xcap-env\config\conf.client.xml; DestDir: {app}\xcap-env\c
 Source: ..\..\exe-env\xcap-env\config\conf.server.xml; DestDir: {app}\xcap-env\config
 Source: ..\..\exe-env\xcap-env\scenario\client.xml; DestDir: {app}\xcap-env\scenario
 Source: ..\..\exe-env\xcap-env\scenario\server.xml; DestDir: {app}\xcap-env\scenario
-
 Source: ..\..\exe-env\sip-env\config\sip-dictionnary.xml; DestDir: {app}\sip-env\config
 Source: ..\..\exe-env\sip-env\config\conf.client.xml; DestDir: {app}\sip-env\config
 Source: ..\..\exe-env\sip-env\config\conf.server.xml; DestDir: {app}\sip-env\config
 Source: ..\..\exe-env\sip-env\scenario\client.xml; DestDir: {app}\sip-env\scenario
 Source: ..\..\exe-env\sip-env\scenario\server.xml; DestDir: {app}\sip-env\scenario
 Source: ..\..\exe-env\sip-env\run\external_data_client.csv; DestDir: {app}\sip-env\run
-Name: {app}\xcap-env\logs
-
 
 [Icons]
 Name: {group}\Start {#MyAppName} shell; Filename: {app}\startterm.bat; WorkingDir: {app}; Comment: Start {#MyAppName} terminal
