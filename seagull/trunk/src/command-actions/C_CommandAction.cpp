@@ -49,6 +49,10 @@ void C_CommandAction::update_log_controller(C_DataLogControl *P_log) {
   m_controllers.m_log = P_log ;
 }
 
+T_action_type C_CommandAction::get_type() {
+  return(m_type);
+}
+
 
 C_CommandAction::~C_CommandAction() {
   DELETE_VAR(m_regexp_data);

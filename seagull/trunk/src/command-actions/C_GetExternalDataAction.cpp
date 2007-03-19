@@ -45,7 +45,7 @@ T_exeCode    C_GetExternalDataAction::execute(T_pCmd_scenario P_pCmd,
   
   if (L_value != NULL) {
     L_size = m_size ;
-    
+
     if (L_size != -1) {
       // binary or string type
       T_ValueData           L_val ;

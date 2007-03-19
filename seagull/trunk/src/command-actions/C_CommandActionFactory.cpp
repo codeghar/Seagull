@@ -42,6 +42,9 @@
 #include "C_SetValueBitAction.hpp"
 #include "C_GetExternalDataActionToMem.hpp"
 #include "C_SetValueActionMethodExtern.hpp"
+#include "C_InsertInMapAction.hpp"
+#include "C_InsertInMapActionFromMem.hpp"
+#include "C_AddDefaultInCallMapAction.hpp"
 
 
 
@@ -156,6 +159,21 @@ C_CommandAction* C_CommandActionFactory::create(T_CmdAction P_cmdAction) {
   case E_ACTION_SCEN_SET_VALUE_METHOD_EXTERN:
     NEW_VAR(L_action, 
             C_SetValueActionMethodExtern(P_cmdAction,&m_controllers));
+    break ;
+
+  case E_ACTION_SCEN_INSERT_IN_MAP:
+    NEW_VAR(L_action, 
+            C_InsertInMapAction(P_cmdAction,&m_controllers));
+    break ;
+
+  case E_ACTION_SCEN_INSERT_IN_MAP_FROM_MEM:
+    NEW_VAR(L_action, 
+            C_InsertInMapActionFromMem(P_cmdAction,&m_controllers));
+    break ;
+
+  case E_ACTION_SCEN_ADD_DEFAULT_IN_CALL_MAP:
+    NEW_VAR(L_action, 
+            C_AddDefaultInCallMapAction(P_cmdAction,&m_controllers));
     break ;
 
   default :

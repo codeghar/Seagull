@@ -60,12 +60,13 @@ T_ValueData  C_SetValueAction::search_memory(T_pCallContext  P_callCtxt,
 
 
   L_mem.m_type = E_TYPE_NUMBER ;
-  
+
   L_mem.m_type = P_msg->get_field_type(m_id,0);
   
   switch (L_mem.m_type) {
     
   case E_TYPE_NUMBER:
+    
     L_mem.m_value.m_val_number = m_controllers.m_scenario_control->get_counter_value
       (m_string_expr->m_portions[0].m_data.m_id) ;
     break ;

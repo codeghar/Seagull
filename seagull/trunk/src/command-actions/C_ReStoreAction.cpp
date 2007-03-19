@@ -46,7 +46,7 @@ T_exeCode    C_ReStoreAction::execute(T_pCmd_scenario P_pCmd,
   GEN_DEBUG(2, "restore field id = "  << m_id);
   
   L_mem = P_callCtxt->get_memory(m_mem_id);
-  
+
   L_size = m_size ;
   
   if (L_size != -1) {
@@ -107,6 +107,7 @@ T_exeCode    C_ReStoreAction::execute(T_pCmd_scenario P_pCmd,
 	  L_exeCode = E_EXE_ERROR;
         }
       } else {
+
         if (P_msg -> set_field_value(L_mem, 
                                      m_id,
                                      m_instance_id,

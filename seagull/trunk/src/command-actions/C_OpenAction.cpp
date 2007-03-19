@@ -32,10 +32,10 @@ C_OpenAction::~C_OpenAction() {
 
 
 T_exeCode    C_OpenAction::execute(T_pCmd_scenario P_pCmd,
-                                         T_pCallContext  P_callCtxt,
-                                         C_MessageFrame *P_msg,
-                                         C_MessageFrame *P_ref) {
-
+                                   T_pCallContext  P_callCtxt,
+                                   C_MessageFrame *P_msg,
+                                   C_MessageFrame *P_ref) {
+  
   T_exeCode           L_exeCode    = E_EXE_NOERROR ;
   int                 L_id ;
   T_OpenStatus        L_openStatus ;

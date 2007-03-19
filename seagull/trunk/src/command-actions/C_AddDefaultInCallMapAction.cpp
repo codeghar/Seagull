@@ -17,21 +17,22 @@
  *
  */
 
-#include "C_AddInCallMapAction.hpp"
+#include "C_AddDefaultInCallMapAction.hpp"
 #include "GeneratorTrace.hpp"
 #include "GeneratorError.h"
 #include "C_CallControl.hpp"
+#include "map_t.hpp"
 
-C_AddInCallMapAction::C_AddInCallMapAction(T_CmdAction        P_cmdAction,
+C_AddDefaultInCallMapAction::C_AddDefaultInCallMapAction(T_CmdAction        P_cmdAction,
                                            T_pControllers P_controllers)
   : C_CommandAction (P_cmdAction, P_controllers) {
 }
 
-C_AddInCallMapAction::~C_AddInCallMapAction() {
+C_AddDefaultInCallMapAction::~C_AddDefaultInCallMapAction() {
 }
 
 
-T_exeCode    C_AddInCallMapAction::execute(T_pCmd_scenario P_pCmd,
+T_exeCode    C_AddDefaultInCallMapAction::execute(T_pCmd_scenario P_pCmd,
                                            T_pCallContext  P_callCtxt,
                                            C_MessageFrame *P_msg,
                                            C_MessageFrame *P_ref) {
@@ -43,13 +44,18 @@ T_exeCode    C_AddInCallMapAction::execute(T_pCmd_scenario P_pCmd,
   
   L_value_id = P_msg -> get_session_id(P_callCtxt);
   if (L_value_id == NULL) {
-    // TO DO
     GEN_ERROR(E_GEN_FATAL_ERROR, "session id is failed");
     L_exeCode = E_EXE_ERROR ;
   } else {
-    L_value_id = P_callCtxt->set_id (m_id,L_value_id);
-    L_map[m_id]
+    pair<C_CallContext::T_CallMap::iterator,bool> L_pr ;
+    C_CallContext::T_contextMapData L_data ;
+
+    L_pr =
+      L_map[m_id]
       ->insert(C_CallContext::T_CallMap::value_type(*L_value_id, P_callCtxt));
+    L_data.m_channel = m_id ;
+    L_data.m_iterator = L_pr.first ;
+    (P_callCtxt->m_map_data_list)->push_back(L_data);
   }
   
   return (L_exeCode);

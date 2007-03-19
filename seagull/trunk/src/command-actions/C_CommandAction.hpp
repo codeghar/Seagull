@@ -57,6 +57,8 @@ public:
                              C_MessageFrame *P_msg,
                              C_MessageFrame *P_ref) = 0 ;
 
+  T_action_type     get_type();
+
 protected:
 
   T_action_type       m_type            ;
