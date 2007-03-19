@@ -180,7 +180,7 @@
 	    get-function="get_primitive_p_abort_cause">
   </fielddef>
 
-  <fielddef name="u-abort-cause" type="number"
+  <fielddef name="u-abort-cause" type="string"
             set-function="set_primitive_u_abort_cause" 
 	    get-function="get_primitive_u_abort_cause">
   </fielddef>
