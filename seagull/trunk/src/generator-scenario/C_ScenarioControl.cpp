@@ -42,6 +42,7 @@
 #define XML_SCENARIO_DEFAULT_SECTION       (char*)"default"
 #define XML_SCENARIO_INIT_SECTION          (char*)"init"
 #define XML_SCENARIO_ABORT_SECTION         (char*)"abort"
+#define XML_SCENARIO_CORRELATION_SECTION   (char*)"correlation"
 
 static const T_CmdAction no_cmd_action = {
   E_ACTION_SCEN_OPEN,
@@ -89,7 +90,27 @@ C_ScenarioControl::C_ScenarioControl(C_ProtocolControl  *P_protocol_control,
   m_protocol_ctrl = P_protocol_control ;
   m_transport_ctrl = P_transport_control ;
   m_channel_ctrl = P_channel_control ;
+  m_nb_channel = 0 ;
+  
+  m_retrieve_id_table = NULL ;
+  NEW_VAR(m_label_map, T_LabelMap());
+  m_label_map->clear();
 
+
+  NEW_VAR(m_pre_action_map, T_CommandActionMap());
+  NEW_VAR(m_post_action_map, T_CommandActionMap());
+  m_pre_action_map ->clear()     ;
+  m_post_action_map ->clear()     ;
+
+  m_label_table = NULL ;
+  m_label_table_size = 0 ;
+  NEW_VAR(m_id_label_gen, C_IdGenerator()) ;
+  m_correlation_section = false ;
+  m_correlation_insert  = false ;
+
+  NEW_VAR (m_correl_name_list, T_CharList);
+  m_correl_name_list->clear();
+ 
   NEW_VAR(m_counter_map, T_CounterMap()) ;
   m_nb_counter = 0 ;
   m_counter_table = NULL ;
@@ -152,9 +173,9 @@ C_ScenarioControl::~C_ScenarioControl() {
 
   if (m_nb_counter != 0){
     for (L_i = 0; L_i < m_nb_counter; L_i++) {
-      FREE_VAR(m_counter_table[L_i]);
+      DELETE_VAR(m_counter_table[L_i]);
     }
-    FREE_TABLE(m_counter_table);
+    DELETE_TABLE(m_counter_table);
     m_nb_counter = 0 ;
   }
   if (!m_counter_map->empty()) {
@@ -163,6 +184,49 @@ C_ScenarioControl::~C_ScenarioControl() {
   DELETE_VAR(m_counter_map);
 
   m_action_check_abort = false ;
+
+  for (L_i = 0; L_i < m_nb_channel; L_i++) {
+    FREE_TABLE(m_retrieve_id_table[L_i].m_id_table);
+    m_retrieve_id_table[L_i].m_id_table = NULL ;
+    m_retrieve_id_table[L_i].m_nb_ids = 0 ;
+  }
+  FREE_TABLE(m_retrieve_id_table);
+  m_nb_channel = 0 ;
+
+  if (!m_label_map->empty()) {
+    m_label_map->erase(m_label_map->begin(), m_label_map->end());
+  }
+  DELETE_VAR(m_label_map);
+
+  if (m_label_table_size != 0) {
+    for (L_i = 0 ; L_i < m_label_table_size; L_i++) {
+      FREE_VAR(m_label_table[L_i]);
+    }
+    FREE_TABLE(m_label_table);
+    m_label_table_size = 0 ;
+  }
+  DELETE_VAR(m_id_label_gen) ;
+  m_correlation_section = false ;
+  m_correlation_insert  = false ;
+
+
+  if (!m_correl_name_list->empty()) {
+    m_correl_name_list->erase(m_correl_name_list->begin(),
+                              m_correl_name_list->end());
+    
+  }
+  DELETE_VAR(m_correl_name_list);
+
+  if (!m_pre_action_map->empty()) {
+    m_pre_action_map->erase(m_pre_action_map->begin(), m_pre_action_map->end());
+  }
+  DELETE_VAR(m_pre_action_map);
+
+
+  if (!m_post_action_map->empty()) {
+    m_post_action_map->erase(m_post_action_map->begin(), m_post_action_map->end());
+  }
+  DELETE_VAR(m_post_action_map);
 
 }
 
@@ -316,6 +380,7 @@ int C_ScenarioControl::add_scenario
  C_XmlData                *P_scen,
  T_pTrafficType            P_trafficType,
  int                      *P_nbOpen,
+ T_LabelDataList&          P_LabelDataList, 
  bool                     *P_data_mesure,
  bool                      P_checkMsgRecv) {
 
@@ -348,17 +413,15 @@ int C_ScenarioControl::add_scenario
   char                              *L_behaviour_scen = NULL ;
 
 
-  T_Controllers            L_controllers ;
+  m_controllers.m_log = m_log ;
+  m_controllers.m_scenario_control = this ;
+  m_controllers.m_stat = C_GeneratorStats::instance() ;
+  m_controllers.m_external_data = m_external_data ;
+  m_controllers.m_check_mask      = m_check_level ;
+  m_controllers.m_check_behaviour      = m_check_behaviour ;
+  m_controllers.m_channel_ctrl = m_channel_ctrl ;
 
-  L_controllers.m_log = m_log ;
-  L_controllers.m_scenario_control = this ;
-  L_controllers.m_stat = C_GeneratorStats::instance() ;
-  L_controllers.m_external_data = m_external_data ;
-  L_controllers.m_check_mask      = m_check_level ;
-  L_controllers.m_check_behaviour      = m_check_behaviour ;
-  L_controllers.m_channel_ctrl = m_channel_ctrl ;
-
-  C_CommandActionFactory    L_CommandActionFactory(&L_controllers) ;
+  C_CommandActionFactory    L_CommandActionFactory(&m_controllers) ;
 
 
   GEN_DEBUG(1, "C_ScenarioControl::add_scenario() start");
@@ -377,7 +440,8 @@ int C_ScenarioControl::add_scenario
       L_ret = -1 ;
       return (L_ret);
     }
-  }
+  } 
+
 
   L_nb_channel = m_channel_ctrl->nb_channel();
   ALLOC_TABLE(L_add_map_inserted,
@@ -417,6 +481,13 @@ int C_ScenarioControl::add_scenario
     break ;
 
   case E_SCENARIO_INIT:
+
+    if (L_behaviour_scen != NULL) {
+      GEN_ERROR(E_GEN_FATAL_ERROR, "Behavior feature is not allowed on scenario init");
+      L_ret = -1 ;
+      return (L_ret);
+    }
+
     NEW_VAR(m_init_scen, C_Scenario(this, m_channel_ctrl, 
 				    m_external_data,
                                     E_EXE_INIT_END,
@@ -499,15 +570,14 @@ int C_ScenarioControl::add_scenario
 			    &L_selectline_added,
 			    L_channel_usage,
 			    &L_primary_channel_id,
+                            P_LabelDataList, 
 			    P_checkMsgRecv);
       } else {
 	GEN_ERROR(E_GEN_FATAL_ERROR, "Unknown command " << L_value);
 	L_ret = -1 ;
 	break ;
       }
-     
       if (L_ret == -1) break ;
-
     }
   }
 
@@ -557,7 +627,9 @@ int C_ScenarioControl::add_scenario
 
   FREE_TABLE(L_add_map_inserted);
   
-  if (L_ret != -1) {
+  if ((L_ret != -1) && 
+      (m_correlation_section == false )) {
+
     L_ret = check_channel_usage (L_channel_usage, L_primary_channel_id, L_nb_channel);
   }
   FREE_TABLE(L_channel_usage);
@@ -573,6 +645,83 @@ int C_ScenarioControl::add_scenario
   
 }
 
+
+bool C_ScenarioControl::find_action (C_XmlData          *P_data,
+                                    char               *P_name) {
+  T_pXmlData_List                L_subList           = NULL     ;
+  T_XmlData_List::iterator       L_listIt                       ;
+  C_XmlData                     *L_msgData                      ;
+
+  T_pXmlData_List                L_actionList        = NULL     ;  
+  T_XmlData_List::iterator       L_actionListIt                 ;
+  C_XmlData                     *L_action                       ;
+  bool                           L_actionFound       = false    ;
+  
+  L_subList = P_data -> get_sub_data() ;
+  for(L_listIt  = L_subList->begin() ;
+      L_listIt != L_subList->end() ;
+      L_listIt++) {
+    L_msgData = *L_listIt ;
+    if (strcmp(L_msgData -> get_name (), (char*)"action") == 0) {
+      L_actionList = L_msgData -> get_sub_data() ;
+      if (L_actionList != NULL) {
+        for (L_actionListIt  = L_actionList->begin();
+             L_actionListIt != L_actionList->end();
+             L_actionListIt++) {
+          L_action = *L_actionListIt ;
+          if (strcmp(L_action -> get_name(), P_name)==0) {
+            L_actionFound = true ;
+            break ;
+          }
+        }
+      }
+    }
+    if (L_actionFound == true ) break;
+  } // for 
+  return (L_actionFound) ;
+}
+
+
+void C_ScenarioControl::find_list_correl_from_map(T_pCommandActionMap P_action_map,
+                                                  char               *P_name,
+                                                  T_CommandActionLst& P_list_actions) {
+  T_CommandActionMap::iterator      L_it                       ; 
+  L_it = P_action_map->find(T_CommandActionMap::key_type(P_name));
+  if (L_it != P_action_map->end()) {
+    P_list_actions = L_it->second ;
+  }
+}
+
+
+void C_ScenarioControl::delete_list_correl_from_map(T_pCommandActionMap P_action_map,
+                                                    char               *P_name,
+                                                    bool                P_reset) {
+  T_CommandActionLst                L_commandActionLst  ;
+  T_CommandActionMap::iterator      L_it                       ; 
+  
+  T_CommandActionLst::iterator      L_list_it                  ;
+
+  
+  L_it = P_action_map->find(T_CommandActionMap::key_type(P_name));
+  if (L_it != P_action_map->end()) {
+    L_commandActionLst = L_it->second ;
+    if (P_reset) {
+      for (L_list_it = L_commandActionLst.begin();
+           L_list_it != L_commandActionLst.end();
+           L_list_it++ ) {
+        DELETE_VAR(*L_list_it) ;
+      }
+    }
+
+    if (!L_commandActionLst.empty()) {
+      L_commandActionLst.erase(L_commandActionLst.begin(),
+                                L_commandActionLst.end());
+    }
+    P_action_map->erase (L_it);
+  }
+}
+
+
 int C_ScenarioControl::add_command (T_cmd_type                P_cmd_type, 
 				    C_XmlData                *P_data,
 				    T_pTrafficType            P_trafficType,
@@ -583,6 +732,7 @@ int C_ScenarioControl::add_command (T_cmd_type                P_cmd_type,
 				    bool                     *P_selectLine_added,
 				    T_pTrafficType            P_channelTrafficTable,
 				    int                      *P_channel_primary_id,
+                                    T_LabelDataList&          P_LabelDataList,
 				    bool                      P_checkMsgRecv) {
 
   
@@ -592,8 +742,10 @@ int C_ScenarioControl::add_command (T_cmd_type                P_cmd_type,
   int                            L_ret               = 0        ;
   C_CommandAction**             L_CommandActionTable    = NULL     ;
   int                            L_nb_action         = 0        ;
-  // T_CmdActionList                L_cmdActionList                ;
+
   T_CommandActionLst             L_commandActionList            ;
+
+  T_CommandActionLst             L_commandActionLabelList       ;
 
   bool                           L_map_inserted      = false    ;
 
@@ -617,29 +769,36 @@ int C_ScenarioControl::add_command (T_cmd_type                P_cmd_type,
   char                          *L_end_str                      ;
 
 
-  T_Controllers            L_controllers ;
+  size_t                         L_nb_cmd                       ;
+  char                          *L_value_label       = NULL     ;
+  int                            L_label_id_table               ;
+  T_pLabelData                   L_label_data        = NULL     ;
+  bool                           L_insert_pre        = false    ;
 
-  L_controllers.m_log = m_log ;
-  L_controllers.m_scenario_control = this ;
-  L_controllers.m_stat = C_GeneratorStats::instance() ;
-  L_controllers.m_external_data = m_external_data ;
-  L_controllers.m_check_mask      = m_check_level ;
-  L_controllers.m_check_behaviour      = m_check_behaviour ;
-  L_controllers.m_channel_ctrl = m_channel_ctrl ;
 
-  C_CommandActionFactory    L_CommandActionFactory(&L_controllers) ;
+  m_controllers.m_log = m_log ;
+  m_controllers.m_scenario_control = this ;
+  m_controllers.m_stat = C_GeneratorStats::instance() ;
+  m_controllers.m_external_data = m_external_data ;
+  m_controllers.m_check_mask      = m_check_level ;
+  m_controllers.m_check_behaviour      = m_check_behaviour ;
+  m_controllers.m_channel_ctrl = m_channel_ctrl ;
+
+  C_CommandActionFactory    L_CommandActionFactory(&m_controllers) ;
+  T_CmdAction L_action_check ;
 
 
   GEN_DEBUG(1, "C_ScenarioControl::add_command() start");
 
   // L_cmdActionList.clear() ;
   L_commandActionList.clear() ;
+  L_commandActionLabelList.clear();
 
   switch (P_cmd_type) {
 
   case E_CMD_SCEN_RECEIVE:
     if (P_checkMsgRecv == true) {
-      T_CmdAction L_action_check ;
+      // T_CmdAction L_action_check ;
       L_action_check = no_cmd_action ;
       L_action_check.m_type = E_ACTION_SCEN_CHECK_ALL_MSG ;
       L_commandActionList.push_back
@@ -686,6 +845,18 @@ int C_ScenarioControl::add_command (T_cmd_type                P_cmd_type,
       L_ret = -1 ;
       break ;
     }
+
+    L_value_label = P_data->find_value((char*)"label");
+    if (L_value_label != NULL) {
+      if (m_label_map->find(T_LabelMap::key_type(L_value_label)) 
+          != m_label_map->end()) {
+        GEN_ERROR(E_GEN_FATAL_ERROR, 
+                  "label with name ["
+                  << L_value_label << "] already defined");
+        L_ret = -1 ;
+        break ;
+      }
+    }
     
     L_protocol = m_channel_ctrl->get_channel_protocol(L_channel_id) ;
 
@@ -707,7 +878,6 @@ int C_ScenarioControl::add_command (T_cmd_type                P_cmd_type,
       
       L_msgData = *L_listIt ;
       L_currentName = L_msgData -> get_name () ;
-
       L_msg_name = (L_protocol->message_name() == NULL) 
         ? L_no_msg_name : L_protocol->message_name() ;
 
@@ -740,7 +910,7 @@ int C_ScenarioControl::add_command (T_cmd_type                P_cmd_type,
 
 	// finally add message on the scenario sequence
 	if ((L_msg != NULL) && (L_channel_id != -1)) {
-	  (void) P_scen
+	  L_nb_cmd = P_scen
 	    ->add_cmd (P_cmd_type, 
 		       L_channel_id,
 		       L_msg,
@@ -752,6 +922,28 @@ int C_ScenarioControl::add_command (T_cmd_type                P_cmd_type,
 
           if (L_retrans_delay > 0 ) {
             m_retrans_delay_values->insert(T_retransDelayValuesSet::value_type(L_retrans_delay));
+          }
+
+          if (L_value_label != NULL) {
+            ALLOC_VAR(L_label_data,
+                      T_pLabelData,
+                      sizeof(T_LabelData));
+            
+            L_label_id_table = m_id_label_gen->new_id() ;
+            
+            L_label_data->m_idx             = L_label_id_table    ;
+            L_label_data->m_id_cmd          = L_nb_cmd - 1        ;
+            L_label_data->m_id_msg          = L_msg_id            ;
+            L_label_data->m_nb_body_value   = L_nb_body_value     ;
+            L_label_data->m_select_line_added = 
+              find_action(P_data, (char*)"restore-from-external");
+            L_label_data->m_scenario        = P_scen              ;
+            
+            P_LabelDataList.push_back(L_label_data);
+
+            m_label_map
+              ->insert(T_LabelMap::value_type(L_value_label,
+                                              L_label_id_table)) ;
           }
 
 	  if (*P_trafficType == E_TRAFFIC_UNKNOWN) {
@@ -782,7 +974,7 @@ int C_ScenarioControl::add_command (T_cmd_type                P_cmd_type,
 	L_ret = -1 ;
       }
       if (L_ret == -1) break;
-    }
+    } // for 
   }
 
     break ;
@@ -820,16 +1012,30 @@ int C_ScenarioControl::add_command (T_cmd_type                P_cmd_type,
 
     case E_CMD_SCEN_RECEIVE:
     case E_CMD_SCEN_SEND: {
+      L_value_label = NULL ;
+      L_value_label = P_data->find_value((char*)"label");
+      if ((m_correlation_section == true) &&
+          (L_value_label != NULL) &&
+          (L_nb_action > 0 )) {
+        L_commandActionLabelList.push_back
+          (L_CommandActionFactory.create(L_action_check));
+      } 
 
 
       for(L_listIt  = L_subList->begin() ;
 	  L_listIt != L_subList->end() ;
 	  L_listIt++) {
 	
+        L_insert_pre  = false  ;
+
 	L_msgData = *L_listIt ;
 	L_currentName = L_msgData -> get_name () ;
 	
 	if (strcmp(L_currentName, (char*) "action") == 0) {
+          if ((L_pre_action == true) &&
+              (L_pre_action_done == false)) {
+            L_insert_pre = true ;
+          }
 
 	  // action decoding 
 	  L_ret = add_actions(L_msgData,
@@ -843,33 +1049,57 @@ int C_ScenarioControl::add_command (T_cmd_type                P_cmd_type,
 			      L_channel_id,
 			      L_pre_action,
 			      L_pre_action_done,
-                              //			      L_CmdActionTable,
 			      L_nb_action,
-			      //L_cmdActionList,
 			      L_map_inserted,
 			      L_nb_body_value,
                               L_msg_id,
                               L_CommandActionFactory,
                               L_commandActionList,
-                              L_CommandActionTable
+                              L_CommandActionTable,
+                              L_value_label,
+                              L_commandActionLabelList,
+                              false
 			      );
-	  if (L_ret == -1) break ;
-	}
-      }
 
+	  if (L_ret == -1) break ;
+
+          if ((m_correlation_section == true) && 
+              (L_value_label != NULL )) {
+            
+            if (L_insert_pre == true) {
+              m_pre_action_map
+                ->insert(T_CommandActionMap::value_type(L_value_label,
+                                                        L_commandActionLabelList)) ;
+
+            } else {
+              m_post_action_map
+                ->insert(T_CommandActionMap::value_type(L_value_label,
+                                                        L_commandActionLabelList)) ;
+            }
+
+            if (!L_commandActionLabelList.empty()) {
+              L_commandActionLabelList.erase(L_commandActionLabelList.begin(),
+                                             L_commandActionLabelList.end());
+            }
+          }
+	} // if
+      } // for
 
       if (L_map_inserted == false) {
-	// no action on the scenario => add post action with add in call map
-
-	T_CmdAction L_action_map ;
-        C_CommandAction** L_action_map_table ;
-        ALLOC_TABLE(L_action_map_table, C_CommandAction**, sizeof(C_CommandAction*),1);
-        L_action_map = no_cmd_action ;
-	L_action_map.m_type = E_ACTION_SCEN_ADD_IN_CALL_MAP ;
-	L_action_map.m_id = L_channel_id ;
-        L_action_map_table[0] = L_CommandActionFactory.create(L_action_map) ;
-
-	P_scen -> define_post_actions(1, (C_CommandAction**)L_action_map_table);
+        if (m_correlation_insert == false) {
+          T_CmdAction L_action_map ;
+          C_CommandAction** L_action_map_table ;
+          ALLOC_TABLE(L_action_map_table, C_CommandAction**, sizeof(C_CommandAction*),1);
+          L_action_map = no_cmd_action ;
+          L_action_map.m_type = E_ACTION_SCEN_ADD_IN_CALL_MAP ;
+          L_action_map.m_id = L_channel_id ;
+          L_action_map_table[0] = L_CommandActionFactory.create(L_action_map) ;
+          
+          P_scen -> define_post_actions(1, (C_CommandAction**)L_action_map_table);
+          if(m_correlation_section == true) {
+            m_correlation_insert  = true ;
+          }
+        }
 	L_map_inserted = true ;
       }
 
@@ -883,8 +1113,9 @@ int C_ScenarioControl::add_command (T_cmd_type                P_cmd_type,
   }
 
   GEN_DEBUG(1, "C_ScenarioControl::add_command() end");
-  
-  if (L_map_inserted == true) { P_map_inserted[L_channel_id] = true ; }
+  if (m_correlation_insert == false) {
+    if (L_map_inserted == true) { P_map_inserted[L_channel_id] = true ; }
+  }
 
   return (L_ret);
   
@@ -898,19 +1129,19 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 				    bool                     *P_data_mesure,
 				    bool                     *P_map_inserted,
 				    bool                     *P_selectLine_added,
-
 				    int&                      P_channel_id,
 				    bool&                     P_pre_action,
 				    bool&                     P_pre_action_done,
-                                    //				    T_pCmdAction&             P_CmdActionTable,
-				    int&                      P_nb_action,
-                                    //		T_CmdActionList&          P_cmdActionList,
-				    bool&                     P_inserted,
+                                    int&                      P_nb_action,
+                                    bool&                     P_inserted,
 				    int                       P_nb_value,
                                     int                       P_msg_id,
                                     C_CommandActionFactory&   P_CmdActionFactory,
                                     T_CommandActionLst&       P_CommandActionLst,
-                                    C_CommandAction**&         P_CommandActionTable
+                                    C_CommandAction**&        P_CommandActionTable,
+                                    char                     *P_label_command,
+                                    T_CommandActionLst&       P_CommandActionLabelLst,
+                                    bool                      P_insert_correlation
 				    ) {
 
   int                       L_ret                   = 0      ;
@@ -918,7 +1149,7 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
   T_pXmlData_List           L_actionList                     ;  
   T_XmlData_List::iterator  L_actionListIt                   ;
   char                     *L_actionName                     ;
-  char                     *L_actionArg, *L_actionArg2       ;
+  char                     *L_actionArg, *L_actionArg2= NULL ;
   C_XmlData                *L_action                         ;
   bool                      L_actionFound                    ;
   T_action_type             L_actionType  = E_NB_ACTION_SCEN ;
@@ -927,6 +1158,7 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 
 
   bool                      L_entityFieldFound       = false ;
+  bool                      L_nameFieldFound         = false ;
   T_CmdAction               L_select_line_action             ;
   int                       L_field_id                       ;
   char                     *L_end_str                        ;
@@ -1206,7 +1438,6 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
               break;
             } // if (strcmp(L_regexp->get_name(), (char*)"regexp") == 0)
           }
-          
 	
 	  break ;
 	
@@ -1458,24 +1689,9 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 	    L_actionArg = L_action -> find_value((char*)"name");
 	    if (L_actionArg != NULL) {
               L_actionData -> m_type = E_ACTION_SCEN_GET_EXTERNAL_DATA_TO_MEM  ;
-              
               L_actionData->m_mem_id = 
                 add_memory (L_actionArg);
-              
-	      if (*P_selectLine_added == false) {
-		
-                L_select_line_action = no_cmd_action ;
-		// Add a new action for select data line
-		L_select_line_action.m_type = E_ACTION_SCEN_SELECT_EXTERNAL_DATA_LINE ;
-		P_CommandActionLst.push_back
-                  (P_CmdActionFactory.create(L_select_line_action));
-		P_nb_action++ ;
-		
-		// once time
-		*(P_selectLine_added) = true ;
-	      }
-	      m_external_data_used = true ;
-	      L_actionData->m_field_data_num = L_field_id;
+              L_nameFieldFound = true ;
 	    } else {    
               L_actionArg2 = L_action -> find_value((char*) "entity");
               if (L_actionArg2 == NULL) {
@@ -1490,15 +1706,13 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
                 = P_protocol->find_field (L_actionArg2) ;
               if (L_actionData->m_id == -1) {
                 GEN_ERROR(E_GEN_FATAL_ERROR,
-                          "No definition found for ["
+                          "Unable to find definition for ["
                           << L_actionArg2 << "]");
                 L_ret = -1 ;
                 break ;
               } else {
                 L_entityFieldFound = true ;
-                
               }
-              
               
               L_actionArg = L_action -> find_value((char*) "instance");
               if (L_actionArg != NULL) {
@@ -1615,7 +1829,7 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
                   break ;
                 }
               }
-	  
+              
               // ctrl type of field
               if (P_protocol->get_field_type(L_actionData->m_id, 
                                              L_actionData->m_sub_id)
@@ -1632,31 +1846,27 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
                 L_ret = -1 ;
                 break ;
               }
-              
-              
-              if (L_entityFieldFound == true) {
-                
-                if (*P_selectLine_added == false) {
-                  
-                  L_select_line_action = no_cmd_action ;
-                  // Add a new action for select data line
-                  L_select_line_action . m_type = E_ACTION_SCEN_SELECT_EXTERNAL_DATA_LINE ;
-                  P_CommandActionLst.push_back
+            } // else
+ 
+            if ((L_entityFieldFound == true) ||  
+                (L_nameFieldFound == true)) {
+              if (*P_selectLine_added == false) {
+                L_select_line_action = no_cmd_action ;
+                // Add a new action for select data line
+                L_select_line_action.m_type = E_ACTION_SCEN_SELECT_EXTERNAL_DATA_LINE ;
+                P_CommandActionLst.push_back
+                  (P_CmdActionFactory.create(L_select_line_action));
+                P_nb_action++ ;
+                if ((m_correlation_section == true) &&
+                    (P_label_command != NULL)) {
+                  P_CommandActionLabelLst.push_back
                     (P_CmdActionFactory.create(L_select_line_action));
-                  P_nb_action++ ;
-                  
-                  // once time
-                  *(P_selectLine_added) = true ;
                 }
-                m_external_data_used = true ;
-                
-                L_actionData->m_field_data_num = L_field_id;
-                
-              } else {
-                GEN_ERROR(E_GEN_FATAL_ERROR, "Unable to find definition for ["
-                          << L_actionArg2 << "]");
-                L_ret = -1 ;
+                // once time
+                *(P_selectLine_added) = true ;
               }
+              m_external_data_used = true ;
+              L_actionData->m_field_data_num = L_field_id;
             }
           } else {
             GEN_ERROR(E_GEN_FATAL_ERROR, 
@@ -1665,8 +1875,6 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
           }
 	  
 	  break ;
-	  
-	  
 
 	case E_ACTION_SCEN_INC_VAR:
 	    
@@ -2156,7 +2364,174 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
           L_actionData->m_field_data_num = L_value_set_bit;
           break;
 
+	case E_ACTION_SCEN_INSERT_IN_MAP : 
 
+          L_actionArg = L_action -> find_value((char*) "channel");
+	  if (L_actionArg == NULL) {
+	    GEN_ERROR(E_GEN_FATAL_ERROR, "Channel section is mandatory for action ["
+		      << L_actionName << "]");
+	    L_ret = -1 ;
+	    break ; 
+	  }
+          
+          L_actionData->m_position = m_channel_ctrl->get_channel_id(L_actionArg);
+          if (L_actionData->m_position  == ERROR_CHANNEL_UNKNOWN) {
+            GEN_ERROR(E_GEN_FATAL_ERROR, 
+                      "Channel [" << L_actionArg << "] unknowm for action ["
+		      << L_actionName << "]");
+            L_ret = -1 ;
+            break ;
+          }
+          
+          L_actionArg = L_action -> find_value((char*)"name");
+          if (L_actionArg != NULL) {
+            L_actionData->m_mem_id = check_memory (L_actionArg) ;
+            if (L_actionData->m_mem_id == -1) {
+              GEN_ERROR(E_GEN_FATAL_ERROR,
+                        "Unable to find definition for ["
+                        << L_actionArg << "]");
+              L_ret = -1 ;
+              break ;
+            }
+            L_actionData -> m_type = E_ACTION_SCEN_INSERT_IN_MAP_FROM_MEM  ;
+          } else {    
+            L_actionArg2 = L_action -> find_value((char*) "entity");
+            if (L_actionArg2 == NULL) {
+              GEN_ERROR(E_GEN_FATAL_ERROR, "entity value mandatory for action ["
+                        << L_actionName << "]");
+              L_ret = -1 ;
+              break ; 
+            }
+            
+            L_actionData->m_id 
+              = P_protocol->find_field (L_actionArg2) ;
+            if (L_actionData->m_id == -1) {
+              GEN_ERROR(E_GEN_FATAL_ERROR,
+                        "Unable to find definition for ["
+                        << L_actionArg2 << "]");
+              L_ret = -1 ;
+              break ;
+            } 
+            
+            L_actionArg = L_action -> find_value((char*) "instance");
+            if (L_actionArg != NULL) {
+              T_InstanceDataList::iterator L_instance_it ;
+              bool L_instance_found = false ;
+              for (L_instance_it = P_instance_list.begin();
+                   L_instance_it != P_instance_list.end();
+                   L_instance_it++) {
+                if (strcmp(L_actionArg, L_instance_it->m_instance_name)==0) {
+                  L_actionData->m_instance_id = L_instance_it->m_instance_id;
+                  L_instance_found = true ;
+                  break ;
+                }
+              }
+              if (L_instance_found == false) {
+                GEN_ERROR(E_GEN_FATAL_ERROR, "Unable to find instance name ["
+                          << L_actionArg << "]");
+                L_ret = -1 ;
+                break ;
+              } else {
+                if (L_instance_it->m_id != L_actionData->m_id) {
+                  GEN_ERROR(E_GEN_FATAL_ERROR, "Bad instance name ["
+                            << L_actionArg << "]");
+                  L_ret = -1 ;
+                  break ;
+                }
+              }
+            } // ctrl instance
+            
+            L_actionArg = L_action -> find_value((char*) "sub-entity");
+            if (L_actionArg != NULL) {	
+              
+              
+              L_actionData->m_sub_id 
+                = P_protocol->find_field (L_actionArg) ;
+              if (L_actionData->m_sub_id == -1) {
+                GEN_ERROR(E_GEN_FATAL_ERROR,
+                          "No definition found for ["
+                          << L_actionArg << "]");
+                L_ret = -1 ;
+                break ;
+              }
+            } 
+            
+            if (P_protocol->check_sub_entity_needed(L_actionData->m_id) == true) {
+              if (L_actionData->m_sub_id == -1) {
+                GEN_ERROR(E_GEN_FATAL_ERROR,
+                          "sub entity needed for  ["
+                          << L_actionArg2 
+                          << "]");
+                
+                L_ret = -1 ;
+                break ;
+              }
+            }
+            
+            L_actionArg = L_action -> find_value((char*) "begin");
+            if (L_actionArg != NULL) {
+              
+              // check type field == STRING || BINARY	      
+              
+              if (P_protocol->get_field_type(L_actionData->m_id, 
+                                             L_actionData->m_sub_id)
+                  != E_TYPE_STRING ) {
+                GEN_ERROR(E_GEN_FATAL_ERROR,
+                          "Type field of entity ["
+                          << L_actionArg2 
+                          << "] is not STRING");
+                L_ret = -1 ;
+                break ;
+              }
+              
+              unsigned long  L_begin ;
+              char          *L_end_str = NULL ;
+              L_begin = strtoul_f (L_actionArg, &L_end_str, 10);
+              if (L_end_str[0] != '\0') {
+                GEN_ERROR(E_GEN_FATAL_ERROR, "bad format, ["
+                          << L_actionArg << "] not a number");
+                L_ret = -1 ;
+                break ;
+              } else {
+                L_actionData->m_begin = (int)L_begin ;
+                L_begin_present = true ;
+              }
+            }
+            
+            L_actionArg = L_action -> find_value((char*) "end");
+            if (L_actionArg != NULL) {
+              
+              if (L_begin_present == true) {
+                
+                unsigned long  L_end ;
+                char          *L_end_str = NULL ;
+                L_end = strtoul_f (L_actionArg, &L_end_str, 10);
+                if (L_end_str[0] != '\0') {
+                  GEN_ERROR(E_GEN_FATAL_ERROR, "bad format, ["
+                            << L_actionArg << "] not a number");
+                  L_ret = -1 ;
+                  break ;
+                } else {
+                  if ((int)L_end > L_actionData->m_begin) {
+                    
+                    L_actionData->m_size = L_end - L_actionData->m_begin ;
+                    
+                  } else {
+                    GEN_ERROR(E_GEN_FATAL_ERROR, "End before begin index");
+                    L_ret = -1 ;
+                    break ;
+                  }
+                }
+              } else {
+                GEN_ERROR(E_GEN_FATAL_ERROR, "End index defined without begin index");
+                L_ret = -1 ;
+                break ;
+              }
+            }
+            
+          } // else
+          break ;
+          
 	default:
 	  GEN_ERROR(E_GEN_FATAL_ERROR, "Action not implemented");
 	  L_ret = -1 ;
@@ -2173,12 +2548,22 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
               break ;
             default:
               P_CommandActionLst.push_back(P_CmdActionFactory.create(*L_actionData));
+              if ((m_correlation_section == true) &&
+                  (P_label_command != NULL)) {
+                P_CommandActionLabelLst.push_back
+                  (P_CmdActionFactory.create(*L_actionData));
+              }
               FREE_VAR(L_actionData);
               P_nb_action++ ;
               break ;
             }
           } else {
             P_CommandActionLst.push_back(P_CmdActionFactory.create(*L_actionData));
+            if ((m_correlation_section == true) &&
+                (P_label_command != NULL)) {
+              P_CommandActionLabelLst.push_back
+                (P_CmdActionFactory.create(*L_actionData));
+            }
             FREE_VAR(L_actionData);
             P_nb_action++ ;
           }
@@ -2195,9 +2580,9 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
     
     if (L_ret != -1) {
       if ((P_pre_action == true) && (P_pre_action_done == false)) {
-	
   	// pre actions settings
-  	if (P_nb_action != 0) {
+  	if ((P_nb_action != 0) &&
+            (P_insert_correlation == false)) {
 	  T_CommandActionLst::iterator L_cmdActionIt ;
 	  int                       L_actionIdx = 0 ;
 	  
@@ -2218,6 +2603,7 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
           P_scen -> define_pre_actions(P_nb_action, P_CommandActionTable);
 	  P_nb_action = 0 ;
 	  P_CommandActionTable = NULL ;
+          
   	}
   	P_pre_action_done = true ;	
 	
@@ -2227,13 +2613,25 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
   	// (== if not already inserted for this channel)
   	P_inserted = P_map_inserted[P_channel_id];
   	if (P_inserted == false) {
-  	  T_CmdAction L_action_map ;
-          L_action_map = no_cmd_action ;
-  	  L_action_map . m_type = E_ACTION_SCEN_ADD_IN_CALL_MAP ;
-  	  L_action_map . m_id = P_channel_id ;
-  	  P_CommandActionLst.push_back(P_CmdActionFactory.create(L_action_map));
-  	  P_nb_action++ ;
-  	  P_inserted = true ;
+          if  (m_correlation_insert == false) {
+            T_CmdAction L_action_map ;
+            L_action_map = no_cmd_action ;
+            L_action_map . m_type = E_ACTION_SCEN_ADD_IN_CALL_MAP ;
+            L_action_map . m_id = P_channel_id ;
+            P_CommandActionLst.push_back(P_CmdActionFactory.create(L_action_map));
+            if ((m_correlation_section == true) &&
+                (P_label_command != NULL)) {
+              P_CommandActionLabelLst.push_back
+                (P_CmdActionFactory.create(L_action_map));
+            }
+
+            P_nb_action++ ;
+            if(m_correlation_section == true) {
+              m_correlation_insert         = true ;
+              // P_map_inserted[P_channel_id] = true ;
+            }
+          }
+          P_inserted = true ;
 
           for (L_actionListIt  = L_actionList->begin();
                L_actionListIt != L_actionList->end();
@@ -2266,7 +2664,8 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
         }
 
 	
-  	if (P_nb_action != 0) {
+  	if ((P_nb_action != 0) && 
+            (P_insert_correlation == false)) {
   	  T_CommandActionLst::iterator L_cmdActionIt ;
   	  int                          L_actionIdx = 0 ;
 	  
@@ -2287,11 +2686,10 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 	  
           P_scen -> define_post_actions(P_nb_action, P_CommandActionTable);
   	}
-	
       }
-    
     }
   }
+
 
   GEN_DEBUG(1, "C_ScenarioControl::add_actions() end with " << L_ret);
   return (L_ret);
@@ -2832,7 +3230,17 @@ bool C_ScenarioControl::fromXml (C_XmlData     *P_data,
   int                      L_nb_open ;
   T_TrafficType            L_trafficType, L_initTrafficType ;
   T_TrafficType            L_scenarioTrafType ;
-  
+
+  C_XmlData                  *L_xml_correlation   = NULL ;
+  T_pLabelData                L_label_data        = NULL ;
+  T_LabelDataList             L_label_data_list          ;
+  T_LabelDataList::iterator   L_it                       ;
+  T_pXmlData_List             L_correlationList   = NULL ;
+
+  L_label_data_list.clear();
+
+  m_nb_channel = m_channel_ctrl->nb_channel();
+
   if (L_data != NULL) {
 
     L_subList = L_data->get_sub_data() ;
@@ -2852,14 +3260,14 @@ bool C_ScenarioControl::fromXml (C_XmlData     *P_data,
 	       L_subscen_it != L_subscen->end();
 	       L_subscen_it++) {
 	    L_scen_data = *L_subscen_it ;
-
+            
 	    if (strcmp (L_scen_data->get_name(), 
 			XML_SCENARIO_TRAFFIC_SECTION) == 0) {
 	      if (L_xml_traffic_scen == NULL) {
 		L_xml_traffic_scen = L_scen_data;
 	      } else {
 		GEN_ERROR(E_GEN_FATAL_ERROR,
-		      "One traffic scenario allowed");
+                          "One traffic scenario allowed");
 		L_XmlOk = false ;
 	      }
 	    } else if (strcmp (L_scen_data->get_name(), 
@@ -2886,6 +3294,15 @@ bool C_ScenarioControl::fromXml (C_XmlData     *P_data,
 	    } else if (strcmp (L_scen_data->get_name(), 
 			       XML_SCENARIO_COUNTER_SECTION) == 0) {
 	      L_XmlOk = set_counters (L_scen_data);
+
+	    } else if (strcmp (L_scen_data->get_name(), 
+			       XML_SCENARIO_CORRELATION_SECTION) == 0) {
+              L_xml_correlation = L_scen_data ;
+              L_correlationList = L_xml_correlation->get_sub_data() ;
+              if (L_subList != NULL) {
+                m_correlation_section = true ;
+                m_correlation_insert  = true ;
+              }
 	    } else {
 	      GEN_ERROR(E_GEN_FATAL_ERROR, "Unkown section ["
 		    << L_scen_data->get_name() 
@@ -2895,41 +3312,14 @@ bool C_ScenarioControl::fromXml (C_XmlData     *P_data,
 	    if (L_XmlOk == false) break ;
 	  }
 	}
-      }
-    }
+      } // XML_SCENARIO_SECTION
+    }   // for(L_subListIt ...
 
     if (L_XmlOk == true) {
       if (L_xml_traffic_scen == NULL) {
 	GEN_ERROR(E_GEN_FATAL_ERROR, 
 		  "Section [scenario] with [traffic] is mandatory");
 	L_XmlOk = false ;
-      }
-    }
-
-    // add scenario traffic (mandatory)
-    if(L_XmlOk == true) {
-      if (add_scenario (E_SCENARIO_TRAFFIC, 
-                        L_xml_traffic_scen,
-                        &L_trafficType,
-                        &L_nb_open,
-                        P_data_mesure,
-                        P_check_msg) == 0) {
-        L_scenarioTrafType = L_trafficType ;
-        *P_traffic_type = L_scenarioTrafType ;
-        GEN_DEBUG(1, "L_trafficType [" << L_trafficType << "]");
-        switch (L_trafficType) {
-        case E_TRAFFIC_CLIENT:
-          C_GeneratorStats::instance()->info_msg((char*)"Outgoing traffic");
-          break ;
-        case E_TRAFFIC_SERVER:
-          C_GeneratorStats::instance()->info_msg((char*)"Incomming traffic");
-          break ;
-        default:
-          break ;
-        }
-      } else {
-        GEN_ERROR(E_GEN_FATAL_ERROR, "Traffic scenario error");
-        L_XmlOk = false ;
       }
     }
 
@@ -2940,20 +3330,50 @@ bool C_ScenarioControl::fromXml (C_XmlData     *P_data,
 	if (add_scenario (E_SCENARIO_INIT, 
 			  L_xml_init_scen,
 			  &L_initTrafficType,
-			  &L_nb_open, P_data_mesure) != 0) {
+			  &L_nb_open, 
+                          L_label_data_list,
+                          P_data_mesure) != 0) {
 	  GEN_ERROR(E_GEN_FATAL_ERROR, "Init scenario error");
 	  L_XmlOk = false ;
-	} else {
-  	  if (L_initTrafficType != L_trafficType) {
-  	    GEN_ERROR(E_GEN_FATAL_ERROR, 
-  		      "Traffic scenario and Init scenario must be"
-  		      << " of the same type (client or server)");
-  	    L_XmlOk = false ;
-          } 
-	}
+	} 
       }
     }
 
+    // add scenario traffic (mandatory)
+    if(L_XmlOk == true) {
+      if (add_scenario (E_SCENARIO_TRAFFIC, 
+                        L_xml_traffic_scen,
+                        &L_trafficType,
+                        &L_nb_open,
+                        L_label_data_list,
+                        P_data_mesure,
+                        P_check_msg) == 0) {
+        if ((L_xml_init_scen != NULL) && 
+            (L_initTrafficType != L_trafficType)) {
+          GEN_ERROR(E_GEN_FATAL_ERROR, 
+                    "Traffic scenario and Init scenario must be"
+                    << " of the same type (client or server)");
+          L_XmlOk = false ;
+        } else {
+          L_scenarioTrafType = L_trafficType ;
+          *P_traffic_type = L_scenarioTrafType ;
+          GEN_DEBUG(1, "L_trafficType [" << L_trafficType << "]");
+          switch (L_trafficType) {
+          case E_TRAFFIC_CLIENT:
+            C_GeneratorStats::instance()->info_msg((char*)"Outgoing traffic");
+            break ;
+          case E_TRAFFIC_SERVER:
+            C_GeneratorStats::instance()->info_msg((char*)"Incomming traffic");
+            break ;
+          default:
+            break ;
+          }
+        }
+      } else {
+        GEN_ERROR(E_GEN_FATAL_ERROR, "Traffic scenario error");
+        L_XmlOk = false ;
+      }
+    }
 
     // add abort scenario if defined
     if (L_XmlOk == true) {
@@ -2961,7 +3381,9 @@ bool C_ScenarioControl::fromXml (C_XmlData     *P_data,
 	if (add_scenario (E_SCENARIO_ABORT, 
 			  L_xml_abort_scen,
 			  &L_trafficType,
-			  &L_nb_open, P_data_mesure) != 0) {
+			  &L_nb_open, 
+                          L_label_data_list,
+                          P_data_mesure) != 0) {
 	  GEN_ERROR(E_GEN_FATAL_ERROR, "Abort scenario error");
 	  L_XmlOk = false ;
 	}
@@ -2978,7 +3400,6 @@ bool C_ScenarioControl::fromXml (C_XmlData     *P_data,
       }
     }
 
-
     // add default scenarii if defined
     if (L_XmlOk == true) {
       set_default_scenarii (L_xml_default_scen.size());
@@ -2990,7 +3411,9 @@ bool C_ScenarioControl::fromXml (C_XmlData     *P_data,
 	  if (add_scenario (E_SCENARIO_DEFAULT, 
 			    L_current_default_scen,
 			    &L_trafficType,
-			    &L_nb_open, P_data_mesure) != 0) {
+			    &L_nb_open, 
+                            L_label_data_list,
+                            P_data_mesure) != 0) {
 	    GEN_ERROR(E_GEN_FATAL_ERROR, "Default scenario error");
 	    L_XmlOk = false ;
 	    break ;
@@ -2999,14 +3422,574 @@ bool C_ScenarioControl::fromXml (C_XmlData     *P_data,
       }
     }
 
+    if (L_XmlOk == true) {
+      if ((m_label_table_size = L_label_data_list.size ()) > 0) {
+        ALLOC_TABLE(m_label_table,
+                    T_pLabelData*,
+                    sizeof(T_pLabelData),
+                    m_label_table_size);
+        
+        for (L_it  = L_label_data_list.begin();
+             L_it != L_label_data_list.end()  ;
+             L_it++) {
+          L_label_data = *L_it ;
+
+          ALLOC_VAR(m_label_table[L_label_data->m_idx], 
+                    T_pLabelData, 
+                    sizeof(T_LabelData));
+
+          m_label_table[L_label_data->m_idx]->m_idx      
+            = L_label_data -> m_idx      ;
+          m_label_table[L_label_data->m_idx]->m_id_cmd   
+            = L_label_data -> m_id_cmd   ;
+          m_label_table[L_label_data->m_idx]->m_id_msg   
+            = L_label_data -> m_id_msg   ;
+          m_label_table[L_label_data->m_idx]->m_nb_body_value   
+            = L_label_data -> m_nb_body_value   ;
+          m_label_table[L_label_data->m_idx]->m_select_line_added   
+            = L_label_data->m_select_line_added  ;
+          m_label_table[L_label_data->m_idx]->m_scenario = L_label_data -> m_scenario ;
+        }
+      }
+
+      if (!L_label_data_list.empty()) {
+  	for (L_it  = L_label_data_list.begin();
+  	     L_it != L_label_data_list.end()  ;
+  	     L_it++) {
+  	  if (L_XmlOk == false) { // error
+  	    if (m_label_table_size > 0) {
+  	      L_label_data = *L_it ;
+  	      FREE_VAR(m_label_table[L_label_data->m_idx]);
+  	    }
+  	  }
+  	  FREE_VAR(*L_it);
+  	}
+  	L_label_data_list.erase(L_label_data_list.begin(),
+                                L_label_data_list.end());
+      }
+      
+      if (L_xml_correlation != NULL) {
+        L_XmlOk = analyze_correlation (L_xml_correlation,
+                                       P_data_mesure);
+        if (L_XmlOk == true) {
+          delete_correlation_map(&m_pre_action_map);
+          delete_correlation_map(&m_post_action_map);
+        }
+      }
+    } 
   } else {
     L_XmlOk = false ;
   }
-
-
-
+ 
   return (L_XmlOk);
+}
 
+bool C_ScenarioControl::analyze_correlation_retrieve (C_XmlData *P_data,
+                                                      int        P_channel_id) {
+  C_XmlData                      *L_data                   ;
+  T_XmlData_List::iterator        L_listIt                 ;
+  T_pXmlData_List                 L_subList     = NULL     ;
+  bool                            L_ret         = true     ;
+  char                           *L_value                  ;
+
+  C_ProtocolFrame                *L_protocol    = NULL     ;
+  int                             L_id                     ;
+
+  T_IdRetrieveList                L_id_retrieve_list       ;
+  T_IdRetrieveList::iterator      L_it                     ;
+  int                             L_nb_id_retrieve         ;
+
+
+  L_protocol = m_channel_ctrl->get_channel_protocol(P_channel_id) ;
+  L_subList = P_data->get_sub_data() ;
+  if (L_subList != NULL) {
+    for(L_listIt  = L_subList->begin() ;
+        L_listIt != L_subList->end() ;
+        L_listIt++) {
+      L_data = *L_listIt ;
+      L_value = L_data->get_name() ;
+      if (strcmp(L_value, (char*)"search-in-map") == 0) {
+        L_value = L_data->find_value((char*)"name") ;
+        L_id  = L_protocol->find_field (L_value) ;
+        if (L_id == -1) {
+          GEN_ERROR(E_GEN_FATAL_ERROR,
+                    "No definition found for ["
+                    << L_value << "]");
+          L_ret = false;
+          break ;
+        } else {
+          L_id_retrieve_list.push_back(L_id);
+        }
+      } // if (strcmp(L_value, (char*)"search-in-map") ...)
+    } // for(L_listIt = ...)
+
+    if (L_ret) {
+      if (!L_id_retrieve_list.empty()) {
+        L_nb_id_retrieve = L_id_retrieve_list.size() ;
+	m_retrieve_id_table[P_channel_id].m_nb_ids = L_nb_id_retrieve ;
+        ALLOC_TABLE(m_retrieve_id_table[P_channel_id].m_id_table,
+                    int*,
+                    sizeof(int),
+                    L_nb_id_retrieve);
+        
+        L_id = 0 ;
+        for (L_it  = L_id_retrieve_list.begin();
+             L_it != L_id_retrieve_list.end()  ;
+             L_it++) {
+          m_retrieve_id_table[P_channel_id].m_id_table[L_id] = *L_it;
+          L_id++;
+        }
+        L_id_retrieve_list.erase(L_id_retrieve_list.begin(),
+                                 L_id_retrieve_list.end());
+      }
+    }
+  } // if (L_subList ...)
+  return (L_ret);
+}
+
+bool C_ScenarioControl::analyze_correlation_command  (C_XmlData *P_data,
+                                                      int        P_channel_id,
+                                                      bool      *P_data_mesure) {
+  
+  C_XmlData                      *L_data                         ;
+  T_XmlData_List::iterator        L_listIt                       ;
+  T_pXmlData_List                 L_subList           = NULL     ;
+
+  C_XmlData                      *L_dataAction                   ;
+  T_XmlData_List::iterator        L_listActionIt                 ;
+  T_pXmlData_List                 L_subActionList     = NULL     ;
+
+  bool                            L_ret               = true     ;
+  char                           *L_value             = NULL     ;
+  char                           *L_value_label       = NULL     ;
+  int                             L_result                       ;
+  int                             L_label_id                     ;
+  T_pLabelData                    L_label_data        = NULL     ;
+
+  T_InstanceDataList              L_instance_list                ;
+  C_ProtocolFrame                *L_protocol = 
+        m_channel_ctrl->get_channel_protocol(P_channel_id)       ;
+  
+  T_pC_Scenario                   L_scen              = NULL     ;
+  bool                            L_map_inserted      = false    ;
+  bool                            L_inserted          = false    ;
+  int                             L_nb_action         = 0        ;
+  int                             L_nbOpen            = 0        ;
+  bool                            L_pre_action        = true     ;
+  bool                            L_pre_action_done   = false    ;
+  bool                            L_selectLine_added  = false    ;
+  bool                            L_post_action       = false    ;
+  T_pCmd_scenario                 L_cmd_sequence =  NULL               ; 
+
+  C_CommandAction**               L_commandActionTable = NULL          ;
+
+
+  T_CommandActionLst              L_preActionLabelList                 ;
+  T_CommandActionLst              L_preActionMapLst                    ;
+  T_CommandActionLst              L_postActionLabelList                ;
+  T_CommandActionLst              L_postActionMapLst                   ;
+
+  T_CharList::iterator            L_iterator                           ;
+
+  L_preActionLabelList.clear();
+  L_preActionMapLst.clear();
+  L_postActionLabelList.clear();
+  L_postActionMapLst.clear();
+
+  C_CommandActionFactory          L_CmdActionFactory(&m_controllers)   ;
+
+  L_instance_list.clear();
+  
+  L_value_label = P_data->find_value((char*)"name") ;  
+
+  if (L_value_label != NULL ) {
+    
+    for (L_iterator = m_correl_name_list->begin();
+         L_iterator != m_correl_name_list->end();
+         L_iterator++) {
+      if (strcmp(*L_iterator,L_value_label) == 0) {
+        GEN_ERROR(E_GEN_FATAL_ERROR, 
+                  "Command with name ["
+                  << L_value_label << "] already defined");
+        return (false);
+      }
+    }
+
+    L_label_id = get_label_id (L_value_label) ;
+    if (L_label_id != -1 ) {
+      L_label_data = m_label_table[L_label_id] ;
+      m_correl_name_list->push_back(L_value_label)   ;
+      L_scen = L_label_data->m_scenario        ;
+      L_selectLine_added = L_label_data->m_select_line_added ;
+      L_cmd_sequence = &(L_scen->get_commands())[L_label_data->m_id_cmd] ;
+    } else {
+      GEN_ERROR(E_GEN_FATAL_ERROR, 
+                "Command name ["
+                << L_value_label << "] unknown");
+      return (false);
+    }
+  } else {
+    GEN_ERROR(E_GEN_FATAL_ERROR, "Name is mandatory for section [command]");
+    return (false);
+  }
+  
+  L_subList = P_data->get_sub_data() ;
+  if (L_subList != NULL) {
+    if (L_label_data->m_id_cmd == 0 ) {
+      for (L_listIt  = L_subList->begin() ;
+           L_listIt != L_subList->end() ;
+           L_listIt++) {
+        L_data = *L_listIt ;
+        if (strcmp(L_data->get_name(), (char*)"post-action") == 0) {
+          L_post_action  = true ;
+          L_subActionList = L_data->get_sub_data();
+          if (L_subActionList != NULL) {
+            for (L_listActionIt  = L_subActionList->begin() ;
+                 L_listActionIt != L_subActionList->end() ;
+                 L_listActionIt++) {
+              L_dataAction = *L_listActionIt ;
+              if (strcmp(L_dataAction->get_name(), (char*)"insert-in-map") == 0) {
+                L_map_inserted = true ; 
+                break;
+              }
+            } // for (L_listActionIt...)
+          }
+        }
+        if (L_map_inserted == true) break;
+      } // for (L_listIt...)
+
+      
+      if (L_post_action == false) {
+	if (add_default_action(L_cmd_sequence,
+			       L_label_data,
+			       L_value_label,
+			       P_channel_id)== false) {
+	  return (false);
+	}
+      } else {
+        if (L_map_inserted == false) {
+          m_correlation_insert  = false ;
+        } else {
+          if (add_default_action(L_cmd_sequence,
+                                 L_label_data,
+                                 L_value_label,
+                                 P_channel_id)== false) {
+            return (false);
+          }
+        }
+      }
+    } // if (L_label_data->m_id_cmd ...)
+
+    for(L_listIt  = L_subList->begin() ;
+        L_listIt != L_subList->end() ;
+        L_listIt++) {
+      L_data = *L_listIt ;
+      L_value = L_data->get_name() ;
+
+      if (strcmp(L_value, (char*)"pre-action") == 0) {
+        L_pre_action = true ;
+        L_pre_action_done   = false    ;
+        L_result = add_actions (L_data,
+                                L_instance_list,
+                                L_protocol,
+                                L_scen,
+                                &L_nbOpen,
+                                P_data_mesure,
+                                &L_map_inserted,
+                                &L_selectLine_added,
+                                P_channel_id,
+                                L_pre_action,
+                                L_pre_action_done,
+                                L_nb_action,
+                                L_inserted,
+                                L_label_data->m_nb_body_value,
+                                L_label_data->m_id_msg,
+                                L_CmdActionFactory,
+                                L_preActionLabelList,
+                                L_commandActionTable, 
+                                NULL, 
+                                L_preActionMapLst,
+                                true) ;
+        if (L_result == -1) {
+          return (false);
+        }
+      }
+
+      if (strcmp(L_value, (char*)"post-action") == 0) {
+        L_pre_action = false ;
+        L_pre_action_done   = true    ;
+        L_result = add_actions (L_data,
+                                L_instance_list,
+                                L_protocol,
+                                L_scen,
+                                &L_nbOpen,
+                                P_data_mesure,
+                                &L_map_inserted,
+                                &L_selectLine_added,
+                                P_channel_id,
+                                L_pre_action,
+                                L_pre_action_done,
+                                L_nb_action,
+                                L_inserted,
+                                L_label_data->m_nb_body_value,
+                                L_label_data->m_id_msg,
+                                L_CmdActionFactory,
+                                L_postActionLabelList,
+                                L_commandActionTable, 
+                                NULL, 
+                                L_postActionMapLst,
+                                true) ;
+        if (L_result == -1) {
+          return (false);
+        }
+      }
+    } //  for(L_listIt...)
+
+    update_actions (L_preActionLabelList,
+                    L_preActionMapLst,
+                    m_pre_action_map,
+                    L_cmd_sequence,
+                    L_value_label,
+                    L_label_data,
+                    true) ;
+
+    update_actions (L_postActionLabelList,
+                    L_postActionMapLst,
+                    m_post_action_map,
+                    L_cmd_sequence,
+                    L_value_label,
+                    L_label_data,
+                    false) ;
+  } // if (L_subList != NULL)
+
+  return (L_ret);
+
+}
+
+
+bool  C_ScenarioControl::add_default_action(T_pCmd_scenario   P_cmd_sequence,
+					    T_pLabelData      P_label_data,
+					    char             *P_value_label,
+                                            int               P_channel_id) {
+  
+  
+  T_pC_Scenario                   L_scen              = NULL     ;
+  bool                            L_ret               = true     ;  
+  
+  C_CommandAction**         L_action_map_table              = NULL ;
+  C_CommandActionFactory    L_CommandActionFactory(&m_controllers) ;
+  T_CmdAction               L_action_map                           ;
+  T_CommandActionLst        L_commandActionMapLst                 ;
+  
+  T_CommandActionLst::iterator L_cmdActionIt   ;
+  int                          L_actionIdx = 0 ;
+  int                          L_nb_action = 0 ;
+  
+  
+  L_commandActionMapLst.clear();
+  
+  L_scen = P_label_data->m_scenario        ;
+  if (P_cmd_sequence->m_post_action > 0 ) {
+    find_list_correl_from_map(m_post_action_map,
+			      P_value_label,
+			      L_commandActionMapLst) ;
+    
+    if (L_commandActionMapLst.empty()) {
+      GEN_ERROR(E_GEN_FATAL_ERROR, 
+		"Command name ["
+		<< P_value_label << "] unknown");
+      return (false);
+    } else {
+      L_nb_action += L_commandActionMapLst.size();
+    }
+  }
+  
+  L_action_map = no_cmd_action ;
+  L_action_map.m_type = E_ACTION_SCEN_ADD_DEFAULT_IN_CALL_MAP ;
+  L_action_map.m_id = P_channel_id ;
+  L_commandActionMapLst.push_back(L_CommandActionFactory.create(L_action_map)) ;
+  L_nb_action++;
+  
+  ALLOC_TABLE(L_action_map_table, C_CommandAction**, sizeof(C_CommandAction*),L_nb_action);
+  for (L_cmdActionIt  = L_commandActionMapLst.begin();
+       L_cmdActionIt != L_commandActionMapLst.end();
+       L_cmdActionIt++) {
+    L_action_map_table[L_actionIdx] = *L_cmdActionIt ;
+    L_actionIdx ++ ;
+  }
+  L_scen -> update_post_actions(L_nb_action, L_action_map_table, P_label_data->m_id_cmd);
+  if (!L_commandActionMapLst.empty()) {
+    L_commandActionMapLst.erase(L_commandActionMapLst.begin(),
+				L_commandActionMapLst.end());
+  }
+  return (L_ret);
+}
+
+
+void C_ScenarioControl::update_actions (T_CommandActionLst&  P_ActionLabelList,
+                                        T_CommandActionLst&  P_ActionMapLst,
+                                        T_pCommandActionMap  P_action_map,
+                                        T_pCmd_scenario      P_cmd_sequence,
+                                        char                *P_value_label,
+                                        T_pLabelData         P_label_data,
+                                        bool                 P_pre_action) {
+  
+  int                          L_nb_action_global   = 0                           ; 
+  int                          L_nb_action_label    = P_ActionLabelList.size()    ;
+  int                          L_nb_action_from_map = 0                           ;
+  T_CommandActionLst::iterator L_cmdActionIt                                      ;
+  int                          L_actionIdx          = 0                           ;
+  T_pC_Scenario                L_scen               = NULL                        ;
+  
+  L_scen = P_label_data->m_scenario        ;
+
+  C_CommandAction**   L_CommandActionTable = NULL ;
+  
+  if (!P_ActionLabelList.empty()) {
+    find_list_correl_from_map(P_action_map,
+                              P_value_label,
+                              P_ActionMapLst) ;
+
+    if (!P_ActionMapLst.empty()) {
+      L_nb_action_from_map = P_ActionMapLst.size() ;      
+    }
+      
+    L_nb_action_global = L_nb_action_label + L_nb_action_from_map ;
+
+    ALLOC_TABLE(L_CommandActionTable,
+                C_CommandAction**,
+                sizeof(C_CommandAction*),
+                L_nb_action_global);
+    
+    for (L_cmdActionIt  = P_ActionLabelList.begin();
+         L_cmdActionIt != P_ActionLabelList.end();
+         L_cmdActionIt++) {
+      L_CommandActionTable[L_actionIdx] = *L_cmdActionIt ;
+      
+      L_actionIdx ++ ;
+    }
+    
+    if (!P_ActionLabelList.empty()) {
+      P_ActionLabelList.erase(P_ActionLabelList.begin(),
+                              P_ActionLabelList.end());
+    }
+    
+    if (!P_ActionMapLst.empty()) {
+      for (L_cmdActionIt  = P_ActionMapLst.begin();
+           L_cmdActionIt != P_ActionMapLst.end();
+           L_cmdActionIt++) {
+        L_CommandActionTable[L_actionIdx] = *L_cmdActionIt ;
+        L_actionIdx ++ ;
+      }
+      P_ActionMapLst.erase(P_ActionMapLst.begin(),
+                           P_ActionMapLst.end());
+    }
+    
+    if (P_pre_action == true) {
+      L_scen -> update_pre_actions(L_nb_action_global, 
+                                   L_CommandActionTable,
+                                   P_label_data->m_id_cmd);
+    } else {
+      L_scen -> update_post_actions(L_nb_action_global, 
+                                    L_CommandActionTable, 
+                                    P_label_data->m_id_cmd);
+    }
+    delete_list_correl_from_map(P_action_map,
+                                P_value_label,
+                                false);
+  } else {
+    delete_list_correl_from_map(P_action_map,
+                                P_value_label,
+                                true);
+  }
+}
+  
+bool C_ScenarioControl::analyze_correlation (C_XmlData *P_xml_correlation,
+                                             bool      *P_data_mesure) {
+
+  C_XmlData                      *L_data                   ;
+  T_XmlData_List::iterator        L_listIt                 ;
+  T_pXmlData_List                 L_subList     = NULL     ;
+  bool                            L_ret         = true     ;
+  char                           *L_value                  ;
+  int                             L_channel_id  = -1       ;
+  int                             L_i                      ;
+  C_XmlData                      *L_data_2                 ;
+  T_pXmlData_List                 L_subListRetCommand      ;
+  T_XmlData_List::iterator        L_listRetCommandIt       ;
+  bool                            L_first_retrieve = false ;
+
+
+  GEN_DEBUG(1, "C_ScenarioControl::analyze_correlation() start");
+
+
+  L_subList = P_xml_correlation->get_sub_data() ;
+  if (L_subList != NULL) {
+    ALLOC_TABLE(m_retrieve_id_table, 
+                T_pRetrieveIdsDef,
+                sizeof(T_RetrieveIdsDef), 
+                m_nb_channel);
+    for (L_i = 0 ; L_i < m_nb_channel ; L_i ++) {
+      m_retrieve_id_table[L_i].m_id_table = NULL ;
+      m_retrieve_id_table[L_i].m_nb_ids = 0 ;
+    }
+    
+    for(L_listIt  = L_subList->begin() ;
+        L_listIt != L_subList->end() ;
+        L_listIt++) {
+      L_data = *L_listIt ;
+      L_value = L_data->get_name() ;
+      L_first_retrieve = false ;
+      if (strcmp(L_value, (char*)"channel") == 0) {
+        L_value = L_data->find_value((char*)"name") ;
+        L_channel_id = m_channel_ctrl->get_channel_id(L_value);
+        if (L_channel_id  == ERROR_CHANNEL_UNKNOWN) {
+          GEN_ERROR(E_GEN_FATAL_ERROR, 
+                    "Channel [" << L_value << "] unknowm");
+          L_ret = false ;
+          break ;
+        } else {
+          L_subListRetCommand = L_data->get_sub_data() ;
+          for(L_listRetCommandIt = L_subListRetCommand->begin() ;
+              L_listRetCommandIt != L_subListRetCommand->end() ;
+              L_listRetCommandIt++) {
+
+            L_data_2 = *L_listRetCommandIt ;
+            if ((L_first_retrieve == false) &&
+                (strcmp(L_data_2->get_name(), (char*)"retrieve") == 0)) {
+              L_first_retrieve = true;
+              L_ret = analyze_correlation_retrieve(L_data_2,
+                                                   L_channel_id);
+              if (L_ret == false) {
+                GEN_ERROR(E_GEN_FATAL_ERROR, 
+                          "Error on [retrieve] section on Channel [" 
+                          << L_value 
+                          << "]");
+                break;
+              }
+            }
+
+            if (strcmp(L_data_2->get_name(), (char*)"command") == 0) {
+              L_ret = analyze_correlation_command(L_data_2,
+                                                  L_channel_id,
+                                                  P_data_mesure);
+              if (L_ret == false) {
+                GEN_ERROR(E_GEN_FATAL_ERROR, 
+                          "Error on [command] section on Channel [" 
+                          << L_value 
+                          << "]");
+                break;
+              }
+            }
+          } // for(L_listRetCommandIt ...)
+          if (L_ret == false ) break;
+        } // else ...
+      } // if (strcmp)
+    } // for(L_listIt...)
+  } // if (L_subList...)
+
+
+  return (L_ret);
 }
 
 bool C_ScenarioControl::set_counters (C_XmlData *P_xml_counter_def) {
@@ -3018,9 +4001,19 @@ bool C_ScenarioControl::set_counters (C_XmlData *P_xml_counter_def) {
   bool                            L_ret = true ;
   unsigned long                   L_init    ;
 
-  list_t<T_pCounterDef>           L_counter_list ;
-  list_t<T_pCounterDef>::iterator L_counter_it ;
-  T_pCounterDef                   L_counter ;
+  char                           *L_value_min, *L_value_max ;
+  char                           *L_value_behaviour ;
+  bool                            L_bLimitedCounter = false;
+  unsigned long                   L_min    ;
+  unsigned long                   L_max    ;
+  T_CounterBehaviour              L_behaviour = E_CNT_RESET_MIN_TYPE ;
+
+
+  list_t<C_CounterDef*>           L_counter_list ;
+  list_t<C_CounterDef*>::iterator L_counter_it ;
+  C_CounterDef *                  L_counter = NULL;
+  C_LimitedCounterDef *           L_limitedCounter = NULL;
+
   int                             L_id = 0 ;
   T_CounterMap::iterator          L_counter_m_it ;
   
@@ -3034,10 +4027,10 @@ bool C_ScenarioControl::set_counters (C_XmlData *P_xml_counter_def) {
 
     L_data = *L_listIt ;
     L_value = L_data->get_name() ;
-
+    
     if (strcmp(L_value, (char*)"counterdef") == 0) {
       char *L_endstr ;
-
+      
       L_value = L_data->find_value((char*)"name") ;
       if (L_value == NULL) {
 	GEN_ERROR(E_GEN_FATAL_ERROR, "counterdef name value is mandatory");
@@ -3054,27 +4047,82 @@ bool C_ScenarioControl::set_counters (C_XmlData *P_xml_counter_def) {
       L_value_init = L_data->find_value((char*)"init") ;
       if (L_value_init == NULL) {
 	GEN_ERROR(E_GEN_FATAL_ERROR, 
-	      "counterdef init value is mandatory ["
-	      << L_value << "]");
+                  "counterdef init value is mandatory ["
+                  << L_value << "]");
 	L_ret = false ;
 	break ;
       } else {
 	L_init = strtoul_f (L_value_init, &L_endstr,10) ;
 	if (L_endstr[0] != '\0') {
-	  GEN_ERROR(E_GEN_FATAL_ERROR, "Bad format for value ["
-		<< L_value_init << "]");
+	  GEN_ERROR(E_GEN_FATAL_ERROR, "Bad format for init value ["
+                    << L_value_init << "]");
 	  L_ret = false ;
 	  break ;
 	}
       }
+      
+      L_value_min = L_data->find_value((char*)"min") ;
+      if (L_value_min == NULL) {
+        // No min value use init
+        L_min = L_init;
+      } else {
+        L_min = strtoul_f (L_value_min, &L_endstr,10) ;
+        if (L_endstr[0] != '\0') {
+          GEN_ERROR(E_GEN_FATAL_ERROR, "Bad format for min value ["
+                    << L_value_min << "]");
+          L_ret = false ;
+          break ;
+        }
+        L_bLimitedCounter = true;
+      }
+
+      L_value_max = L_data->find_value((char*)"max") ;
+      if (L_value_max == NULL) {
+        // No max value
+        L_max = ULONG_MAX;
+      } else {
+        L_max = strtoul_f (L_value_max, &L_endstr,10) ;
+        if (L_endstr[0] != '\0') {
+          GEN_ERROR(E_GEN_FATAL_ERROR, "Bad format for max value ["
+                    << L_value_max << "]");
+          L_ret = false ;
+          break ;
+        }
+        L_bLimitedCounter = true;
+      }
+      
+      L_value_behaviour = L_data->find_value((char*)"behaviour") ;
+      if (L_value_behaviour == NULL) {
+        // Set the behaviour to default
+        L_behaviour = E_CNT_RESET_INIT_TYPE ;
+      } else {
+        if (strcmp(L_value_behaviour,"min") == 0) {
+          L_behaviour = E_CNT_RESET_MIN_TYPE ;
+        } else
+          if (strcmp(L_value_behaviour,"init") == 0) {
+            L_behaviour = E_CNT_RESET_INIT_TYPE ;
+          } else
+            if (strcmp(L_value_behaviour,"no_reset") == 0) {
+              L_behaviour = E_CNT_NO_RESET_TYPE ;
+            } else {
+              GEN_WARNING("Unknown counter behaviour ["
+                          << L_value_behaviour << "]");
+              // Set the behaviour to default
+              L_behaviour = E_CNT_RESET_INIT_TYPE ;
+            }
+        L_bLimitedCounter = true;
+      }
 
       if (L_ret == true) {
-	ALLOC_VAR(L_counter, T_pCounterDef, sizeof(T_CounterDef));
-	L_counter->m_id = L_id ;
+        if (L_bLimitedCounter) {
+	  NEW_VAR(L_limitedCounter, 
+                  C_LimitedCounterDef(L_id, L_value, L_init, 
+                                      L_min, L_max, L_behaviour));
+          L_counter = (C_CounterDef*)L_limitedCounter;
+        } else {
+	  NEW_VAR(L_counter, C_CounterDef(L_id, L_value, L_init));
+        }
 	L_id ++ ;
-	L_counter->m_name = L_value ;
-	L_counter->m_init = L_init ;
-	L_counter->m_value = L_counter->m_init ;
 	L_counter_list.push_back(L_counter);
 	m_counter_map->insert(T_CounterMap::value_type(L_value, L_counter));
       }
@@ -3084,29 +4132,28 @@ bool C_ScenarioControl::set_counters (C_XmlData *P_xml_counter_def) {
   if (!L_counter_list.empty()) {
     if (L_ret == true) {
       m_nb_counter = L_counter_list.size();
-      ALLOC_TABLE(m_counter_table,
-		  T_pCounterDef*,
-		  sizeof(T_pCounterDef),
-		  m_nb_counter);
+
+      NEW_TABLE(m_counter_table,
+	        C_CounterDef*,
+		m_nb_counter);
+
       for (L_counter_it = L_counter_list.begin();
 	   L_counter_it != L_counter_list.end();
 	   L_counter_it ++) {
 	L_counter = *L_counter_it ;
-	m_counter_table[L_counter->m_id] = L_counter ;
+	m_counter_table[L_counter->get_counter_id()] = L_counter ;
       }
     } else {
       for (L_counter_it = L_counter_list.begin();
 	   L_counter_it != L_counter_list.end();
 	   L_counter_it ++) {
 	L_counter = *L_counter_it ;
-	FREE_VAR(L_counter);
+	DELETE_VAR(L_counter);
       }
     }
     L_counter_list.erase(L_counter_list.begin(), 
 			 L_counter_list.end());
   }
-
-  
 
   GEN_DEBUG(1, "C_ScenarioControl::set_counters() return " << L_ret);
   
@@ -3114,11 +4161,11 @@ bool C_ScenarioControl::set_counters (C_XmlData *P_xml_counter_def) {
 }
 
 T_UnsignedInteger32 C_ScenarioControl::get_counter_value (int P_id) {
-  return (m_counter_table[P_id]->m_value);
+  return (m_counter_table[P_id]->get_counter_value());
 }
 
 void          C_ScenarioControl::increase_counter  (int P_id) {
-  (m_counter_table[P_id]->m_value)++;
+  m_counter_table[P_id]->increase_counter();
 }
 
 int           C_ScenarioControl::get_counter_id (char *P_name) {
@@ -3127,7 +4174,7 @@ int           C_ScenarioControl::get_counter_id (char *P_name) {
 
   L_counter_m_it = m_counter_map->find(T_CounterMap::key_type(P_name));
   if (L_counter_m_it != m_counter_map->end()) {
-    L_id = (L_counter_m_it->second)->m_id ;
+    L_id = (L_counter_m_it->second)->get_counter_id() ;
   }
 
   return (L_id);
@@ -3285,6 +4332,83 @@ int C_ScenarioControl::get_max_nb_recv () {
   }
 
   return (L_max);
+}
+
+int C_ScenarioControl::get_label_id (char *P_name) {
+  int                         L_ret = -1 ;
+  T_LabelMap::iterator        L_it       ;
+
+  L_it = m_label_map->find(T_LabelMap::key_type(P_name)) ;
+  if (L_it != m_label_map->end()) {
+    L_ret = L_it->second ;
+  }
+  return (L_ret) ;
+}
+
+T_pLabelData C_ScenarioControl::get_label_data (int P_id) {
+  T_pLabelData L_ret = NULL ;
+
+  if (P_id < m_label_table_size) {
+    L_ret = m_label_table[P_id] ;
+  }
+
+  return (L_ret) ;
+}
+
+
+bool C_ScenarioControl::get_correlation_section () {
+  return (m_correlation_section);
+}
+
+T_pRetrieveIdsDef C_ScenarioControl::get_id_table_by_channel (int P_id) {
+
+  T_pRetrieveIdsDef   L_ret   = NULL ;
+  if (P_id < m_nb_channel) {
+    L_ret = &m_retrieve_id_table[P_id] ;
+  }
+  return (L_ret) ;
+}
+
+void C_ScenarioControl::delete_correlation_map(T_pCommandActionMap *P_action_map) {
+
+  T_CommandActionMap::iterator   L_it_map                ;
+  T_CharList::iterator           L_iterator              ;
+
+
+  T_CommandActionLst::iterator   L_list_it               ;
+  bool                           L_found         = false ;
+
+
+  for (L_it_map =  (*P_action_map)->begin();
+       L_it_map != (*P_action_map)->end();
+       L_it_map++) {
+    L_found  = false ;
+    for (L_iterator = m_correl_name_list->begin();
+         L_iterator != m_correl_name_list->end();
+         L_iterator++) {
+      if (strcmp((L_it_map->first).c_str(),*L_iterator) == 0) {
+        L_found = true ;
+        break;
+      }
+    } // for (L_iterator ...)
+    
+    if (L_found == false) {    
+      T_CommandActionLst   L_commandActionLst  ;
+      L_commandActionLst = L_it_map->second ;
+      for (L_list_it = L_commandActionLst.begin();
+           L_list_it != L_commandActionLst.end();
+           L_list_it++ ) {
+        DELETE_VAR(*L_list_it) ;
+      }
+      if (!L_commandActionLst.empty()) {
+        L_commandActionLst.erase(L_commandActionLst.begin(),
+                                 L_commandActionLst.end());
+      }
+    }
+    if (!(*P_action_map)->empty()) {
+      (*P_action_map)->erase((*P_action_map)->begin(), (*P_action_map)->end());
+    }
+  } // for (L_it_map...)
 }
 
 

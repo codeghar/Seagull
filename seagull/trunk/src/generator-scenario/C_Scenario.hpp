@@ -49,11 +49,11 @@
 // STRING related types
 typedef enum _enum_exe_code {
   E_EXE_NOERROR = 0,
-
+  
   E_EXE_TRAFFIC_END,
   E_EXE_DEFAULT_END,
   E_EXE_ABORT_END,
-
+  
   E_EXE_INIT_END,
   E_EXE_ERROR_MSG,
   E_EXE_ERROR_SEND,
@@ -82,6 +82,7 @@ typedef enum _action_scenario_type {
    E_ACTION_SCEN_TRANSPORT_OPTION,
    E_ACTION_SCEN_SET_BIT,
    E_ACTION_SCEN_SET_VALUE_BIT,
+   E_ACTION_SCEN_INSERT_IN_MAP,
 
    E_NB_ACTION_SCEN,  // internal actions after this value
    E_ACTION_SCEN_INTERNAL_INIT_DONE,
@@ -89,7 +90,9 @@ typedef enum _action_scenario_type {
    E_ACTION_SCEN_ADD_IN_CALL_MAP,
    E_ACTION_SCEN_SELECT_EXTERNAL_DATA_LINE,
    E_ACTION_SCEN_GET_EXTERNAL_DATA_TO_MEM,
-   E_ACTION_SCEN_SET_VALUE_METHOD_EXTERN
+   E_ACTION_SCEN_SET_VALUE_METHOD_EXTERN,
+   E_ACTION_SCEN_INSERT_IN_MAP_FROM_MEM,
+   E_ACTION_SCEN_ADD_DEFAULT_IN_CALL_MAP
 
 }  T_action_type,
   *T_pAction_type ;
@@ -188,6 +191,7 @@ typedef struct _xml_cmd_scenario {
   unsigned long        m_retrans_delay  ;
   unsigned long        m_retrans_index  ;
   unsigned long        m_retrans_delay_index  ;
+  unsigned long        m_id             ;
 
 }  T_cmd_scenario,
   *T_pCmd_scenario ;
@@ -228,6 +232,16 @@ public:
   size_t define_pre_actions (int          P_nb_pre_action,
 			     C_CommandAction** P_pre_act_table) ;
 
+  void delete_post_actions (int P_cmd_index);
+  void delete_pre_actions  (int P_cmd_index) ;
+
+  void update_post_actions (int               P_nb_post_action,
+                            C_CommandAction** P_post_act_table,
+                            int               P_cmd_index) ;
+
+  void update_pre_actions  (int               P_nb_pre_action,
+                            C_CommandAction** P_pre_act_table,
+                            int               P_cmd_index) ;
 
   size_t add_cmd  (T_cmd_type    P_type,
 		   unsigned long P_duration);
@@ -293,7 +307,6 @@ private:
 				     C_CommandAction**    P_actions,
 				     C_MessageFrame      *P_ref);
 
-  void delete_post_actions (int P_cmd_index);
 
   T_BehaviourScenario m_behaviour ;
 

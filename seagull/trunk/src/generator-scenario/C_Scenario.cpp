@@ -55,11 +55,17 @@ const char* action_name_table [] = {
   "transport-option",
   "set-bit",
   "set-value-bit",
+  "insert-in-map",
   "E_NB_ACTION_SCEN",  // internal actions after this value
   "E_ACTION_SCEN_INTERNAL_INIT_DONE",
   "E_ACTION_SCEN_CHECK_ALL_MSG",
   "E_ACTION_SCEN_ADD_IN_CALL_MAP",
-  "E_ACTION_SCEN_SELECT_EXTERNAL_DATA_LINE"
+  "E_ACTION_SCEN_SELECT_EXTERNAL_DATA_LINE",
+  "E_ACTION_SCEN_GET_EXTERNAL_DATA_TO_MEM",
+  "E_ACTION_SCEN_SET_VALUE_METHOD_EXTERN",
+  "E_ACTION_SCEN_INSERT_IN_MAP_FROM_MEM",
+  "E_ACTION_SCEN_ADD_DEFAULT_IN_CALL_MAP"
+
 } ;
 
 
@@ -325,7 +331,6 @@ T_exeCode C_Scenario::execute_cmd (T_pCallContext P_callCtxt,
             P_callCtxt->m_retrans_context.m_retrans_index = L_pCmd->m_retrans_index ;
             P_callCtxt->m_retrans_context.m_retrans_delay_index = L_pCmd->m_retrans_delay_index ;
             P_callCtxt->m_retrans_context.m_context = P_callCtxt ;
-            // std::cerr << "m_retrans_context.m_context =" << P_callCtxt << std::endl ;
             P_callCtxt->m_retrans_time[L_pCmd->m_retrans_index] = P_callCtxt->m_current_time ;
             P_callCtxt->m_retrans_cmd_idx[L_pCmd->m_retrans_index] = L_cmdIdx;
             P_callCtxt->m_retrans_msg[L_pCmd->m_retrans_index] = L_sendMsg ;
@@ -581,6 +586,7 @@ size_t C_Scenario::define_post_actions
 
   if (m_sequence_max-1 >= 0) {
     T_pCmd_scenario L_cmd_sequence = &(m_cmd_sequence[m_sequence_max-1]) ;
+
     if ((P_nb_post_action != 0) && (P_post_act_table != NULL)) {
       delete_post_actions(m_sequence_max-1);
       L_cmd_sequence->m_post_action = P_nb_post_action ;
@@ -598,7 +604,7 @@ size_t C_Scenario::define_pre_actions
 (int               P_nb_pre_action,
  C_CommandAction** P_pre_act_table) {
 
-  GEN_DEBUG(1, "C_Scenario::define_post_actions() start");
+  GEN_DEBUG(1, "C_Scenario::define_pre_actions() start");
 
   if (m_sequence_max-1 >= 0) {
     T_pCmd_scenario L_cmd_sequence = &(m_cmd_sequence[m_sequence_max-1]) ;
@@ -608,7 +614,7 @@ size_t C_Scenario::define_pre_actions
     }
   }
 
-  GEN_DEBUG(1, "C_Scenario::define_post_actions() end");
+  GEN_DEBUG(1, "C_Scenario::define_pre_actions() end");
 
   return (m_sequence_max);
 }
@@ -671,6 +677,7 @@ size_t C_Scenario::add_cmd  (T_cmd_type          P_type,
     }
     L_cmd_sequence->m_post_action = 0 ;
     L_cmd_sequence->m_post_action_table = NULL ;
+    L_cmd_sequence->m_id = m_sequence_max ;
 
     m_sequence_max++ ;
     GEN_DEBUG(1, "C_Scenario::add_cmd() end");
@@ -698,6 +705,8 @@ size_t C_Scenario::add_cmd  (T_cmd_type    P_type,
     L_cmd_sequence->m_retrans_index = 0 ;
     L_cmd_sequence->m_retrans_delay_index = 0 ;
 
+    L_cmd_sequence->m_id = m_sequence_max ;
+
     m_sequence_max++ ;
     GEN_DEBUG(1, "C_Scenario::add_cmd() end");
     return (m_sequence_max);
@@ -721,6 +730,8 @@ size_t C_Scenario::add_cmd  (T_cmd_type    P_type) {
     L_cmd_sequence->m_retrans_delay = 0 ;
     L_cmd_sequence->m_retrans_index = 0 ;
     L_cmd_sequence->m_retrans_delay_index = 0 ;
+
+    L_cmd_sequence->m_id = m_sequence_max ;
 
     m_sequence_max++ ;
     GEN_DEBUG(1, "C_Scenario::add_cmd() end");
@@ -773,7 +784,7 @@ T_exeCode C_Scenario::execute_action(T_pCmd_scenario P_pCmd,
 
   C_CommandAction*    L_current_action;
 
-  bool                L_suspend = false 
+  bool                L_suspend = false  ;
 
 
   GEN_DEBUG(1, "C_Scenario::execute_action() start");
@@ -791,14 +802,12 @@ T_exeCode C_Scenario::execute_action(T_pCmd_scenario P_pCmd,
     if (L_exeCode == E_EXE_SUSPEND ) {
       L_suspend = true;
     }
-
-
   } // for L_i
 
 
   if ((L_exeCode == E_EXE_NOERROR) && (L_suspend == true)) {
     L_exeCode = E_EXE_SUSPEND ;
-  }
+  } 
 
   
   GEN_DEBUG(1, "C_Scenario::execute_action() end");
@@ -848,6 +857,46 @@ void C_Scenario::delete_post_actions (int P_cmd_index) {
     m_cmd_sequence[P_cmd_index].m_post_action = 0 ;
   }
 }
+
+void C_Scenario::update_post_actions  
+(int               P_nb_post_action,
+ C_CommandAction** P_post_act_table,
+ int               P_cmd_index) {
+  
+  T_pCmd_scenario L_cmd_sequence = &(m_cmd_sequence[P_cmd_index]) ;
+
+  if ((P_nb_post_action != 0) && (P_post_act_table != NULL)) {
+    L_cmd_sequence->m_post_action = P_nb_post_action ;
+    L_cmd_sequence->m_post_action_table = P_post_act_table ;
+  }
+}
+
+
+
+void C_Scenario::update_pre_actions  
+(int               P_nb_pre_action,
+ C_CommandAction** P_pre_act_table,
+ int               P_cmd_index) {
+  
+  T_pCmd_scenario L_cmd_sequence = &(m_cmd_sequence[P_cmd_index]) ;
+  if ((P_nb_pre_action != 0) && (P_pre_act_table != NULL)) {
+    L_cmd_sequence->m_pre_action = P_nb_pre_action ;
+    L_cmd_sequence->m_pre_action_table = P_pre_act_table ;
+  }
+}
+
+void C_Scenario::delete_pre_actions (int P_cmd_index) {
+  int L_j ;
+
+  if (m_cmd_sequence[P_cmd_index].m_pre_action != 0) {
+    for (L_j = 0 ; L_j < m_cmd_sequence[P_cmd_index].m_pre_action; L_j ++) {
+      DELETE_VAR(m_cmd_sequence[P_cmd_index].m_pre_action_table[L_j])
+    }
+    FREE_TABLE(m_cmd_sequence[P_cmd_index].m_pre_action_table);
+    m_cmd_sequence[P_cmd_index].m_pre_action = 0 ;
+  }
+}
+
 
 void C_Scenario::set_stats (C_ScenarioStats *P_scenStat) {
   m_stats = P_scenStat ;
