@@ -79,24 +79,38 @@ C_CallControl::C_CallControl(C_GeneratorConfig   *P_config,
   m_channel_control = P_channel_ctrl ;
 
   m_nb_channel = m_channel_control->nb_channel();
+  m_correlation_section = false ;
+  m_correlation_method = &C_CallControl::getSessionFromDico ;
 
   ALLOC_TABLE(m_call_map_table,
-	      T_pCallMap*,
-	      sizeof(T_pCallMap),
+	      C_CallContext::T_pCallMap*,
+	      sizeof(C_CallContext::T_pCallMap),
 	      m_nb_channel);
   for(L_i=0; L_i < m_nb_channel; L_i++) {
-    NEW_VAR(m_call_map_table[L_i], T_CallMap());
+    NEW_VAR(m_call_map_table[L_i], C_CallContext::T_CallMap());
   }
 
   GEN_DEBUG (1, "C_CallControl::C_CallControl() end");
 }
 
-T_pCallMap* C_CallControl::get_call_map () {
+C_CallContext::T_pCallMap* C_CallControl::get_call_map () {
   return (m_call_map_table) ;
 }
 
 void C_CallControl::start_traffic() {
 }
+
+
+void C_CallControl::increase_incoming_call() {
+}
+
+void C_CallControlClient::increase_incoming_call() {
+}
+
+void C_CallControlServer::increase_incoming_call() {
+  m_call_created++ ;
+}
+
 
 C_CallControl::~C_CallControl() {
 
@@ -132,9 +146,10 @@ C_CallControl::~C_CallControl() {
   m_nb_send_per_scene = 0 ;
   m_nb_recv_per_scene = 0 ;
 
+  m_correlation_section = false ;
+  m_correlation_method = &C_CallControl::getSessionFromDico ;
 
   if (m_nb_retrans_delay_values > 0 ) {
-    // std::cerr << "m_nb_retrans_delay_values " << m_nb_retrans_delay_values << std::endl ;
     for(L_i=0; L_i < (int)m_nb_retrans_delay_values; L_i++) {
       if (!m_retrans_context_list[L_i]->empty()) {
         m_retrans_context_list[L_i]->erase(m_retrans_context_list[L_i]->begin(),
@@ -269,8 +284,12 @@ void C_CallControl::makeCallContextAvailable (T_pCallContext *P_pCallCtxt) {
   
   int                 L_id ;
   T_pCallContext      L_callCtxt ;
-  T_CallMap::iterator L_call_it ;
+  C_CallContext::T_CallMap::iterator L_call_it ;
   int                 L_i ;
+
+  C_CallContext::T_pContextMapDataList L_map_data_list;
+  C_CallContext::T_contextMapDataList::iterator L_it ;
+
   
   GEN_DEBUG (1, "C_CallControl::makeCallContextAvailable() start");
 
@@ -278,10 +297,24 @@ void C_CallControl::makeCallContextAvailable (T_pCallContext *P_pCallCtxt) {
 
   L_id = L_callCtxt -> get_internal_id();
 
+
+  L_map_data_list = L_callCtxt->m_map_data_list ;
+  if (!L_map_data_list->empty()){
+    for(L_it = L_map_data_list->begin();
+        L_it != L_map_data_list->end();
+        L_it ++) {
+      m_call_map_table[L_it->m_channel]
+        ->erase(L_it->m_iterator) ;
+    }
+    L_map_data_list->erase(L_map_data_list->begin(),
+                           L_map_data_list->end());
+  }
+  
+
   // remove call context from map
   for(L_i=0; L_i < m_nb_channel; L_i++) {
     L_call_it = m_call_map_table[L_i]
-      ->find (T_CallMap::key_type(L_callCtxt->m_id_table[L_i]));
+      ->find (C_CallContext::T_CallMap::key_type(L_callCtxt->m_id_table[L_i]));
     if (L_call_it != m_call_map_table[L_i]->end()) {
       m_call_map_table[L_i]->erase (L_call_it);
     } 
@@ -311,16 +344,7 @@ void C_CallControl::messageReceivedControl () {
 
   int                 L_callContextIdx ;
 
-
-
-#ifdef INIT_CALL_FILTER
-  T_ValueData               L_filtered_value ;
-  bool                      L_filter = false ;
-#endif //INIT_CALL_FILTER
-
   T_pValueData   L_value_id = NULL ;
-
-
   
   GEN_DEBUG (1, "C_CallControl::messageReceivedControl() start");
 
@@ -335,37 +359,9 @@ void C_CallControl::messageReceivedControl () {
     m_msg_rcv_ctxt_list -> erase (m_msg_rcv_ctxt_list->begin()) ;
 
     L_msg = L_rcvCtxt.m_msg ;
-
-    L_value_id = L_msg -> get_session_id (&L_rcvCtxt) ;
-    if (L_value_id == NULL) {
-      GEN_DEBUG(1, "C_CallControl::messageReceivedControl() L_value_id == NULL and now is " << L_value_id);
-#ifdef INIT_CALL_FILTER
-      L_filter = false ;
-#endif // INIT_CALL_FILTER    
-    }
-#ifdef INIT_CALL_FILTER
-    else {
-      if (L_value_id->m_type == E_TYPE_STRUCT) {
-          L_filtered_value = *L_value_id ;
-          L_filtered_value.m_value.m_val_struct.m_id_2 = 0 ;
-          L_filter = true ;
-      } else L_filter = false ;
-    }
-#endif // INIT_CALL_FILTER    
-
-    if (L_value_id != NULL) {
-      L_pCallContext = retrieve_call_context (L_rcvCtxt.m_channel, L_value_id);
-      
-#ifdef INIT_CALL_FILTER
-      if ((L_pCallContext == NULL) && (L_filter == true)) {
-	L_pCallContext = retrieve_call_context (L_rcvCtxt.m_channel, &L_filtered_value);
-      }
-#endif // INIT_CALL_FILTER
-
-    } else {
-      L_pCallContext = NULL ;
-    }
     
+    L_pCallContext = ((this)->*(m_correlation_method))(L_rcvCtxt, &L_value_id);
+
     if (L_pCallContext == NULL) {
       // new call management
       // search for scenario
@@ -388,9 +384,7 @@ void C_CallControl::messageReceivedControl () {
             // move to list 2 times
             if (L_scenario->get_exe_end_code() != E_EXE_IGNORE ) {
               m_stat -> executeStatAction (C_GeneratorStats::E_CREATE_INCOMING_CALL);
-              if (m_type == E_TRAFFIC_SERVER) {
-                m_call_created ++ ;
-              }
+              increase_incoming_call() ;
             }
 	  } else {
 	    // no more call context available
@@ -747,7 +741,6 @@ void C_CallControl::messageSendControl() {
   L_nbSend = m_call_ctxt_mlist -> getNbElements (E_CTXT_SEND) ;
   L_nbSendToDo = (L_nbSend > m_max_send_loop) 
     ? m_max_send_loop : L_nbSend ;
-  
   while (L_nbSendToDo > 0) {
     L_pCallContext 
       = m_call_ctxt_table[m_call_ctxt_mlist->getFirst(E_CTXT_SEND)];
@@ -778,7 +771,6 @@ T_exeCode C_CallControl::execute_scenario_cmd (T_pCallContext  P_callContext,
   L_exeResult = L_scenario->execute_cmd (L_callContext, P_resume);
 
   switch (L_exeResult) {
-
 
   case E_EXE_NOERROR:
     m_call_ctxt_mlist
@@ -862,6 +854,7 @@ T_exeCode C_CallControl::execute_scenario_cmd (T_pCallContext  P_callContext,
   case E_EXE_IGNORE:
     makeCallContextAvailable(&L_callContext) ;
     break ;
+
 
   default: 
     m_stat -> executeStatAction (C_GeneratorStats::E_CALL_FAILED) ;
@@ -1010,6 +1003,10 @@ T_GeneratorError C_CallControl::InitProcedure() {
     L_nb_retrans = 0 ; 
   }
 
+  m_correlation_section = m_scenario_control->get_correlation_section();
+  if (m_correlation_section == true) {
+    m_correlation_method = &C_CallControl::getSessionFromScen ;
+  } 
 
   m_nb_send_per_scene = m_scenario_control->get_max_nb_send () ; 
   m_nb_recv_per_scene = m_scenario_control->get_max_nb_recv () ; 
@@ -1031,8 +1028,6 @@ T_GeneratorError C_CallControl::InitProcedure() {
     L_retrans_delay_values = m_scenario_control->get_retrans_delay_values() ;
     m_nb_retrans_delay_values = L_retrans_delay_values -> size() ;
 
-    // std::cerr << "m_nb_retrans_delay_values=" << m_nb_retrans_delay_values << std::endl ;
-
     if (m_nb_retrans_delay_values != 0) {
       
       T_retransDelayValuesSet::iterator L_retransDelayIt ;
@@ -1050,7 +1045,10 @@ T_GeneratorError C_CallControl::InitProcedure() {
         L_i ++ ;
       }
 
-      ALLOC_TABLE(m_retrans_context_list, C_CallContext::T_pRetransContextList*, sizeof(C_CallContext::T_pRetransContextList), m_nb_retrans_delay_values);
+      ALLOC_TABLE(m_retrans_context_list, 
+                  C_CallContext::T_pRetransContextList*, 
+                  sizeof(C_CallContext::T_pRetransContextList), 
+                  m_nb_retrans_delay_values);
       for (L_i = 0 ; L_i < (int)m_nb_retrans_delay_values; L_i++) {
         NEW_VAR(m_retrans_context_list[L_i], 
                 C_CallContext::T_retransContextList());
@@ -1305,32 +1303,15 @@ void C_CallControlClient::calculUpdateParamTraffic() {
   
   L_currentPeriodDuration = m_traffic_model -> get_current_period_duration() ; 
   
-  
-  //std::cerr <<  "newCallControl : Current Period Duration (ti-tp)  : " 
-  //        << L_currentPeriodDuration<< std::endl;
-  
   L_currentPeriodDuration = (L_currentPeriodDuration == 0) ? 1 : L_currentPeriodDuration ;
-  
-  
-  //std::cerr <<  "Current Period Duration (ti-tp)  : " 
-  //     << (float)(L_currentPeriodDuration/1000.0) << std::endl;
-  
-  //std::cerr << "m_call_rate " << m_call_rate << std::endl;
-  //std::cerr << "m_nb_send_per_scene " << m_nb_send_per_scene << std::endl;
-  
   
   m_max_send_loop    =   (int)floor (0.5 + 
                                      ((m_call_rate * m_nb_send_per_scene)/ 
                                       (float)(L_currentPeriodDuration/1000.0))) ; 
   
-  
-  
   m_max_receive_loop =   (int) floor (0.5 + 
                                       ((m_call_rate * m_nb_recv_per_scene)/
                                        (float)(L_currentPeriodDuration/1000.0))) ;
-  
-  // std::cerr << "m_max_send_loop " << m_max_send_loop << std::endl;
-  // std::cerr << "m_max_receive_loop " << m_max_receive_loop << std::endl;
   
 }
 
@@ -1345,7 +1326,6 @@ void C_CallControlClient::newCallControl() {
 
 
   L_nbNewCalls = m_traffic_model -> authorize_new_call() ;
-
   ((this)->*(m_update_param_traffic))();
 
   while (L_nbNewCalls) {
@@ -1672,10 +1652,10 @@ void C_CallControl::makeCallContextSuspended(T_pCallContext P_callContext) {
 T_pCallContext   C_CallControl::retrieve_call_context (int P_channel_id, T_pValueData P_id) {
 
   T_pCallContext      L_pCallContext = NULL ;
-  T_CallMap::iterator L_call_it ;
+  C_CallContext::T_CallMap::iterator L_call_it ;
 
   L_call_it 
-    = m_call_map_table[P_channel_id]->find(T_CallMap::key_type(*P_id));
+    = m_call_map_table[P_channel_id]->find(C_CallContext::T_CallMap::key_type(*P_id));
 
   if (L_call_it != m_call_map_table[P_channel_id]->end()) {
     L_pCallContext = L_call_it -> second ;
@@ -1685,7 +1665,6 @@ T_pCallContext   C_CallControl::retrieve_call_context (int P_channel_id, T_pValu
   
   return (L_pCallContext);
 }
-
 
 
 C_CallControlServer::C_CallControlServer(C_GeneratorConfig    *P_config, 
@@ -1783,5 +1762,107 @@ void C_CallControlServer::clean_traffic() {
   C_CallControl::clean_traffic() ;
 }
 
+T_pCallContext  C_CallControl::getSessionFromDico(T_ReceiveMsgContext P_rcvCtxt,
+                                                  T_pValueData        *P_value_id) {
 
+  T_pValueData              L_value_id      = NULL ;
+  T_pCallContext            L_pCallContext  = NULL ;
+
+#ifdef INIT_CALL_FILTER
+  T_ValueData               L_filtered_value ;
+  bool                      L_filter = false ;
+#endif //INIT_CALL_FILTER
+  
+  L_value_id = (P_rcvCtxt.m_msg)->get_session_id (&P_rcvCtxt) ;
+  if (L_value_id == NULL) {
+    GEN_DEBUG(1, "C_CallControl::messageReceivedControl() L_value_id == NULL and now is " 
+              << L_value_id);
+#ifdef INIT_CALL_FILTER
+    L_filter = false ;
+#endif // INIT_CALL_FILTER    
+  }
+#ifdef INIT_CALL_FILTER
+  else {
+    if (L_value_id->m_type == E_TYPE_STRUCT) {
+      L_filtered_value = *L_value_id ;
+      L_filtered_value.m_value.m_val_struct.m_id_2 = 0 ;
+      L_filter = true ;
+    } else L_filter = false ;
+  }
+#endif // INIT_CALL_FILTER    
+  
+  if (L_value_id != NULL) {
+    L_pCallContext = retrieve_call_context (P_rcvCtxt.m_channel, L_value_id);
+    
+#ifdef INIT_CALL_FILTER
+    if ((L_pCallContext == NULL) && (L_filter == true)) {
+      L_pCallContext = retrieve_call_context (P_rcvCtxt.m_channel, &L_filtered_value);
+    }
+#endif // INIT_CALL_FILTER
+    
+  } else {
+    L_pCallContext = NULL ;
+  }
+  
+  *P_value_id = L_value_id ;
+  return (L_pCallContext) ;
+}
+
+T_pCallContext  C_CallControl::getSessionFromScen(T_ReceiveMsgContext P_rcvCtxt,
+                                                T_pValueData        *P_value_id) {
+
+  T_pRetrieveIdsDef   L_retrieveIds   = NULL ;
+  int                 L_i                    ;
+  T_pValueData        L_value_id      = NULL ;
+  T_pCallContext      L_pCallContext  = NULL ;
+
+
+#ifdef INIT_CALL_FILTER
+  T_ValueData               L_filtered_value ;
+  bool                      L_filter = false ;
+#endif //INIT_CALL_FILTER
+
+  L_retrieveIds = m_scenario_control->get_id_table_by_channel(P_rcvCtxt.m_channel);
+  if (L_retrieveIds != NULL) {
+    for (L_i = 0 ; L_i < L_retrieveIds->m_nb_ids ; L_i++) {
+      if ((L_value_id = (P_rcvCtxt.m_msg)->get_field_value(L_retrieveIds->m_id_table[L_i], 
+                                                          -1,
+                                                          -1))){
+
+        if (L_value_id == NULL) {
+          GEN_DEBUG(1, "C_CallControl::messageReceivedControl() L_value_id == NULL and now is " 
+                    << L_value_id);
+#ifdef INIT_CALL_FILTER
+          L_filter = false ;
+#endif // INIT_CALL_FILTER    
+        }
+#ifdef INIT_CALL_FILTER
+        else {
+          if (L_value_id->m_type == E_TYPE_STRUCT) {
+            L_filtered_value = *L_value_id ;
+            L_filtered_value.m_value.m_val_struct.m_id_2 = 0 ;
+            L_filter = true ;
+          } else L_filter = false ;
+        }
+#endif // INIT_CALL_FILTER 
+        if (L_value_id != NULL) {
+          L_pCallContext = retrieve_call_context (P_rcvCtxt.m_channel, L_value_id);
+#ifdef INIT_CALL_FILTER
+          if ((L_pCallContext == NULL) && (L_filter == true)) {
+            L_pCallContext = retrieve_call_context (P_rcvCtxt.m_channel, &L_filtered_value);
+          }
+#endif // INIT_CALL_FILTER
+        }
+
+        if (L_pCallContext != NULL) {
+          break;
+        }
+      } // if ((L_value_id =..))
+    } // for (L_i = 0...)
+  } // if (L_retrieveIds != ...)
+
+  *P_value_id = L_value_id ;
+
+  return (L_pCallContext) ;
+}
 

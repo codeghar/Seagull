@@ -72,13 +72,15 @@ int C_TrafficDistribBestEffort::authorize_new_call ()
   if (m_currentTrafficDuration <= ms_setup_time) {
     return (0);
   }
+
   L_outgoingTraffic = m_currentTrafficDuration - ms_setup_time;
 
   GEN_DEBUG(0, "Outgoing Traffic Duration (ti-TO): " << (long) L_outgoingTraffic);
   GEN_DEBUG(0, "Desired Call Rate (VO)           : " << (long) L_desiredAverageRate);
   GEN_DEBUG(0, "Calls Already Created (Ni)       : " << (long) L_createdCallNb);
 
-  L_NB1 = ( (float) ( (float) L_outgoingTraffic / (float) 1000.0) * 
+
+  L_NB1 = ( (float) ( (float)  L_outgoingTraffic / (float) 1000.0) * 
 	    (float) L_desiredAverageRate);
 
   GEN_DEBUG(0, "NB1 = [ (ti - T0) * V0 ]         : " << L_NB1);
@@ -89,7 +91,7 @@ int C_TrafficDistribBestEffort::authorize_new_call ()
     L_S1 = L_NB1 - (float) L_createdCallNb;
     L_callLimit = (int) (floor (L_S1) + (fmodf (L_S1, 1.0) > 0 ? 1 : 0));
   }
-   
+  
   if (!L_maxNbCreationPerPeriod) {
     return (L_callLimit); // no burstLimit
   }

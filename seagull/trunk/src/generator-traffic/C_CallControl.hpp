@@ -65,9 +65,6 @@ public:
   typedef C_MultiList<C_CallContext> T_CallContextList, 
     *T_pCallContextList ;
   
-  typedef map_t<T_ValueData,
-		   T_pCallContext> T_CallMap, *T_pCallMap ;
-
   typedef map_t<int, T_pCallContext> T_SuspendMap, *T_pSuspendMap ;
 
    C_CallControl(C_GeneratorConfig    *P_config, 
@@ -93,7 +90,7 @@ public:
 
   T_GeneratorError close() ;
 
-  T_pCallMap* get_call_map () ;
+  C_CallContext::T_pCallMap* get_call_map () ;
 
   virtual void start_traffic () ;
 
@@ -122,7 +119,7 @@ protected:
 
   T_pSuspendMap        m_call_suspended ;
 
-  T_pCallMap          *m_call_map_table ;
+  C_CallContext::T_pCallMap          *m_call_map_table ;
   int                  m_nb_channel ;
   
   // traffic parameters
@@ -159,6 +156,20 @@ protected:
 
   int                    m_nb_send_per_scene              ;
   int                    m_nb_recv_per_scene              ;
+
+  bool                   m_correlation_section            ;
+  
+
+  typedef T_pCallContext (C_CallControl::* T_CorrelationMethod)(T_ReceiveMsgContext P_rcvCtxt,
+                                                                T_pValueData        *P_value_id);
+
+
+
+  T_CorrelationMethod    m_correlation_method                                 ;
+  T_pCallContext         getSessionFromDico(T_ReceiveMsgContext P_rcvCtxt,
+                                            T_pValueData        *P_value_id)    ;  
+  T_pCallContext         getSessionFromScen(T_ReceiveMsgContext P_rcvCtxt,
+                                            T_pValueData        *P_value_id)    ;  
 
   
   // TaskController related methods
@@ -199,6 +210,8 @@ protected:
 
   void clean_mlist (long P_id) ;
 
+  virtual void increase_incoming_call() ;
+
 
 } ;
 
@@ -223,6 +236,8 @@ protected:
   void             restart_traffic() ;
 
   virtual void clean_traffic () ;
+
+  virtual void increase_incoming_call() ;
 
   unsigned long    get_call_rate();
   void             change_call_rate(T_GenChangeOperation P_op,
@@ -258,6 +273,9 @@ public:
   ~C_CallControlServer() ;
 protected:
   virtual T_GeneratorError InitProcedure();
+
+  virtual void increase_incoming_call() ;
+
   virtual void clean_traffic () ;
 } ;
 

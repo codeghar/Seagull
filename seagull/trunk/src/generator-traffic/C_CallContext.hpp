@@ -32,6 +32,7 @@ class C_Scenario ; // prevent from circular include
 
 class C_CallControl ; 
 
+
 typedef long T_CallContextState, *T_pCallContextState ;
 #define E_CTXT_AVAILABLE    0L
 #define E_CTXT_SUSPEND      1L
@@ -41,8 +42,11 @@ typedef long T_CallContextState, *T_pCallContextState ;
 #define E_CTXT_NBSTATE      5L
 #define E_CTXT_ERROR       -1L
 
+
 class C_CallContext : public C_ContextFrame {
 public:
+
+  typedef map_t<T_ValueData, C_CallContext*> T_CallMap, *T_pCallMap ;
 
   typedef struct _retrans_context {
     C_CallContext * m_context             ;
@@ -53,13 +57,14 @@ public:
   typedef list_t<T_retransContext> 
   T_retransContextList, *T_pRetransContextList;
 
-  typedef struct _retrans_data {
-    T_retransContextList::iterator m_iterator ;
-    int                            m_index    ;
-  } T_retransData, *T_pRetransData ;
 
-  typedef list_t <T_retransData> T_retransDataList, *T_pRetransDataList ;
+  typedef struct _context_map_data {
+    T_CallMap::iterator                m_iterator   ;
+    int                                m_channel    ;
+  } T_contextMapData, *T_pContextMapData ;
 
+  typedef list_t <T_contextMapData> T_contextMapDataList, *T_pContextMapDataList ;
+  
 
   // TEMPORARY
   bool                      m_created_call  ;
@@ -91,6 +96,8 @@ public:
   int                       m_channel_received ;
   
   C_CallControl*            m_call_control ;
+
+  T_pContextMapDataList     m_map_data_list ;
 
 
   C_CallContext(C_CallControl *P_call_control, 

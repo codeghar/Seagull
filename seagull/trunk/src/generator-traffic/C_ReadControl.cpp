@@ -265,7 +265,7 @@ T_GeneratorError C_ReadControl::receiveControl () {
       } else { // L_error >= 0
 
 	GEN_DEBUG(1, "C_ReadControl::receiveControl() nb events = " << L_nb_event);
-	
+        
 	for (L_i = 0 ; L_i < L_nb_event ; L_i++) {
 
 	  process_event (m_transport_table[L_j], &m_events[L_i]);
@@ -362,7 +362,8 @@ void C_ReadControl::process_event (C_Transport *P_transport, T_pC_TransportEvent
     L_event_recv.m_type = P_event->m_type ;
     m_call_controller->eventReceived (&L_event_recv);
 
-    if (m_nb_global_channel == m_channel_ctrl->opened()) {
+    if ((m_nb_global_channel) && 
+        (m_nb_global_channel == m_channel_ctrl->opened())) {
       start_call_controller() ;
     }
     break ;

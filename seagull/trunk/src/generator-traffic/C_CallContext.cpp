@@ -101,7 +101,6 @@ C_CallContext::C_CallContext(C_CallControl *P_call_control,
   m_current_cmd_idx = -1 ;
   m_selected_line = -1 ;
 
-
   if (P_mem) {
     ALLOC_TABLE(m_memory_table,
 		T_pValueData,
@@ -163,6 +162,9 @@ C_CallContext::C_CallContext(C_CallControl *P_call_control,
 
   m_retrans_to_do = false ;
 
+  NEW_VAR(m_map_data_list, T_contextMapDataList());
+  m_map_data_list->clear();
+
 }
 
 C_CallContext::~C_CallContext() {
@@ -197,6 +199,12 @@ C_CallContext::~C_CallContext() {
   FREE_TABLE(m_retrans_it);
   FREE_TABLE(m_retrans_it_available);
 
+  if (!m_map_data_list->empty()) {
+    m_map_data_list->erase(m_map_data_list->begin(),
+                           m_map_data_list->end());
+  }
+  DELETE_VAR(m_map_data_list);
+
 }
 
 void C_CallContext::init() {
@@ -210,6 +218,7 @@ void C_CallContext::init() {
   }
   
   clean_retrans () ;
+
 }
 
 void C_CallContext::reset() {
@@ -217,6 +226,7 @@ void C_CallContext::reset() {
   m_current_cmd_idx = 0 ;
   m_created_call = false ;
   clean_retrans () ;
+
 }
 
 T_CallContextState C_CallContext::get_state() {
@@ -258,6 +268,7 @@ T_CallContextState C_CallContext::init_state (T_pC_Scenario P_scen,
   m_created_call = false ;
   m_current_time = *P_time ;
   clean_retrans () ;
+  
   return (m_state);
 }
 
@@ -270,6 +281,7 @@ T_CallContextState C_CallContext::init_state (T_pC_Scenario P_scen) {
   reset_id();
   m_created_call = false ;
   clean_retrans () ;
+
   return (m_state);
 }
 
@@ -281,6 +293,7 @@ void C_CallContext::init_state(C_Scenario *P_scen, T_pReceiveMsgContext P_rcvCtx
   m_current_cmd_idx = 0 ;
   // m_id to be tested
   clean_retrans () ;
+
   m_created_call = false ;
   m_current_time = P_rcvCtxt->m_time ;
 
