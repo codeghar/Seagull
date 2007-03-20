@@ -77,6 +77,7 @@ C_MessageExternal::~C_MessageExternal() {
     }
   }
   FREE_TABLE(m_body);
+  
   for(L_i=0; L_i < m_nb_header_fields; L_i++) {
     if(m_header_not_present_table[m_id][L_i] == true ) {
       resetMemory(m_header[L_i]);
@@ -97,10 +98,13 @@ void C_MessageExternal::internal_reset() {
       resetMemory(m_header[L_i]);
     }
   }
+
   for(L_i = 0 ; L_i < m_nb_body_values; L_i++) {
     m_body[L_i].m_nb = 0 ;
     m_body[L_i].m_values = NULL ;
   }
+
+
   if (m_nb_values) {
     for (L_i = m_nb_header_fields; L_i < m_nb_values; L_i++) {
       for (L_j = 0; L_j < m_nb_body_fields; L_j++) {
@@ -112,6 +116,8 @@ void C_MessageExternal::internal_reset() {
     FREE_TABLE(m_ids);
     m_nb_values = 0 ;
   }
+
+
   m_protocol = NULL ;
   m_id = -1 ;
 
@@ -454,6 +460,23 @@ T_TypeType C_MessageExternal::get_field_type  (int P_id,
 
 // bool fct (source, dest);
 
+T_pValueData C_MessageExternal::get_field_value (int P_id, 
+                                                 int P_instance,
+                                                 int P_sub_id) {
+
+  T_pValueData    L_value = NULL ;
+  
+  if (get_field_value(P_id, 
+                      P_instance,
+                      P_sub_id,
+                      L_value) == false ) {
+    return (NULL) ;
+  }
+  
+  return (L_value);
+}
+
+
 bool         C_MessageExternal::get_field_value (int P_id,
 						 int P_instance,
 						 int P_sub_id,
@@ -461,6 +484,7 @@ bool         C_MessageExternal::get_field_value (int P_id,
 
   GEN_DEBUG(1, "C_MessageExternal::get_field_value() start");
 
+  bool                   L_found = true ; 
   // P_id : field_header_id, body_value_id or body_header_id
   // if body_value_id ou body_header_id => use instance
   // if body_header_id => must use a body_value_id 
@@ -468,15 +492,19 @@ bool         C_MessageExternal::get_field_value (int P_id,
   if (P_id < m_nb_header_fields) {
     copyValue(*(P_value),m_header[P_id],true) ;
   } else {
-    copyValue(*(P_value),
-	      m_body[P_id-m_nb_header_fields]
-	      .m_values[P_instance][P_sub_id-m_nb_header_fields-m_nb_body_values]
-	      ,true) ;
+    if (m_body[P_id-m_nb_header_fields].m_nb != 0) {
+      copyValue(*(P_value),
+                m_body[P_id-m_nb_header_fields]
+                .m_values[P_instance][P_sub_id-m_nb_header_fields-m_nb_body_values]
+                ,true) ;
+    } else {
+      L_found = false ;
+    }
   }
-
+  
   GEN_DEBUG(1, "C_MessageExternal::get_field_value() end");
 
-  return (true);
+  return (L_found);
 }
 
 bool         C_MessageExternal::set_field_value (T_pValueData P_value, 
@@ -486,17 +514,15 @@ bool         C_MessageExternal::set_field_value (T_pValueData P_value,
 
   GEN_DEBUG(1, "C_MessageExternal::set_field_value() start");
 
+
   if (P_id < m_nb_header_fields) {
     copyValue(m_header[P_id],*(P_value),true) ;
   } else {
-    copyValue(
-	      m_body[P_id-m_nb_header_fields]
-	      .m_values[P_instance][P_sub_id-m_nb_header_fields-m_nb_body_values],
-	      *(P_value),
-	      true) ;
+    copyValue(m_body[P_id-m_nb_header_fields]
+              .m_values[P_instance][P_sub_id-m_nb_header_fields-m_nb_body_values],
+              *(P_value),
+              true) ;
   }
-
-
 
   GEN_DEBUG(1, "C_MessageExternal::set_field_value() end");
   return (true);  
@@ -588,6 +614,7 @@ C_MessageExternal& C_MessageExternal::operator= (C_MessageExternal &P_val) {
   m_id = P_val.m_id ;
 
   for (L_i = 0 ; L_i < m_nb_header_fields; L_i++) {
+    // To be verify
     copyValue(m_header[L_i], P_val.m_header[L_i], false);
   }
   m_nb_values = P_val.m_nb_values ;
@@ -647,7 +674,7 @@ iostream_output& operator<< (iostream_output&   P_stream,
 
       P_stream << "[" ;
       if (L_string_value == NULL) {
-	P_stream << *P_msg.m_all_values[L_i] ;
+        P_stream << *P_msg.m_all_values[L_i] ;
       } else {
 	P_stream << L_string_value ;
       }

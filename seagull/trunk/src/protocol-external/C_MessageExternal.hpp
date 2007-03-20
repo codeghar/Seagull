@@ -79,6 +79,10 @@ public:
                           T_MessagePartType P_header_body_type) ;
 
 
+  T_pValueData get_field_value (int P_id, 
+                                int P_instance,
+                                int P_sub_id) ;
+
   bool         get_field_value (int P_id, 
 				int P_instance,
 				int P_sub_id,
