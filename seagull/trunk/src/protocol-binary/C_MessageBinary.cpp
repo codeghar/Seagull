@@ -66,7 +66,7 @@ C_MessageBinary::C_MessageBinary(C_ProtocolBinary *P_protocol) {
    
    m_header_body_field_separator = m_protocol->get_header_body_field_separator () ;
 
-
+   m_session_id = NULL ;
    GEN_DEBUG(1, "C_MessageBinary::C_MessageBinary() end");
 }
 
@@ -154,6 +154,15 @@ C_MessageBinary::~C_MessageBinary() {
   m_protocol->reset_value_data (&m_id);
   m_header_body_field_separator = NULL ;
   m_protocol = NULL ;
+
+  if (m_session_id != NULL) {
+    if ((m_session_id->m_type == E_TYPE_STRING)
+        && (m_session_id->m_value.m_val_binary.m_size> 0)) {
+      FREE_TABLE(m_session_id->m_value.m_val_binary.m_value);
+      m_session_id->m_value.m_val_binary.m_size = 0 ;
+    }
+    FREE_VAR(m_session_id)  ;
+  }
 
   GEN_DEBUG(1, "C_MessageBinary::~C_MessageBinary() end");
 
@@ -464,17 +473,17 @@ C_MessageBinary& C_MessageBinary::operator= (C_MessageBinary & P_val) {
   return (*this) ;
 }
 
+
 void C_MessageBinary::get_header_value (T_pValueData P_res, 
-				      int P_id) {
+                                        int          P_id) {
   *P_res = m_header_values[P_id] ;
 }
 
-void C_MessageBinary::get_body_value (T_pValueData P_res, 
-				    int P_id) {
-
+bool C_MessageBinary::get_body_value (T_pValueData P_res, 
+                                      int          P_id) {
+  
   int  L_i ;
   bool L_found = false ;
-
 
   // Search the body value in the array
   for (L_i=0 ; L_i < m_nb_body_values ; L_i++) {
@@ -486,6 +495,8 @@ void C_MessageBinary::get_body_value (T_pValueData P_res,
   if (L_found == true) {
     m_protocol->get_body_value(P_res, &m_body_val[L_i]) ;
   } 
+
+  return (L_found) ;
 }
 
 bool C_MessageBinary::set_body_value (int P_id, T_pValueData P_val) {
@@ -804,7 +815,7 @@ bool C_MessageBinary::check_field_value (C_MessageFrame   *P_ref,
 
   T_ValueData                          L_value_ref           ;
   T_ValueData                          L_value               ;
-
+  bool                                 L_found   = true      ;
 
   C_ProtocolBinary::T_pHeaderBodyValue L_descr               ;
   C_ProtocolBinary::T_pHeaderField     L_headerField         ;
@@ -816,8 +827,38 @@ bool C_MessageBinary::check_field_value (C_MessageFrame   *P_ref,
   if (L_id >= (int) L_max_nb_field_header) {
     // case body
     L_id -= L_max_nb_field_header ;
-    L_ref->get_body_value (&L_value_ref, L_id);
-    get_body_value (&L_value, L_id);
+
+    L_found =  L_ref->get_body_value (&L_value_ref, L_id);
+    if (L_found == false ) {
+      L_descr = m_protocol->get_header_body_value_description(L_id);
+      if (L_descr != NULL) {
+        GEN_LOG_EVENT        (_check_behaviour_mask[P_behave], 
+                              "check failed in [" 
+                              <<  m_protocol->message_name(L_ref->m_header_id) 
+                              << "] " << m_protocol->message_name() 
+                              << ", value of " << m_protocol->message_component_name ()
+                              << " ["
+                              << L_descr->m_name
+                              << "] is not present in this in reference message");
+      }
+      return (L_found);
+    }
+    L_found = get_body_value (&L_value, L_id);
+    if (L_found == false ) {
+      L_descr = m_protocol->get_header_body_value_description(L_id);
+      if (L_descr != NULL) {
+        GEN_LOG_EVENT        (_check_behaviour_mask[P_behave], 
+                              "check failed in [" 
+                              <<  m_protocol->message_name(L_ref->m_header_id) 
+                              << "] " << m_protocol->message_name() 
+                              << ", value of " << m_protocol->message_component_name ()
+                              << " ["
+                              << L_descr->m_name
+                              << "] is not present in message received");
+      }
+      return (L_found);
+    }
+    
     L_check = (L_value_ref == L_value) ;
   } else {
     // case header
@@ -909,6 +950,26 @@ bool C_MessageBinary::set_field_value(T_pValueData P_value,
   return (L_found) ;
 }
 
+T_pValueData C_MessageBinary::get_field_value (int P_id, 
+                                               int P_instance,
+                                               int P_sub_id) {
+  
+  if (m_session_id == NULL) {
+    
+    ALLOC_VAR(m_session_id,
+              T_pValueData,
+              sizeof(T_ValueData));
+    
+    if (get_field_value(P_id, 
+                        P_instance,
+                        P_sub_id,
+                        m_session_id) == false ) {
+      FREE_VAR(m_session_id);
+    }
+  }   
+  return (m_session_id);
+}
+
 bool C_MessageBinary::get_field_value(int P_id, 
 				      int P_instance,
 				      int P_sub_id,
@@ -926,10 +987,10 @@ bool C_MessageBinary::get_field_value(int P_id,
     get_header_value (P_value, L_id);
     break ;
   case C_ProtocolBinary::E_MSG_ID_BODY:
-    get_body_value (P_value, L_id);
+    L_found = get_body_value (P_value, L_id);
     break ;
   }
-  
+
   GEN_DEBUG(1 , "C_MessageBinary::get_field_value() end ret = " << L_found);
   return (L_found);
 }
@@ -948,8 +1009,6 @@ void C_MessageBinary::dump(iostream_output& P_stream) {
 }
 
 char* C_MessageBinary::name() {
-//  GEN_DEBUG(1, "C_MessageBinary::name() name:[" 
-//                <<  m_protocol -> message_name(m_header_id) << "]");
   return( m_protocol -> message_name(m_header_id));
 }
 

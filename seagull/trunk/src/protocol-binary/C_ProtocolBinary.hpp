@@ -277,10 +277,9 @@ public:
   char* get_header_body_field_separator();
 
 
-  int analyze_setfield(C_XmlData          *P_data,
-                       int                *P_fieldId,
-                       unsigned long      *P_fieldValueUl) ;
 
+  int analyze_setfield(C_XmlData          *P_data,
+                       T_pValueData        P_value_field);
 
 
 protected:
