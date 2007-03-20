@@ -436,7 +436,7 @@ void C_MessageTlv::get_header_value (T_pValueData P_res,
   *P_res = m_header_values[P_id] ;
 }
 
-void C_MessageTlv::get_body_value (T_pValueData P_res, 
+bool C_MessageTlv::get_body_value (T_pValueData P_res, 
 				    int P_id) {
 
   int  L_i ;
@@ -453,6 +453,7 @@ void C_MessageTlv::get_body_value (T_pValueData P_res,
   if (L_found == true) {
     m_protocol->get_body_value(P_res, &m_body_val[L_i]) ;
   } 
+  return (L_found);
 }
 
 bool C_MessageTlv::set_body_value (int P_id, T_pValueData P_val) {
@@ -769,6 +770,8 @@ bool C_MessageTlv::check_field_value (C_MessageFrame   *P_ref,
   int                                  L_id     = P_id       ;
   bool                                 L_check  = false      ;
 
+  bool                                 L_found   = true      ;
+
   T_ValueData                          L_value_ref           ;
   T_ValueData                          L_value               ;
 
@@ -783,8 +786,37 @@ bool C_MessageTlv::check_field_value (C_MessageFrame   *P_ref,
   if (L_id >= (int) L_max_nb_field_header) {
     // case body
     L_id -= L_max_nb_field_header ;
-    L_ref->get_body_value (&L_value_ref, L_id);
-    get_body_value (&L_value, L_id);
+    L_found = L_ref->get_body_value (&L_value_ref, L_id);
+    if (L_found == false ) {
+      L_descr = m_protocol->get_header_body_value_description(L_id);
+      if (L_descr != NULL) {
+        GEN_LOG_EVENT        (_check_behaviour_mask[P_behave], 
+                              "check failed in [" 
+                              <<  m_protocol->message_name(L_ref->m_header_id) 
+                              << "] " << m_protocol->message_name() 
+                              << ", value of " << m_protocol->message_component_name ()
+                              << " ["
+                              << L_descr->m_name
+                              << "] is not present in this in reference message");
+      }
+      return (L_found);
+    }
+
+    L_found = get_body_value (&L_value, L_id);
+    if (L_found == false ) {
+      L_descr = m_protocol->get_header_body_value_description(L_id);
+      if (L_descr != NULL) {
+        GEN_LOG_EVENT        (_check_behaviour_mask[P_behave], 
+                              "check failed in [" 
+                              <<  m_protocol->message_name(L_ref->m_header_id) 
+                              << "] " << m_protocol->message_name() 
+                              << ", value of " << m_protocol->message_component_name ()
+                              << " ["
+                              << L_descr->m_name
+                              << "] is not present in message received");
+      }
+      return (L_found);
+    }
     L_check = (L_value_ref == L_value) ;
   } else {
     // case header
@@ -876,10 +908,31 @@ bool C_MessageTlv::set_field_value(T_pValueData P_value,
   return (L_found) ;
 }
 
+
+T_pValueData C_MessageTlv::get_field_value (int P_id, 
+                                               int P_instance,
+                                               int P_sub_id) {
+
+  T_pValueData    L_value = NULL ;
+
+  ALLOC_VAR(L_value,
+            T_pValueData,
+            sizeof(T_ValueData));
+
+  if (get_field_value(P_id, 
+                  P_instance,
+                  P_sub_id,
+                      L_value) == false ) {
+    FREE_VAR(L_value);
+  }
+  
+  return (L_value);
+}
+
 bool C_MessageTlv::get_field_value(int P_id, 
-				      int P_instance,
-				      int P_sub_id,
-				      T_pValueData P_value) {
+                                   int P_instance,
+                                   int P_sub_id,
+                                   T_pValueData P_value) {
   bool                          L_found = true ;
   C_ProtocolTlv::T_MsgIdType L_id_type ;
   int                           L_id = m_protocol->retrieve_field_id(P_id, &L_id_type);
@@ -893,7 +946,7 @@ bool C_MessageTlv::get_field_value(int P_id,
     get_header_value (P_value, L_id);
     break ;
   case C_ProtocolTlv::E_MSG_ID_BODY:
-    get_body_value (P_value, L_id);
+    L_found = get_body_value (P_value, L_id);
     break ;
   }
   

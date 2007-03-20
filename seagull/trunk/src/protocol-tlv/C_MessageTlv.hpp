@@ -100,7 +100,12 @@ public:
   void set_body_value (C_ProtocolTlv::T_pBodyValue P_val);
 
   void get_header_value (T_pValueData P_res, int P_id);
-  virtual void get_body_value (T_pValueData P_res, int P_id);
+
+  T_pValueData   get_field_value (int P_id, 
+                                  int P_instance,
+                                  int P_sub_id) ;
+
+  virtual bool get_body_value (T_pValueData P_res, int P_id);
   virtual bool set_body_value (int P_id, T_pValueData P_val);
 
   C_MessageTlv& operator= (C_MessageTlv & P_val);

@@ -328,8 +328,7 @@ public:
 
 
   int analyze_setfield(C_XmlData          *P_data,
-                       int                *P_fieldId,
-                       unsigned long      *P_fieldValueUl) ;
+                       T_pValueData        P_value_field);
 
 
 

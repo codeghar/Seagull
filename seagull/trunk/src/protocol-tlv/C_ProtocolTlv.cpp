@@ -5481,14 +5481,15 @@ C_MessageFrame* C_ProtocolTlv::create_new_message(void                *P_xml,
 	      } // end to else not grouped
             } else if (strcmp(L_bodyData->get_name(),
                               (char*)"setfield")==0) {
-              unsigned long   L_val_setfield = 0 ;
-              int             L_id_setfield   = 0 ;
-	      L_msgOk = (analyze_setfield(L_bodyData, &L_id_setfield ,&L_val_setfield) == -1) 
+              T_ValueData           L_val_setfield   ;
+              L_val_setfield.m_type  = E_TYPE_NUMBER ;
+
+	      L_msgOk = (analyze_setfield(L_bodyData, &L_val_setfield) == -1) 
                 ? false : true  ;
               if (L_msgOk) {
-                L_msg->set_header_value(L_id_setfield, L_val_setfield);
+                L_msg->set_header_value((int)L_val_setfield.m_id, &L_val_setfield);
+                resetMemory(L_val_setfield);
               }
-              
 	    } else {
 	      GEN_ERROR(E_GEN_FATAL_ERROR, 
 			"Unkown section ["
@@ -5981,9 +5982,10 @@ char* C_ProtocolTlv::get_header_body_field_separator() {
   return (m_header_body_field_separator);
 }
 
+
+
 int C_ProtocolTlv::analyze_setfield(C_XmlData          *P_data, 
-                                       int                *P_fieldId,
-                                       unsigned long      *P_fieldValueUl) {
+                                    T_pValueData        P_res) {
 
   int                       L_ret = 0       ;
   C_XmlData                *L_data          ;
@@ -5991,9 +5993,10 @@ int C_ProtocolTlv::analyze_setfield(C_XmlData          *P_data,
   char                     *L_fieldValue    ;
   T_IdMap::iterator         L_IdMapIt       ;
   char                     *L_endstr        ;
-
-  unsigned long             L_fieldValueUl  ;  
   int                       L_fieldId       ;
+  int                       L_type_id       ;
+  T_pHeaderField            L_fieldVal      ;
+  T_TypeType                L_type          ;
 
 
   L_data = P_data ;
@@ -6007,39 +6010,205 @@ int C_ProtocolTlv::analyze_setfield(C_XmlData          *P_data,
   
   L_IdMapIt = 
     m_header_id_map->find(T_IdMap::key_type(L_fieldName));
-  
   if (L_IdMapIt != m_header_id_map->end()) {
     L_fieldId = L_IdMapIt->second ;
-    (*P_fieldId) = L_fieldId ;
   } else {
     GEN_ERROR(E_GEN_FATAL_ERROR, 
               "Field ["
               << L_fieldName << "] not defined");
     L_ret = -1 ;
   }
-  
-  L_fieldValue = L_data->find_value((char*)"value") ;
-  if (L_fieldValue == NULL) {
-    GEN_ERROR(E_GEN_FATAL_ERROR, "setfield value is mandatory");
-    L_ret = -1 ;
-  }
-  
-  L_fieldValueUl = strtoul_f (L_fieldValue, &L_endstr,10) ;
-  
-  if (L_endstr[0] != '\0') {
-    L_fieldValueUl = strtoul_f (L_fieldValue, &L_endstr,16) ;
-    if (L_endstr[0] != '\0') {
-      GEN_ERROR(E_GEN_FATAL_ERROR, "typedef size value ["
-                << L_fieldValue << "] bad format");
-      L_ret = -1 ;
+
+  if (L_ret != -1) {
+    L_fieldVal = &(m_header_field_table[L_fieldId]);
+    L_type_id = L_fieldVal->m_type_id ;
+    if (L_type_id == - 1) {
+      L_type = E_TYPE_NUMBER;
     } else {
-      (*P_fieldValueUl) = L_fieldValueUl ;
+      L_type = m_type_def_table[L_type_id].m_type ;
+    }
+  
+    L_fieldValue = L_data->find_value((char*)"value") ;
+    if (L_fieldValue == NULL) {
+      GEN_ERROR(E_GEN_FATAL_ERROR, "setfield value is mandatory");
+      L_ret = -1 ;
+    }
+    
+    if (L_ret != -1) {
+      P_res->m_id   = L_fieldId ;
+      P_res->m_type = L_type    ;
+      
+      switch (L_type) {
+      case E_TYPE_NUMBER:
+        if ((strlen(L_fieldValue)>2) && 
+            (L_fieldValue[0] == '0') && 
+            (L_fieldValue[1] == 'x')) { // hexa buffer value
+          P_res->m_value.m_val_number = strtoul_f(L_fieldValue, &L_endstr, 16) ;
+        } else {
+          P_res->m_value.m_val_number = strtoul_f(L_fieldValue, &L_endstr, 10) ;
+        }
+        if (L_endstr[0] != '\0') {
+          GEN_ERROR(E_GEN_FATAL_ERROR, 
+                    "Incorrect value format for ["
+                    << L_fieldValue << "] - Unsigned Integer expected");
+          L_ret = -1 ;
+        } 
+        break ;
+        
+      case E_TYPE_SIGNED: {
+        if ((strlen(L_fieldValue)>2) && 
+            (L_fieldValue[0] == '0') && 
+            (L_fieldValue[1] == 'x')) { // hexa buffer value
+          P_res->m_value.m_val_signed = strtol_f(L_fieldValue, &L_endstr, 16) ;
+        } else {
+          P_res->m_value.m_val_signed = strtol_f(L_fieldValue, &L_endstr, 10) ;
+        }
+
+        if (L_endstr[0] != '\0') {
+          GEN_ERROR(E_GEN_FATAL_ERROR, 
+                    "Incorrect value format for ["
+                    << L_fieldValue << "] - Integer expected");
+          L_ret = -1 ;
+        } 
+      }
+
+      break ;
+      
+      case E_TYPE_STRING: {
+        if ((strlen(L_fieldValue)>2) && 
+            (L_fieldValue[0] == '0') && 
+            (L_fieldValue[1] == 'x')) { // hexa buffer value
+          char  *L_ptr = L_fieldValue+2 ;
+          size_t L_res_size ;
+          P_res->m_value.m_val_binary.m_value
+            = convert_hexa_char_to_bin(L_ptr, &L_res_size);
+
+          if (P_res->m_value.m_val_binary.m_value == NULL) {
+            GEN_ERROR(E_GEN_FATAL_ERROR, 
+                      "Bad buffer size for hexadecimal buffer ["
+                      << L_fieldValue << "]");
+            L_ret = -1 ;
+          } else {
+            P_res->m_value.m_val_binary.m_size= L_res_size ;
+          }
+          
+        } else { // direct string value
+          P_res->m_value.m_val_binary.m_value=(unsigned char*)L_fieldValue;
+          P_res->m_value.m_val_binary.m_size=strlen(L_fieldValue);
+        }
+      }
+      
+      break ;
+      
+      case E_TYPE_STRUCT : {
+   
+        int   L_i = 0 ;
+        int   L_size = (L_fieldValue == NULL ) ? 0 : strlen(L_fieldValue) ;
+        char *L_value1, *L_value2, *L_value3 ;
+        L_value1 = NULL ;
+        L_value2 = NULL ;
+        L_value3 = NULL ;
+        while (L_i< L_size) {
+          if ( L_fieldValue[L_i]== ';')  {
+            L_fieldValue[L_i] = 0 ;
+            L_value3= &L_fieldValue[L_i];
+            L_value1= L_fieldValue ;
+            if (L_i+1 < L_size ) {
+              L_value2 = &L_fieldValue[L_i+1]; 
+            }
+          }
+          L_i ++;
+        }
+        
+        if ( L_value1 != NULL ) {
+          if ((strlen(L_value1)>2) && 
+              (L_value1[0] == '0') && 
+              (L_value1[1] == 'x')) { // hexa buffer value
+            P_res->m_value.m_val_struct.m_id_1 = strtoul_f(L_value1, &L_endstr, 16) ;
+          } else {
+            P_res->m_value.m_val_struct.m_id_1 = strtoul_f(L_value1, &L_endstr, 10) ;
+          }
+          if (L_endstr[0] != '\0') {
+            GEN_ERROR(E_GEN_FATAL_ERROR, 
+                      "Incorrect value format for ["
+                      << L_value1 << "] - Unsigned Integer expected");
+            L_ret = -1 ;
+          } 
+          
+          if ( (L_value2 != NULL)  && 
+               (L_ret != -1 )) {
+            if ((strlen(L_value2)>2) && 
+                (L_value2[0] == '0') && 
+                (L_value2[1] == 'x')) { // hexa buffer value
+              P_res->m_value.m_val_struct.m_id_2 = strtoul_f(L_value2, &L_endstr, 16) ;
+            } else {
+              P_res->m_value.m_val_struct.m_id_2 = strtoul_f(L_value2, &L_endstr, 10) ;
+            }
+            if (L_endstr[0] != '\0') {
+              GEN_ERROR(E_GEN_FATAL_ERROR, 
+                        "Incorrect value format for ["
+                        << L_value2 << "] - Unsigned Integer expected");
+              L_ret = -1 ;
+            } 
+            
+          }
+          if (L_ret != -1) *L_value3 = ';' ;
+        } else {
+          char * L_value = (L_fieldValue == NULL) ? (char *)"not set" : L_fieldValue ;
+          GEN_ERROR(E_GEN_FATAL_ERROR, 
+                    "Incorrect value format for ["
+                    << L_value << "] - struct expected");
+          L_ret = -1 ;
+        }
+      }
+
+        break ;
+        
+      case E_TYPE_NUMBER_64: {
+        if ((strlen(L_fieldValue)>2) && 
+            (L_fieldValue[0] == '0') && 
+            (L_fieldValue[1] == 'x')) { // hexa buffer value
+          P_res->m_value.m_val_number_64 = strtoull_f(L_fieldValue, &L_endstr, 16) ;
+        } else {
+          P_res->m_value.m_val_number_64 = strtoull_f(L_fieldValue, &L_endstr, 10) ;
+        }
+        if (L_endstr[0] != '\0') {
+          GEN_ERROR(E_GEN_FATAL_ERROR, 
+                    "Incorrect value format for ["
+                    << L_fieldValue << "] - Unsigned Integer64 expected");
+          L_ret = -1 ;
+        } 
+      }
+        break ;
+        
+      case E_TYPE_SIGNED_64: {
+        if ((strlen(L_fieldValue)>2) && 
+            (L_fieldValue[0] == '0') && 
+            (L_fieldValue[1] == 'x')) { // hexa buffer value
+          P_res->m_value.m_val_signed_64 = strtoll_f(L_fieldValue, &L_endstr, 16) ;
+        } else {
+          P_res->m_value.m_val_signed_64 = strtoll_f(L_fieldValue, &L_endstr, 10) ;
+        }
+        
+        if (L_endstr[0] != '\0') {
+          GEN_ERROR(E_GEN_FATAL_ERROR, 
+                    "Incorrect value format for ["
+                    << L_fieldValue << "] - Integer64 expected");
+          L_ret = -1 ;
+        } 
+      }
+      break ;
+      
+      default:
+        GEN_FATAL(E_GEN_FATAL_ERROR, "Type value not implemented");
+        L_ret = -1 ;
+        break ;
+      } // switch 
     }
   }
 
   return (L_ret) ;
 }
-
 
 
 int C_ProtocolTlv::ctrl_length  (char *P_length_name, bool P_header) {
