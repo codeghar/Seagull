@@ -22,6 +22,8 @@
 #include "GeneratorError.h"
 #include "GeneratorTrace.hpp"
 
+#include "ProtocolData.hpp"
+
 #include "BufferUtils.hpp"
 
 
@@ -930,12 +932,13 @@ C_MessageFrame* C_ProtocolBinaryBodyNotInterpreted::create_new_message(void     
 
             } else if (strcmp(L_bodyData->get_name(),
                               (char*)"setfield")==0) {
-              unsigned long   L_val_setfield = 0 ;
-              int             L_id_setfield   = 0 ;
-	      L_msgOk = (analyze_setfield(L_bodyData, &L_id_setfield ,&L_val_setfield) == -1) 
+              T_ValueData           L_val_setfield   ;
+              L_val_setfield.m_type  = E_TYPE_NUMBER ;
+	      L_msgOk = (analyze_setfield(L_bodyData, &L_val_setfield) == -1) 
                 ? false : true  ;
               if (L_msgOk) {
-                L_msg->C_MessageBinary::set_header_value(L_id_setfield, L_val_setfield);
+                L_msg->C_MessageBinary::set_header_value((int)L_val_setfield.m_id, &L_val_setfield);
+                resetMemory(L_val_setfield);
               }
 	    } else {
 	      GEN_ERROR(E_GEN_FATAL_ERROR, 
@@ -1198,18 +1201,18 @@ int C_ProtocolBinaryBodyNotInterpreted::analyze_sessions_id_from_xml (C_XmlData 
         L_list_management_session.erase(L_list_management_session.begin(),
                                         L_list_management_session.end());
 
-//          for (L_id = 0 ; L_id < m_value_sessions_table_size ; L_id++) {
-//            std::cerr << "m_value_sessions_table[" 
-//                      << L_id 
-//                      << "]" 
-//                      << m_value_sessions_table[L_id].m_msg_id_id
-//                      << " " 
-//                      << m_value_sessions_table[L_id].m_msg_id_type
-//                      << " " 
-//                      << m_value_sessions_table[L_id].m_msg_id_value_type
-//                      << std::endl;
+//            for (L_id = 0 ; L_id < m_value_sessions_table_size ; L_id++) {
+//              std::cerr << "m_value_sessions_table[" 
+//                        << L_id 
+//                        << "]" 
+//                        << m_value_sessions_table[L_id].m_msg_id_id
+//                        << " " 
+//                        << m_value_sessions_table[L_id].m_msg_id_type
+//                        << " " 
+//                        << m_value_sessions_table[L_id].m_msg_id_value_type
+//                        << std::endl;
             
-//          }
+//            }
 
       } else {
         GEN_ERROR(E_GEN_FATAL_ERROR,

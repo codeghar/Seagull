@@ -67,6 +67,7 @@ T_pValueData C_MessageBinaryBodyNotInterpreted::get_session_id (C_ContextFrame *
   int                      L_nb_manag_session ;
   T_ValueData              L_tmp_id_value     ;
 
+  bool                     L_found  = true    ;
   GEN_DEBUG(1, "C_MessageBinaryBodyNotInterpreted::get_session_id() start");
 
   // retrieve the number of managment session
@@ -103,11 +104,12 @@ T_pValueData C_MessageBinaryBodyNotInterpreted::get_session_id (C_ContextFrame *
       
       if(m_protocol->check_present_session (m_header_id, L_session_elt->m_msg_id_id)) {
 	m_protocol->reset_value_data(&m_id);
-        
-        //get_body_value(m_body_val[L_session_elt->m_msg_id_id], L_session_elt->m_msg_id_id);
-        //	m_protocol->get_body_value(&m_id, &m_body_val[L_session_elt->m_msg_id_id]) ;
-        get_body_value(&m_id,L_session_elt->m_msg_id_id);
-	L_id_value = &m_id ;
+        L_found = get_body_value(&m_id,L_session_elt->m_msg_id_id);
+        if (L_found == false) {
+          return (NULL);
+        } else {
+          L_id_value = &m_id ;
+        }
       }
       break ;
     }
@@ -123,10 +125,13 @@ T_pValueData C_MessageBinaryBodyNotInterpreted::get_session_id (C_ContextFrame *
 
 }
 
-void C_MessageBinaryBodyNotInterpreted::get_body_value (T_pValueData P_res, 
+bool C_MessageBinaryBodyNotInterpreted::get_body_value (T_pValueData P_res, 
                                                         int P_id) {
 
   C_ProtocolBinaryBodyNotInterpreted::T_HeaderBodyPositionSize L_pos ;
+
+  bool            L_found = true ;
+
   // ctrl a ajouter
   if (P_id != 0) {
     // find position of field
@@ -150,10 +155,11 @@ void C_MessageBinaryBodyNotInterpreted::get_body_value (T_pValueData P_res,
     }
     m_protocol->get_body_value(P_res, &m_body_val[P_id]);
     resetValue(m_body_val[P_id].m_value);
-
   } else {
     m_protocol->get_body_value(P_res, &m_body_val[P_id]);
   }
+
+  return (L_found);
 }
 
 
