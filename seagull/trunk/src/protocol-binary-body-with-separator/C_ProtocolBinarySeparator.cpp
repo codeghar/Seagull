@@ -26,6 +26,8 @@
 #include "C_MessageBinarySeparator.hpp"
 
 
+#include "ProtocolData.hpp"
+
 C_ProtocolBinarySeparator::C_ProtocolBinarySeparator() : C_ProtocolBinary() {
   GEN_DEBUG(1, "C_ProtocolBinarySeparator::C_ProtocolBinarySeparator() start");
   m_header_body_field_separator_size = 0;
@@ -271,14 +273,15 @@ C_MessageFrame* C_ProtocolBinarySeparator::create_new_message(void              
 	      }
             } else if (strcmp(L_bodyData->get_name(),
                               (char*)"setfield")==0) {
-              unsigned long   L_val_setfield = 0 ;
-              int             L_id_setfield   = 0 ;
-	      L_msgOk = (analyze_setfield(L_bodyData, &L_id_setfield ,&L_val_setfield) == -1) 
+
+              T_ValueData           L_val_setfield   ;
+              L_val_setfield.m_type  = E_TYPE_NUMBER ;
+	      L_msgOk = (analyze_setfield(L_bodyData, &L_val_setfield) == -1) 
                 ? false : true  ;
               if (L_msgOk) {
-                L_msg->C_MessageBinary::set_header_value(L_id_setfield, L_val_setfield);
+                L_msg->C_MessageBinary::set_header_value((int)L_val_setfield.m_id, &L_val_setfield);
+                resetMemory(L_val_setfield);
               }
-              
 	    } else {
 	      GEN_ERROR(E_GEN_FATAL_ERROR, 
 			"Unkown section ["
