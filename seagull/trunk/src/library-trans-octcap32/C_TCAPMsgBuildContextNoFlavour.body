@@ -878,6 +878,8 @@ bool C_TCAPMsgBuildContextNoFlavour::get_primitive_u_abort_cause(T_pValueData P_
     // TO DO destroy m_value ????
   } else {
     LOG_ERROR("abort cause is not specified");
+    P_data->m_value.m_val_binary.m_size = 0 ;
+    P_data->m_value.m_val_binary.m_value = NULL ;
   }
 
   return(true) ;

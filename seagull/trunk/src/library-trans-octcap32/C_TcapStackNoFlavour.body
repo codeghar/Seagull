@@ -631,8 +631,12 @@ C_TcapStackNoFlavour::T_pRecvData C_TcapStackNoFlavour::create_recv_data() {
 
 void C_TcapStackNoFlavour::delete_recv_data(C_TcapStackNoFlavour::T_pRecvData *P_data) {
   T_pRecvData L_data = *P_data ;
-  FREE_VAR(L_data->m_primitive);
+
+  if (*L_data->m_components != NULL) {
+    m_stack_fct.m_free_components(*L_data->m_components);
+  }
   FREE_VAR(L_data->m_components);
+  FREE_VAR(L_data->m_primitive);
   FREE_VAR(L_data);
   *P_data = NULL ;
 }
@@ -660,13 +664,10 @@ bool C_TcapStackNoFlavour::get_message(int P_id,
 				 &(L_data->m_time));
     m_protocol->from_external((C_MsgBuildContext*)L_context, P_ctxt);
 
-    // temporary
-    m_protocol->log_message((char*)"recv", P_ctxt->m_msg);
-
     DELETE_VAR(L_context);
 
-
     FREE_VAR(L_data->m_components);
+
     FREE_VAR(L_data);
     L_ret = true ;
 
