@@ -605,6 +605,24 @@ bool C_MessageText::get_field_value(int P_id,
   return (L_found);
 }
 
+
+T_pValueData C_MessageText::get_field_value (int P_id, 
+                                             int P_instance,
+                                             int P_sub_id) {
+
+  T_pValueData    L_value = NULL ;
+  
+  if (get_field_value(P_id, 
+                      P_instance,
+                      P_sub_id,
+                      L_value) == false ) {
+    return (NULL) ;
+  }
+  
+  return (L_value);
+}
+
+
 bool C_MessageText::get_field_value(int P_id, 
                                     int P_instance,
                                     int P_sub_id,
