@@ -38,38 +38,38 @@
 
 #define LOG_ERROR(m) { \
  char L_err [100] ; \
- snprintf(L_err, 100, (m)) ; \
+ snprintf(L_err, 100, (char*)(m)) ; \
 (*m_logError)(L_err); \
 }
 
 #define LOG_ERROR_P1(m,P1) { \
  char L_err [100] ; \
- snprintf(L_err, 100, (m), (P1)) ; \
+ snprintf(L_err, 100, (char*)(m), (P1)) ; \
 (*m_logError)(L_err); \
 }
 
 #define LOG_ERROR_P2(m,P1,P2) { \
  char L_err [100] ; \
- snprintf(L_err, 100, (m), (P1),(P2)) ; \
+ snprintf(L_err, 100, (char*)(m), (P1),(P2)) ; \
 (*m_logError)(L_err); \
 }
 
 
 #define LOG_ALL(m) { \
  char L_msg [100] ; \
- snprintf(L_msg, 100, (m)) ; \
+ snprintf(L_msg, 100, (char*)(m)) ; \
 (*m_logInfo)(L_msg); \
 }
 
 #define LOG_ALL_P1(m,P1) { \
  char L_msg [100] ; \
- snprintf(L_msg, 100, (m), (P1)) ; \
+ snprintf(L_msg, 100, (char*)(m), (P1)) ; \
 (*m_logInfo)(L_msg); \
 }
 
 #define LOG_ALL_P2(m,P1,P2) { \
  char L_msg [100] ; \
- snprintf(L_msg, 100, (m), (P1),(P2)) ; \
+ snprintf(L_msg, 100, (char*)(m), (P1),(P2)) ; \
 (*m_logInfo)(L_msg); \
 }
 
@@ -94,7 +94,6 @@ C_TransIP::C_TransIP() {
   m_encode_buffer = NULL ;
 
   m_read_buffer_size = DEFAULT_READ_BUFFER_SIZE ;
-
 }
 
 C_TransIP::~C_TransIP() {
@@ -224,11 +223,45 @@ int C_TransIP::pre_select (int             P_n,
 			   size_t          P_nb) {
 
   T_SocketMap::iterator L_it ;
+  C_Socket  *L_socket = NULL ;
+  list_t<T_SocketMap::iterator>::iterator L_close_it ;
+  
+  if (! m_close_list.empty()) {
+    
+    list_t<list_t<T_SocketMap::iterator>::iterator> L_close_list ;
+
+    for(L_close_it = m_close_list.begin();
+        L_close_it != m_close_list.end();
+        L_close_it++) {
+      L_socket = (*L_close_it)->second ;
+      if (((L_socket)->get_list())->empty()) {
+        // do close
+        (L_socket)->_close() ;
+        m_close_event_list.push_back(L_socket->get_id());
+        m_socket_map.erase(*L_close_it);
+        DELETE_VAR(L_socket);
+        L_close_list.push_back (L_close_it);
+      }
+    }
+    if (!L_close_list.empty()) {
+      list_t<list_t<T_SocketMap::iterator>::iterator>::iterator 
+        L_close_lst_it ;
+      for (L_close_lst_it = L_close_list.begin();
+           L_close_lst_it != L_close_list.end();
+           L_close_lst_it ++) {
+        m_close_list.erase(*L_close_lst_it);
+      }
+      L_close_list.erase(L_close_list.begin(),
+                         L_close_list.end());
+    }
+  }
+
 
   for(L_it = m_socket_map.begin();
       L_it != m_socket_map.end ();
       L_it ++) {
-    (L_it->second) -> set_fd_set (P_readfds, P_writefds);
+    if (!(L_socket = L_it->second)->closing())
+      (L_socket) -> set_fd_set (P_readfds, P_writefds);
   }
   
   return ((m_max_fd > P_n) ? m_max_fd : P_n) ;
@@ -251,6 +284,7 @@ int C_TransIP::post_select (int                 P_n,
 
   list_t<T_SocketMap::iterator>::iterator L_del_it ;
   list_t<C_Socket*>::iterator             L_ins_it ;
+  list_t<int>::iterator                   L_close_it ;
 
   bool L_max_update = false ;
 
@@ -263,67 +297,73 @@ int C_TransIP::post_select (int                 P_n,
     if (L_n) {
 
       L_socket = L_it->second ;
-      L_event.no_event() ;
-      L_newSocket = L_socket->process_fd_set(P_readfds,P_writefds, &L_event);
-      switch (L_event.m_type) {
-	
-      case C_TransportEvent::E_TRANS_NO_EVENT:
-	GEN_DEBUG(0, "C_TransIP::post_select() E_TRANS_NO_EVENT");
-	break ;
-	
-      case C_TransportEvent::E_TRANS_RECEIVED:
-	GEN_DEBUG(0, "C_TransIP::post_select() E_TRANS_RECEIVED");
-	P_eventTable[L_nb_event] = L_event ;
-
-	// insert decode process
-	decode_from_protocol (L_socket);
-
-	L_nb_event++ ;
-	L_n -- ;
-	break ;
-
-      case C_TransportEvent::E_TRANS_CLOSED:
-	GEN_DEBUG(0, "C_TransIP::post_select() E_TRANS_CLOSED");
-	L_id = (L_socket)->get_id() ;
-        LOG_ALL_P1("Connection closed: [%d]", L_id);
-	(L_socket)->_close() ;
-	m_delete_list.push_back(L_it) ;
-	DELETE_VAR(L_socket);
-	if (L_id == m_max_fd) { L_max_update = true ; }
-	P_eventTable[L_nb_event] = L_event ;
-	L_nb_event++ ;
-	L_n-- ;
-	break ;
-
-      case C_TransportEvent::E_TRANS_CONNECTION:
-	L_id = L_event.m_id ;
-	GEN_DEBUG(0, "C_TransIP::post_select() E_TRANS_CONNECTION id=" 
-		  << L_id);
-	if (L_id > m_max_fd) { L_max_update = true ; }
-	m_insert_list.push_back(L_newSocket);
-	P_eventTable[L_nb_event] = L_event ;
-	L_nb_event++ ;
-	L_n-- ;
-	break ;
-
-      case C_TransportEvent::E_TRANS_OPEN:
-	P_eventTable[L_nb_event] = L_event ;
-	L_nb_event++ ;
-	L_n-- ;
-	break ;
-
-      case C_TransportEvent::E_TRANS_OPEN_FAILED:
-	L_id = (L_socket)->get_id() ;
-	(L_socket)->_close() ;
-	m_delete_list.push_back(L_it) ;
-	DELETE_VAR(L_socket);
-	if (L_id == m_max_fd) { L_max_update = true ; }
-	P_eventTable[L_nb_event] = L_event ;
-	L_nb_event++ ;
-	L_n-- ;
-	break ;
-	
-      }
+      if (!L_socket->closing()) {
+        L_event.no_event() ;
+        L_newSocket = L_socket->process_fd_set(P_readfds,P_writefds, &L_event);
+        switch (L_event.m_type) {
+          
+        case C_TransportEvent::E_TRANS_NO_EVENT:
+          GEN_DEBUG(0, "C_TransIP::post_select() E_TRANS_NO_EVENT");
+          break ;
+          
+        case C_TransportEvent::E_TRANS_RECEIVED:
+          GEN_DEBUG(0, "C_TransIP::post_select() E_TRANS_RECEIVED");
+          P_eventTable[L_nb_event] = L_event ;
+          
+          // insert decode process
+          decode_from_protocol (L_socket);
+          
+          L_nb_event++ ;
+          L_n -- ;
+          break ;
+          
+        case C_TransportEvent::E_TRANS_CLOSED:
+          GEN_DEBUG(0, "C_TransIP::post_select() E_TRANS_CLOSED");
+          L_id = (L_socket)->get_id() ;
+          if (!((L_socket)->get_list())->empty()) {
+            L_socket->set_closing();
+            m_close_list.push_back(L_it);
+          } else {
+            (L_socket)->_close() ;
+            m_delete_list.push_back(L_it) ;
+            DELETE_VAR(L_socket);
+            if (L_id == m_max_fd) { L_max_update = true ; }
+            P_eventTable[L_nb_event] = L_event ;
+            L_nb_event++ ;
+            L_n-- ;
+          }
+          break ;
+          
+        case C_TransportEvent::E_TRANS_CONNECTION:
+          L_id = L_event.m_id ;
+          GEN_DEBUG(0, "C_TransIP::post_select() E_TRANS_CONNECTION id=" 
+                    << L_id);
+          if (L_id > m_max_fd) { L_max_update = true ; }
+          m_insert_list.push_back(L_newSocket);
+          P_eventTable[L_nb_event] = L_event ;
+          L_nb_event++ ;
+          L_n-- ;
+          break ;
+          
+        case C_TransportEvent::E_TRANS_OPEN:
+          P_eventTable[L_nb_event] = L_event ;
+          L_nb_event++ ;
+          L_n-- ;
+          break ;
+          
+        case C_TransportEvent::E_TRANS_OPEN_FAILED:
+          L_id = (L_socket)->get_id() ;
+          (L_socket)->_close() ;
+          m_delete_list.push_back(L_it) ;
+          DELETE_VAR(L_socket);
+          if (L_id == m_max_fd) { L_max_update = true ; }
+          P_eventTable[L_nb_event] = L_event ;
+          L_nb_event++ ;
+          L_n-- ;
+          break ;
+          
+        } // switch L_event
+      } // if ! L_socket->closing()
     }
   }
 
@@ -351,6 +391,20 @@ int C_TransIP::post_select (int                 P_n,
     m_max_fd = (m_socket_map.empty()) ? 
       0 : (m_socket_map.rbegin())->first ;
     GEN_DEBUG(0, "C_TransIP::post_select() max fd [" << m_max_fd << "]");
+  }
+
+  if (!m_close_event_list.empty()) {
+    for(L_close_it = m_close_event_list.begin();
+        L_close_it != m_close_event_list.end();
+        L_close_it ++) {
+      L_event.no_event();
+      L_event.m_type = C_TransportEvent::E_TRANS_CLOSED ;
+      L_event.m_id = *L_close_it ;
+      P_eventTable[L_nb_event] = L_event ;
+      L_nb_event++ ;
+    }
+    m_close_event_list.erase(m_close_event_list.begin(),
+                             m_close_event_list.end());
   }
 
   *P_nb = L_nb_event ;
@@ -450,15 +504,18 @@ int C_TransIP::close (int P_id) {
     L_ret = -1 ;
   }
 
-
-
   if (!m_socket_map.empty()) {
     L_it = m_socket_map.find (T_SocketMap::key_type(P_id));
     if (L_it != m_socket_map.end()) {
       L_socket = L_it->second ;
-      L_socket -> _close();
-      DELETE_VAR(L_socket);
-      m_socket_map.erase(L_it);
+      if (!((L_socket)->get_list())->empty()) {
+        L_socket->set_closing();
+        m_close_list.push_back(L_it);
+      } else {
+        L_socket -> _close();
+        DELETE_VAR(L_socket);
+        m_socket_map.erase(L_it);
+      }
     } else {
       L_ret = -1 ; 
     }
@@ -509,7 +566,7 @@ C_Socket* C_TransIP::open (int              P_channel_id,
                                        P_channel_id, 
                                        m_read_buffer_size, 
                                        m_decode_buffer_size));
-      
+
       L_rc = L_Socket->_open_udp(m_buffer_size, P_protocol) ;
       if (L_rc == 0) {
         L_socket_created = L_Socket ;
@@ -557,11 +614,10 @@ C_Socket* C_TransIP::open (int              P_channel_id,
 bool C_TransIP::analyze_ulong_value (char* P_buf, 
                                      char* P_pattern,
                                      size_t* P_value) {
-  bool L_ret = false ;
+  bool             L_ret  = false ;
   char            *L_ptr          ;
   char             L_tmp  [255]   ;
   char            *L_buf          ;
-
   char            *L_pattern      ;
 
   L_buf = P_buf ;
@@ -593,8 +649,7 @@ bool C_TransIP::analyze_ulong_value (char* P_buf,
 bool C_TransIP::analyze_string_value (char* P_buf, 
                                       char* P_pattern,
                                       char* P_value) {
-  bool L_ret = false ;
-
+  bool             L_ret = false  ;
   char            *L_ptr          ;
   char            *L_pattern      ;
 
@@ -615,6 +670,11 @@ bool C_TransIP::analyze_string_value (char* P_buf,
 
 void C_TransIP::analyze_optional_init_string(char *P_buf) {
 
+  char                          L_tmp  [255]         ;
+  size_t                        L_close_wait_ms_size ;
+  int                           L_linger_onoff = 1    ;
+  int                           L_linger = 0         ;
+
   if (analyze_ulong_value (P_buf,
                            (char*)"decode-buf-len=",
                            &m_decode_buffer_size)) {
@@ -630,6 +690,23 @@ void C_TransIP::analyze_optional_init_string(char *P_buf) {
                            &m_read_buffer_size)) {
     // not mandatory
   } 
+  
+  if (analyze_string_value (P_buf,
+                            (char*)"close-wait-ms=",
+                            L_tmp)) {
+    if (!strcmp(L_tmp,"off")) {
+      L_linger_onoff = 0 ;
+    } else {
+      if (analyze_ulong_value (P_buf,
+                               (char*)"close-wait-ms=",
+                               &L_close_wait_ms_size)) {
+        L_linger = L_close_wait_ms_size ;
+      } else {
+        LOG_ALL_P1("Unknown parameter value for close-wait-ms: [%s]", L_tmp);
+      }
+    }
+  }
+  set_socket_linger(L_linger_onoff, L_linger);
 }
 
 bool C_TransIP::analyze_init_string(char *P_buf) {

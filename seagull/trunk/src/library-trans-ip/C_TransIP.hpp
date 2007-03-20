@@ -117,6 +117,9 @@ protected:
 
   list_t<T_SocketMap::iterator> m_delete_list ;
   list_t<C_Socket *>            m_insert_list ;
+  list_t<T_SocketMap::iterator> m_close_list  ;
+  list_t<int>                   m_close_event_list ;
+
 
   T_logFunction                 m_logError, 
                                 m_logInfo ;

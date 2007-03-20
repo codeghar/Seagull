@@ -85,7 +85,11 @@ public:
   int                    get_channel_id();
   void                   _close () ;
   void                   set_channel_id(int P_channel_id);
+
   C_ProtocolBinaryFrame* get_protocol() ;
+
+  bool                   closing() ;
+  void                   set_closing() ;
 
 protected:
 
@@ -95,6 +99,7 @@ protected:
   int                 m_src_port    ;
   T_SocketState       m_state       ;
   size_t              m_buffer_size ;
+  bool                m_closing     ;
 
   // decode process temporary
   C_ProtocolBinaryFrame  *m_protocol ;
@@ -234,6 +239,8 @@ public:
   int _read ();
 
 } ;
+
+void set_socket_linger(int P_onoff, int P_linger) ;
 
 typedef map_t<int, C_Socket*> T_SocketMap, *T_pSocketMap ;
 

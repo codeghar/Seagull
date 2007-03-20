@@ -38,6 +38,13 @@
 #define SOCKET_DEBUG(l,m)
 #endif
 
+static struct linger m_linger ;
+
+void set_socket_linger(int P_onoff, int P_linger) {
+  m_linger.l_onoff = P_onoff ;
+  m_linger.l_linger = P_linger ;
+}
+
 int C_Socket::get_prototype() {
   int L_ret ;
 
@@ -125,6 +132,7 @@ C_Socket::C_Socket(C_Socket &P_Socket) {
   m_state = P_Socket.m_state       ;
   m_buffer_size = P_Socket.m_buffer_size ;
   m_protocol = P_Socket.m_protocol ;
+  m_closing = P_Socket.m_closing ;
 }
 
 C_Socket::C_Socket(int P_channel_id) {
@@ -135,6 +143,7 @@ C_Socket::C_Socket(int P_channel_id) {
    m_socket_id = -1 ;
    m_channel_id = P_channel_id ;
    m_state = E_SOCKET_STATE_NOT_READY ;
+   m_closing = false ;
 }
 
 C_Socket::C_Socket(T_SocketType P_type, 
@@ -150,6 +159,7 @@ C_Socket::C_Socket(T_SocketType P_type,
 
   m_channel_id = P_channel_id ;
   m_state = E_SOCKET_STATE_NOT_READY ;
+  m_closing = false ;
 }
 
 C_Socket::C_Socket(T_SocketType P_type, 
@@ -161,6 +171,15 @@ C_Socket::C_Socket(T_SocketType P_type,
   m_type = P_type ;
   m_channel_id = P_channel_id ;
   m_state = E_SOCKET_STATE_NOT_READY ;
+  m_closing = false ;
+}
+
+bool C_Socket::closing() {
+  return(m_closing);
+}
+
+void C_Socket::set_closing() {
+  m_closing = true ;
 }
 
 C_pDataDecode C_Socket::get_decode() {
@@ -258,7 +277,7 @@ void C_Socket::set_properties() {
 
   int           L_sock_opt ;
   unsigned int  L_max_buf_size ;
-  struct linger L_linger ;
+  //   struct linger L_linger ;
   int           L_flags ;
 
   if (m_type == E_SOCKET_TCP_MODE) {
@@ -277,12 +296,13 @@ void C_Socket::set_properties() {
       SOCKET_ERROR(1, "setsockopt(TCP_NODELAY) failed");
     }
     // max wait time after a close
-    L_linger.l_onoff = 1;
-    L_linger.l_linger = 0;
     if (call_setsockopt (m_socket_id, SOL_SOCKET, SO_LINGER,
-		    &L_linger, sizeof (L_linger)) < 0) {
+		    &m_linger, sizeof (m_linger)) < 0) {
       SOCKET_ERROR(1, "Unable to set SO_LINGER option");
     }
+
+
+
   }
 
   // size of recv buf
@@ -372,7 +392,7 @@ int C_SocketListen::_open (size_t P_buffer_size,
 	 /* system, if we are not directly awaiting them using	*/
 	 /* the accept() system call, when they arrive.		*/
 	 L_rc = _call_listen(5);
-	 
+	 	 
 	 /* check there was no error */
 	 if (L_rc) {
 	   SOCKET_ERROR(1, "listen [" << strerror(errno) << "]");
@@ -568,9 +588,21 @@ int C_SocketClient::_open(T_pOpenStatus  P_status,
 			 P_protocol) ;
 
   if (L_rc == 0) {
-
+    
     if (m_type == E_SOCKET_TCP_MODE) {
-
+      
+      if ((m_remote_addr_info->m_value_src != NULL) &&
+          (m_remote_addr_info->m_port_src != -1)) {
+        L_rc = call_bind(m_socket_id,
+                         (sockaddr *)(void *)&(m_remote_addr_info->m_addr_src),
+                         SOCKADDR_IN_SIZE(&(m_remote_addr_info->m_addr_src)));
+        
+        if (L_rc) {
+          SOCKET_ERROR(1, "TCP Client bind [" << strerror(errno) << "]");
+          *P_status = E_OPEN_FAILED ;
+        }
+      }
+      
       L_rc = call_connect (m_socket_id, 
                            (struct sockaddr*)(void*)&(m_remote_addr_info->m_addr),
                            SOCKADDR_IN_SIZE(&(m_remote_addr_info->m_addr))) ;
@@ -605,7 +637,7 @@ int C_SocketClient::_open(T_pOpenStatus  P_status,
         
         m_state                   = E_SOCKET_STATE_READY ;
         *P_status                 = E_OPEN_OK ;
-        }
+       }
     }
   }
   return (L_rc);
@@ -775,6 +807,8 @@ C_Socket* C_SocketWithData::process_fd_in_progess(fd_set *P_rSet,
                    << m_socket_id << "]");
     }
   }
+
+
   return (NULL);
 }
 
@@ -795,7 +829,6 @@ C_Socket* C_SocketWithData::process_fd_set (fd_set* P_rSet,
     break ;
 
   case E_SOCKET_STATE_INPROGESS:
-
     L_socket = process_fd_in_progess(P_rSet, P_wSet, P_event);
     break ;
 
