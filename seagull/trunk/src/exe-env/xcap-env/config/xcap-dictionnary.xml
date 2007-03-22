@@ -60,12 +60,12 @@
              line="0"
              subexpr="1"> 
      </regexp>
-     <regexp name="request-param" 
+     <regexp name="request-param"
              expr="[[:space:]]*([^ ]+)[[:space:]]+([^ ]+)[[:space:]]+HTTP\/1\.1[[:space:]]*$"
              nbexpr="3"
              line="0"
-             subexpr="2"> 
-     </regexp>
+             subexpr="2">
+     </regexp> 
      <regexp name="answer-type"
              expr="HTTP\/1\.1[[:space:]]+([0-9]+)[[:space:]]+"
              nbexpr="2"
@@ -81,6 +81,16 @@
              subexpr="1">
      </regexp>
    </fielddef>
+
+   <fielddef name="request-uri">
+     <regexp name="uri"
+             expr="[[:space:]]*([^ ]+)[[:space:]]+([^ ]+)[[:space:]]+HTTP\/1\.1[[:space:]]*$"
+             nbexpr="3"
+             line="0"
+             subexpr="2">
+     </regexp> 
+   </fielddef>
+
 </header>
 
 <body name="data" type="data-type">
