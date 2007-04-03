@@ -2230,7 +2230,8 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
               <td>Number of calls to be done. It is available for client and server. 
             Once the number of calls is reached, no new calls are :<br/>
             - placed by the client(note that some additional calls can be placed, but no less) <br/>
-            - accepted by the server.
+            - accepted by the server.<br/>
+            <strong>WARNING</strong>: the init section of the scenario is considered as one call for the server side.
               </td>
               <td>-</td>
               <td>
