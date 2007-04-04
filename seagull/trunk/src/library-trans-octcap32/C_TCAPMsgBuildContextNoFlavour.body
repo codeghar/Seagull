@@ -216,24 +216,29 @@ bool C_TCAPMsgBuildContextNoFlavour::get_component (T_pValueData P_data) {
 
 bool C_TCAPMsgBuildContextNoFlavour::get_primitive_d_address_ssn (T_pValueData P_data) {
   P_data->m_value.m_val_number = TC_P_D_ADDR(m_primitive).ssn ;
+  P_data->m_type = E_TYPE_NUMBER ;
   return(true);
 }
 
 bool C_TCAPMsgBuildContextNoFlavour::get_primitive_o_address_ssn (T_pValueData P_data) {
   P_data->m_value.m_val_number = TC_P_O_ADDR(m_primitive).ssn ;
+  P_data->m_type = E_TYPE_NUMBER ;
   return(true);
 }
 
 bool C_TCAPMsgBuildContextNoFlavour::get_primitive_type (T_pValueData P_data) {
   P_data->m_value.m_val_number = TC_P_TYPE(m_primitive) ;
+  P_data->m_type = E_TYPE_NUMBER ;
   return(true);
 }
 
 bool C_TCAPMsgBuildContextNoFlavour::get_primitive_d_address_pc (T_pValueData P_data) {
   if (TC_P_TYPE(m_primitive) != SCCP_USER_STATUS) {
     P_data->m_value.m_val_number = TC_P_D_ADDR(m_primitive).pc_value ;
+    P_data->m_type = E_TYPE_NUMBER ;
   } else {
     P_data->m_value.m_val_number = TC_P_ASSPC(m_primitive) ;
+    P_data->m_type = E_TYPE_NUMBER ;
   return(false);
   }
   return(true);
@@ -260,27 +265,32 @@ bool C_TCAPMsgBuildContextNoFlavour::get_primitive_d_address_pc (T_pValueData P_
 
 bool C_TCAPMsgBuildContextNoFlavour::get_primitive_o_address_pc (T_pValueData P_data) {
   P_data->m_value.m_val_number = TC_P_O_ADDR(m_primitive).pc_value ;
+  P_data->m_type = E_TYPE_NUMBER ;
   return(true);
 }
 
 bool C_TCAPMsgBuildContextNoFlavour::get_primitive_uid (T_pValueData P_data) {
   P_data->m_value.m_val_number = TC_P_USER_ID(m_primitive);
+  P_data->m_type = E_TYPE_NUMBER ;
   return(true);
 }
 
 bool C_TCAPMsgBuildContextNoFlavour::get_primitive_pid (T_pValueData P_data) {
   P_data->m_value.m_val_number = TC_P_PROVIDER_ID(m_primitive) ;
+  P_data->m_type = E_TYPE_NUMBER ;
   return(true);
 }
 
 bool C_TCAPMsgBuildContextNoFlavour::get_component_type (T_pValueData P_data) {
 
   P_data->m_value.m_val_number = m_component_current->c_type ;
+  P_data->m_type = E_TYPE_NUMBER ;
   return(true);
 }
 
 bool C_TCAPMsgBuildContextNoFlavour::get_component_class (T_pValueData P_data) {
   P_data->m_value.m_val_number = m_component_current->op_class ;
+  P_data->m_type = E_TYPE_NUMBER ;
   return(true);
 }
 
@@ -294,6 +304,7 @@ bool C_TCAPMsgBuildContextNoFlavour::get_component_timeout (T_pValueData P_data)
   }
  
   P_data->m_value.m_val_number = (unsigned long) L_timeout ;
+  P_data->m_type = E_TYPE_NUMBER ;
 
   return(true);
 }
@@ -319,9 +330,11 @@ bool C_TCAPMsgBuildContextNoFlavour::get_component_code (T_pValueData P_data) {
 	  (m_component_current->operation.datas[L_indice]);
       }
     P_data->m_value.m_val_number = L_opValue;  
+    P_data->m_type = E_TYPE_NUMBER ;
   } else {
     LOG_ERROR("RECEIPT INVOKE/RESULT No operation code");
     P_data->m_value.m_val_number = 0 ;
+    P_data->m_type = E_TYPE_NUMBER ;
     return(false);
   }
   
@@ -335,6 +348,7 @@ bool C_TCAPMsgBuildContextNoFlavour::get_component_code (T_pValueData P_data) {
     P_data->m_value.m_val_number = P_data->m_value.m_val_number << 8 ;
     P_data->m_value.m_val_number = P_data->m_value.m_val_number |
       (m_component_current->operation.op_specifier & 0xff);
+    P_data->m_type = E_TYPE_NUMBER ;
   }
 
 #endif
@@ -430,6 +444,7 @@ bool C_TCAPMsgBuildContextNoFlavour::get_component_data (T_pValueData P_data) {
 
 bool C_TCAPMsgBuildContextNoFlavour::get_component_invoke_id(T_pValueData P_data) {
   P_data->m_value.m_val_number = m_component_current->invoke_id ;
+  P_data->m_type = E_TYPE_NUMBER ;
   return(true);
 }
 
@@ -450,14 +465,17 @@ bool C_TCAPMsgBuildContextNoFlavour::get_component_error_code(T_pValueData P_dat
 	(m_component_current->error.datas[L_indice]);
     }   /* endfor(L_indice=0;                                 */
     P_data->m_value.m_val_number = L_opValue;  
+    P_data->m_type = E_TYPE_NUMBER ;
   } else {
     LOG_ERROR("No error code");
     P_data->m_value.m_val_number = 0;
+    P_data->m_type = E_TYPE_NUMBER ;
     return(false);
   }
 #else
   if (m_component_current->c_type == TC_U_ERROR ) {
     P_data->m_value.m_val_number = m_component_current->error.code ;
+    P_data->m_type = E_TYPE_NUMBER ;
   }
 #endif
   
@@ -466,18 +484,21 @@ bool C_TCAPMsgBuildContextNoFlavour::get_component_error_code(T_pValueData P_dat
 
 bool C_TCAPMsgBuildContextNoFlavour::get_component_problem_code_identifier(T_pValueData P_data) {
   P_data->m_value.m_val_number = m_component_current->problem_code.identifier  ;
+  P_data->m_type = E_TYPE_NUMBER ;
   return(true);
 }
 
 
 bool C_TCAPMsgBuildContextNoFlavour::get_component_problem_code(T_pValueData P_data) {
   P_data->m_value.m_val_number = m_component_current->problem_code.code  ;
+  P_data->m_type = E_TYPE_NUMBER ;
   return(true);
 }
 
 #ifdef _ANSI_STANDARD
 bool C_TCAPMsgBuildContextNoFlavour::get_component_correlation_id(T_pValueData P_data) {
   P_data->m_value.m_val_number = m_component_current->correlation_id;
+  P_data->m_type = E_TYPE_NUMBER ;
   return(true);
 }
 #endif 
@@ -508,9 +529,11 @@ bool C_TCAPMsgBuildContextNoFlavour::get_primitive_termination (T_pValueData P_d
   switch (TC_P_TERMINATION(m_primitive)) {
   case BASIC:
     P_data->m_value.m_val_number = 0 ;
+    P_data->m_type = E_TYPE_NUMBER ;
     break ;
   case PREARRANGED:
     P_data->m_value.m_val_number = 1 ;
+    P_data->m_type = E_TYPE_NUMBER ;
     break ;
   default:
     L_ret = false ;
@@ -653,6 +676,7 @@ bool C_TCAPMsgBuildContextNoFlavour::set_component_error_tag (T_pValueData P_dat
 bool C_TCAPMsgBuildContextNoFlavour::get_component_error_tag (T_pValueData P_data) {
 
   P_data->m_value.m_val_number = m_component_current->error.tag ;
+  P_data->m_type = E_TYPE_NUMBER ;
   return(true);
 }
 
@@ -671,6 +695,7 @@ bool C_TCAPMsgBuildContextNoFlavour::set_component_operation_code_tag (T_pValueD
 bool C_TCAPMsgBuildContextNoFlavour::get_component_operation_code_tag (T_pValueData P_data) {
 
   P_data->m_value.m_val_number = m_component_current->operation.tag ;
+  P_data->m_type = E_TYPE_NUMBER ;
   return(true);
 }
 
@@ -836,6 +861,7 @@ bool C_TCAPMsgBuildContextNoFlavour::set_primitive_p_abort_cause(T_pValueData P_
 
 bool C_TCAPMsgBuildContextNoFlavour::get_primitive_p_abort_cause(T_pValueData P_data) {
   P_data->m_value.m_val_number = TC_P_PABORT(m_primitive);
+  P_data->m_type = E_TYPE_NUMBER ;
   return(true) ;
 }
 
@@ -874,7 +900,6 @@ bool C_TCAPMsgBuildContextNoFlavour::get_primitive_u_abort_cause(T_pValueData P_
     memcpy(P_data->m_value.m_val_binary.m_value,
 	   TC_P_UABORT(m_primitive).datas,
 	   L_size) ;
-    
     // TO DO destroy m_value ????
   } else {
     LOG_ERROR("abort cause is not specified");
@@ -893,6 +918,7 @@ bool C_TCAPMsgBuildContextNoFlavour::set_primitive_report_cause(T_pValueData P_d
 
 bool C_TCAPMsgBuildContextNoFlavour::get_primitive_report_cause(T_pValueData P_data) {
   P_data->m_value.m_val_number = TC_P_REPORT(m_primitive);
+  P_data->m_type = E_TYPE_NUMBER ;
   return(true) ;
 }
 
@@ -1017,8 +1043,10 @@ bool C_TCAPMsgBuildContextNoFlavour::get_primitive_abort_reason(T_pValueData P_d
 #ifdef _ITU_STANDARD
   if (TC_P_DLG_INFO_PRESENT(m_primitive) == TC_YES) {
     P_data->m_value.m_val_number = TC_P_DLG_PORTION_ABORT_REASON(m_primitive);
+    P_data->m_type = E_TYPE_NUMBER ;
   } else {
     P_data->m_value.m_val_number = 2 ;
+    P_data->m_type = E_TYPE_NUMBER ;
   }
 #endif
   return(true) ;
@@ -1057,6 +1085,7 @@ bool C_TCAPMsgBuildContextNoFlavour::primitive_termination_from_string (char **P
   for (L_i = 0 ; L_i < 2 ; L_i ++) {
     if (strcmp((*P_string), L_termination_name[L_i]) == 0) {
       P_data->m_value.m_val_number = L_i ;
+      P_data->m_type = E_TYPE_NUMBER ;
       L_ret = true ;
       break ;
     }
@@ -1106,6 +1135,7 @@ bool C_TCAPMsgBuildContextNoFlavour::primitive_report_cause_from_string (char **
   for (L_i = 0 ; L_i < 8 ; L_i ++) {
     if (strcmp((*P_string), L_report_name[L_i]) == 0) {
       P_data->m_value.m_val_number = L_i ;
+      P_data->m_type = E_TYPE_NUMBER ;
       L_ret = true ;
       break ;
     }
@@ -1183,6 +1213,7 @@ bool C_TCAPMsgBuildContextNoFlavour::primitive_p_abort_cause_from_string (char *
   for (L_i = 0 ; L_i < L_size ; L_i ++) {
     if (strcmp((*P_string), L_p_abort_name[L_i]) == 0) {
       P_data->m_value.m_val_number = L_i ;
+      P_data->m_type = E_TYPE_NUMBER ;
       L_ret = true ;
       break ;
     }
@@ -1298,6 +1329,7 @@ bool C_TCAPMsgBuildContextNoFlavour::component_problem_code_from_string (char **
   for (L_i = 0 ; L_i < L_size ; L_i ++) {
     if (strcmp((*P_string), L_problem_code_name[L_i]) == 0) {
       P_data->m_value.m_val_number = L_i ;
+      P_data->m_type = E_TYPE_NUMBER ;
       L_ret = true ;
       break ;
     }
@@ -1364,6 +1396,7 @@ bool C_TCAPMsgBuildContextNoFlavour::component_pb_code_identifier_from_string (c
   for (L_i = 0 ; L_i < L_size ; L_i ++) {
     if (strcmp((*P_string), L_pb_code_identifier_name[L_i]) == 0) {
       P_data->m_value.m_val_number = L_i ;
+      P_data->m_type = E_TYPE_NUMBER ;
       L_ret = true ;
       break ;
     }
@@ -1406,6 +1439,7 @@ bool C_TCAPMsgBuildContextNoFlavour::primitive_dlg_abort_reason_from_string (cha
   for (L_i = 0 ; L_i < 3 ; L_i ++) {
     if (strcmp((*P_string), L_dlg_abort_name[L_i]) == 0) {
       P_data->m_value.m_val_number = L_i ;
+      P_data->m_type = E_TYPE_NUMBER ;
       L_ret = true ;
       break ;
     }
@@ -1423,6 +1457,7 @@ bool C_TCAPMsgBuildContextNoFlavour::set_component_parameter_type(T_pValueData P
 }
 bool C_TCAPMsgBuildContextNoFlavour::get_component_parameter_type(T_pValueData P_data) {
   P_data->m_value.m_val_number = m_component_current->parameter_type;  
+  P_data->m_type = E_TYPE_NUMBER ;
   return(true) ;
 }
 
@@ -1454,6 +1489,7 @@ bool C_TCAPMsgBuildContextNoFlavour::component_parameter_type_from_string (char 
   for (L_i = 0 ; L_i < 2 ; L_i ++) {
     if (strcmp((*P_string), L_parameter_type[L_i]) == 0) {
       P_data->m_value.m_val_number = L_i ;
+      P_data->m_type = E_TYPE_NUMBER ;
       L_ret = true ;
       break ;
     }
@@ -1507,6 +1543,7 @@ bool C_TCAPMsgBuildContextNoFlavour::component_operation_code_tag_from_string (c
   for (L_i = 0 ; L_i < 2 ; L_i ++) {
     if (strcmp((*P_string), L_operation_code_tag_name[L_i]) == 0) {
       P_data->m_value.m_val_number = L_i ;
+      P_data->m_type = E_TYPE_NUMBER ;
       L_ret = true ;
       break ;
     }
@@ -1557,6 +1594,7 @@ bool C_TCAPMsgBuildContextNoFlavour::component_error_tag_from_string (char **P_s
   for (L_i = 0 ; L_i < 2 ; L_i ++) {
     if (strcmp((*P_string), L_error_tag_name[L_i]) == 0) {
       P_data->m_value.m_val_number = L_i ;
+      P_data->m_type = E_TYPE_NUMBER ;
       L_ret = true ;
       break ;
     }

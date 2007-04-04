@@ -215,8 +215,8 @@ C_TCAPMsgBuildContextFactoryNoFlavour
 
 #endif // _ANSI_STANDARD
 
-    create_table (&L_list, &L_list_s);
 
+    create_table (&L_list, &L_list_s);
 }
 
 C_TCAPMsgBuildContextFactoryNoFlavour::~C_TCAPMsgBuildContextFactoryNoFlavour() {

@@ -188,6 +188,7 @@ C_TcapStackNoFlavour::C_TcapStackNoFlavour(char *P_library_name)
   }
   
   NEW_VAR(m_recv_data_list, T_RecvDataList());
+  m_recv_data_list->clear();
 }
 
 C_TcapStackNoFlavour::~C_TcapStackNoFlavour() {
@@ -646,7 +647,9 @@ bool C_TcapStackNoFlavour::get_message(int P_id,
   bool        L_ret = false ;
   T_pRecvData L_data = NULL ;
 
-  C_TCAPMsgBuildContextNoFlavour* L_context ;  //WARNING !!! flavour dep
+  C_TCAPMsgBuildContextNoFlavour* L_context = NULL ;  //WARNING !!! flavour dep
+
+  C_ProtocolFrame::T_MsgError L_error = C_ProtocolFrame::E_MSG_OK;
 
 
   if (!m_recv_data_list->empty()) {
@@ -662,14 +665,16 @@ bool C_TcapStackNoFlavour::get_message(int P_id,
 				 L_data->m_primitive,
 				 L_data->m_components,
 				 &(L_data->m_time));
-    m_protocol->from_external((C_MsgBuildContext*)L_context, P_ctxt);
+
+    L_error = m_protocol->from_external((C_MsgBuildContext*)L_context, P_ctxt) ;
+    L_ret = (L_error == C_ProtocolFrame::E_MSG_OK) ? true : false ;
 
     DELETE_VAR(L_context);
 
     FREE_VAR(L_data->m_components);
 
     FREE_VAR(L_data);
-    L_ret = true ;
+
 
     // something to call from stack to delete primitive/component
   }
@@ -681,7 +686,7 @@ int  C_TcapStackNoFlavour::send_message(int P_id,
 
   int L_ret = 0 ;
 
-  C_TCAPMsgBuildContextNoFlavour* L_context ;  //WARNING !!! flavour dep
+  C_TCAPMsgBuildContextNoFlavour* L_context = NULL ;  //WARNING !!! flavour dep
 
   NEW_VAR(L_context, C_TCAPMsgBuildContextNoFlavour()); 
 
@@ -704,7 +709,6 @@ int  C_TcapStackNoFlavour::send_message(int P_id,
   } 
 
   DELETE_VAR(L_context); // => delete the primitive field of the context
-  
 
   return (L_ret);
 }
