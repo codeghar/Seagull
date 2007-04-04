@@ -19,102 +19,32 @@
 #ifndef _C_TRANS_SCTP_
 #define _C_TRANS_SCTP_
 
-#define NO_TRANS_IP_CONTEXT 0L
-
-#include <sys/time.h>
-
-#include "list_t.hpp"
-#include "C_Transport.hpp"
-#include "S_SCTPIpAddr.hpp"
-
+#include "C_TransIP.hpp"
 #include "C_SocketSCTP.hpp"
-#include "C_ProtocolBinaryFrame.hpp"
 
-class C_TransSCTP : public C_Transport {
+class C_TransSCTP : public C_TransIP {
 
 public:
-
-   C_TransSCTP ();
-  ~C_TransSCTP ();
-
-  int         init       (char *P_buf,
-                          T_logFunction P_logError,
-                          T_logFunction P_logInfo) ;
-
-  int         config (T_pConfigValueList P_config_param_list) ;
-
-
-  int         open       (int              P_channel_id,
-			  char            *P_buf, 
-			  T_pOpenStatus    P_status,
-			  C_ProtocolFrame *P_protocol);
-
-  int         pre_select (int             P_n, 
-			  fd_set         *P_readfds,  
-			  fd_set         *P_writefds,
-			  fd_set         *P_exceptfds, 
-			  struct timeval *P_timeout, 
-			  int            *P_cnx, 
-			  size_t          P_nb) ;
-
-  int         post_select (int                 P_n, 
-			   fd_set             *P_readfds,  
-			   fd_set             *P_writefds,
-			   fd_set             *P_exceptfds, 
-			   T_pC_TransportEvent P_eventTable,
-			   size_t             *P_nb);
-
-  size_t      send_buffer     (int             P_id, 
-			       unsigned char  *P_data, 
-			       size_t          P_size);
-  size_t      send_buffer2    (int             P_id,
-			       unsigned char  *P_data,
-			       size_t          P_size);
-
-  int         send_message    (int             P_id,
-			       C_MessageFrame *P_msg);
-
-  size_t received_buffer (int             P_id, 
-			  unsigned char  *P_data,
-			  size_t          P_size_buf);
-
-  bool        get_message (int P_id, T_pReceiveMsgContext P_ctxt) ;
-
-  int         set_channel_id (int P_id, int P_channel_id);
+  C_TransSCTP();
+  virtual ~C_TransSCTP();
+  virtual int         config (T_pConfigValueList P_config_param_list) ;
   
-  int close (); 
-  int close (int P_id);
-
-  T_SelectDef select_definition() ;
-
-private:
-
-  T_SocketType    m_trans_type ;
-  T_SocketMap     m_socket_map ;
-  T_IpAddrList    m_ip_addr_list  ;
-  int             m_max_fd     ;
+  T_SelectDef select_definition () ;
   
-  bool            analyze_init_string (char *P_buf) ;
-  bool            analyze_open_string (char *P_buf, T_pIpAddr P_addr) ;
-  int             open                (int              P_channel_id,
-				       T_pIpAddr     P_Addr,
-				       T_pOpenStatus    P_status,
-				       C_ProtocolBinaryFrame *P_protocol) ;
-  int             extract_ip_addr(T_pIpAddr P_pIpAddr);
-  int             resolve_addr(T_pIpAddr P_pIpAddr);
-  int             inet_addr   (char                   **P_addr, 
-			       T_SockAddrStorage       *P_AddrS);;
+protected : 
+  virtual C_Socket* open (int              P_channel_id, 
+			                    T_pIpAddr        P_Addr,
+			                    T_pOpenStatus    P_status,
+			                    C_ProtocolBinaryFrame *P_protocol) ;
 
-  void            decode_from_protocol (C_SocketSCTP *P_socket);
-  size_t                        m_buffer_size ;
-  list_t<T_SocketMap::iterator> m_delete_list ;
-  list_t<C_SocketSCTP *>        m_insert_list ;
+  int analyze_config(T_ConfigValue& P_config) ;
+protected :
+
 
 } ;
 
-typedef C_TransSCTP *T_pC_TransSCTP ;
 
-extern "C" T_pTransport create_cipio_instance () ;
-extern "C" void         delete_cipio_instance (T_ppTransport) ;
+extern "C" T_pTransport create_cipsctpio_instance () ;
+extern "C" void         delete_cipsctpio_instance (T_ppTransport) ;
 
 #endif // _C_TRANS_SCTP_

@@ -76,14 +76,14 @@ public:
   virtual T_pRcvMsgCtxtList      get_list() ;
 
 
-  void                   set_properties () ;
+  virtual void           set_properties () ;
 
-  int                    _open (int    P_socket_domain, 
+  virtual int            _open (int    P_socket_domain, 
 	                        size_t P_buffer_size,
 	                        C_ProtocolBinaryFrame *P_protocol);
   int                    get_id () ;
   int                    get_channel_id();
-  void                   _close () ;
+  virtual void           _close () ;
   void                   set_channel_id(int P_channel_id);
 
   C_ProtocolBinaryFrame* get_protocol() ;
@@ -178,7 +178,7 @@ public:
                              size_t             P_size);
   virtual int _call_listen (int P_max) ;
 
-  int                _open (size_t P_buffer_size, C_ProtocolBinaryFrame *P_protocol) ;
+  virtual int        _open (size_t P_buffer_size, C_ProtocolBinaryFrame *P_protocol) ;
   size_t             received_buffer  (unsigned char  *P_data, 
 				       size_t          P_size_buf,
 				       struct timeval *P_time) ;
