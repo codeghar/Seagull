@@ -51,7 +51,7 @@ T_exeCode    C_InsertInMapAction::execute(T_pCmd_scenario P_pCmd,
                                m_sub_id,
                                &L_val) == true) {
 
-    pair<C_CallContext::T_CallMap::iterator,bool> L_pr ;
+    pair_t<C_CallContext::T_CallMap::iterator,bool> L_pr ;
     C_CallContext::T_contextMapData L_data ;
 
     L_pr = L_map[m_position]

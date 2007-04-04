@@ -47,7 +47,7 @@ T_exeCode    C_AddDefaultInCallMapAction::execute(T_pCmd_scenario P_pCmd,
     GEN_ERROR(E_GEN_FATAL_ERROR, "session id is failed");
     L_exeCode = E_EXE_ERROR ;
   } else {
-    pair<C_CallContext::T_CallMap::iterator,bool> L_pr ;
+    pair_t<C_CallContext::T_CallMap::iterator,bool> L_pr ;
     C_CallContext::T_contextMapData L_data ;
 
     L_pr =

@@ -43,7 +43,7 @@ T_exeCode    C_InsertInMapActionFromMem::execute(T_pCmd_scenario P_pCmd,
   
   C_CallContext::T_pCallMap *L_map = P_callCtxt->m_call_control->get_call_map();
 
-  pair<C_CallContext::T_CallMap::iterator,bool> L_pr ;
+  pair_t<C_CallContext::T_CallMap::iterator,bool> L_pr ;
   C_CallContext::T_contextMapData L_data ;
     
   L_mem = P_callCtxt->get_memory(m_mem_id);
