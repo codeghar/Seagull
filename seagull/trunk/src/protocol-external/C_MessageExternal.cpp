@@ -67,7 +67,7 @@ C_MessageExternal::~C_MessageExternal() {
     }
     FREE_TABLE(m_all_values[L_i]);
   }
-  FREE_TABLE(m_all_values);
+
   FREE_TABLE(m_ids);
   
   for(L_i = 0 ; L_i < m_nb_body_values; L_i++) {
@@ -78,12 +78,15 @@ C_MessageExternal::~C_MessageExternal() {
   }
   FREE_TABLE(m_body);
   
+
   for(L_i=0; L_i < m_nb_header_fields; L_i++) {
     if(m_header_not_present_table[m_id][L_i] == true ) {
       resetMemory(m_header[L_i]);
     }
   }
   FREE_TABLE(m_header);
+
+  FREE_TABLE(m_all_values);
 
   m_protocol = NULL ;
   m_nb_values = 0 ;
@@ -104,7 +107,6 @@ void C_MessageExternal::internal_reset() {
     m_body[L_i].m_values = NULL ;
   }
 
-
   if (m_nb_values) {
     for (L_i = m_nb_header_fields; L_i < m_nb_values; L_i++) {
       for (L_j = 0; L_j < m_nb_body_fields; L_j++) {
@@ -116,7 +118,6 @@ void C_MessageExternal::internal_reset() {
     FREE_TABLE(m_ids);
     m_nb_values = 0 ;
   }
-
 
   m_protocol = NULL ;
   m_id = -1 ;
@@ -282,7 +283,6 @@ bool C_MessageExternal::check_field_presence
   bool            L_found = false ;
 
   GEN_DEBUG(1, "C_MessageExternal::check_field_presence() start");
-  // this->dump(std::cerr);
 
   if (P_id < m_nb_header_fields) {
     if ((int) m_header[P_id].m_id == P_id) {
@@ -547,9 +547,13 @@ C_MessageExternal::C_MessageExternal(C_MessageExternal &P_val) {
   m_nb_values = P_val.m_nb_values ;
   ALLOC_TABLE(m_header, T_pValueData, 
 	      sizeof(T_ValueData), m_nb_header_fields);
+
+
   for (L_i = 0 ; L_i < m_nb_header_fields; L_i++) {
-    m_header[L_i].m_type = E_TYPE_NUMBER ;
-    copyValue(m_header[L_i], P_val.m_header[L_i], false);
+    if(m_header_not_present_table[m_id][L_i] == true ) {
+      m_header[L_i].m_type = E_TYPE_NUMBER ;
+      copyValue(m_header[L_i], P_val.m_header[L_i], false);
+    }
   }
   ALLOC_TABLE(m_body, T_pMultiValueData, 
 	      sizeof(T_MultiValueData), m_nb_body_values);
@@ -561,6 +565,8 @@ C_MessageExternal::C_MessageExternal(C_MessageExternal &P_val) {
 
   ALLOC_TABLE(m_all_values,T_pValueData*, 
 	      sizeof(T_pValueData), m_nb_values);
+
+
   ALLOC_TABLE(m_ids,int*, 
 	      sizeof(int), m_nb_values);
   for (L_i = 0; L_i < m_nb_header_fields; L_i++) {
@@ -578,9 +584,10 @@ C_MessageExternal::C_MessageExternal(C_MessageExternal &P_val) {
     L_id = m_ids[L_i] ;
 
     for (L_j = 0 ; L_j < m_nb_body_fields; L_j ++) {
+      m_all_values[L_i][L_j].m_type = E_TYPE_NUMBER ;
       copyValue(m_all_values[L_i][L_j],
-		P_val.m_all_values[L_i][L_j],
-		false);
+                P_val.m_all_values[L_i][L_j],
+                false);
     }
     if (L_body_instance[L_id] == 0) {
       L_body_instance[L_id] = P_val.m_body[L_id].m_nb ;
@@ -614,7 +621,6 @@ C_MessageExternal& C_MessageExternal::operator= (C_MessageExternal &P_val) {
   m_id = P_val.m_id ;
 
   for (L_i = 0 ; L_i < m_nb_header_fields; L_i++) {
-    // To be verify
     copyValue(m_header[L_i], P_val.m_header[L_i], false);
   }
   m_nb_values = P_val.m_nb_values ;
@@ -657,7 +663,7 @@ iostream_output& operator<< (iostream_output&   P_stream,
 			     C_MessageExternal& P_msg) {
 
   int L_i, L_j, L_k ;
-  char *L_string_value ;
+  char *L_string_value = NULL ;
 
   P_stream << P_msg.m_message_names[P_msg.m_id] ;
 
@@ -803,9 +809,11 @@ C_MessageExternal::C_MessageExternal (C_ProtocolExternal *P_protocol,
   T_ValueDataList::iterator L_value_it ;
   list_t<int>::iterator     L_id_it    ;
 
+
   GEN_DEBUG(1, "C_MessageExternal::C_MessageExternal() start");
   
   m_protocol = P_protocol ;
+
   m_header = P_header ;
   m_nb_values = m_nb_header_fields ;  
 
@@ -825,11 +833,13 @@ C_MessageExternal::C_MessageExternal (C_ProtocolExternal *P_protocol,
   if (!P_body->empty()) {
     m_nb_values += P_body->size() ;
   }
+
+
   ALLOC_TABLE(m_all_values,T_pValueData*, 
 	      sizeof(T_pValueData), m_nb_values);
 
   ALLOC_TABLE(m_ids,int*, 
-	      sizeof(int), m_nb_values);
+              sizeof(int), m_nb_values);
   L_index = 0 ;
   for (L_i = 0; L_i < m_nb_header_fields; L_i++) {
     m_all_values[L_index] = &(m_header[L_i]) ;
@@ -842,7 +852,9 @@ C_MessageExternal::C_MessageExternal (C_ProtocolExternal *P_protocol,
     for(L_value_it = P_body->begin();
 	L_value_it != P_body->end();
 	L_value_it++) {
+
       m_all_values[L_index] = *L_value_it ;
+
       L_id = *L_id_it;
       m_ids[L_index] = L_id ;
       L_instance = m_body[L_id].m_nb ;

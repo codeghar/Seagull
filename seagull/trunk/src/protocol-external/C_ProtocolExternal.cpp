@@ -25,6 +25,7 @@
 
 #include "dlfcn_t.hpp"
 #include "Utils.hpp"
+
 #include "ProtocolData.hpp"
 
 #include "set_t.hpp"
@@ -160,6 +161,7 @@ C_ProtocolExternal::C_ProtocolExternal
 C_ProtocolExternal::~C_ProtocolExternal() {
 
   int  L_i ;
+
 
   if (m_factory != NULL) {
     if (m_factory_context != NULL) {
@@ -318,6 +320,7 @@ C_ProtocolExternal::~C_ProtocolExternal() {
 
 
   m_config_value_list = NULL ;
+
   
 }
 
@@ -361,7 +364,6 @@ C_MessageFrame* C_ProtocolExternal::create_new_message (void                *P_x
 	  if (L_msg != NULL) {
 	    L_msg -> m_id = L_it->second->m_id ;
 
-	    // L_msg->dump(std::cerr);
 
 	  } 
 	}
@@ -450,7 +452,7 @@ T_TypeType      C_ProtocolExternal::get_field_type     (int P_id,
   if (P_id < m_nb_header_fields) {
     return(m_header_field_desc_table[P_id]->m_type) ;
   } else {
-      return (m_body_field_desc_table[P_sub_id - m_start_body_index]->m_type);
+    return (m_body_field_desc_table[P_sub_id - m_start_body_index]->m_type);
   }
 
 }
@@ -458,8 +460,7 @@ T_TypeType      C_ProtocolExternal::get_field_type     (int P_id,
 C_ProtocolFrame::T_MsgError C_ProtocolExternal::from_external 
 (C_MsgBuildContext* P_build,T_pReceiveMsgContext P_recvMsgCtx) {
 
-
-  C_ProtocolFrame::T_MsgError L_error = C_ProtocolFrame::E_MSG_EXTERNAL_ERROR;
+  C_ProtocolFrame::T_MsgError L_error = C_ProtocolFrame::E_MSG_OK;
   
   int                              L_i               ;
   T_pValueData                     L_header          ;
@@ -474,9 +475,13 @@ C_ProtocolFrame::T_MsgError C_ProtocolExternal::from_external
   int                              L_id              ;
   int                              L_msg_id          ;
 
+  T_ValueDataList::iterator       L_it_body          ;
 
   T_MessageDecodeMap::iterator     L_msg_it          ;
-  C_MessageExternal               *L_msg             ;
+  C_MessageExternal               *L_msg = NULL      ;
+
+
+  P_recvMsgCtx->m_msg = NULL ;
 
   P_build->init_from_external();
 
@@ -541,7 +546,6 @@ C_ProtocolFrame::T_MsgError C_ProtocolExternal::from_external
       
       ((P_build)->*(m_body_field_desc_table[m_body_type_id-m_start_body_index]->m_get))
   	(&L_a_body[m_body_type_id-m_start_body_index]);
-      
       L_it = m_body_decode_map
   	->find(T_BodyDecodeMap::key_type(L_a_body[m_body_type_id-m_start_body_index]));
 
@@ -558,7 +562,12 @@ C_ProtocolFrame::T_MsgError C_ProtocolExternal::from_external
 	L_body_id.push_back(L_id);
       } else {
   	// error on decoding body
-  	// L_error = ?
+        GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR,
+                      "Error on decoding body for message [" <<
+                      m_message_names_table[L_msg_id] <<
+                      "] " << 
+                      GEN_HEADER_LOG << GEN_HEADER_NO_LEVEL << "]" );
+        L_error = C_ProtocolFrame::E_MSG_EXTERNAL_ERROR;
   	break ;
       }
       
@@ -569,6 +578,7 @@ C_ProtocolFrame::T_MsgError C_ProtocolExternal::from_external
 	  if (m_body_not_present_table[L_id][L_i] == true) {
 	    L_a_body[L_i].m_id = L_i + m_start_body_index ;
 	    L_a_body[L_i].m_type = m_body_field_desc_table[L_i]->m_type ;
+
 	    ((P_build)->*(m_body_field_desc_table[L_i]->m_get))(&L_a_body[L_i]);
 	  } else {
 	    L_a_body[L_i].m_type = E_TYPE_NUMBER ;
@@ -580,24 +590,41 @@ C_ProtocolFrame::T_MsgError C_ProtocolExternal::from_external
     
     } // while 
 
-    NEW_VAR(L_msg, 
-	    C_MessageExternal(this, L_header, &L_body, &L_body_id, L_body_instance));
-    
-    L_msg->m_id =(L_msg_it->second)->m_id ;
-    // TODO: delete primitive and component ?????
+    if (L_error == C_ProtocolFrame::E_MSG_OK) {
+      NEW_VAR(L_msg, 
+              C_MessageExternal(this, L_header, &L_body, &L_body_id, L_body_instance));
+      
+      L_msg->m_id =  L_msg_id ;
+        // (L_msg_it->second)->m_id 
+      // TODO: delete primitive and component ?????
+      ((P_build)->*(m_delete_body))(NULL) ;
+      ((P_build)->*(m_delete_header))(NULL) ;
+      
+      P_recvMsgCtx->m_msg = L_msg ;
+    }
+  } else {
     ((P_build)->*(m_delete_body))(NULL) ;
     ((P_build)->*(m_delete_header))(NULL) ;
+    FREE_TABLE(L_header);
+    GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR,
+                  "message unknown" <<
+                  GEN_HEADER_LOG << GEN_HEADER_NO_LEVEL << "]" );
     
-    P_recvMsgCtx->m_msg = L_msg ;
-    L_error = C_ProtocolFrame::E_MSG_OK ;
     
-  } else {
+    L_error = C_ProtocolFrame::E_MSG_EXTERNAL_ERROR;
     iostream_error << "message unknown" << iostream_endl ;
   }
   
 
   FREE_TABLE(L_body_instance);
   if (!L_body.empty()) {
+    if (L_error != C_ProtocolFrame::E_MSG_OK ) {
+      for (L_it_body = L_body.begin() ;
+           L_it_body != L_body.end()  ;
+           L_it_body ++) {
+        FREE_TABLE(*L_it_body);
+      }
+    }
     L_body.erase(L_body.begin(), L_body.end());
     L_body_id.erase(L_body_id.begin(), L_body_id.end());
   }
@@ -622,7 +649,7 @@ C_ProtocolFrame::T_MsgError C_ProtocolExternal::to_external   (C_MsgBuildContext
 
   L_header = L_msg->m_header ;
   L_msg_id = L_msg->m_id     ;
-
+  
   if (m_stats) {
     m_stats->updateStats(E_MESSAGE,
 			 E_SEND,
@@ -1623,7 +1650,6 @@ int C_ProtocolExternal::analyze_dictionnary (T_FieldDefList *P_header_fields, //
 
   if (!P_body_fields->empty()) {
     m_nb_body_fields = P_body_fields->size()  ;
-
     if (m_nb_body_fields > 0) {
       m_nb_names += m_nb_body_fields ;
       for (L_fielddef_it = P_body_fields->begin();
@@ -2003,7 +2029,7 @@ int C_ProtocolExternal::analyze_dictionnary (T_FieldDefList *P_header_fields, //
   if (L_ret != -1) {
     NEW_VAR(m_message_map, T_MessageNameMap());
     m_message_map->clear();
-    C_MessageExternal *L_msg ;
+    C_MessageExternal *L_msg = NULL ;
     for (L_header_fielddef_it = P_header_values->begin();
 	 L_header_fielddef_it != P_header_values->end();
 	 L_header_fielddef_it++) {
@@ -2103,12 +2129,12 @@ int C_ProtocolExternal::analyze_dictionnary (T_FieldDefList *P_header_fields, //
   } 
   
   
-//        if (L_ret != -1) {
-//          for (L_i = 0 ; L_i <  m_nb_names ; L_i ++) {
-//            std::cerr << "m_names_table[" << L_i << "] = [" 
-//        	<< m_names_table[L_i] << "]"<< std::endl;
-//          }
-//        }
+//    if (L_ret != -1) {
+//      for (L_i = 0 ; L_i <  m_nb_names ; L_i ++) {
+//        std::cerr << "m_names_table[" << L_i << "] = [" 
+//          	<< m_names_table[L_i] << "]"<< std::endl;
+//      }
+//    }
   
   if (L_ret != -1) {
     NEW_VAR(m_message_decode_map, T_MessageDecodeMap());
@@ -2130,8 +2156,6 @@ int C_ProtocolExternal::analyze_dictionnary (T_FieldDefList *P_header_fields, //
 		  
       strcpy(m_message_names_table[L_id],(L_it_message->first).c_str()) ;
 
-      // L_msg->dump(std::cerr);
-      // std::cerr << " ********** L_id " << L_id << std::endl;
       L_id ++ ;      
 
       GEN_DEBUG(1, "C_ProtocolExternal::analyze_dictionnary() "
@@ -2153,7 +2177,7 @@ int C_ProtocolExternal::analyze_dictionnary (T_FieldDefList *P_header_fields, //
 //    if (L_ret != -1) {
 //      for (L_i = 0 ; L_i <  m_nb_message_names ; L_i ++) {
 //        std::cerr << "m_message_names_table[" << L_i << "] = [" 
-//      		<< m_message_names_table[L_i] << "]"<< std::endl;
+//        		<< m_message_names_table[L_i] << "]"<< std::endl;
 //      }
 //    }
   
@@ -2667,12 +2691,6 @@ C_MessageExternal* C_ProtocolExternal::build_message (C_MessageExternal *P_msg,
     }
   }
 
-
-  //      if (P_msg != NULL) {
-  // P_msg->dump(std::cerr);
-  //  }
-  
-  
   if ((P_header.m_list_value != NULL ) 
       && (!(P_header.m_list_value)->empty())) {  
     for(L_value_it = (P_header.m_list_value)->begin();
@@ -2885,7 +2903,6 @@ C_MessageExternal* C_ProtocolExternal::build_message (C_MessageExternal *P_msg,
 
   FREE_TABLE(L_body_instance);
   if (!L_body.empty()) {
-
     L_body.erase(L_body.begin(), L_body.end());
     L_body_id.erase(L_body_id.begin(), L_body_id.end());
   }

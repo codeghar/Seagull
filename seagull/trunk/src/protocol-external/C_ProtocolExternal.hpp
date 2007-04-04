@@ -20,7 +20,7 @@
 #ifndef _C_PROTOCOL_EXTERNAL_H
 #define _C_PROTOCOL_EXTERNAL_H
 
-#include "Utils.hpp"
+// #include "Utils.hpp"
 #include "C_XmlData.hpp"
 
 #include "C_TransportControl.hpp"
