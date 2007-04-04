@@ -24,8 +24,10 @@
 
 #if defined(__hpux)
 #define map_t map
+#define pair_t pair
 #else
 #define map_t std::map
+#define pair_t std::pair
 #endif
 
 #endif
