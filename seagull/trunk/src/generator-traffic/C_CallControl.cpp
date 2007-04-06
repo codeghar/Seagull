@@ -112,6 +112,21 @@ void C_CallControlServer::increase_incoming_call() {
 }
 
 
+void C_CallControl::log_search_session_from_scen(int P_channel_id) {
+}
+
+void C_CallControlClient::log_search_session_from_scen(int P_channel_id) {
+  GEN_LOG_EVENT (LOG_LEVEL_TRAFFIC_ERR, 
+                 "Value of session-id defiened in scenario is incorrect or not found for channel["
+                 << P_channel_id
+                 << "]");
+  
+}
+
+void C_CallControlServer::log_search_session_from_scen(int P_channel_id) {
+}
+
+
 C_CallControl::~C_CallControl() {
 
   int L_i ;
@@ -1858,10 +1873,7 @@ T_pCallContext  C_CallControl::getSessionFromScen(T_ReceiveMsgContext P_rcvCtxt,
       }
     } // for (L_i = 0...)
     if (L_pCallContext == NULL ){
-      GEN_LOG_EVENT (LOG_LEVEL_TRAFFIC_ERR, 
-                     "Value of session-id defiened in scenario is incorrect or not found for channel["
-                     << P_rcvCtxt.m_channel
-                     << "]");
+      log_search_session_from_scen(P_rcvCtxt.m_channel) ;
     }
   } // if (L_retrieveIds != ...)
   

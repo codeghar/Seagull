@@ -212,6 +212,7 @@ protected:
 
   virtual void increase_incoming_call() ;
 
+  virtual void log_search_session_from_scen(int P_channel_id) ;
 
 } ;
 
@@ -238,6 +239,7 @@ protected:
   virtual void clean_traffic () ;
 
   virtual void increase_incoming_call() ;
+  virtual void log_search_session_from_scen(int P_channel_id) ;
 
   unsigned long    get_call_rate();
   void             change_call_rate(T_GenChangeOperation P_op,
@@ -275,6 +277,7 @@ protected:
   virtual T_GeneratorError InitProcedure();
 
   virtual void increase_incoming_call() ;
+  virtual void log_search_session_from_scen(int P_channel_id) ;
 
   virtual void clean_traffic () ;
 } ;
