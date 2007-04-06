@@ -185,13 +185,16 @@ C_ScenarioControl::~C_ScenarioControl() {
 
   m_action_check_abort = false ;
 
-  for (L_i = 0; L_i < m_nb_channel; L_i++) {
-    FREE_TABLE(m_retrieve_id_table[L_i].m_id_table);
-    m_retrieve_id_table[L_i].m_id_table = NULL ;
-    m_retrieve_id_table[L_i].m_nb_ids = 0 ;
+  if (m_retrieve_id_table != NULL) {
+    for (L_i = 0; L_i < m_nb_channel; L_i++) {
+      FREE_TABLE(m_retrieve_id_table[L_i].m_id_table);
+      m_retrieve_id_table[L_i].m_id_table = NULL ;
+      m_retrieve_id_table[L_i].m_nb_ids = 0 ;
+    }
+    FREE_TABLE(m_retrieve_id_table);
   }
-  FREE_TABLE(m_retrieve_id_table);
   m_nb_channel = 0 ;
+
 
   if (!m_label_map->empty()) {
     m_label_map->erase(m_label_map->begin(), m_label_map->end());
@@ -3390,7 +3393,6 @@ bool C_ScenarioControl::fromXml (C_XmlData     *P_data,
       }
     }
 
-
     if (L_XmlOk == true) {
       if ((m_abort_scen == NULL) && 
           (m_action_check_abort == true) && 
@@ -3510,15 +3512,21 @@ bool C_ScenarioControl::analyze_correlation_retrieve (C_XmlData *P_data,
       L_value = L_data->get_name() ;
       if (strcmp(L_value, (char*)"search-in-map") == 0) {
         L_value = L_data->find_value((char*)"name") ;
-        L_id  = L_protocol->find_field (L_value) ;
-        if (L_id == -1) {
-          GEN_ERROR(E_GEN_FATAL_ERROR,
-                    "No definition found for ["
-                    << L_value << "]");
+        if (L_value != NULL ) {
+          L_id  = L_protocol->find_field (L_value) ;
+          if (L_id == -1) {
+            GEN_ERROR(E_GEN_FATAL_ERROR,
+                      "No definition found for ["
+                      << L_value << "]");
+            L_ret = false;
+            break ;
+          } else {
+            L_id_retrieve_list.push_back(L_id);
+          }
+        } else {
+          GEN_ERROR(E_GEN_FATAL_ERROR, "Name is mandatory for section [search-in-map]");
           L_ret = false;
           break ;
-        } else {
-          L_id_retrieve_list.push_back(L_id);
         }
       } // if (strcmp(L_value, (char*)"search-in-map") ...)
     } // for(L_listIt = ...)
