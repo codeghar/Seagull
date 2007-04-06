@@ -1775,8 +1775,8 @@ T_pCallContext  C_CallControl::getSessionFromDico(T_ReceiveMsgContext P_rcvCtxt,
   
   L_value_id = (P_rcvCtxt.m_msg)->get_session_id (&P_rcvCtxt) ;
   if (L_value_id == NULL) {
-    GEN_DEBUG(1, "C_CallControl::messageReceivedControl() L_value_id == NULL and now is " 
-              << L_value_id);
+    GEN_DEBUG(1, "C_CallControl::messageReceivedControl() L_value_id = NULL");
+
 #ifdef INIT_CALL_FILTER
     L_filter = false ;
 #endif // INIT_CALL_FILTER    
@@ -1825,44 +1825,48 @@ T_pCallContext  C_CallControl::getSessionFromScen(T_ReceiveMsgContext P_rcvCtxt,
   L_retrieveIds = m_scenario_control->get_id_table_by_channel(P_rcvCtxt.m_channel);
   if (L_retrieveIds != NULL) {
     for (L_i = 0 ; L_i < L_retrieveIds->m_nb_ids ; L_i++) {
-      if ((L_value_id = (P_rcvCtxt.m_msg)->get_field_value(L_retrieveIds->m_id_table[L_i], 
-                                                          -1,
-                                                          -1))){
-
-        if (L_value_id == NULL) {
-          GEN_DEBUG(1, "C_CallControl::messageReceivedControl() L_value_id == NULL and now is " 
-                    << L_value_id);
+      L_value_id = (P_rcvCtxt.m_msg)->get_field_value(L_retrieveIds->m_id_table[L_i],
+                                                      -1,
+                                                      -1) ;
+      if (L_value_id == NULL) {
+        GEN_DEBUG(1, "C_CallControl::messageReceivedControl() L_value_id = NULL");
+        
 #ifdef INIT_CALL_FILTER
-          L_filter = false ;
+        L_filter = false ;
 #endif // INIT_CALL_FILTER    
-        }
+      }
 #ifdef INIT_CALL_FILTER
-        else {
-          if (L_value_id->m_type == E_TYPE_STRUCT) {
-            L_filtered_value = *L_value_id ;
-            L_filtered_value.m_value.m_val_struct.m_id_2 = 0 ;
-            L_filter = true ;
-          } else L_filter = false ;
-        }
+      else {
+        if (L_value_id->m_type == E_TYPE_STRUCT) {
+          L_filtered_value = *L_value_id ;
+          L_filtered_value.m_value.m_val_struct.m_id_2 = 0 ;
+          L_filter = true ;
+        } else L_filter = false ;
+      }
 #endif // INIT_CALL_FILTER 
-        if (L_value_id != NULL) {
-          L_pCallContext = retrieve_call_context (P_rcvCtxt.m_channel, L_value_id);
+      if (L_value_id != NULL) {
+        L_pCallContext = retrieve_call_context (P_rcvCtxt.m_channel, L_value_id);
 #ifdef INIT_CALL_FILTER
-          if ((L_pCallContext == NULL) && (L_filter == true)) {
-            L_pCallContext = retrieve_call_context (P_rcvCtxt.m_channel, &L_filtered_value);
-          }
+        if ((L_pCallContext == NULL) && (L_filter == true)) {
+          L_pCallContext = retrieve_call_context (P_rcvCtxt.m_channel, &L_filtered_value);
+        }
 #endif // INIT_CALL_FILTER
-        }
-
-        if (L_pCallContext != NULL) {
-          break;
-        }
-      } // if ((L_value_id =..))
+      }
+      
+      if (L_pCallContext != NULL) {
+        break;
+      }
     } // for (L_i = 0...)
+    if (L_pCallContext == NULL ){
+      GEN_LOG_EVENT (LOG_LEVEL_TRAFFIC_ERR, 
+                     "Value of session-id defiened in scenario is incorrect or not found for channel["
+                     << P_rcvCtxt.m_channel
+                     << "]");
+    }
   } // if (L_retrieveIds != ...)
-
+  
   *P_value_id = L_value_id ;
-
+  
   return (L_pCallContext) ;
 }
 
