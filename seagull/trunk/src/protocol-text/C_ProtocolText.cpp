@@ -1302,7 +1302,7 @@ int C_ProtocolText::xml_interpretor(C_XmlData *P_def,
     for (L_it = L_data->begin();
 	 L_it != L_data->end();
 	 L_it++) {
-      if (strcmp((*L_it)->get_name(), "external-method") == 0) {
+      if (strcmp((*L_it)->get_name(), (char*)"external-method") == 0) {
 	NEW_VAR(m_def_method_extern_list, T_DefMethodExternList());
 	L_ret = analyze_extern_method_from_xml (*L_it,m_def_method_extern_list); 
 	break ;

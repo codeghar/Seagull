@@ -338,12 +338,9 @@ C_MessageText::~C_MessageText() {
   m_protocol = NULL       ;
   m_id       = -1         ;
 
+
   if (m_session_id != NULL) {
-    if ((m_session_id->m_type == E_TYPE_STRING)
-        && (m_session_id->m_value.m_val_binary.m_size> 0)) {
-      FREE_TABLE(m_session_id->m_value.m_val_binary.m_value);
-      m_session_id->m_value.m_val_binary.m_size = 0 ;
-    }
+    resetMemory(*m_session_id);
     FREE_VAR(m_session_id)  ;
   }
 
@@ -610,16 +607,18 @@ T_pValueData C_MessageText::get_field_value (int P_id,
                                              int P_instance,
                                              int P_sub_id) {
 
-  T_pValueData    L_value = NULL ;
-  
-  if (get_field_value(P_id, 
-                      P_instance,
-                      P_sub_id,
-                      L_value) == false ) {
-    return (NULL) ;
-  }
-  
-  return (L_value);
+  if (m_session_id == NULL ) {
+    ALLOC_VAR(m_session_id,
+              T_pValueData,
+              sizeof(T_ValueData));
+    if (get_field_value(P_id, 
+                        P_instance,
+                        P_sub_id,
+                        m_session_id) == false ) {
+      FREE_VAR(m_session_id);
+    }
+  }  
+  return (m_session_id);
 }
 
 
