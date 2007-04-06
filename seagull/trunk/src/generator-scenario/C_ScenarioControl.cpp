@@ -3302,7 +3302,7 @@ bool C_ScenarioControl::fromXml (C_XmlData     *P_data,
 			       XML_SCENARIO_CORRELATION_SECTION) == 0) {
               L_xml_correlation = L_scen_data ;
               L_correlationList = L_xml_correlation->get_sub_data() ;
-              if (L_subList != NULL) {
+              if (L_correlationList != NULL) {
                 m_correlation_section = true ;
                 m_correlation_insert  = true ;
               }
