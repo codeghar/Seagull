@@ -71,24 +71,6 @@ typedef struct sockaddr_storage T_SockAddrStorage ;
 #endif
 
 
-// system call 
-
-#define call_shutdown   ext_shutdown
-#define call_open       ext_open
-#define call_close      ext_close
-#define call_bind       ext_bind
-#define call_accept     ext_accept
-#define call_setsockopt ext_setsockopt
-#define call_getsockopt ext_getsockopt
-#define call_listen     ext_listen
-#define call_send       ext_send
-#define call_read       ext_read
-#define call_socket     ext_socket
-#define call_connect    ext_connect
-#define call_fcntl      ext_fcntl
-#define call_select     ext_select
-#define call_recvmsg    ext_recvmsg
-
 #endif
 
 
