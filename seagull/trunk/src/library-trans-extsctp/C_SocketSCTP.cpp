@@ -98,7 +98,7 @@ void C_SocketSCTPListen::set_properties() {
     events.sctp_peer_error_event = 1;
     events.sctp_shutdown_event = 1;
     events.sctp_partial_delivery_event = 1;
-    events.sctp_adaption_layer_event = 1;
+    events.sctp_adaptation_layer_event = 1;
 
     if(ext_setsockopt(m_socket_id, IPPROTO_SCTP,
 		       SCTP_EVENTS,&events,sizeof(events)) < 0) {
@@ -391,7 +391,7 @@ void C_SocketSCTPWithData::set_properties() {
     events.sctp_peer_error_event = 1;
     events.sctp_shutdown_event = 1;
     events.sctp_partial_delivery_event = 1;
-    events.sctp_adaption_layer_event = 1;
+    events.sctp_adaptation_layer_event = 1;
 
     if(ext_setsockopt(m_socket_id, IPPROTO_SCTP,
 		       SCTP_EVENTS,&events,sizeof(events)) < 0) {
@@ -569,7 +569,7 @@ void C_SocketSCTPWithData::sctp_event_handler (C_TransportEvent *P_event) {
     //    printf("EVENT: remote_error: err=%hu len=%hu\n", ntohs(sre->sre_error), ntohs(sre->sre_length));
     break;
 
-  case SCTP_ADAPTION_INDICATION:
+  case SCTP_ADAPTATION_INDICATION:
     SOCKET_DEBUG(0, "C_SocketSCTPWithData::sctp_event_handler() " <<
 		 "EVENT: ADAPTATION INDICATION");
     break;
