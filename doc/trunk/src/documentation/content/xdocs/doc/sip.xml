@@ -12,7 +12,7 @@
     </section>
     <section>
       <title>Getting started with SIP</title>
-      <section>
+      <section id="first_try">
         <title>First try</title>
         <p>So that you can get familiar with Seagull in the context of SIP, here is an example that will launch the following SIP scenario:</p>
       <source><![CDATA[   
@@ -31,14 +31,14 @@
     |--------------------->|  
     |(7) 200 OK            |
     |<---------------------|]]></source>
-    <p>You can also see the <a href="http://gull.svn.sourceforge.net/viewvc/gull/seagull/trunk/src/exe-env/sip-env/scenario/client.xml?view=markup">client XML scenario.</a></p>
+    <p></p>
       </section>
-      <section>
-        <title>First try explained</title>
-        <p>Here is the commented version of the SIP client</p>
+      <section id="first_try_file">
+        <title>First try explained using external file</title>
+        <p>Here is the commented version of the SIP client using a external file to set fields</p>
         <table>
           <tr>
-            <th>Scenario</th>
+            <th>Scenario. You can also see the <a href="http://gull.svn.sourceforge.net/viewvc/gull/seagull/trunk/src/exe-env/sip-env/scenario/client.xml?view=markup">client XML scenario.</a></th>
             <th>Comments</th>
           </tr>
           <tr>
@@ -377,6 +377,259 @@ Header
          
        
     
+
+]]></source>
+            </td>
+           </tr>
+          </table>      
+    </section>
+          <section id="first_try_param">
+        <title>First try explained with configuration parameters</title>
+        <p>Here is the commented version of the SIP client using configuration parameters to set fields</p>
+        <p>In the configuration file, several parameters are added, for example:<br/>
+        <source><![CDATA[<define entity="config-param"  name="param_call-id-addr" value="127.0.0.1:5060"></define>
+<define entity="config-param"  name="param_via"          value="SIP/2.0/UDP 127.0.0.1"></define>
+<define entity="config-param"  name="param_from"         value="seagull <sip:seagull@127.0.0.1:5060>;tag=1"></define>
+<define entity="config-param"  name="param_to"           value="sut <sip:service@127.0.0.1:5060>"></define>
+  ]]></source>
+        They will be used in the sceanrio.
+        </p>
+        <table>
+          <tr>
+            <th>Scenario. You can also see the <a href="http://gull.svn.sourceforge.net/viewvc/gull/seagull/trunk/src/exe-env/sip-env/scenario/client.param.xml?view=markup">client XML scenario.</a></th>
+            <th>Comments</th>
+          </tr>
+          <tr>
+            <td>
+            <source><![CDATA[<?xml version="1.0" encoding="ISO-8859-1" ?>
+<scenario>
+
+<counter>
+  <counterdef name="callid-counter" init="0"> </counterdef>
+</counter>
+
+<traffic>
+   <send channel="channel-1">
+     <action>
+
+     <!-- For each new call, increment the callid counter -->
+       <inc-counter name="callid-counter"> </inc-counter>
+     <!-- And set the call-id field -->
+       <set-value name="call-id"
+                  format="$(callid-counter)@127.0.0.1"></set-value>
+       
+     </action>
+     <message>
+     <!-- header -->
+     <! [ CDATA[INVITE sip:$(param_call-id-addr) SIP/2.0
+         Via: $(param_via)
+         From: $(param_from)
+         To: $(param_to)
+         Call-ID: 2963313058@north.east.isi.edu
+         CSeq: 1 INVITE
+         Subject: SIP will be discussed, too
+         Content-Type: application/sdp
+         Content-Length: 187 ]] >
+     <!-- body -->
+     <![CDATA[v=0
+              o=user1 53655765 2353687637 IN IP4 155.208.221.173
+              s=Mbone Audio
+              i=Discussion of Mbone Engineering Issues
+              e=mbone@somewhere.com
+              c=IN IP4 155.208.221.173
+              t=0 0
+              m=audio 3456 RTP/AVP 0
+	      a=rtpmap:0 PCMU/8000]] >
+     </message>
+     <action>
+       <!-- Store completed fields for future msg-->
+       <store name="SID" entity="call-id"></store>
+       </action>
+   </send>
+
+   <receive channel="channel-1">
+    <message>
+     <!-- header -->
+      <! [CDATA[SIP/2.0 180 Ringing
+         Via: SIP/2.0/UDP north.east.isi.edu
+         From: Mark Handley <sip:mjh@isi.edu>
+         To: Eve Schooler <sip:schooler@caltech.edu> ;tag=9883472
+         Call-ID: 2963313058@north.east.isi.edu
+         CSeq: 1 INVITE]] >
+    </message>
+   </receive>
+
+   <receive channel="channel-1">
+    <message>
+     <!-- header -->
+     <! [CDATA[SIP/2.0 200 OK
+              Via: SIP/2.0/UDP north.east.isi.edu
+              From: Mark Handley <sip:mjh@isi.edu>
+              To: Eve Schooler <sip:schooler@caltech.edu> ;tag=9883472
+              Call-ID: 2963313058@north.east.isi.edu
+              CSeq: 1 INVITE
+              Contact: sip:es@jove.cs.caltech.edu]] >
+    </message>
+   </receive>
+
+   <send channel="channel-1">
+    <action>
+      <!-- restore fields -->
+      <restore name="SID" entity="call-id"></restore>
+    </action>
+    <message>
+       <!-- header -->
+     <! [ CDATA[ACK sip:$(param_call-id-addr) SIP/2.0
+         Via: $(param_via)
+         From: $(param_from)
+         To: $(param_to)
+         Call-ID: 2963313058@north.east.isi.edu
+         CSeq: 1 ACK]] >
+    </message>
+   </send>
+
+   <send channel="channel-1">
+     <action>
+       <!-- restore fields -->
+       <restore name="SID" entity="call-id"></restore>
+     </action>    <message>
+     <!-- header -->
+     <! [ CDATA[BYE sip:$(param_call-id-addr) SIP/2.0
+         Via: $(param_via)
+         From: $(param_from)
+         To: $(param_to)
+         Call-ID:  2963313058@north.east.isi.edu
+         CSeq:     2 BYE]] >
+    </message>
+   </send>
+
+   <receive channel="channel-1">
+    <message>
+     <!-- header -->
+     <! [CDATA[SIP/2.0 200 OK
+         Via:      SIP/2.0/UDP c.bell-tel.com
+         From:     A. Bell <sip:a.g.bell@bell-tel.com>
+         To:       T. Watson <sip:t.watson@ieee.org>;tag=35253448
+         Call-ID:  2963313058@north.east.isi.edu
+         CSeq:     2 BYE]] >
+    </message>
+   </receive>
+
+</traffic>
+
+</scenario>
+
+]]></source>
+            </td>
+            <td>
+              <source><![CDATA[XML header
+
+
+
+The call id counter is declared and 
+will be incremented for each new call
+ 
+
+First scenario command: send a INVITE message 
+Action done before sending message
+
+
+For each new call, increment the call-id and set the call-id field
+
+   
+       
+     
+       
+Set the INVITE request address and name                  
+Header
+Set address from the configuration parameter "param_call-id-addr"
+Set Via from the configuration parameter "param_via"  
+Set From from the configuration parameter "param_from"
+Set To from the configuration parameter "param_to"     
+
+
+       
+                 
+
+
+Body       
+
+
+
+
+
+
+
+
+
+Action done after sending message
+
+Store session-id ("Call-id") field for future msg
+       
+       
+       
+scenario command: receive a 180 message      
+  
+      
+Header
+      
+         
+        
+         
+  
+  
+  
+         
+scenario command: receive a 200 message      
+  
+      
+Header       
+
+
+
+
+
+
+    
+
+
+scenario command: send a ACK message      
+  
+
+Restore session-id in the "Call-id" field
+      
+      
+Header               
+              
+             
+             
+            
+    
+
+
+  
+    
+scenario command: send a BYE message      
+  
+
+Restore session-id in the "Call-id" field
+      
+      
+Header 
+      
+    
+     
+      
+
+
+
+
+scenario command: receive a 200 message      
+  
+
+Header         
+         
+
 
 ]]></source>
             </td>
