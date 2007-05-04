@@ -32,7 +32,7 @@
     |(7) 200 OK            |
     |<---------------------|]]></source>
     <p></p>
-      </section>
+      
       <section id="first_try_file">
         <title>First try explained using external file</title>
         <p>Here is the commented version of the SIP client using a external file to set fields</p>
@@ -635,6 +635,7 @@ Header
             </td>
            </tr>
           </table>      
+      </section>
     </section>
    </section>
     <section id="misc">
@@ -762,6 +763,71 @@ Header
     ...]]>
     
     </source>
+    </section>
+    <section id="sip_correlation">
+        <title>SIP Correlation example</title>
+        <p>An example of the correlation feature is proposed in the SIP environment.<br/>
+        Here is the call flow:
+              <source><![CDATA[   
+
+
+  CLIENT                SERVER_1              SERVER_2
+    |(1) INVITE            
+    |--------------------->|   
+    |(2) 180 Ringing       |
+    |<---------------------|   
+    |(3) 200 OK            |
+    |<---------------------|   
+    |(4) ACK               |
+    |--------------------->|
+                           |
+                           |(5) INVITE 
+                           |--------------------->|
+                           |(6) 180 Ringing       |
+                           |<---------------------|   
+                           |(7) 200 OK            |
+                           |<---------------------|   
+                           |(8) ACK               |
+                           |--------------------->|
+                                                  |
+     (9)  INVITE                                  |
+    |<--------------------------------------------|   
+    |(10) 180 Ringing                             |
+    |<--------------------------------------------|   
+    |(11) 200 OK                                  |
+    |<--------------------------------------------|   
+    |(12) ACK                                     |
+    |---------------------------------------------|
+    |                                             
+    |(13) PAUSE                                    
+    |                                             
+    |(14) BYE                                     |
+    |-------------------------------------------->|  
+    |(15) 200 OK                                  |
+    |<--------------------------------------------|
+    |                                             
+    |(16) BYE              |
+    |--------------------->|   
+    |(17) 200 OK           |
+    |<---------------------|   
+]]></source>
+        
+      The call-id used between the client and the server_1 is defined by the client. The call-id 
+      used between the server_1 and the server_2 and between the server_2 and the client is defined
+       by the server_1. The value of this last call-id is sent from the server_1 to the client in the
+       "o" field of the body of the "200 OK" (3) message.<br/>
+       
+       To execute this example, Open three terminal sessions. Terminal 2 will be the server_1, Terminal 3 will be the server_2 and Terminal 1 the client.
+        Examples are located in the "run" directory. So the first thing you need
+        to do is to go in this directory (in both terminal windows):
+        <source> cd run</source>
+        <p>In Terminal 2 window type:</p>
+        <source>./start_server_corr_1.ksh</source>
+        <p>In Terminal 3 window type:</p>
+        <source>./start_server_corr_2.ksh</source>
+        <p>In Terminal 1 window type:</p>
+        <source>./start_client_corr.ksh</source> 
+        </p>
     </section>
   </body>
 </document>

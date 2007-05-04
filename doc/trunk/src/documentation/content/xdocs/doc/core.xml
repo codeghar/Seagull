@@ -604,6 +604,7 @@ Seagull will look at parameters indicated by
         <p>Seagull messages are sent/received using a transport protocol. Several transport protocols can be used: TCP, UDP or SCTP,
 	 all three over IPv4 or IPv6. In addition, <a href="ext:hpoc">HP OpenCall SS7</a> can be used to provide TCAP over SS7 transport. 
    See <a href="octcap.html">TCAP</a> documentation for more details.</p>
+   
         <p>You first have to define the transport to use. This is done in the <a href="#config_generic">generic configuration file</a> (see example below). 
 	 Then you can open channels for the transport that you have defined. You can open one or several
 	 channels. Each channel can be on the same or on different transports, and can use the same or
@@ -667,10 +668,35 @@ Seagull will look at parameters indicated by
     open-args="mode=client;dest=192.168.0.10:3868">
   </define>]]></source>
           </li>
+          <li>Example using SCTP over TCP:
+        <source><![CDATA[
+  <define entity="transport"
+    name="trans_sctp"
+    file="libtrans_extsctp.so"
+    create_function="create_cipsctpio_instance"
+    delete_function="delete_cipsctpio_instance"
+    init-args="type=tcp">
+  </define>
+
+  <define entity="channel"
+    name="channel-sctp"
+    protocol="Protocol"
+    transport="trans-sctp"
+    open-args="mode=client;dest=127.0.0.1:7000">
+  </define>
+]]></source>
+          </li>
         </ul>
         <p/>
         <p>For more details, see "<a href="#transport_config">Transport Configuration</a>".</p>
       </section>
+      <section>
+        <title>SCTP transport</title>
+        <p>Seagull supports SCTP transport with SCTP library in version 1.5 and SCTP Socket api
+        library in version 1.9.0 (refer to <a href="http://www.sctp.de/sctp-download.html">www.sctp.de</a>).
+        <warning>Seagull only supports SCTP upon TCP transport on linux platform. </warning>
+        </p>
+      </section>  
       <section>
         <title>Multi-channels</title>
         <p>Seagull supports several channels in one single scenario. This means that you can create
@@ -742,6 +768,9 @@ Seagull will look at parameters indicated by
         <source><![CDATA[  <scenario>
     <counter>
     </counter>
+    
+    <correlation>
+    </correlation>
 
     <init>
     </init>
@@ -779,6 +808,12 @@ Seagull will look at parameters indicated by
           for Diameter protocol).</p>
           <p>The list of scenario commands that can be included in this section is 
             described in the <a href="#ref_scenario_commands">scenario command section</a>.</p>
+        </section>
+        <section id="scen_corr">
+          <title>Correlation section</title>
+          <p>The <strong>correlation</strong> section is used to define rules to maintain several 
+          session-id in one call on one or several channels.</p>
+          <p>Refer to the <a href="#ref_correlation">"Correlation" section for further details</a>.</p>
         </section>
         <section id="scen_default">
           <title>Default section</title>
@@ -1858,6 +1893,155 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
         </section>
       </section>
     </section>
+    <section id="ref_correlation">
+      <title>Correlation</title>
+      <p>Calls are identified with the session-id. In some cases, the session-id change during the call and/or is stored in a different field of the message (header or body).
+      To perform this, the "correlation" feature has been done in Seagull. Now it can hold several session-ids for one call. 
+      For each channel, a list (called "map") of known session-id is hold to match received messages 
+      to current calls. Seagull must know the alternative session-id before he receive any messages with this alternative session-id<br/>
+      Here is an example of call flow:
+      <source><![CDATA[   
+  client                 server_1               server_2              |
+    |                                                                 | The client define the session-id-1
+    |                                                                 |
+    | session-id-1         |                                          |
+    |--------------------->|                                          |
+                           |                                          | The server_1 define session-id-2 and send it to the client into a field of the message
+                           |                                          |
+      session-id-1         |                                          |
+    |<---------------------|                                          | The client receives into a field of the message the value session-id-2 and inserts it into its map
+                           |                                          |
+                           |  session-id-2        |                   |
+                           |--------------------->|                   |
+                           |  session-id-2        |                   |
+                           |<---------------------|                   |
+                                                  |                   |
+                                            PAUSE |                   |
+                     session-id-2                 |                   |
+    |<--------------------------------------------|                   | The client receives a message with the session-id-2 as session-id
+    |                session-id-2                 |                   | It reconizes the call and continues it
+    |-------------------------------------------->|                   |
+    |                      
+    
+    ...
+    
+    
+    ]]></source>
+    <p></p>
+      
+      
+      
+      
+      For users, this is translated in the scenario with a new section "correlation" and a new tag "label" for scenario commands .</p>
+      <warning>It is not compatible with the "open-id" feature (to identify a call with the socket).</warning> 
+      
+      To activate the correlation, the "correlation" section must be add to the scenario:
+      <p>Example:</p>
+          <source><![CDATA[
+<correlation>
+ <channel name="channel-1">
+   <retrieve>
+     <search-in-map name="call-id"></search-in-map>
+   </retrieve>
+
+   <command name="command-1">
+     <pre-action>
+          <!-- For each new call, increment the callid counter -->
+       <inc-counter name="callid-counter"> </inc-counter>
+     <!-- And set the call-id field -->
+       <set-value name="call-id"
+                  format="$(callid-counter)@127.0.0.1"></set-value>
+       
+     </pre-action>
+     <post-action>
+       <store name="SID" entity="call-id"></store>
+       <insert-in-map channel="channel-1" name="SID"></insert-in-map>
+     </post-action>
+   </command>
+
+   <command name="command-1b">
+     <post-action>
+       <store name="alt-sid" entity="o"></store>
+      <insert-in-map channel="channel-2" name="alt-sid"></insert-in-map>
+     </post-action>
+   </command>
+ 
+ </channel>
+  <channel name="channel-2">
+   <retrieve>
+     <search-in-map name="call-id"></search-in-map>
+   </retrieve>
+
+
+ 
+ </channel>
+</correlation>]]></source>
+       
+      
+      <p>For each channel, the "channel" section must be added. This will define the retrieve method 
+      and the commands. 
+      The "retrieve" section define all the fields (defined in the dictionary) in which the session-id can 
+      be stored. For each field, add a "insert-in-map" tag.</p>
+      <p>Example:</p>
+          <source><![CDATA[   <retrieve>
+     <search-in-map name="Session-Id"></search-in-map>
+     <search-in-map name="HbH-id"></search-in-map>
+   </retrieve>]]></source>
+      
+      <p>For a new received message, seagull get the value of the field define in "name", and will search in its "map" 
+      of call context to match a known call. 
+      
+      To define the new session-id, correlation "command" sections must be added.</p>
+      <p>Example:</p>
+         <source><![CDATA[<command name="command-1">
+     <pre-action>
+      <set-value name="HbH-id" format="$(HbH-counter)">
+      </set-value>
+     </pre-action>
+     <post-action>
+      <insert-in-map channel="channel-1" entity="HbH-id"></insert-in-map>
+     </post-action>
+</command>]]></source>
+      
+      <p>The "pre-action" define the actions which must be done before the scenario command. The "post-action" 
+      define the actions which must be done after the scenario command.
+      The "inser-in-map" action is specific to the correlation feature. It inserts in the list of known 
+      session-id the value of the entity for the given channel. By default, the session id is inserted 
+      in the list of the first channel.</p>
+      
+      <p>To link the correlation "command" to the scenario "command", set the "label" to the 
+      scenario "command".</p>
+      <p>Example:</p>
+      <source><![CDATA[<send channel="channel-1" label="command-1">
+    <action>
+      <start-timer></start-timer>
+    </action>
+    <command name="CER">
+      <avp name="Origin-Host" value="seagull.ims.hpintelco.org"> </avp>
+      <avp name="Origin-Realm" value="ims.hpintelco.org"> </avp>
+      <avp name="Host-IP-Address" value="0x00010a03fc5e"> </avp> <!-- IPV4 10.3.252.94-->
+      <avp name="Vendor-Id" value="11"> </avp>
+      <avp name="Product-Name" value="HP Cx Interface"> </avp>
+      <avp name="Origin-State-Id" value="1094807040"> </avp>
+      <avp name="Supported-Vendor-Id" value="10415"> </avp>
+      <avp name="Auth-Application-Id" value="167772151"> </avp>
+      <avp name="Acct-Application-Id" value="0"> </avp>
+      <avp name="Vendor-Specific-Application-Id">
+        <avp name="Vendor-Id" value="11"></avp>
+        <avp name="Auth-Application-Id" value="167772151"></avp>
+        <avp name="Acct-Application-Id" value="0"></avp>
+      </avp>
+      <avp name="Firmware-Revision" value="1"> </avp>
+
+    </command>
+    <action>
+      <stop-timer></stop-timer>
+    </action>
+  </send>]]></source>
+      
+    <p>A example of the correlation feature is proposed in SIP protocol: <a href="sip.html#sip_correlation">SIP correlation example</a>. </p>  
+      
+    </section>
     <section id="support">
       <title>Getting support</title>
       <p>For support on Seagull, please send your questions on Seagull users mailing list: 
@@ -2398,6 +2582,8 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
       Content-Length: 187 ]] >
 </message>
       ]]></source>
+        
+        (See "<a href="sip.html#first_try_param">SIP first try</a>" for a commented example)
         </p>
       </section>
       <section id="scenario_ref">
