@@ -25,6 +25,10 @@
 
 #include "ProtocolData.hpp"
 
+#include "ReceiveMsgContext.h"
+#include "C_CallContext.hpp"
+
+
 C_MessageTlv::C_MessageTlv(C_ProtocolTlv *P_protocol) {
 
   unsigned long L_nbFields, L_i ;
@@ -65,6 +69,8 @@ C_MessageTlv::C_MessageTlv(C_ProtocolTlv *P_protocol) {
    m_id.m_type = E_TYPE_NUMBER ;
    
    m_header_body_field_separator = m_protocol->get_header_body_field_separator () ;
+
+   m_session_id = NULL ;
 
 
    GEN_DEBUG(1, "C_MessageTlv::C_MessageTlv() end");
@@ -154,6 +160,11 @@ C_MessageTlv::~C_MessageTlv() {
   m_protocol->reset_value_data (&m_id);
   m_header_body_field_separator = NULL ;
   m_protocol = NULL ;
+
+  if (m_session_id != NULL) {
+    resetMemory(*m_session_id);
+    FREE_VAR(m_session_id)  ;
+  }
 
   GEN_DEBUG(1, "C_MessageTlv::~C_MessageTlv() end");
 
@@ -490,121 +501,83 @@ C_ProtocolTlv* C_MessageTlv::get_protocol() {
 }
 
 T_pValueData C_MessageTlv::get_session_id (C_ContextFrame *P_ctxt) {
+  return (((this)->*(m_protocol->get_m_session_method()))(P_ctxt)) ;
+}
 
-  T_pValueData L_id_value = NULL ;
-  int                      L_i, L_id  ;
-  bool                     L_found = false ;
+T_pValueData C_MessageTlv::getSessionFromOpenId (C_ContextFrame *P_ctxt) {
+
+  T_pReceiveMsgContext L_recvCtx = NULL ;
+  C_CallContext*       L_callCtx = NULL ;
+  GEN_DEBUG(1, "C_MessageTlv::getSessionFromOpenId() start");
+  
+  if (m_session_id == NULL) {
+    if (P_ctxt != NULL) {
+      if ((L_callCtx = dynamic_cast<C_CallContext*>(P_ctxt)) != NULL) {
+        ALLOC_VAR(m_session_id, T_pValueData, sizeof(T_ValueData));
+        m_session_id->m_type = E_TYPE_NUMBER ;
+        m_session_id->m_value.m_val_number = 
+          L_callCtx->m_channel_table[L_callCtx->m_channel_received] ;
+        m_session_id->m_id = m_protocol->get_m_session_id_id() ;
+
+      } else if ((L_recvCtx = dynamic_cast<T_pReceiveMsgContext>(P_ctxt)) != NULL) {
+        ALLOC_VAR(m_session_id, T_pValueData, sizeof(T_ValueData));
+        m_session_id->m_type = E_TYPE_NUMBER ;
+        m_session_id->m_value.m_val_number = L_recvCtx->m_response ;
+        m_session_id->m_id =  m_protocol->get_m_session_id_id() ;
+      }
+    }
+  }
+
+  GEN_DEBUG(1, "C_MessageTlv::getSessionFromOpenId() end");
+  return (m_session_id);
+}
+
+T_pValueData C_MessageTlv::getSessionFromField (C_ContextFrame *P_ctxt) {
+
+  T_pValueData                               L_id_value = NULL  ;
+  int                                        L_i                ;
+  C_ProtocolTlv::T_pManagementSessionId      L_session_elt      ;
+  int                                        L_nb_manag_session ;
+  T_ValueData                                L_tmp_id_value     ;
+
 
   GEN_DEBUG(1, "C_MessageTlv::get_session_id() start");
 
-  L_id = m_protocol->get_msg_id() ;
+  // retrieve the number of managment session
+  L_nb_manag_session = m_protocol->get_nb_management_session () ;
 
-  GEN_DEBUG(1, "L_id = " << L_id << " type is " << 
-               m_protocol->get_msg_id_type() << " (0: header, 1:body)");
+  for (L_i = 0 ; L_i < L_nb_manag_session ; L_i++) {
+    L_session_elt = m_protocol->get_manage_session_elt(L_i);
 
-  switch (m_protocol->get_msg_id_type()) {
-  case C_ProtocolTlv::E_MSG_ID_HEADER:
-    GEN_DEBUG(1, "Header Id :");
-    L_id_value = &m_header_values[L_id];
+    switch (L_session_elt->m_msg_id_type) {
+    case C_ProtocolTlv::E_MSG_ID_HEADER:
+      L_id_value = &m_header_values[L_session_elt->m_msg_id_id];
+      // To be verify
+      if (L_session_elt->m_msg_id_value_type == E_TYPE_STRING) {
+        memcpy(&L_tmp_id_value,L_id_value,sizeof(L_tmp_id_value)) ;
+        m_protocol->reset_value_data(&m_id);
+        m_protocol->convert_to_string(&m_id, &L_tmp_id_value);
+        L_id_value = &m_id ;
+      }
+      break ;
 
-    GEN_DEBUG(1, "value :\n\tm_id :" << L_id_value->m_id << 
-                 "\tm_type: " << L_id_value->m_type << " ");
-
-    break ;
-  case C_ProtocolTlv::E_MSG_ID_BODY:
-
-    GEN_DEBUG(1, "Body Id : nb value is " << m_nb_body_values << " ");
-
-    for (L_i=0 ; L_i < m_nb_body_values ; L_i++) {
-
-      GEN_DEBUG(1, "Body Id [" << L_i << "] = " << m_body_val[L_i].m_id << " ");
-
-      if (m_body_val[L_i].m_id == L_id) { L_found=true; break; }
-
-
+    case C_ProtocolTlv::E_MSG_ID_BODY:
+      L_id_value = getSessionFromBody(L_session_elt->m_msg_id_id);
+      break ;
     }
-    if (L_found == true) {
-      m_protocol->reset_value_data(&m_id);
-      m_protocol->get_body_value(&m_id, &m_body_val[L_i]) ;
-      L_id_value = &m_id ;
 
-      GEN_DEBUG(1, "value :\n\tm_id :" << L_id_value->m_id << 
-                   "\tm_type: " << L_id_value->m_type << " ");
-
+    if (L_id_value != NULL) {
+      break;
     }
-    break ;
-  }
+  } // for (L_i...)
+
   GEN_DEBUG(1, "C_MessageTlv::get_session_id() end");
-
-  if (L_id_value == NULL) {
-    L_id_value = get_out_of_session_id();
-  }
-
   return (L_id_value) ;
 
 }
 
 T_pValueData C_MessageTlv::get_out_of_session_id () {
-
-  T_pValueData L_id_value = NULL ;
-
-  int                      L_i, L_id  ;
-  bool                     L_found = false ;
-
-  // Gilles PB
-  T_ValueData L_tmp_id_value ;
-  
-
-  GEN_DEBUG(1, "C_MessageTlv::get_out_of_session_id() start");
-
-  L_id = m_protocol->get_out_of_session_id() ;
-
-  GEN_DEBUG(1, "L_id = " << L_id << " with type: " 
-               << m_protocol->get_out_of_session_id_type() 
-               << " (0: header, 1:body)");
-
-  switch (m_protocol->get_out_of_session_id_type ()) {
-  case C_ProtocolTlv::E_MSG_ID_HEADER:
-    GEN_DEBUG(1, "Header Id :");
-
-    L_id_value = &m_header_values[L_id];
-
-    GEN_DEBUG(1, "value :\n  m_id :" << L_id_value->m_id << 
-                 "\n  m_type: " << L_id_value->m_type << " ");
-
-    if (m_protocol->get_msg_id_value_type() 
-	== E_TYPE_STRING) {
-      GEN_DEBUG(1, "C_MessageTlv::get_out_of_session_id() reset PB");
-      memcpy(&L_tmp_id_value,L_id_value,sizeof(L_tmp_id_value)) ;
-
-      m_protocol->reset_value_data(&m_id);
-      m_protocol->convert_to_string(&m_id, &L_tmp_id_value);
-
-      L_id_value = &m_id ;
-    }
-    break ;
-    case C_ProtocolTlv::E_MSG_ID_BODY:
-      GEN_DEBUG(1, "Body Id : nb value is " << m_nb_body_values << " ");
-
-      L_found = false ;
-      for (L_i=0 ; L_i < m_nb_body_values ; L_i++) {
-
-        GEN_DEBUG(1, "Body Id [" << L_i << "] = " << m_body_val[L_i].m_id << " ");
-	if (m_body_val[L_i].m_id == L_id) { L_found=true; break; }
-      }
-      if (L_found == true) {
-	m_protocol->reset_value_data(&m_id);
-	m_protocol->get_body_value(&m_id, &m_body_val[L_i]) ;
-	L_id_value = &m_id ;
-
-        GEN_DEBUG(1, "value :\n  m_id :" << L_id_value->m_id << 
-                   "\n  m_type: " << L_id_value->m_type << " ");
-      }
-      break ;
-  }
-  GEN_DEBUG(1, "C_MessageTlv::get_out_of_session_id() end");
-  
- return (L_id_value) ;
+  return (NULL) ;
 }
 
 bool C_MessageTlv::check(C_MessageFrame    *P_ref, 
@@ -910,23 +883,28 @@ bool C_MessageTlv::set_field_value(T_pValueData P_value,
 
 
 T_pValueData C_MessageTlv::get_field_value (int P_id, 
-                                               int P_instance,
-                                               int P_sub_id) {
+                                            C_ContextFrame *P_ctxt,
+                                            int P_instance,
+                                            int P_sub_id) {
 
-  T_pValueData    L_value = NULL ;
 
-  ALLOC_VAR(L_value,
-            T_pValueData,
-            sizeof(T_ValueData));
-
-  if (get_field_value(P_id, 
-                  P_instance,
-                  P_sub_id,
-                      L_value) == false ) {
-    FREE_VAR(L_value);
+  if (m_session_id == NULL) {
+    if (P_id == -1) {
+      return(getSessionFromOpenId (P_ctxt));
+    } else {
+      ALLOC_VAR(m_session_id,
+                T_pValueData,
+                sizeof(T_ValueData));
+      
+      if (get_field_value(P_id, 
+                          P_instance,
+                          P_sub_id,
+                          m_session_id) == false ) {
+        FREE_VAR(m_session_id);
+      }
+    }
   }
-  
-  return (L_value);
+  return (m_session_id);
 }
 
 bool C_MessageTlv::get_field_value(int P_id, 
@@ -990,6 +968,152 @@ void   C_MessageTlv::update_message_stats  () {
 }
 
 int    C_MessageTlv::get_buffer (T_pValueData P_dest,
-                                    T_MessagePartType P_header_body_type) {
+                                 T_MessagePartType P_header_body_type) {
+
+  int                              L_ret          =  0                        ;
+  size_t                           L_size         =  4096                     ;
+  size_t                           L_size_header  =  0                        ;
+  unsigned char                   *L_data         = NULL                      ;
+  C_ProtocolFrame::T_MsgError      L_error        = C_ProtocolFrame::E_MSG_OK ;
+
+  T_ValueData                      L_value                                    ;
+
+  if (P_header_body_type == E_NOTHING_TYPE ) {
+    return (L_ret);
+  } else {
+    ALLOC_TABLE(L_data,
+                unsigned char *,
+                sizeof(unsigned char),
+                L_size);
+
+    encode_without_stat(L_data, &L_size, &L_size_header, &L_error);
+    
+    if (L_error != C_ProtocolFrame::E_MSG_OK) {
+      L_ret = -1;
+    } else {
+      L_value.m_type = E_TYPE_STRING ;
+      L_value.m_value.m_val_binary.m_size = L_size;
+      ALLOC_TABLE(L_value.m_value.m_val_binary.m_value,
+                  unsigned char*,
+                  sizeof(unsigned char),
+                  L_value.m_value.m_val_binary.m_size);
+      
+      memcpy(L_value.m_value.m_val_binary.m_value,
+             L_data,
+             L_value.m_value.m_val_binary.m_size);
+
+      P_dest->m_type = E_TYPE_STRING ;
+      switch (P_header_body_type) {
+      case E_HEADER_TYPE :
+
+      ALLOC_TABLE(P_dest->m_value.m_val_binary.m_value,
+                  unsigned char*,
+                  sizeof(unsigned char),
+                  L_size_header);
+      P_dest->m_value.m_val_binary.m_size = L_size ;
+      extractBinaryVal(*P_dest, 0, L_size_header,
+                       L_value);
+
+        break;
+      case E_BODY_TYPE   :
+      ALLOC_TABLE(P_dest->m_value.m_val_binary.m_value,
+                  unsigned char*,
+                  sizeof(unsigned char),
+                  (L_size - L_size_header));
+      P_dest->m_value.m_val_binary.m_size = L_size ;
+      extractBinaryVal(*P_dest, L_size_header, (L_size - L_size_header),
+                       L_value);
+
+        break;
+      case E_ALL_TYPE    :
+      ALLOC_TABLE(P_dest->m_value.m_val_binary.m_value,
+                  unsigned char*,
+                  sizeof(unsigned char),
+                  L_size);
+      P_dest->m_value.m_val_binary.m_size = L_size ;
+      extractBinaryVal(*P_dest, 0, L_size,
+                       L_value);
+
+        break;
+      default:
+        L_ret = -1 ;
+        break ;
+      }
+      resetMemory(L_value);
+        
+    }
+  }
+  FREE_TABLE(L_data);
+
   return (0) ;
+}
+
+
+void C_MessageTlv::encode_without_stat (unsigned char* P_buffer, 
+                                        size_t*        P_size, //init value = buf size
+                                        size_t*        P_size_header,
+                                        C_ProtocolFrame::T_pMsgError P_error) {
+
+  unsigned char *L_ptr = P_buffer ;
+  size_t         L_size = *P_size ;
+  C_ProtocolContext   *L_protocol_ctxt = m_protocol->create_protocol_context() ;
+  
+  GEN_DEBUG(1, "C_MessageTlv::encode() start ");
+
+
+  C_ProtocolFrame::T_MsgError L_error = C_ProtocolFrame::E_MSG_OK ;
+
+  // start with header
+  m_protocol->encode_header_without_stat (m_header_id, 
+                                          m_header_values, 
+                                          L_ptr, 
+                                          &L_size,
+                                          L_protocol_ctxt,
+                                          &L_error);
+
+  if (L_error == C_ProtocolFrame::E_MSG_OK) {
+    *P_size_header = L_size ; 
+    L_ptr += L_size ;
+    L_size = *P_size - L_size ;
+    
+    L_error = m_protocol->encode_body_without_stat(m_nb_body_values,
+                                                   m_body_val,
+                                                   L_ptr,
+                                                   &L_size,
+                                                   L_protocol_ctxt);
+    
+    
+    if (L_error == C_ProtocolFrame::E_MSG_OK) {
+      
+      m_protocol->propagate_ctxt_global (L_protocol_ctxt);
+      *P_size = L_protocol_ctxt->get_counter_ctxt(0); 
+      m_protocol->delete_protocol_context (&L_protocol_ctxt);
+    }
+  }
+
+  *P_error = L_error ;
+  
+  GEN_DEBUG(1, "C_MessageTlv::encode() end");
+}
+
+
+T_pValueData C_MessageTlv::getSessionFromBody(int P_id) {
+  int                                 L_i             ;
+  T_pValueData                        L_ret   = NULL  ;
+  bool                                L_found = false ;
+ 
+
+  for (L_i=0 ; L_i < m_nb_body_values ; L_i++) {
+    if (m_body_val[L_i].m_id == P_id) { 
+      L_found = true; 
+      break; 
+    }
+  }
+  if (L_found == true) {
+    m_protocol->reset_value_data(&m_id);
+    m_protocol->get_body_value(&m_id, &m_body_val[L_i]) ;
+    L_ret = &m_id ;
+  }
+
+  return (L_ret) ;
 }

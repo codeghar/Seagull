@@ -635,7 +635,7 @@ int C_ProtocolTlv::analyze_header_from_xml (C_XmlData *P_def) {
   L_data = P_def ;
 
   m_max_nb_field_header = (L_data->get_sub_data())->size() ;
-
+  m_session_id_id = m_max_nb_field_header + 1 ; 
   m_nb_field_header = 0 ;
   ALLOC_TABLE(m_header_field_table, 
               T_pHeaderField, sizeof(T_HeaderField), 
@@ -764,8 +764,7 @@ int C_ProtocolTlv::analyze_dictionnary_from_xml (C_XmlData *P_def) {
       if ((L_data->get_name() != NULL ) 
 	  && (strcmp(L_data->get_name(), m_header_name) == 0)) {
         // "Message" defintion
- 
-        L_ret = analyze_sessions_id_from_xml(L_data);
+        L_ret = analyze_sessions_from_xml(L_data);
         if (L_ret == -1) break;
         // header values dictionnary definitions
 
@@ -853,13 +852,15 @@ int C_ProtocolTlv::analyze_dictionnary_from_xml (C_XmlData *P_def) {
 
 int C_ProtocolTlv::xml_interpretor(C_XmlData *P_def) {
 
-  C_XmlData                *L_data                           ;
-  T_pXmlData_List           L_subList                        ; 
-  T_XmlData_List::iterator  L_listIt                         ;
-  char                     *L_value                          ;
-  int                       L_ret = 0                        ;
-
-  bool                      L_headerFound = false            ;
+  C_XmlData                      *L_data                           ;
+  T_pXmlData_List                 L_subList                        ; 
+  T_XmlData_List::iterator        L_listIt                         ;
+  char                           *L_value                  = NULL  ;
+  int                             L_ret                    = 0     ;
+  bool                            L_headerFound            = false ;
+  int                             L_id                     = 0     ;
+  T_DefMethodExternList::iterator L_def_method_extern_it           ;
+  T_DefMethodExtern               L_defmethod_extern_data          ;
 
   GEN_DEBUG(1, "C_ProtocolTlv::xml_interpretor() start");
 
@@ -893,27 +894,55 @@ int C_ProtocolTlv::xml_interpretor(C_XmlData *P_def) {
       L_value = L_data->get_name() ;
 
       // Type definition
-      if (strcmp(L_value, "types") == 0) {
+      if (strcmp(L_value, (char*)"types") == 0) {
         L_ret = analyze_types_from_xml (L_data) ;
 	if (L_ret == -1) break ;
       }
+      if (strcmp(L_value, (char*)"external-method") ==0) {
+	NEW_VAR(m_def_method_extern_list, T_DefMethodExternList());
+	L_ret = analyze_extern_method_from_xml (L_data,m_def_method_extern_list); 
+	if (L_ret == -1) break ;
+
+        if((m_def_method_extern_list) &&
+           (!m_def_method_extern_list-> empty()) && 
+           (m_def_method_extern_list->size()> 0)) {
+          
+          m_nb_method_external_table = m_def_method_extern_list->size() ;
+          
+          ALLOC_TABLE(m_method_external_table,
+                      T_pDefMethodExternal,
+                      sizeof(T_DefMethodExternal),
+                      m_nb_method_external_table);
+          
+          for (L_def_method_extern_it = m_def_method_extern_list->begin();
+               L_def_method_extern_it != m_def_method_extern_list->end();
+               L_def_method_extern_it++) {
+            
+            L_defmethod_extern_data = *L_def_method_extern_it ;
+            
+            m_method_external_table[L_id].m_id = L_id ;
+            m_method_external_table[L_id].m_method
+              = create_external_method (L_defmethod_extern_data.m_param) ;
+            L_id++ ;
+          }
+        }
+      }
       
       // Message Header definition
-      if (strcmp(L_value, "header") ==0) {
+      if (strcmp(L_value, (char*)"header") ==0) {
 	L_headerFound = true ;
         L_ret = analyze_header_from_xml (L_data) ;
 	if (L_ret == -1) break ;
       }
 
       // Message Body definition
-      if (strcmp(L_value, "body") ==0) {
+      if (strcmp(L_value, (char*)"body") ==0) {
         L_ret = analyze_body_from_xml (L_data);
         if (L_ret == -1) break ;
       } // body
 
       // Message dictionary for "fields" and "Message" definition
       if (strcmp(L_value, (char*)"dictionary") ==0) {
-        //        L_ret = analyze_dictionnary_from_xml (L_data, &L_session_id_name, &L_outof_session_id_name);
         L_ret = analyze_dictionnary_from_xml (L_data);
         if (L_ret == -1) break ;
       } // L_value == dico
@@ -987,6 +1016,17 @@ C_ProtocolTlv::C_ProtocolTlv() {
   m_nb_protocol_ctxt_values = 0 ;
   
   m_ctxt_id_data_size = -1 ;
+
+  m_def_method_extern_list   = NULL    ;  
+  m_method_external_table    = NULL   ;
+  m_nb_method_external_table = 0      ;
+
+  m_session_id_id               = -1   ;
+  m_use_open_id                 = false ;
+  m_session_method              = &C_MessageTlv::getSessionFromField ;
+
+  m_value_sessions_table      = NULL ;
+  m_value_sessions_table_size = 0 ;
 
   GEN_DEBUG(1, "C_ProtocolTlv::C_ProtocolTlv() end");
   
@@ -1264,6 +1304,28 @@ C_ProtocolTlv::~C_ProtocolTlv() {
 
   m_counter_id_last_length = -1 ;
   m_ctxt_id_data_size = -1 ;
+
+
+  if((m_def_method_extern_list) && (!m_def_method_extern_list -> empty())) {
+  
+    m_def_method_extern_list-> erase (m_def_method_extern_list->begin(), 
+                                      m_def_method_extern_list->end());
+  }
+  DELETE_VAR (m_def_method_extern_list) ;
+
+  if (m_nb_method_external_table) {
+    FREE_TABLE(m_method_external_table);
+    m_nb_method_external_table  = 0    ;
+  }
+
+  m_session_id_id               = -1   ;
+  m_use_open_id                 = false ;
+  m_session_method              = &C_MessageTlv::getSessionFromField ;
+
+  if (m_value_sessions_table_size != 0) {
+    FREE_TABLE(m_value_sessions_table);
+    m_value_sessions_table_size = 0 ;
+  }
 
   GEN_DEBUG(1, "C_ProtocolTlv::~C_ProtocolTlv() end");
 
@@ -2725,6 +2787,11 @@ int C_ProtocolTlv::get_header_body_values_from_xml (C_XmlData *P_def) {
       ->insert(T_IdMap::value_type(L_name, L_id));
     L_id ++ ;
   } // L_listIt
+
+  if ((L_ret != -1) &&  (m_use_open_id)) {
+    m_session_id_id += L_id ;
+  }
+
   GEN_DEBUG(1, "C_ProtocolTlv::get_header_body_values_from_xml() end");
   
   return (L_ret);
@@ -4394,13 +4461,13 @@ void C_ProtocolTlv::set_header_values (T_pValueData P_dest,
   unsigned long         L_fieldIdx     ;
 
   for(L_fieldIdx=0; L_fieldIdx < m_nb_field_header; L_fieldIdx++) {
-    P_dest[L_fieldIdx] = P_orig [L_fieldIdx] ;
+    copyValue(P_dest[L_fieldIdx], P_orig [L_fieldIdx], false) ;
   }
 }
 
 void C_ProtocolTlv::set_header_value (int          P_id, 
-                                         T_pValueData P_dest, 
-                                         T_pValueData P_orig) {
+                                      T_pValueData P_dest, 
+                                      T_pValueData P_orig) {
 
   int                L_type_id ;
   T_pHeaderField     L_fieldVal  ;
@@ -4414,6 +4481,7 @@ void C_ProtocolTlv::set_header_value (int          P_id,
     L_type = m_type_def_table[L_type_id].m_type ;
   }
 
+  P_dest->m_type = L_type ;
   if (L_type == P_orig->m_type) {
     switch (L_type) {
     case E_TYPE_NUMBER:
@@ -4425,7 +4493,9 @@ void C_ProtocolTlv::set_header_value (int          P_id,
       break ;
 
     case E_TYPE_STRING:
-      FREE_TABLE(P_dest->m_value.m_val_binary.m_value);
+      if (P_dest->m_type == E_TYPE_STRING) {
+        FREE_TABLE(P_dest->m_value.m_val_binary.m_value);
+      }
       P_dest->m_value.m_val_binary.m_size
         = P_orig->m_value.m_val_binary.m_size ;
       ALLOC_TABLE(P_dest->m_value.m_val_binary.m_value,
@@ -5833,42 +5903,19 @@ void C_ProtocolTlv::update_stats (T_ProtocolStatDataType   P_type,
 				       int                      P_id) {
 }
 
-int C_ProtocolTlv::analyze_sessions_id_from_xml (C_XmlData *P_def) {
+int C_ProtocolTlv::analyze_sessions_from_xml (C_XmlData *P_def) {
 
 
-  int                       L_ret = 0                      ;
-  char                     *L_session_id_name = NULL       ;
-  char                     *L_outof_session_id_name = NULL ;
-  C_XmlData                *L_data                         ;
+  int                                     L_ret                      = 0          ;
+  C_XmlData                              *L_data                                  ; 
 
-  char                     *L_session_id_position_name = NULL ;
-  char                     *L_endstr           ;
+  char                                   *L_session_id_position_name = NULL       ;
+  char                                   *L_endstr                                ;
 
 
   L_data = P_def ;
-  // header values dictionnary definitions
-  L_session_id_name = L_data->find_value ((char*)"session-id") ;
-  
-  GEN_DEBUG(1, "C_ProtocolTlv::xml_interpretor() L_session_id_name is " << 
-            L_session_id_name);
-  
-  if (L_session_id_name == NULL) {
-    GEN_ERROR(E_GEN_FATAL_ERROR,
-              "session-id value is mandatory for ["
-              << m_header_name << "] section");
-    L_ret = -1 ;
-  } 
 
-  if (L_ret != -1) {
-    L_outof_session_id_name 
-      = L_data->find_value ((char*)"out-of-session-id") ;
-    if (L_outof_session_id_name == NULL) {
-      GEN_ERROR(E_GEN_FATAL_ERROR,
-                "out-of-session-id value is mandatory for ["
-                << m_header_name << "] section");
-      L_ret = -1 ;
-    } 
-  }
+  L_ret = analyze_sessions_id_out_from_xml(L_data);
 
   if (L_ret != -1) {
     L_session_id_position_name 
@@ -5883,91 +5930,23 @@ int C_ProtocolTlv::analyze_sessions_id_from_xml (C_XmlData *P_def) {
     }
   }
   
-  if (L_ret != -1) {
-    GEN_DEBUG(1, "C_ProtocolTlv::xml_interpretor() " 
-	      << "Session Id name is " << L_session_id_name );
-
-    // retrieve informations for session_id
-    if (L_session_id_name) {
-      m_msg_id_id = find_header_field_id (L_session_id_name) ;
-      
-      GEN_DEBUG(1, "C_ProtocolTlv::xml_interpretor() " 
-                << "m_msg_id_id is " << m_msg_id_id );
-      
-      if (m_msg_id_id != -1) {
-        GEN_DEBUG(1, "C_ProtocolTlv::xml_interpretor() " 
-                  << "m_msg_id_id is an header one it type is number");
-        m_msg_id_type = E_MSG_ID_HEADER ;
-        m_msg_id_value_type = E_TYPE_NUMBER ;
-      } else {
-        GEN_DEBUG(1, "C_ProtocolTlv::xml_interpretor() " 
-                  << "m_msg_id_id is an body one ");
-        m_msg_id_id = find_body_value_id (L_session_id_name) ;
-
-        GEN_DEBUG(1, "C_ProtocolTlv::xml_interpretor() " 
-                  << "m_msg_id_id is " << m_msg_id_id );
-        if (m_msg_id_id != -1) {
-          m_msg_id_type = E_MSG_ID_BODY ;
-          m_msg_id_value_type = get_body_value_type (m_msg_id_id);
-
-          GEN_DEBUG(1, "C_ProtocolTlv::xml_interpretor() " 
-                    << "m_msg_id_id is " << m_msg_id_id << " its type is " 
-                    << m_msg_id_value_type);
-        } else {
-          GEN_ERROR(E_GEN_FATAL_ERROR,
-                    "No definition found for session-id ["
-                    << L_session_id_name << "]");
-          L_ret = -1 ;
-        }
-      }
-    }
-
-    if (L_ret != -1) {
-      if (L_outof_session_id_name) {
-        GEN_DEBUG(1, "C_ProtocolTlv::xml_interpretor() " 
-                  << "Out Of Session Id name is " 
-                  << L_outof_session_id_name );
-        
-        m_id_out_of_session = find_header_field_id (L_outof_session_id_name) ;
-        
-        GEN_DEBUG(1, "C_ProtocolTlv::xml_interpretor() " 
-                  << "m_id_out_of_session is " 
-                  << m_id_out_of_session );
-        
-        if (m_id_out_of_session != -1) {
-          m_type_id_out_of_session = E_MSG_ID_HEADER ;
-          GEN_DEBUG(1, "C_ProtocolTlv::xml_interpretor() " 
-                    << "m_type_id_out_of_session is " 
-                    << m_type_id_out_of_session);
-        } else {
-          m_id_out_of_session = find_body_value_id (L_outof_session_id_name) ;
-          if (m_id_out_of_session != -1) {
-            m_type_id_out_of_session = E_MSG_ID_BODY ;
-            GEN_DEBUG(1, "C_ProtocolTlv::xml_interpretor() " 
-                      << "m_type_id_out_of_session is  " 
-                      << m_type_id_out_of_session);
-          } else {
-            GEN_ERROR(E_GEN_FATAL_ERROR,
-                      "No definition found for out-of-session-id ["
-                      << L_session_id_name << "]");
-            L_ret = -1 ;
-          }
-        }
-      } // if (L_outof_session_id_name)
-    }
-  }
-
   return (L_ret) ;
 }
 
+
 C_ProtocolTlv::T_pManagementSessionId 
 C_ProtocolTlv::get_manage_session_elt(int P_id) {
-  return (NULL) ;
+
+  T_ManagementSessionId  *L_ret = NULL ;
+  
+  if ((P_id < m_value_sessions_table_size) && (P_id >= 0)) {
+    L_ret = &m_value_sessions_table[P_id] ;
+  }
+  return (L_ret) ;
 }
 
-
 int C_ProtocolTlv::get_nb_management_session () {
-  return (0);
+  return (m_value_sessions_table_size);
 }
 
 bool C_ProtocolTlv::check_present_session (int P_msg_id,int P_id) {
@@ -6093,8 +6072,16 @@ int C_ProtocolTlv::analyze_setfield(C_XmlData          *P_data,
           }
           
         } else { // direct string value
-          P_res->m_value.m_val_binary.m_value=(unsigned char*)L_fieldValue;
           P_res->m_value.m_val_binary.m_size=strlen(L_fieldValue);
+
+          ALLOC_TABLE(P_res->m_value.m_val_binary.m_value,
+                      unsigned char *,
+                      sizeof(unsigned char),
+                      P_res->m_value.m_val_binary.m_size);
+
+          memcpy(P_res->m_value.m_val_binary.m_value,
+                 L_fieldValue,
+                 P_res->m_value.m_val_binary.m_size);
         }
       }
       
@@ -6545,5 +6532,751 @@ int  C_ProtocolTlv::update_ctxt_values_decode (C_ProtocolContext     *P_protocol
   
 }
 
+int C_ProtocolTlv::analyze_extern_method_from_xml(C_XmlData             *P_data, 
+                                                     T_DefMethodExternList *P_def_method_list) {
+  
+  int                       L_ret                = 0        ;
+  T_pXmlData_List           L_defmethod_xml_list = NULL     ;
+  C_XmlData                *L_defmethod          = NULL     ;
+  T_XmlData_List::iterator  L_defmethod_it                  ;
+  
+  T_DefMethodExtern         L_defmethod_data                ;
+  
+  
+  GEN_DEBUG(1, "C_ProtocolTlv::analyze_extern_method_from_xml() start");
 
+  L_defmethod_xml_list = P_data->get_sub_data() ;
+
+
+  for(L_defmethod_it  = L_defmethod_xml_list->begin() ;
+      L_defmethod_it != L_defmethod_xml_list->end() ;
+      L_defmethod_it++) {
+
+    L_defmethod = *L_defmethod_it ;
+    
+    if (strcmp(L_defmethod->get_name(), (char*)"defmethod") == 0) {
+      L_defmethod_data.m_name = L_defmethod->find_value((char*)"name") ;
+      if (L_defmethod_data.m_name == NULL) {
+	GEN_ERROR(E_GEN_FATAL_ERROR, 
+		  "defmehod name value is mandatory");
+	L_ret = -1 ;
+	break ;
+      }
+      
+      L_defmethod_data.m_param = L_defmethod->find_value((char*)"param") ;
+      if (L_defmethod_data.m_param == NULL) {
+	GEN_ERROR(E_GEN_FATAL_ERROR, 
+		  "defmehod param value is mandatory");
+	L_ret = -1 ;
+	break ;
+      }
+
+      if (L_ret == -1) { 
+	break ; 
+      } else {
+	P_def_method_list->push_back(L_defmethod_data);
+      }
+
+    } // strcmp defmethod
+  }
+
+  GEN_DEBUG(1, "C_ProtocolTlv::analyze_extern_method_from_xml() end");
+
+  return (L_ret);
+}
+
+T_ExternalMethod C_ProtocolTlv::find_method_extern(char *P_name) {
+
+  int L_i ;
+  T_ExternalMethod                L_ret = NULL               ;
+  T_DefMethodExternList::iterator L_def_method_extern_it     ;
+  T_DefMethodExtern               L_defmethod_extern_data    ;
+
+
+  if (m_nb_method_external_table > 0 ) {
+    L_i = 0 ;
+    for (L_def_method_extern_it = m_def_method_extern_list->begin();
+         L_def_method_extern_it != m_def_method_extern_list->end();
+         L_def_method_extern_it++) {
+      
+      L_defmethod_extern_data = *L_def_method_extern_it ;
+      if (strcmp(P_name, L_defmethod_extern_data.m_name) == 0){
+        L_ret = m_method_external_table[L_i].m_method ;
+        break ;
+      }
+      L_i ++;
+    }
+  }
+  return (L_ret);
+}
+
+int  C_ProtocolTlv::get_m_session_id_id() {
+  return (m_session_id_id);
+}
+
+C_ProtocolTlv::T_SessionMethodTlv C_ProtocolTlv::get_m_session_method() {
+  return (m_session_method);
+}
+
+int C_ProtocolTlv::analyze_sessions_id_out_from_xml (C_XmlData *P_def) {
+  
+  int                                  L_ret = 0                 ;
+  C_XmlData::T_pXmlField_List          L_fields_list             ;
+  C_XmlData::T_XmlField_List::iterator L_fieldIt                 ;
+
+  T_ManagementSessionId                L_management_session      ;
+  T_ManagementSessionIdList            L_list_management_session ;
+  char                                *L_name_value = NULL       ;
+
+  T_ManagementSessionIdList::iterator  L_it                      ;
+  int                                  L_msg_id_id               ;
+  T_MsgIdType                          L_msg_id_type             ;
+  T_TypeType                           L_msg_id_value_type       ;
+  int                                  L_id                      ;
+
+  GEN_DEBUG(1, "C_ProtocolTlv::analyze_sessions_id_out_from_xml() start");  
+
+  L_fields_list = P_def->get_fields();
+  if (!L_fields_list->empty()) {
+    for(L_fieldIt  = L_fields_list->begin() ;
+	L_fieldIt != L_fields_list->end() ;
+	L_fieldIt++) {
+      
+      if (strcmp((*L_fieldIt)->get_name() , (char*)"session-method") == 0 ) {
+  	L_name_value = (*L_fieldIt)->get_value();
+        if (L_name_value == NULL) {
+          GEN_ERROR(E_GEN_FATAL_ERROR,
+                    (*L_fieldIt)->get_name()
+                    << " value is mandatory for ["
+                    << m_header_name 
+                    << "] section");
+          L_ret = -1 ;
+          break ;
+        }
+        
+        if (strcmp(L_name_value, (char*)"open-id") == 0 ) {
+          m_use_open_id = true ;
+	  m_session_method = &C_MessageTlv::getSessionFromOpenId ;
+        } else if (strcmp(L_name_value, (char*)"field") != 0 ) {
+          GEN_ERROR(E_GEN_FATAL_ERROR,
+                    (*L_fieldIt)->get_name()
+                    << " value is mandatory for ["
+                    << m_header_name 
+                    << "] section");
+          L_ret = -1 ;
+          break ;
+        }
+      }
+      
+      if((strcmp((*L_fieldIt)->get_name() , (char*)"session-id") == 0 ) || 
+         (strcmp((*L_fieldIt)->get_name() , (char*)"out-of-session-id") == 0 )) {
+
+        if (m_use_open_id == false) {
+          L_name_value = (*L_fieldIt)->get_value();
+          if (L_name_value == NULL) {
+            GEN_ERROR(E_GEN_FATAL_ERROR,
+                      (*L_fieldIt)->get_name()
+                      << " is mandatory for ["
+                      << m_header_name 
+                      << "] section");
+            L_ret = -1 ;
+            break ;
+          }
+          
+          // retrieve informations for session_id
+          L_msg_id_id = find_header_field_id (L_name_value) ;
+          
+          GEN_DEBUG(1, "C_ProtocolTlv::analyze_sessions_id_out_from_xml() " 
+                    << "L_msg_id_id is " << L_msg_id_id );
+          
+          if (L_msg_id_id != -1) {
+            GEN_DEBUG(1, "C_ProtocolTlv::analyze_sessions_id_out_from_xml() " 
+                      << "L_msg_id_id is an header one it type is number");
+            L_msg_id_type =  E_MSG_ID_HEADER ;
+            L_msg_id_value_type = get_header_value_type (L_msg_id_id) ;
+          } else {
+            GEN_DEBUG(1, "C_ProtocolTlv::analyze_sessions_id_out_from_xml() " 
+                      << "L_msg_id_id is an body one ");
+            L_msg_id_id = find_body_value_id (L_name_value) ;
+            GEN_DEBUG(1, "C_ProtocolTlv::analyze_sessions_id_out_from_xml() " 
+                      << "L_msg_id_id is " << L_msg_id_id );
+            if (L_msg_id_id != -1) {
+              L_msg_id_type = E_MSG_ID_BODY ;
+              L_msg_id_value_type = get_body_value_type (L_msg_id_id);
+              GEN_DEBUG(1, "C_ProtocolTlv::analyze_sessions_id_out_from_xml() " 
+                        << "L_msg_id_id is " << L_msg_id_id << " its type is " 
+                        << L_msg_id_value_type);
+
+            } else {
+              GEN_ERROR(E_GEN_FATAL_ERROR,
+                        "No definition found for "
+                        << (*L_fieldIt)->get_name() 
+                        << " ["
+                        << L_name_value << "]");
+              L_ret = -1 ;
+              break ;
+            }
+          }
+
+          if (L_ret != -1) {
+            L_management_session.m_msg_id_id = L_msg_id_id ;
+            L_management_session.m_msg_id_type = L_msg_id_type ;
+            L_management_session.m_msg_id_value_type = L_msg_id_value_type ;
+            L_list_management_session.push_back(L_management_session);
+          }
+        } else { // if m_use_open_id == true
+          GEN_ERROR(E_GEN_FATAL_ERROR,
+                    "Definition found for "
+                    << (*L_fieldIt)->get_name() 
+                    << " with session-method=open-id");
+	  L_ret = -1 ;
+	  break ;
+        }
+      } // if((strcmp((*L_fieldIt)->get_name() ..))) 
+    } // for(L_fieldIt...)
+
+    if (L_ret != -1) {
+      if (m_use_open_id == false) {
+        if (!L_list_management_session.empty()) {
+          m_value_sessions_table_size = L_list_management_session.size() ;
+          ALLOC_TABLE(m_value_sessions_table,
+                      T_pManagementSessionId,
+                      sizeof(T_ManagementSessionId),
+                      m_value_sessions_table_size);
+          
+          L_id = 0 ;
+          for (L_it  = L_list_management_session.begin();
+               L_it != L_list_management_session.end()  ;
+               L_it++) {
+            m_value_sessions_table[L_id] = *L_it ;
+            L_id ++ ;
+          }
+          
+          L_list_management_session.erase(L_list_management_session.begin(),
+                                          L_list_management_session.end());
+
+//              for (L_id = 0 ; L_id < m_value_sessions_table_size ; L_id++) {
+//                std::cerr << "m_value_sessions_table[" 
+//                          << L_id 
+//                          << "]" 
+//                          << m_value_sessions_table[L_id].m_msg_id_id
+//                          << " " 
+//                          << m_value_sessions_table[L_id].m_msg_id_type
+//                          << " " 
+//                          << m_value_sessions_table[L_id].m_msg_id_value_type
+//                          << std::endl;
+            
+//              }
+        } else {
+          GEN_ERROR(E_GEN_FATAL_ERROR,
+                    "No session-id nor out-of-session definition found"); 
+          L_ret = -1 ;
+        }
+      } // if (m_use_open_id ...)
+    } // if (L_ret != -1)
+  } else {
+    GEN_ERROR(E_GEN_FATAL_ERROR,
+              "No session-id nor out-of-session found in dictionary definition");
+    L_ret = -1 ;
+  }
+  
+  GEN_DEBUG(1, "C_ProtocolBinary::analyze_sessions_id_from_xml() end");
+  return (L_ret);
+}
+
+
+void C_ProtocolTlv::encode_header_without_stat (int            P_id,
+                                                T_pValueData   P_headerVal,
+                                                unsigned char *P_buf, 
+                                                size_t             *P_size,
+                                                C_ProtocolContext  *P_ctxt_protocol,
+                                                C_ProtocolFrame::T_pMsgError P_error) {
+
+  unsigned char      *L_ptr = P_buf  ;
+  unsigned long       L_fieldIdx     ;
+  T_pHeaderField      L_fieldDescr   ;
+
+  unsigned long       L_current_size, L_total_size ;
+  T_UnsignedInteger32 L_current_value ;
+  T_UnsignedInteger64 L_current_value_ll ;
+
+  int            L_type_id ;
+  T_TypeType     L_type ;
+
+  unsigned char        *L_position_ptr = NULL;
+  C_ProtocolContext    *L_ctxt_protocol = P_ctxt_protocol ;
+
+  GEN_DEBUG(1, "C_ProtocolTlv::encode_header(" << P_id 
+	<< "," << &P_buf << "," << P_size << ") 1 start");
+
+  *P_error = C_ProtocolFrame::E_MSG_OK ;
+
+  L_current_size = 0 ;
+  L_total_size = 0 ;
+
+  GEN_DEBUG(1, "C_ProtocolTlv::encode_header m_nb_field_header = " 
+               << m_nb_field_header);
+
+
+
+  for(L_fieldIdx=0; L_fieldIdx < m_nb_field_header; L_fieldIdx++) {
+
+    L_fieldDescr = &m_header_field_table[L_fieldIdx] ;
+    
+    L_current_size = L_fieldDescr -> m_size ;
+    L_position_ptr = L_ptr ;
+    
+    L_total_size += L_current_size ;
+
+    if (L_total_size > *P_size) {
+      GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR,
+                    "Buffer max size reached [" << *P_size << "]");
+      *P_error = C_ProtocolFrame::E_MSG_ERROR_ENCODING ;
+      break ;
+    }
+
+    L_type_id = L_fieldDescr->m_type_id ;
+    if (L_type_id == -1) {
+      L_type = E_TYPE_NUMBER;
+    } else {
+      L_type = m_type_def_table[L_type_id].m_type ;
+    }
+    
+    // now add the value of the body
+    switch (L_type) {
+
+    case E_TYPE_NUMBER:
+      L_current_value = P_headerVal[L_fieldIdx].m_value.m_val_number ;
+
+      GEN_DEBUG(1, "Number Value set = " << L_current_value);
+
+      convert_ul_to_bin_network(L_ptr,
+                                L_current_size,
+                                L_current_value);
+      break ;
+
+    case E_TYPE_SIGNED:
+      L_current_value = P_headerVal[L_fieldIdx].m_value.m_val_signed ;
+
+      GEN_DEBUG(1, "Signed Value set = " << L_current_value);
+
+      convert_l_to_bin_network(L_ptr,
+                               L_current_size,
+                               L_current_value);
+      break ;
+
+    case E_TYPE_STRING: {
+      size_t L_padding ;
+      if (P_headerVal[L_fieldIdx].m_value.m_val_binary.m_size == 0) {
+        GEN_ERROR(E_GEN_FATAL_ERROR, 
+                  "The value of the field ["
+                  << L_fieldDescr -> m_name 
+                  << "] is not set");
+        
+        //        *P_error = C_ProtocolTlvFrame::E_MSG_ERROR_ENCODING ;
+        *P_error = C_ProtocolFrame::E_MSG_ERROR_ENCODING ;
+        break;
+      }
+
+      memcpy(L_ptr, P_headerVal[L_fieldIdx].m_value.m_val_binary.m_value, L_current_size);
+      if (m_padding_value) {
+        L_padding = L_current_size % m_padding_value ;
+        if (L_padding) { L_padding = m_padding_value - L_padding ; }
+        while (L_padding) {
+          *(L_ptr+L_current_size) = '\0' ;
+          L_current_size++ ;
+          L_padding-- ;
+        }
+      } else {
+        L_padding = 0 ;
+      }
+    }
+        break ;
+
+    case E_TYPE_STRUCT: {
+      size_t   L_sub_value_size = L_current_size/2 ;
+
+      convert_ul_to_bin_network(L_ptr,
+                                L_sub_value_size,
+                                P_headerVal[L_fieldIdx].m_value.m_val_struct.m_id_1);
+
+      convert_ul_to_bin_network(L_ptr + L_sub_value_size,
+                                L_sub_value_size,
+                                P_headerVal[L_fieldIdx].m_value.m_val_struct.m_id_2);
+      }
+        break ;
+
+    case E_TYPE_NUMBER_64:
+      L_current_value_ll = P_headerVal[L_fieldIdx].m_value.m_val_number_64 ;
+
+      GEN_DEBUG(1, "Number64 Value set = " << L_current_value_ll);
+
+      convert_ull_to_bin_network(L_ptr,
+                                 L_current_size,
+                                 L_current_value_ll);
+      break ;
+
+    case E_TYPE_SIGNED_64:
+      L_current_value_ll = P_headerVal[L_fieldIdx].m_value.m_val_signed_64 ;
+
+      GEN_DEBUG(1, "Signed64 Value set = " << L_current_value_ll);
+
+      convert_ll_to_bin_network(L_ptr,
+                                L_current_size,
+                                L_current_value_ll);
+      break ;
+
+    case E_TYPE_GROUPED:
+    default:
+      GEN_FATAL(E_GEN_FATAL_ERROR,
+            "Encoding method not implemented for this value");
+      break ;
+    }
+
+    update_ctxt_values (L_ctxt_protocol,
+			L_position_ptr,
+			L_fieldIdx,
+			(int)L_current_size,
+			m_header_ctxt_v_table,
+			m_header_ctxt_p_table) ;
+      
+      
+    L_ptr += L_current_size ;
+  } // for
+
+  if (*P_error == C_ProtocolFrame::E_MSG_OK) {
+    *P_size = L_total_size ;
+  }
+
+
+  GEN_DEBUG(1, "C_ProtocolTlv::encode_header() 1 end");
+
+}
+
+
+C_ProtocolFrame::T_MsgError C_ProtocolTlv::encode_body_without_stat (int            P_nbVal, 
+                                                                     T_pBodyValue   P_val,
+                                                                     unsigned char *P_buf, 
+                                                                     size_t        *P_size,
+                                                                     C_ProtocolContext  *P_ctxt_protocol) {
+
+  unsigned char     *L_ptr = P_buf ;
+  int                L_i, L_body_id ;
+  int                L_valueIdx     ;
+  size_t             L_total_size   = 0 ;
+  size_t             L_current_size = 0 ;
+  T_pHeaderField     L_body_fieldDescr   ;
+  T_pHeaderBodyValue L_body_fieldValues  ;
+  T_pBodyValue       L_body_val ;
+  unsigned long      L_body_fieldIdx, L_valueSize  ;
+  int                L_type_id ;
+  T_TypeType         L_type ;
+  unsigned long      L_current_value ;
+
+  unsigned long      L_header_body_size ;
+
+  unsigned char *L_save_length_ptr = NULL;
+  unsigned long  L_save_length = 0;
+  size_t         L_length_size = 0;
+
+  size_t         L_sub_size ;
+  C_ProtocolFrame::T_MsgError  L_error = C_ProtocolFrame::E_MSG_OK;
+
+  unsigned char        *L_position_ptr = NULL;
+  C_ProtocolContext    *L_ctxt_protocol = P_ctxt_protocol ;
+
+
+  GEN_DEBUG(1, "C_ProtocolTlv::encode_body() start");
+
+  L_total_size = 0 ;
+  L_current_size = 0 ;
+
+  for (L_i = 0; L_i < P_nbVal ; L_i ++) {
+
+    L_body_val = &P_val[L_i] ;
+    L_body_id = L_body_val->m_id  ;
+
+    L_body_fieldValues = &m_header_body_value_table[L_body_id] ;
+    L_type_id = L_body_fieldValues->m_type_id ;
+    L_type = m_type_def_table[L_type_id].m_type ;
+
+    if (L_type == E_TYPE_STRING) {
+      L_valueSize = 
+	L_body_val -> m_value.m_val_binary.m_size ;
+    } else {
+      L_valueSize = 
+	m_type_def_table[L_type_id].m_size ;
+    }
+
+    L_header_body_size = 0 ;
+    L_save_length_ptr = NULL ;
+    for(L_body_fieldIdx=0; 
+	L_body_fieldIdx < m_nb_field_header_body; 
+	L_body_fieldIdx++) {
+
+      if (L_body_fieldValues->m_present[L_body_fieldIdx]) {
+      L_current_size = L_body_fieldValues->m_size[L_body_fieldIdx] ;
+      L_header_body_size += L_current_size ;
+      L_total_size += L_current_size ;      
+
+      if (L_total_size > *P_size) {
+        GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR,
+                      "Buffer max size reached [" << *P_size << "]");
+        L_error = C_ProtocolFrame::E_MSG_ERROR_ENCODING ;
+        break ;
+      }
+
+      L_position_ptr = L_ptr ;
+
+      update_ctxt_values (L_ctxt_protocol,
+                          L_position_ptr,
+                          L_body_fieldIdx,
+                          (int)L_current_size,
+                          m_header_body_ctxt_v_table,
+                          m_header_body_ctxt_p_table) ;
+      
+      if (L_body_fieldIdx == (unsigned long)m_header_body_length_id) {
+        L_save_length = L_valueSize ;
+	L_length_size = L_current_size ;
+	L_save_length_ptr = L_ptr ;
+      } else {
+	
+	if (L_body_fieldValues->m_value_setted[L_body_fieldIdx] == false) {
+	  L_current_value = (unsigned long) 0 ;
+	} else {
+	  L_valueIdx = L_body_fieldValues
+	    ->m_id_value_setted[L_body_fieldIdx];
+	  L_current_value = L_body_fieldValues
+	    ->m_values[L_valueIdx].m_value.m_val_number ;
+	}
+        
+	convert_ul_to_bin_network(L_ptr,
+				  L_current_size,
+				  L_current_value) ;
+	
+      }
+      L_ptr += L_current_size ;
+    }
+    } // for(L_body_fieldIdx...
+
+    if (L_error != C_ProtocolFrame::E_MSG_OK) {
+      break ;
+    }
+
+    // optional field value management
+    if (m_header_body_start_optional_id != -1) { // optional part to be added
+
+      for(L_body_fieldIdx=m_header_body_start_optional_id; 
+	  L_body_fieldIdx < m_max_nb_field_header_body; 
+	  L_body_fieldIdx++) {
+
+	L_body_fieldDescr = &m_header_body_field_table[L_body_fieldIdx];
+	if (L_body_fieldValues->m_value_setted[L_body_fieldIdx] == true) {
+
+          L_current_size = L_body_fieldValues->m_size[L_body_fieldIdx] ;
+          L_header_body_size += L_current_size ;
+      
+	  // L_current_size = L_body_fieldDescr -> m_size ;
+	  L_total_size += L_current_size ;
+
+          if (L_total_size > *P_size) {
+            GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR,
+                          "Buffer max size reached [" << *P_size << "]");
+            L_error = C_ProtocolFrame::E_MSG_ERROR_ENCODING ;
+            break ;
+          }
+
+          L_position_ptr = L_ptr ;
+          
+          update_ctxt_values (L_ctxt_protocol,
+                              L_position_ptr,
+                              L_body_fieldIdx,
+                              (int)L_current_size,
+                              m_header_body_ctxt_v_table,
+                              m_header_body_ctxt_p_table) ;
+	  L_valueIdx = L_body_fieldValues
+	    ->m_id_value_setted[L_body_fieldIdx];
+	  L_current_value = L_body_fieldValues
+	    ->m_values[L_valueIdx].m_value.m_val_number ;
+	  convert_ul_to_bin_network(L_ptr,
+				    L_current_size,
+				    L_current_value) ;
+	  L_ptr += L_current_size ;
+	}
+      } // for (L_body_fieldIdx...
+
+    } // if (m_header_body_start_optional_id != -1)
+
+    GEN_DEBUG(1, "C_ProtocolTlv::encode_body()  value encoding for = " 
+                 << L_body_fieldValues->m_name);
+
+
+    if (L_error != C_ProtocolFrame::E_MSG_OK) {
+      break ;
+    }  
+
+
+    if ((L_total_size+L_valueSize) > *P_size) {
+      GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR,
+                    "Buffer max size reached [" << *P_size << "]");
+      L_error = C_ProtocolFrame::E_MSG_ERROR_ENCODING ;
+      break ;
+    }
+
+    // now add the value of the body
+    switch (L_type) {
+
+    case E_TYPE_NUMBER:
+      convert_ul_to_bin_network(L_ptr,
+				L_valueSize,
+				L_body_val -> m_value.m_val_number);
+
+      GEN_DEBUG(1, "C_ProtocolTlv::encode_body()  with number value = " 
+                   << L_body_val->m_value.m_val_number);
+      break ;
+
+    case E_TYPE_SIGNED:
+      convert_l_to_bin_network(L_ptr,
+			       L_valueSize,
+			       L_body_val -> m_value.m_val_signed);
+
+      GEN_DEBUG(1, "C_ProtocolTlv::encode_body()  with signed value = " 
+                   << L_body_val->m_value.m_val_signed);
+      break ;
+
+    case E_TYPE_STRING: {
+      size_t L_padding ;
+      memcpy(L_ptr, L_body_val->m_value.m_val_binary.m_value, L_valueSize);
+      if (m_padding_value) {
+	L_padding = L_valueSize % m_padding_value ;
+	if (L_padding) { 
+          L_padding = m_padding_value - L_padding ; 
+
+          if ((L_total_size+L_valueSize+L_padding) > *P_size) {
+            GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR,
+                          "Buffer max size reached [" << *P_size << "]");
+            L_error = C_ProtocolFrame::E_MSG_ERROR_ENCODING ;
+            break ;
+          }
+
+        }
+	while (L_padding) {
+	  *(L_ptr+L_valueSize) = '\0' ;
+	  L_valueSize++ ;
+	  L_padding-- ;
+	}
+      } else {
+	L_padding = 0 ;
+      }
+
+      GEN_DEBUG(1, "C_ProtocolTlv::encode_body()  with string value (size: " 
+                   << L_valueSize << " and padding: " << L_padding);
+    }
+	break ;
+
+    case E_TYPE_STRUCT: {
+      size_t   L_sub_value_size = L_valueSize/2 ;   
+
+      convert_ul_to_bin_network(L_ptr,
+				L_sub_value_size,
+				L_body_val -> m_value.m_val_struct.m_id_1);
+      
+      convert_ul_to_bin_network(L_ptr + L_sub_value_size,
+				L_sub_value_size,
+				L_body_val -> m_value.m_val_struct.m_id_2);
+
+      GEN_DEBUG(1, "C_ProtocolTlv::encode_body()  with struct value = [" 
+                   << L_body_val -> m_value.m_val_struct.m_id_1 << ";" 
+                   << L_body_val -> m_value.m_val_struct.m_id_2);
+      }
+	break ;
+
+    case E_TYPE_GROUPED:
+      GEN_DEBUG(1, "C_ProtocolTlv::encode_body()  with grouped value " );
+
+      L_save_length += L_header_body_size ;
+      L_sub_size = *P_size - L_total_size ;
+
+      L_error =  encode_body_without_stat(L_body_val->m_value.m_val_number,
+                                          L_body_val->m_sub_val,
+                                          L_ptr,
+                                          &L_sub_size,
+                                          L_ctxt_protocol);
+      
+      if (L_error == C_ProtocolFrame::E_MSG_OK) {
+        L_total_size += L_sub_size ;
+
+        if (L_total_size > *P_size) {
+          GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR,
+                        "Buffer max size reached [" << *P_size << "]");
+          L_error = C_ProtocolFrame::E_MSG_ERROR_ENCODING ;
+          break ;
+        }
+
+        L_save_length += L_sub_size ;
+        convert_ul_to_bin_network(L_save_length_ptr,
+                                  L_length_size,
+                                  L_save_length) ;
+
+        L_ptr += L_sub_size ;
+      }
+
+      break ;
+      
+    case E_TYPE_NUMBER_64:
+      convert_ull_to_bin_network(L_ptr,
+				 L_valueSize,
+				 L_body_val -> m_value.m_val_number_64);
+
+      GEN_DEBUG(1, "C_ProtocolTlv::encode_body()  with number64 value = " 
+                   << L_body_val->m_value.m_val_number_64);
+      break ;
+
+    case E_TYPE_SIGNED_64:
+      convert_ll_to_bin_network(L_ptr,
+			        L_valueSize,
+			        L_body_val -> m_value.m_val_signed_64);
+
+      GEN_DEBUG(1, "C_ProtocolTlv::encode_body()  with signed64 value = " 
+                   << L_body_val->m_value.m_val_signed_64);
+      break ;
+
+    default:
+      GEN_FATAL(E_GEN_FATAL_ERROR, 
+	    "Encoding method not implemented for this value");
+      break ;
+    }
+
+
+    if (L_error != C_ProtocolFrame::E_MSG_OK) {
+      break ;
+    }  
+
+    update_ctxt_length (L_ctxt_protocol,
+                        L_valueSize);
+
+    propagate_ctxt_local (L_ctxt_protocol,
+                          m_nb_header_length,
+                          m_nb_protocol_ctxt_values,
+                          m_header_body_field_table,
+                          m_header_body_length_table);
+    
+    
+    reset_protocol_context(L_ctxt_protocol);
+    
+    L_total_size += L_valueSize ;
+    L_ptr += L_valueSize ;
+ 
+ 
+  } // for (L_i ...
+
+  if (L_error == C_ProtocolFrame::E_MSG_OK) {
+    *P_size = L_total_size ;
+  }
+
+
+  GEN_DEBUG(1, "C_ProtocolTlv::encode_body() end");
+
+  return (L_error);
+}
 
