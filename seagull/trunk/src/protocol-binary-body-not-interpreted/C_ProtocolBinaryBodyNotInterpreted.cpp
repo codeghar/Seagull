@@ -30,7 +30,6 @@
 C_ProtocolBinaryBodyNotInterpreted::C_ProtocolBinaryBodyNotInterpreted
 () : C_ProtocolBinary() {
   m_field_present_table = NULL ;
-  m_value_sessions_table = NULL ; // use this table for session id and out-of-session
 }
 
 C_ProtocolBinaryBodyNotInterpreted::~C_ProtocolBinaryBodyNotInterpreted() {
@@ -51,11 +50,6 @@ C_ProtocolBinaryBodyNotInterpreted::~C_ProtocolBinaryBodyNotInterpreted() {
     }
   }
   DELETE_VAR(m_header_body_position_size_map);
-
-  if (m_value_sessions_table_size != 0) {
-    FREE_TABLE(m_value_sessions_table);
-    m_value_sessions_table_size = 0 ;
-  }
 
 }
 
@@ -83,41 +77,45 @@ int C_ProtocolBinaryBodyNotInterpreted::get_header_body_values_from_xml (C_XmlDa
 
 
   m_nb_header_body_values++ ;
-
+  
   ALLOC_TABLE(m_header_body_value_table,
               T_pHeaderBodyValue,
               sizeof(T_HeaderBodyValue),
               m_nb_header_body_values);
-
+  
   L_id = 0 ;
   L_position = 0 ;
   L_typeId = 0 ;
   L_size = 0 ;
-
+  
   L_fieldDefCpt = 0;
   L_subListDefine = P_def->get_sub_data() ;
-
-
+  
+  
   m_header_body_value_id_map
     ->insert(T_IdMap::value_type((char*)"body", L_id));
+  
+  m_header_body_value_table[L_id].m_id = L_id ;
+  m_header_body_value_table[L_id].m_name = (char*)"body" ;
+  m_header_body_value_table[L_id].m_type_id = L_typeId ;
+  m_header_body_value_table[L_id].m_nb_set=0;
+  
+  L_position_size.m_position = L_position ;
+  L_position_size.m_size = L_size ;
+  
+  m_header_body_decode_map
+    ->insert(T_DecodeMap::value_type(L_position, L_id));
 
-    m_header_body_value_table[L_id].m_id = L_id ;
-    m_header_body_value_table[L_id].m_name = (char*)"body" ;
-    m_header_body_value_table[L_id].m_type_id = L_typeId ;
-    m_header_body_value_table[L_id].m_nb_set=0;
-
-    L_position_size.m_position = L_position ;
-    L_position_size.m_size = L_size ;
-
-    m_header_body_decode_map
-      ->insert(T_DecodeMap::value_type(L_position, L_id));
-
-    
-    m_header_body_position_size_map
-      ->insert(T_HeaderBodyPositionSizeMap::value_type(L_id, L_position_size));
-    
-
-    L_id ++ ;
+  
+  m_header_body_position_size_map
+    ->insert(T_HeaderBodyPositionSizeMap::value_type(L_id, L_position_size));
+  
+  
+  L_id ++ ;
+  
+  if (m_use_open_id) {
+    m_session_id_id += L_id ;
+  }
 
   for(L_listIt  = L_subListDefine->begin() ;
       L_listIt != L_subListDefine->end() ;
@@ -1026,6 +1024,42 @@ C_ProtocolFrame::T_MsgError C_ProtocolBinaryBodyNotInterpreted::encode_body (int
   return (L_error);
 }
 
+C_ProtocolFrame::T_MsgError C_ProtocolBinaryBodyNotInterpreted::encode_body_without_stat (int            P_nbVal, 
+                                                                                          T_pBodyValue   P_val,
+                                                                                          unsigned char *P_buf, 
+                                                                                          size_t        *P_size) {
+
+  unsigned char     *L_ptr = P_buf       ;
+  int                L_body_id           ;
+  T_pBodyValue       L_body_val          ;
+
+  unsigned long      L_valueSize         ;
+
+  C_ProtocolFrame::T_MsgError  L_error = C_ProtocolFrame::E_MSG_OK;
+
+
+  GEN_DEBUG(1, "C_ProtocolBinaryBodyNotInterpreted::encode_body_without_stat() start");
+
+  L_body_val = &P_val[0] ;
+  L_body_id = L_body_val->m_id  ;
+  
+  L_valueSize = L_body_val -> m_value.m_val_binary.m_size ;
+
+  if (L_valueSize > *P_size) {
+    GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR,
+                  "Buffer maximum size reached [" << *P_size << "]");
+    L_error = C_ProtocolFrame::E_MSG_ERROR_ENCODING ;
+  } else {
+    memcpy(L_ptr, L_body_val->m_value.m_val_binary.m_value, L_valueSize);
+    L_ptr += L_valueSize ;
+    *P_size = L_valueSize ;
+  }
+  
+  GEN_DEBUG(1, "C_ProtocolBinaryBodyNotInterpreted::encode_body_without_stat() end");
+
+  return (L_error);
+}
+
 int C_ProtocolBinaryBodyNotInterpreted::decode_body(unsigned char *P_buf, 
                                                     size_t         P_size,
                                                     T_pBodyValue   P_valDec,
@@ -1102,149 +1136,8 @@ int C_ProtocolBinaryBodyNotInterpreted::decode_body(unsigned char *P_buf,
 }
 
 
-int C_ProtocolBinaryBodyNotInterpreted::analyze_sessions_id_from_xml (C_XmlData *P_def) {
-
-  int                                  L_ret = 0                 ;
-  C_XmlData::T_pXmlField_List          L_fields_list             ;
-  C_XmlData::T_XmlField_List::iterator L_fieldIt                 ;
-
-  T_ManagementSessionId                L_management_session      ;
-  T_ManagementSessionIdList            L_list_management_session ;
-  char                                *L_name_value = NULL       ;
-
-  T_ManagementSessionIdList::iterator  L_it                      ;
-  int                                  L_msg_id_id               ;
-  T_MsgIdType                          L_msg_id_type             ;
-  T_TypeType                           L_msg_id_value_type       ;
-  int                                  L_id                      ;
-
-  GEN_DEBUG(1, "C_ProtocolBinaryBodyNotInterpreted::analyze_sessions_id_from_xml() start");  
-
-  L_fields_list = P_def->get_fields();
-  if (!L_fields_list->empty()) {
-    for(L_fieldIt  = L_fields_list->begin() ;
-	L_fieldIt != L_fields_list->end() ;
-	L_fieldIt++) {
-      
-      if((strcmp((*L_fieldIt)->get_name() , (char*)"session-id") == 0 ) || 
-         (strcmp((*L_fieldIt)->get_name() , (char*)"out-of-session-id") == 0 )) {
-
-	L_name_value = (*L_fieldIt)->get_value();
-        if (L_name_value == NULL) {
-          GEN_ERROR(E_GEN_FATAL_ERROR,
-                    (*L_fieldIt)->get_name()
-                    << " is mandatory for ["
-                    << m_header_name 
-                    << "] section");
-          L_ret = -1 ;
-          break ;
-        }
-
-        // retrieve informations for session_id
-        L_msg_id_id = find_header_field_id (L_name_value) ;
-      
-        GEN_DEBUG(1, "C_ProtocolBinaryBodyNotInterpreted::analyze_sessions_id_from_xml() " 
-                  << "L_msg_id_id is " << L_msg_id_id );
-        
-        if (L_msg_id_id != -1) {
-          GEN_DEBUG(1, "C_ProtocolBinaryBodyNotInterpreted::analyze_sessions_id_from_xml() " 
-                    << "L_msg_id_id is an header one it type is number");
-          L_msg_id_type =  E_MSG_ID_HEADER ;
-          L_msg_id_value_type = get_header_value_type (L_msg_id_id) ;
-        } else {
-          GEN_DEBUG(1, "C_ProtocolBinaryBodyNotInterpreted::analyze_sessions_id_from_xml() " 
-                    << "L_msg_id_id is an body one ");
-          L_msg_id_id = find_body_value_id (L_name_value) ;
-          GEN_DEBUG(1, "C_ProtocolBinaryBodyNotInterpreted::analyze_sessions_id_from_xml() " 
-                    << "L_msg_id_id is " << L_msg_id_id );
-          if (L_msg_id_id != -1) {
-            L_msg_id_type = E_MSG_ID_BODY ;
-            L_msg_id_value_type = get_body_value_type (L_msg_id_id);
-            GEN_DEBUG(1, "C_ProtocolBinaryBodyNotInterpreted::analyze_sessions_id_from_xml() " 
-                      << "L_msg_id_id is " << L_msg_id_id << " its type is " 
-                      << L_msg_id_value_type);
-          } else {
-            GEN_ERROR(E_GEN_FATAL_ERROR,
-                      "No definition found for "
-                      << (*L_fieldIt)->get_name() 
-                      << " ["
-                      << L_name_value << "]");
-            L_ret = -1 ;
-            break ;
-          }
-        }
-      }
-
-      L_management_session.m_msg_id_id = L_msg_id_id ;
-      L_management_session.m_msg_id_type = L_msg_id_type ;
-      L_management_session.m_msg_id_value_type = L_msg_id_value_type ;
- 
-      L_list_management_session.push_back(L_management_session);
-    }
-
-    if (L_ret != -1) {
-      if (!L_list_management_session.empty()) {
-        m_value_sessions_table_size = L_list_management_session.size() ;
-        ALLOC_TABLE(m_value_sessions_table,
-                    T_pManagementSessionId,
-                    sizeof(T_ManagementSessionId),
-                    m_value_sessions_table_size);
-
-        L_id = 0 ;
-        for (L_it  = L_list_management_session.begin();
-             L_it != L_list_management_session.end()  ;
-             L_it++) {
-          m_value_sessions_table[L_id] = *L_it ;
-          L_id ++ ;
-        }
-
-        L_list_management_session.erase(L_list_management_session.begin(),
-                                        L_list_management_session.end());
-
-//            for (L_id = 0 ; L_id < m_value_sessions_table_size ; L_id++) {
-//              std::cerr << "m_value_sessions_table[" 
-//                        << L_id 
-//                        << "]" 
-//                        << m_value_sessions_table[L_id].m_msg_id_id
-//                        << " " 
-//                        << m_value_sessions_table[L_id].m_msg_id_type
-//                        << " " 
-//                        << m_value_sessions_table[L_id].m_msg_id_value_type
-//                        << std::endl;
-            
-//            }
-
-      } else {
-        GEN_ERROR(E_GEN_FATAL_ERROR,
-                  "No session-id nor out-of-session definition found"); 
-        L_ret = -1 ;
-      }
-    }
-  } else {
-    GEN_ERROR(E_GEN_FATAL_ERROR,
-              "No session-id nor out-of-session found in dictionary definition");
-    L_ret = -1 ;
-  }
-  
-  GEN_DEBUG(1, "C_ProtocolBinaryBodyNotInterpreted::analyze_sessions_id_from_xml() end");
-  return (L_ret);
-}
-
-
-C_ProtocolBinary::T_pManagementSessionId 
-C_ProtocolBinaryBodyNotInterpreted::get_manage_session_elt(int P_id) {
-  
-  T_ManagementSessionId  *L_ret = NULL ;
-  
-  if ((P_id < m_value_sessions_table_size) && (P_id >= 0)) {
-    L_ret = &m_value_sessions_table[P_id] ;
-  }
-  return (L_ret) ;
-}
-
-
-int C_ProtocolBinaryBodyNotInterpreted::get_nb_management_session () {
-  return (m_value_sessions_table_size);
+int C_ProtocolBinaryBodyNotInterpreted::analyze_sessions_from_xml (C_XmlData *P_def) {
+  return (C_ProtocolBinary::analyze_sessions_id_out_from_xml(P_def));
 }
 
 

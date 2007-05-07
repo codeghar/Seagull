@@ -55,74 +55,11 @@ C_MessageBinaryBodyNotInterpreted::~C_MessageBinaryBodyNotInterpreted() {
   m_protocol->reset_value_data (&m_id);
   
   m_local_protocol = NULL ;
-  
+
 }
 
-
 T_pValueData C_MessageBinaryBodyNotInterpreted::get_session_id (C_ContextFrame *P_ctxt) {
-
-  T_pValueData             L_id_value = NULL  ;
-  int                      L_i           ;
-  C_ProtocolBinary::T_pManagementSessionId   L_session_elt      ;
-  int                      L_nb_manag_session ;
-  T_ValueData              L_tmp_id_value     ;
-
-  bool                     L_found  = true    ;
-  GEN_DEBUG(1, "C_MessageBinaryBodyNotInterpreted::get_session_id() start");
-
-  // retrieve the number of managment session
-  L_nb_manag_session = m_protocol->get_nb_management_session () ;
-
-
-  for (L_i = 0 ; L_i < L_nb_manag_session ; L_i++) {
-    L_session_elt = m_protocol->get_manage_session_elt(L_i);
-
-    GEN_DEBUG(1, " L_session_elt->m_msg_id_id = " 
-              << L_session_elt->m_msg_id_id 
-              << " type is " 
-              << L_session_elt->m_msg_id_type 
-              << " (0: header, 1:body)");
-
-    switch (L_session_elt->m_msg_id_type) {
-    case C_ProtocolBinary::E_MSG_ID_HEADER:
-      GEN_DEBUG(1, "Header Id :");
-      L_id_value = &m_header_values[L_session_elt->m_msg_id_id];
-      
-      GEN_DEBUG(1, "value :\n  m_id :" << L_id_value->m_id << 
-                "\n  m_type: " << L_id_value->m_type << " ");
-      
-      if (L_session_elt->m_msg_id_value_type == E_TYPE_STRING) {
-        memcpy(&L_tmp_id_value,L_id_value,sizeof(L_tmp_id_value)) ;
-        m_protocol->reset_value_data(&m_id);
-        m_protocol->convert_to_string(&m_id, &L_tmp_id_value);
-        L_id_value = &m_id ;
-      }
-      break ;
-
-    case C_ProtocolBinary::E_MSG_ID_BODY:
-      GEN_DEBUG(1, "Body Id : nb value is " << m_nb_body_values << " ");
-      
-      if(m_protocol->check_present_session (m_header_id, L_session_elt->m_msg_id_id)) {
-	m_protocol->reset_value_data(&m_id);
-        L_found = get_body_value(&m_id,L_session_elt->m_msg_id_id);
-        if (L_found == false) {
-          return (NULL);
-        } else {
-          L_id_value = &m_id ;
-        }
-      }
-      break ;
-    }
-
-    if (L_id_value != NULL) {
-      break;
-    }
-  } // for (L_i...)
-
-  GEN_DEBUG(1, "C_MessageBinaryBodyNotInterpreted::get_session_id() end");
-
-  return (L_id_value) ;
-
+  return (((this)->*(m_protocol->get_m_session_method()))(P_ctxt)) ;
 }
 
 bool C_MessageBinaryBodyNotInterpreted::get_body_value (T_pValueData P_res, 
@@ -187,6 +124,16 @@ bool C_MessageBinaryBodyNotInterpreted::set_body_value (int P_id, T_pValueData P
 }
 
 
-
-
-
+T_pValueData C_MessageBinaryBodyNotInterpreted::getSessionFromBody(int P_id) {
+  T_pValueData                        L_ret   = NULL  ;
+  bool                                L_found = false ;
+  
+  if(m_protocol->check_present_session (m_header_id, P_id)) {
+    m_protocol->reset_value_data(&m_id);
+    L_found = get_body_value(&m_id,P_id);
+    if (L_found == true) {
+      L_ret = &m_id ;
+    }
+  }
+  return (L_ret);
+}

@@ -23,6 +23,7 @@
 
 #include "map_t.hpp"
 
+class C_MessageBinaryBodyNotInterpreted ;
 
 class C_ProtocolBinaryBodyNotInterpreted : public C_ProtocolBinary {
 
@@ -51,8 +52,11 @@ public:
                                                     unsigned char *P_buf, 
                                                     size_t        *P_size) ;
 
-  virtual T_ManagementSessionId* get_manage_session_elt (int P_id);
-  virtual int get_nb_management_session () ;
+  virtual C_ProtocolFrame::T_MsgError  encode_body_without_stat   (int            P_nbVal, 
+                                                                   T_pBodyValue   P_val, 
+                                                                   unsigned char *P_buf, 
+                                                                   size_t        *P_size) ;
+
   virtual bool check_present_session (int P_msg_id,int P_id) ;
   virtual bool find_present_session (int P_msg_id,int P_id) ;
 
@@ -72,6 +76,7 @@ public:
 
   void get_field_position (T_pHeaderBodyPositionSize P_pos, int P_id) ;
 
+
 protected:
 
   bool                       **m_field_present_table         ;
@@ -81,12 +86,10 @@ protected:
   virtual int get_header_body_values_from_xml (C_XmlData *P_def) ;
   virtual int get_header_values_from_xml (C_XmlData *P_def) ;
 
-  virtual int analyze_sessions_id_from_xml (C_XmlData *P_def) ;
+  virtual int analyze_sessions_from_xml (C_XmlData *P_def) ;
 
   T_pHeaderBodyPositionSizeMap     m_header_body_position_size_map ;
 
-  T_pManagementSessionId           m_value_sessions_table      ;
-  int                              m_value_sessions_table_size ;
 
 } ;
 
