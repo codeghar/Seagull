@@ -542,7 +542,7 @@ int C_GeneratorStats::computeStat (E_Action P_action)
     
 
   default :
-    GEN_FATAL(0,"C_GeneratorStats::ComputeStat() - Unrecognized Action " <<  P_action);
+    GEN_FATAL(E_GEN_FATAL_ERROR,"C_GeneratorStats::ComputeStat() - Unrecognized Action " <<  P_action);
     break ;
   } /* end switch */
 
@@ -847,7 +847,7 @@ int C_GeneratorStats::executeStatAction (E_Action P_action) {
       
 
   default :
-    GEN_FATAL(0,"C_GeneratorStats::executeStatAction() - Unrecognized Action " <<  P_action);
+    GEN_FATAL(E_GEN_FATAL_ERROR,"C_GeneratorStats::executeStatAction() - Unrecognized Action " <<  P_action);
     break ;
 
   } /* end switch */
@@ -919,7 +919,7 @@ int C_GeneratorStats::computeStat (E_Action P_action, unsigned long P_value)
       break;
 
     default :
-     GEN_FATAL(0,"C_GeneratorStats::ComputeStat() - Unrecognized Action " <<  P_action);
+     GEN_FATAL(E_GEN_FATAL_ERROR,"C_GeneratorStats::ComputeStat() - Unrecognized Action " <<  P_action);
 	 } /* end switch */
   return (0);
 }
@@ -1161,6 +1161,104 @@ void C_GeneratorStats::displayRepartition_without_percent(T_dynamicalRepartition
     {
       DISPLAY_INFO ("  <No repartion defined>");
     }
+}
+
+unsigned long C_GeneratorStats::getStatAction (E_Action P_action, 
+                                               E_CounterName P_counter) {
+
+  unsigned long L_counter_value = 0 ;
+
+  switch (P_action) {
+  case E_CREATE_INCOMING_CALL :
+    m_mutexTable[CPT_C_IncomingCallCreated].lock() ;
+    L_counter_value = m_counters [P_counter];
+    m_mutexTable[CPT_C_IncomingCallCreated].unlock() ;
+    break;
+
+  case E_SEND_MSG :
+    m_mutexTable[CPT_C_MsgSend].lock() ;
+    L_counter_value = m_counters [P_counter];
+    m_mutexTable[CPT_C_MsgSend].unlock() ;
+    break;
+
+  case E_RECV_MSG :
+    m_mutexTable[CPT_C_MsgRecv].lock() ;
+    L_counter_value = m_counters [P_counter];
+    m_mutexTable[CPT_C_MsgRecv].unlock() ;
+    break;
+
+  case E_CALL_FAILED :
+    m_mutexTable[CPT_C_FailedCall].lock() ;
+    L_counter_value = m_counters [P_counter];
+    m_mutexTable[CPT_C_FailedCall].unlock() ;
+    break;
+
+  case E_CALL_INIT_SUCCESSFULLY_ENDED :
+    m_mutexTable[CPT_C_InitSuccessfulCall].lock() ;
+    L_counter_value = m_counters [P_counter];
+    m_mutexTable[CPT_C_InitSuccessfulCall].unlock() ;
+    break;
+
+  case E_CALL_TRAFFIC_SUCCESSFULLY_ENDED :
+    m_mutexTable[CPT_C_TrafficSuccessfulCall].lock() ;
+    L_counter_value = m_counters [P_counter];
+    m_mutexTable[CPT_C_TrafficSuccessfulCall].unlock() ;
+    break;
+
+  case E_CALL_DEFAULT_SUCCESSFULLY_ENDED :
+    m_mutexTable[CPT_C_DefaultSuccessfulCall].lock() ;
+    L_counter_value = m_counters [P_counter];
+    m_mutexTable[CPT_C_DefaultSuccessfulCall].unlock() ;
+    break;
+
+  case E_CALL_ABORT_SUCCESSFULLY_ENDED :
+    m_mutexTable[CPT_C_AbortSuccessfulCall].lock() ;
+    L_counter_value = m_counters [P_counter];
+    m_mutexTable[CPT_C_AbortSuccessfulCall].unlock() ;
+    break;
+
+  case E_FAILED_CANNOT_SEND_MSG :
+    m_mutexTable[CPT_C_FailedCallCannotSendMessage].lock() ;
+    L_counter_value = m_counters [P_counter];
+    m_mutexTable[CPT_C_FailedCallCannotSendMessage].unlock() ;
+    break;
+
+  case E_FAILED_UNEXPECTED_MSG :
+    m_mutexTable [CPT_C_FailedCallUnexpectedMessage].lock() ;
+    L_counter_value = m_counters [P_counter];
+    m_mutexTable [CPT_C_FailedCallUnexpectedMessage].unlock() ;
+    break;
+
+  case E_CALL_REFUSED :
+    m_mutexTable[CPT_C_RefusedCall].lock() ;
+    L_counter_value = m_counters [P_counter];
+    m_mutexTable[CPT_C_RefusedCall].unlock() ;
+    break;
+
+  case E_FAILED_ABORTED:
+    m_mutexTable[CPT_C_FailedCallAborted].lock() ;
+    L_counter_value = m_counters [P_counter];
+    m_mutexTable[CPT_C_FailedCallAborted].unlock() ;
+    break ;
+
+  case E_FAILED_TIMEOUT:
+    m_mutexTable[CPT_C_FailedCallTimeout].lock() ;
+    L_counter_value = m_counters [P_counter];
+    m_mutexTable[CPT_C_FailedCallTimeout].unlock() ;
+    break ;
+
+  case E_CREATE_OUTGOING_CALL :
+    m_mutexTable[CPT_C_OutgoingCallCreated].lock() ;
+    L_counter_value = m_counters [P_counter];
+    m_mutexTable[CPT_C_OutgoingCallCreated].unlock() ;
+    break;
+  default :
+    GEN_FATAL(E_GEN_FATAL_ERROR,"C_GeneratorStats::executeStatAction() - Unrecognized Action " <<  P_action);
+    break ;
+
+  } /* end switch */
+
+  return (L_counter_value);
 }
 
 
@@ -2474,7 +2572,7 @@ int C_GeneratorStats::executeStatAction (E_Action P_action, unsigned long P_valu
       break;
 
     default :
-     GEN_FATAL(0,"C_GeneratorStats::executeStatAction() - Unrecognized Action " 
+     GEN_FATAL(E_GEN_FATAL_ERROR,"C_GeneratorStats::executeStatAction() - Unrecognized Action " 
 	   <<  P_action << " " << P_value);
   } /* end switch */
   return (0);

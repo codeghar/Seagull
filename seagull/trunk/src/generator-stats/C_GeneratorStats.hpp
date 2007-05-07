@@ -240,6 +240,9 @@ public:
   int executeStatAction (E_Action P_action);
   int executeStatAction (E_Action P_action, unsigned long P_value);
 
+
+  unsigned long getStatAction(E_Action P_action, E_CounterName P_counter) ;
+
   void displayScreen (int P_id, int P_sub_screen);
 
   void makeFirstLog ();
