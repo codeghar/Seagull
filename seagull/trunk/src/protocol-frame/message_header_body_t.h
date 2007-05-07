@@ -21,7 +21,8 @@
 #define _MESSAGE_HEADER_BODY_T_
 
 typedef enum {
-  E_HEADER_TYPE = 0 ,
+  E_NOTHING_TYPE = 0 ,
+  E_HEADER_TYPE,
   E_BODY_TYPE,
   E_ALL_TYPE,
   E_NB_TYPE
