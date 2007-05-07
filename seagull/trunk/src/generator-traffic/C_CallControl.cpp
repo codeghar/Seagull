@@ -299,6 +299,7 @@ void C_CallControl::makeCallContextAvailable (T_pCallContext *P_pCallCtxt) {
   
   int                 L_id ;
   T_pCallContext      L_callCtxt ;
+
   C_CallContext::T_CallMap::iterator L_call_it ;
   int                 L_i ;
 
@@ -312,27 +313,29 @@ void C_CallControl::makeCallContextAvailable (T_pCallContext *P_pCallCtxt) {
 
   L_id = L_callCtxt -> get_internal_id();
 
-
-  L_map_data_list = L_callCtxt->m_map_data_list ;
-  if (!L_map_data_list->empty()){
-    for(L_it = L_map_data_list->begin();
-        L_it != L_map_data_list->end();
-        L_it ++) {
-      m_call_map_table[L_it->m_channel]
-        ->erase(L_it->m_iterator) ;
+  if (m_correlation_section == true) {
+    L_map_data_list = L_callCtxt->m_map_data_list ;
+    if (!L_map_data_list->empty()){
+      for(L_it = L_map_data_list->begin();
+          L_it != L_map_data_list->end();
+          L_it ++) {
+        if (!m_call_map_table[L_it->m_channel]->empty()) {
+          m_call_map_table[L_it->m_channel]
+            ->erase(L_it->m_iterator) ;
+        }
+      }
+      L_map_data_list->erase(L_map_data_list->begin(),
+                             L_map_data_list->end());
     }
-    L_map_data_list->erase(L_map_data_list->begin(),
-                           L_map_data_list->end());
-  }
-  
-
-  // remove call context from map
-  for(L_i=0; L_i < m_nb_channel; L_i++) {
-    L_call_it = m_call_map_table[L_i]
-      ->find (C_CallContext::T_CallMap::key_type(L_callCtxt->m_id_table[L_i]));
-    if (L_call_it != m_call_map_table[L_i]->end()) {
-      m_call_map_table[L_i]->erase (L_call_it);
-    } 
+  } else {
+    // To be optimize remove call context from map
+    for(L_i=0; L_i < m_nb_channel; L_i++) {
+      L_call_it = m_call_map_table[L_i]
+        ->find (C_CallContext::T_CallMap::key_type(L_callCtxt->m_id_table[L_i]));
+      if (L_call_it != m_call_map_table[L_i]->end()) {
+        m_call_map_table[L_i]->erase (L_call_it);
+      } 
+    }
   }
 
   // make call context available for a new call
@@ -1410,7 +1413,7 @@ void C_CallControl::eventControl() {
 	  m_stat->executeStatAction(C_GeneratorStats::E_CALL_FAILED);
 	  break ;
 	default:
-	  GEN_FATAL(0, "Internal error: Unexpected event");
+	  GEN_FATAL(E_GEN_FATAL_ERROR, "Internal error: Unexpected event");
 	  break ;
 	}
       }
@@ -1824,7 +1827,7 @@ T_pCallContext  C_CallControl::getSessionFromDico(T_ReceiveMsgContext P_rcvCtxt,
 }
 
 T_pCallContext  C_CallControl::getSessionFromScen(T_ReceiveMsgContext P_rcvCtxt,
-                                                T_pValueData        *P_value_id) {
+                                                  T_pValueData        *P_value_id) {
 
   T_pRetrieveIdsDef   L_retrieveIds   = NULL ;
   int                 L_i                    ;
@@ -1841,6 +1844,7 @@ T_pCallContext  C_CallControl::getSessionFromScen(T_ReceiveMsgContext P_rcvCtxt,
   if (L_retrieveIds != NULL) {
     for (L_i = 0 ; L_i < L_retrieveIds->m_nb_ids ; L_i++) {
       L_value_id = (P_rcvCtxt.m_msg)->get_field_value(L_retrieveIds->m_id_table[L_i],
+                                                      &P_rcvCtxt,
                                                       -1,
                                                       -1) ;
       if (L_value_id == NULL) {
