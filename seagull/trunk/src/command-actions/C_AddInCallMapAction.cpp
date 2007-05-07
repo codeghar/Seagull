@@ -38,7 +38,7 @@ T_exeCode    C_AddInCallMapAction::execute(T_pCmd_scenario P_pCmd,
 
   T_exeCode           L_exeCode    = E_EXE_NOERROR ;
   
-  T_pValueData  L_value_id ;
+  T_pValueData        L_value_id   = NULL          ;
   C_CallContext::T_pCallMap   *L_map = P_callCtxt->m_call_control->get_call_map();
   
   L_value_id = P_msg -> get_session_id(P_callCtxt);

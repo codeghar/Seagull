@@ -33,15 +33,17 @@ C_SetValueAction::~C_SetValueAction() {
 
   int L_k ;
 
-  for(L_k = 0; 
-      L_k < m_string_expr->m_nb_portion; L_k++) {
-    if (m_string_expr->m_portions[L_k].m_type
-        == E_STR_STATIC) {
-      FREE_TABLE(m_string_expr->m_portions[L_k].m_data.m_value);
+  if (m_string_expr != NULL) {
+    for(L_k = 0; 
+        L_k < m_string_expr->m_nb_portion; L_k++) {
+      if (m_string_expr->m_portions[L_k].m_type
+          == E_STR_STATIC) {
+        FREE_TABLE(m_string_expr->m_portions[L_k].m_data.m_value);
+      }
     }
+    FREE_TABLE(m_string_expr->m_portions);
+    FREE_VAR(m_string_expr);
   }
-  FREE_TABLE(m_string_expr->m_portions);
-  FREE_VAR(m_string_expr);
 }
 
 T_ValueData  C_SetValueAction::search_memory(T_pCallContext  P_callCtxt,

@@ -38,8 +38,8 @@ T_exeCode    C_AddDefaultInCallMapAction::execute(T_pCmd_scenario P_pCmd,
                                            C_MessageFrame *P_ref) {
 
   T_exeCode           L_exeCode    = E_EXE_NOERROR ;
-  
-  T_pValueData  L_value_id ;
+
+  T_pValueData        L_value_id   = NULL          ;
   C_CallContext::T_pCallMap   *L_map = P_callCtxt->m_call_control->get_call_map();
   
   L_value_id = P_msg -> get_session_id(P_callCtxt);
@@ -49,6 +49,8 @@ T_exeCode    C_AddDefaultInCallMapAction::execute(T_pCmd_scenario P_pCmd,
   } else {
     pair_t<C_CallContext::T_CallMap::iterator,bool> L_pr ;
     C_CallContext::T_contextMapData L_data ;
+
+    L_value_id = P_callCtxt->set_id (m_id,L_value_id);
 
     L_pr =
       L_map[m_id]

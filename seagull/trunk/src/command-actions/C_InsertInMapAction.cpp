@@ -40,7 +40,9 @@ T_exeCode    C_InsertInMapAction::execute(T_pCmd_scenario P_pCmd,
 
   T_exeCode           L_exeCode    = E_EXE_NOERROR ;
 
-  T_ValueData           L_val      ;
+  T_ValueData         L_val      ;
+  T_pValueData        L_value_id   = NULL          ;
+
   
   C_CallContext::T_pCallMap *L_map = P_callCtxt->m_call_control->get_call_map();
     
@@ -54,8 +56,11 @@ T_exeCode    C_InsertInMapAction::execute(T_pCmd_scenario P_pCmd,
     pair_t<C_CallContext::T_CallMap::iterator,bool> L_pr ;
     C_CallContext::T_contextMapData L_data ;
 
+    L_value_id = &L_val ;
+    L_value_id = P_callCtxt->set_id (m_position, L_value_id);
+
     L_pr = L_map[m_position]
-      ->insert(C_CallContext::T_CallMap::value_type(L_val, P_callCtxt));
+      ->insert(C_CallContext::T_CallMap::value_type(*L_value_id, P_callCtxt));
 
     L_data.m_channel = m_position ;
     L_data.m_iterator = L_pr.first ;
@@ -67,11 +72,7 @@ T_exeCode    C_InsertInMapAction::execute(T_pCmd_scenario P_pCmd,
     GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
                   action_name_table[m_type] 
                   << ": the value of the field asked is incorrect or not found");
-    
-    GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-                  "error on call with session-id ["
-                  << P_callCtxt->m_id_table[P_pCmd->m_channel_id] << "]");
-    
+
     L_exeCode = E_EXE_ERROR;
   }
   

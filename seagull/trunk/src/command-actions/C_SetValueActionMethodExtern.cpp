@@ -50,13 +50,19 @@ T_exeCode    C_SetValueActionMethodExtern::execute(T_pCmd_scenario P_pCmd,
   bool                L_reset_value = false        ;
 
 
-  L_mem = search_memory(P_callCtxt, P_msg, L_reset_value) ;
+  if (m_string_expr != NULL) {
+    L_mem = search_memory(P_callCtxt, P_msg, L_reset_value) ;
+  } else {
+    L_mem.m_type = E_TYPE_STRING ;
+    L_mem.m_value.m_val_binary.m_size  = 0 ;
+    L_mem.m_value.m_val_binary.m_value = NULL ;
+  }
 
   
   L_value.m_type = E_TYPE_NUMBER ;
   L_result.m_type = E_TYPE_NUMBER ;
 
-  if (P_msg->get_buffer(&L_value,E_BODY_TYPE) == -1) {
+  if (P_msg->get_buffer(&L_value,m_msg_part_type) == -1) {
     GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
                   action_name_table[m_type] 
                   << ": error in body of message");
@@ -66,6 +72,7 @@ T_exeCode    C_SetValueActionMethodExtern::execute(T_pCmd_scenario P_pCmd,
                   << P_callCtxt->m_id_table[P_pCmd->m_channel_id] << "]");
     
     L_exeCode = E_EXE_ERROR;
+    resetMemory(L_value);
     return (L_exeCode);
   } else {
     L_ret = (*m_external_method)(&L_value, 
@@ -101,6 +108,7 @@ T_exeCode    C_SetValueActionMethodExtern::execute(T_pCmd_scenario P_pCmd,
     }
     resetMemory(L_result);
     resetMemory(L_value);
+    resetMemory(L_mem);
   }
 
   if (L_reset_value == true) {
@@ -109,12 +117,4 @@ T_exeCode    C_SetValueActionMethodExtern::execute(T_pCmd_scenario P_pCmd,
     
   return (L_exeCode);
 }
-
-
-
-
-
-
-
-
 
