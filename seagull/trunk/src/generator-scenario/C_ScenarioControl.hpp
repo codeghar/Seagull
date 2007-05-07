@@ -328,11 +328,6 @@ private:
                                       T_pLabelData         P_label_data,
                                       bool                 P_pre_action) ;
 
-  bool                add_default_action(T_pCmd_scenario   P_cmd_sequence,
-                                         T_pLabelData      P_label_data,
-                                         char             *P_value_label,
-                                         int               P_channel_id) ;
-
   int add_scenario (T_scenario_type           P_type,
 		    C_XmlData                *P_scen,
 		    T_pTrafficType            P_trafficType,

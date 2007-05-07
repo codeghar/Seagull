@@ -44,7 +44,7 @@
 #include "C_RegExp.hpp"
 #include "ExternalMethod.h"
 
-
+#include "message_header_body_t.h"
 
 // STRING related types
 typedef enum _enum_exe_code {
@@ -135,6 +135,7 @@ typedef struct _xml_cmd_action {
   int                 m_field_data_num  ;
   C_RegExp           *m_regexp_data     ;
   T_ExternalMethod    m_external_method ;
+  T_MessagePartType   m_msg_part_type   ;
 } T_CmdAction, *T_pCmdAction ;
 
 typedef list_t<T_pCmdAction> T_CmdActionList, 

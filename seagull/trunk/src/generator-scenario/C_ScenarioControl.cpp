@@ -54,7 +54,8 @@ static const T_CmdAction no_cmd_action = {
   E_CHECK_BEHAVIOUR_WARNING,
   -1,
   NULL,
-  NULL
+  NULL,
+  E_NOTHING_TYPE
 } ;
   
 C_ScenarioControl::C_ScenarioControl(C_ProtocolControl  *P_protocol_control,
@@ -1159,7 +1160,6 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
   T_pCmdAction              L_actionData             = NULL  ;
   bool                      L_memoryRefFound         = false ;
 
-
   bool                      L_entityFieldFound       = false ;
   bool                      L_nameFieldFound         = false ;
   T_CmdAction               L_select_line_action             ;
@@ -1168,7 +1168,6 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
   bool                      L_begin_present          = false ;
   int                       L_position                       ;
 
-
   T_pXmlData_List           L_reg_action_list        = NULL  ;  
   T_XmlData_List::iterator  L_reg_action_it                  ;
   C_XmlData                *L_regexp                 = NULL  ;
@@ -1176,6 +1175,10 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
   C_RegExp                 *L_cRegExp                = NULL  ;
   int                       L_error_comp             = 0     ;
   int                       L_value_set_bit                  ;
+
+  int                       L_len_format             = 0     ;
+  bool                      L_external_method_exist  = false ;
+
 
   GEN_DEBUG(1, "C_ScenarioControl::add_actions() start");
 
@@ -1471,8 +1474,9 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 		      << L_actionName << "]");
 	    L_ret = -1 ;
 	    break ; 
-	  } 
-	  
+	  } else {
+            L_len_format = strlen(L_actionArg2) ;
+          }
 	  
 	  L_actionData->m_id 
 	    = P_protocol->find_field (L_actionArg) ;
@@ -1483,18 +1487,66 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 	    L_ret = -1 ;
 	    break ;
 	  }
-	  
-	  L_ret = add_expression(L_actionArg2, P_protocol,
-				 &L_actionData->m_string_expr) ;
-	  
-	  
-	  if (L_ret == -1) {
-	    GEN_ERROR(E_GEN_FATAL_ERROR,
-		      "Format error for ["
-		      << L_actionArg2 << "]");
-	    break ;
-	  }
-	  
+
+	  if (L_ret != -1) {
+            L_actionArg = L_action -> find_value((char*)"method");
+            if (L_actionArg != NULL) {
+              L_external_method_exist = true ;
+              L_actionData->m_external_method = 
+                P_protocol->find_method_extern(L_actionArg);
+              if (L_actionData->m_external_method == NULL) {
+                GEN_ERROR(E_GEN_FATAL_ERROR,
+                          "No method extern found for ["
+                          << L_actionArg << "]");
+                L_ret = -1 ;
+                break ;
+              } else {
+                char   *L_actionArg3 = NULL ;
+                L_actionData->m_type =  E_ACTION_SCEN_SET_VALUE_METHOD_EXTERN ;
+  		L_actionArg3 = L_action -> find_value((char*)"message_part");
+  		if (L_actionArg3 != NULL) {
+
+  		  if (strcmp (L_actionArg3, (char*)"nothing") == 0) {
+  		    L_actionData->m_msg_part_type =  E_NOTHING_TYPE ;
+  		  } else if (strcmp (L_actionArg3, (char*)"header") == 0) {
+  		    L_actionData->m_msg_part_type =  E_HEADER_TYPE ;
+  		  } else if (strcmp (L_actionArg3, (char*)"body") == 0) {
+  		    L_actionData->m_msg_part_type =  E_BODY_TYPE ;
+  		  } else if (strcmp (L_actionArg3, (char*)"all") == 0) {
+  		    L_actionData->m_msg_part_type =  E_ALL_TYPE ;
+  		  } else {
+  		    GEN_ERROR(E_GEN_FATAL_ERROR,
+  			      "bad value for ["
+  			      << L_actionArg3 << "] (nothing, header, body or all)");
+  		    L_ret = -1 ;
+  		    break ;
+  		  }
+  		}
+              }
+            } // if (L_actionArg != NULL)
+          } // if (L_ret != -1)
+
+          if (L_len_format > 0) {
+            L_ret = add_expression(L_actionArg2, P_protocol,
+                                   &L_actionData->m_string_expr) ;
+            
+            
+            if (L_ret == -1) {
+              GEN_ERROR(E_GEN_FATAL_ERROR,
+                        "Format error for ["
+                        << L_actionArg2 << "]");
+              break ;
+            }
+          } else {
+            if (L_external_method_exist == false) {
+              GEN_ERROR(E_GEN_FATAL_ERROR,
+                        "Format empty for ["
+                        << L_actionName << "] action");
+              L_ret = -1 ;
+              break ;
+            }
+          }
+
 	  if (L_ret != -1) {
             L_actionArg2 = L_action -> find_value((char*) "fill-pattern");
             if (L_actionArg2 != NULL) {
@@ -1541,31 +1593,18 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
               }
             } 
           }
-
-	  if (L_ret != -1) {
-            L_actionArg2 = L_action -> find_value((char*)"method");
-            if (L_actionArg2 != NULL) {
-              L_actionData->m_external_method = 
-                P_protocol->find_method_extern(L_actionArg2);
-              if (L_actionData->m_external_method == NULL) {
+          
+          if (L_ret != -1) {
+            if (L_len_format > 0) {
+              L_ret = check_expression (L_actionData, P_protocol) ;
+              if (L_ret == -1) {
                 GEN_ERROR(E_GEN_FATAL_ERROR,
-                          "No method extern found for ["
+                          "Expression error for ["
                           << L_actionArg2 << "]");
-                L_ret = -1 ;
                 break ;
-              } else {
-                L_actionData->m_type =  E_ACTION_SCEN_SET_VALUE_METHOD_EXTERN ;
               }
-            } 
+            }
           }
-
-	  L_ret = check_expression (L_actionData, P_protocol) ;
-	  if (L_ret == -1) {
-	    GEN_ERROR(E_GEN_FATAL_ERROR,
-		      "Expression error for ["
-		      << L_actionArg2 << "]");
-	    break ;
-	  }
 	  break ;
 	  
 	case E_ACTION_SCEN_INC_COUNTER:
@@ -3492,7 +3531,7 @@ bool C_ScenarioControl::analyze_correlation_retrieve (C_XmlData *P_data,
   T_XmlData_List::iterator        L_listIt                 ;
   T_pXmlData_List                 L_subList     = NULL     ;
   bool                            L_ret         = true     ;
-  char                           *L_value                  ;
+  char                           *L_value       = NULL     ;
 
   C_ProtocolFrame                *L_protocol    = NULL     ;
   int                             L_id                     ;
@@ -3515,11 +3554,15 @@ bool C_ScenarioControl::analyze_correlation_retrieve (C_XmlData *P_data,
         if (L_value != NULL ) {
           L_id  = L_protocol->find_field (L_value) ;
           if (L_id == -1) {
-            GEN_ERROR(E_GEN_FATAL_ERROR,
-                      "No definition found for ["
-                      << L_value << "]");
-            L_ret = false;
-            break ;
+            if (strcmp(L_value, (char*)"session-method-open-id") == 0) {
+              L_id_retrieve_list.push_back(L_id);
+            } else {
+              GEN_ERROR(E_GEN_FATAL_ERROR,
+                        "No definition found for ["
+                        << L_value << "]");
+              L_ret = false;
+              break ;
+            }
           } else {
             L_id_retrieve_list.push_back(L_id);
           }
@@ -3551,7 +3594,7 @@ bool C_ScenarioControl::analyze_correlation_retrieve (C_XmlData *P_data,
                                  L_id_retrieve_list.end());
       }
     }
-  } // if (L_subList ...)
+  } // if (L_subList ...) 
   return (L_ret);
 }
 
@@ -3587,6 +3630,7 @@ bool C_ScenarioControl::analyze_correlation_command  (C_XmlData *P_data,
   bool                            L_pre_action_done   = false    ;
   bool                            L_selectLine_added  = false    ;
   bool                            L_post_action       = false    ;
+  bool                            L_add_def_action    = false    ;   
   T_pCmd_scenario                 L_cmd_sequence =  NULL               ; 
 
   C_CommandAction**               L_commandActionTable = NULL          ;
@@ -3605,6 +3649,7 @@ bool C_ScenarioControl::analyze_correlation_command  (C_XmlData *P_data,
   L_postActionMapLst.clear();
 
   C_CommandActionFactory          L_CmdActionFactory(&m_controllers)   ;
+
 
   L_instance_list.clear();
   
@@ -3668,23 +3713,12 @@ bool C_ScenarioControl::analyze_correlation_command  (C_XmlData *P_data,
 
       
       if (L_post_action == false) {
-	if (add_default_action(L_cmd_sequence,
-			       L_label_data,
-			       L_value_label,
-			       P_channel_id)== false) {
-	  return (false);
-	}
+        L_add_def_action = true ;
       } else {
         if (L_map_inserted == false) {
           m_correlation_insert  = false ;
-        } else {
-          if (add_default_action(L_cmd_sequence,
-                                 L_label_data,
-                                 L_value_label,
-                                 P_channel_id)== false) {
-            return (false);
-          }
-        }
+          L_add_def_action      = true  ;
+        } 
       }
     } // if (L_label_data->m_id_cmd ...)
 
@@ -3753,6 +3787,16 @@ bool C_ScenarioControl::analyze_correlation_command  (C_XmlData *P_data,
       }
     } //  for(L_listIt...)
 
+
+    if ((L_label_data->m_id_cmd == 0)  &&
+        (L_add_def_action == true)) {
+      T_CmdAction               L_action_map  ;
+      L_action_map = no_cmd_action ;
+      L_action_map.m_type = E_ACTION_SCEN_ADD_DEFAULT_IN_CALL_MAP ;
+      L_action_map.m_id = P_channel_id ;
+      L_postActionLabelList.push_back(L_CmdActionFactory.create(L_action_map)) ;
+    }
+
     update_actions (L_preActionLabelList,
                     L_preActionMapLst,
                     m_pre_action_map,
@@ -3773,66 +3817,6 @@ bool C_ScenarioControl::analyze_correlation_command  (C_XmlData *P_data,
   return (L_ret);
 
 }
-
-
-bool  C_ScenarioControl::add_default_action(T_pCmd_scenario   P_cmd_sequence,
-					    T_pLabelData      P_label_data,
-					    char             *P_value_label,
-                                            int               P_channel_id) {
-  
-  
-  T_pC_Scenario                   L_scen              = NULL     ;
-  bool                            L_ret               = true     ;  
-  
-  C_CommandAction**         L_action_map_table              = NULL ;
-  C_CommandActionFactory    L_CommandActionFactory(&m_controllers) ;
-  T_CmdAction               L_action_map                           ;
-  T_CommandActionLst        L_commandActionMapLst                 ;
-  
-  T_CommandActionLst::iterator L_cmdActionIt   ;
-  int                          L_actionIdx = 0 ;
-  int                          L_nb_action = 0 ;
-  
-  
-  L_commandActionMapLst.clear();
-  
-  L_scen = P_label_data->m_scenario        ;
-  if (P_cmd_sequence->m_post_action > 0 ) {
-    find_list_correl_from_map(m_post_action_map,
-			      P_value_label,
-			      L_commandActionMapLst) ;
-    
-    if (L_commandActionMapLst.empty()) {
-      GEN_ERROR(E_GEN_FATAL_ERROR, 
-		"Command name ["
-		<< P_value_label << "] unknown");
-      return (false);
-    } else {
-      L_nb_action += L_commandActionMapLst.size();
-    }
-  }
-  
-  L_action_map = no_cmd_action ;
-  L_action_map.m_type = E_ACTION_SCEN_ADD_DEFAULT_IN_CALL_MAP ;
-  L_action_map.m_id = P_channel_id ;
-  L_commandActionMapLst.push_back(L_CommandActionFactory.create(L_action_map)) ;
-  L_nb_action++;
-  
-  ALLOC_TABLE(L_action_map_table, C_CommandAction**, sizeof(C_CommandAction*),L_nb_action);
-  for (L_cmdActionIt  = L_commandActionMapLst.begin();
-       L_cmdActionIt != L_commandActionMapLst.end();
-       L_cmdActionIt++) {
-    L_action_map_table[L_actionIdx] = *L_cmdActionIt ;
-    L_actionIdx ++ ;
-  }
-  L_scen -> update_post_actions(L_nb_action, L_action_map_table, P_label_data->m_id_cmd);
-  if (!L_commandActionMapLst.empty()) {
-    L_commandActionMapLst.erase(L_commandActionMapLst.begin(),
-				L_commandActionMapLst.end());
-  }
-  return (L_ret);
-}
-
 
 void C_ScenarioControl::update_actions (T_CommandActionLst&  P_ActionLabelList,
                                         T_CommandActionLst&  P_ActionMapLst,
@@ -3950,6 +3934,9 @@ bool C_ScenarioControl::analyze_correlation (C_XmlData *P_xml_correlation,
       L_first_retrieve = false ;
       if (strcmp(L_value, (char*)"channel") == 0) {
         L_value = L_data->find_value((char*)"name") ;
+        if (L_value == NULL ) {
+          GEN_FATAL(E_GEN_FATAL_ERROR, "name value on [channel] section is mandatory");
+        }
         L_channel_id = m_channel_ctrl->get_channel_id(L_value);
         if (L_channel_id  == ERROR_CHANNEL_UNKNOWN) {
           GEN_ERROR(E_GEN_FATAL_ERROR, 
