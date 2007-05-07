@@ -93,17 +93,15 @@ bool         C_ExternalDataControl::init (char * P_file_name) {
   L_result = max_buffer_size(); 
 
   if(L_result == false ) {
-    GEN_ERROR(E_GEN_FATAL_ERROR, 
+    GEN_FATAL(E_GEN_FATAL_ERROR, 
 	      "Unable to determine max buffer size in file ["
 	      << P_file_name << "]");
-    return (L_result);
   }
   
   // analyze this file
   L_result = create_regexp() ;
   if (L_result == false) {
-    GEN_ERROR(E_GEN_FATAL_ERROR, "Regular expression building is failed");
-    return (L_result);
+    GEN_FATAL(E_GEN_FATAL_ERROR, "Regular expression building is failed");
   }
 
   L_result = analyze();
@@ -111,8 +109,7 @@ bool         C_ExternalDataControl::init (char * P_file_name) {
   delete_regexp();
 
   if (L_result == false) {
-    GEN_ERROR(E_GEN_FATAL_ERROR, "External data analysis failed");
-    return (L_result);
+    GEN_FATAL(E_GEN_FATAL_ERROR, "External data analysis failed");
   }
 
   L_result  = true ;
@@ -149,9 +146,8 @@ bool         C_ExternalDataControl::max_buffer_size () {
 
   if (!m_file->good()) {
     DELETE_VAR(m_file);
-    GEN_ERROR(E_GEN_FATAL_ERROR, 
+    GEN_FATAL(E_GEN_FATAL_ERROR, 
 	      "Unable to open file [" << m_file_name << "]");
-    return (L_result) ;
   }
 
   // read one char 
@@ -209,9 +205,8 @@ bool         C_ExternalDataControl::analyze () {
 
   if (!m_file->good()) {
     DELETE_VAR(m_file);
-    GEN_ERROR(E_GEN_FATAL_ERROR, 
+    GEN_FATAL(E_GEN_FATAL_ERROR, 
 	      "Unable to open file [" << m_file_name << "]");
-    return (L_result) ;
   }
 
   m_line_selected = 0 ; 
@@ -246,9 +241,8 @@ bool         C_ExternalDataControl::analyze () {
     } 
 
     if (m_number_line == 0){
-      GEN_ERROR(E_GEN_FATAL_ERROR, 
+      GEN_FATAL(E_GEN_FATAL_ERROR, 
                 "The file [" << m_file_name << "] doesn't contain any valid lines");
-      L_result = false ;
     }
   }
 
@@ -342,46 +336,29 @@ bool C_ExternalDataControl::create_regexp() {
   if (L_status != 0) {
     regerror(L_status, m_regExpr1, L_buffer, 100);
     regfree (m_regExpr1) ;
-    GEN_ERROR(E_GEN_FATAL_ERROR, "regcomp error: [" << L_buffer << "]");
-
-    GEN_DEBUG(1, "C_ExternalDataControl::create_regexp() end Error ");
-
-    return (false);
+    GEN_FATAL(E_GEN_FATAL_ERROR, "regcomp error: [" << L_buffer << "]");
   }
 
   L_status = regcomp (m_regExpr2, "^#.*$", REG_EXTENDED) ;
   if (L_status != 0) {
     regerror(L_status, m_regExpr2, L_buffer, 100);
     regfree (m_regExpr2) ;
-    GEN_ERROR(E_GEN_FATAL_ERROR, "regcomp error: [" << L_buffer << "]");
-
-    GEN_DEBUG(1, "C_ExternalDataControl::create_regexp() end Error ");
-
-    return (false);
+    GEN_FATAL(E_GEN_FATAL_ERROR, "regcomp error: [" << L_buffer << "]");
   }
 
   L_status = regcomp (m_regExpr3, "^//.*$", REG_EXTENDED) ;
   if (L_status != 0) {
     regerror(L_status, m_regExpr3, L_buffer, 100);
     regfree (m_regExpr3) ;
-    GEN_ERROR(E_GEN_FATAL_ERROR, "regcomp error: [" << L_buffer << "]");
-
-    GEN_DEBUG(1, "C_ExternalDataControl::create_regexp() end Error ");
-
-    return (false);
+    GEN_FATAL(E_GEN_FATAL_ERROR, "regcomp error: [" << L_buffer << "]");
   }
 
   L_status = regcomp (m_regExpr4, "[[:blank:]]*;[[:blank:]]*", REG_EXTENDED) ;
   if (L_status != 0) {
     regerror(L_status, m_regExpr4, L_buffer, 100);
     regfree (m_regExpr4) ;
-    GEN_ERROR(E_GEN_FATAL_ERROR, "regcomp error: [" << L_buffer << "]");
-
-    GEN_DEBUG(1, "C_ExternalDataControl::create_regexp() end Error ");
-    return (false);
+    GEN_FATAL(E_GEN_FATAL_ERROR, "regcomp error: [" << L_buffer << "]");
   }
-
-
 
   GEN_DEBUG(1, "C_ExternalDataControl::create_regexp() end Ok ");
 
@@ -449,10 +426,8 @@ bool C_ExternalDataControl::analyze_first_data (char*P_line) {
     }
     
     if (L_type == E_UNSUPPORTED_TYPE) {
-      GEN_ERROR(E_GEN_FATAL_ERROR, "typedef type value ["
+      GEN_FATAL(E_GEN_FATAL_ERROR, "typedef type value ["
 		<< L_type_name << "] unsupported");
-      L_ret = false ;
-      break ;
     }
 
     switch (L_type) {
@@ -463,10 +438,8 @@ bool C_ExternalDataControl::analyze_first_data (char*P_line) {
     case E_TYPE_SIGNED_64:
       break ;
     default:
-      GEN_ERROR(E_GEN_FATAL_ERROR, "type ["
+      GEN_FATAL(E_GEN_FATAL_ERROR, "type ["
 		<< L_type_name << "] unsupported for external data file");
-      L_ret = false ;
-      break ;
     }
 
     L_type_list.push_back(L_type);
@@ -509,9 +482,8 @@ bool C_ExternalDataControl::analyze_first_data (char*P_line) {
       }
     }
   } else {
-    GEN_ERROR(E_GEN_FATAL_ERROR, "No field definition (first line) found in file ["
+    GEN_FATAL(E_GEN_FATAL_ERROR, "No field definition (first line) found in file ["
 	      << m_file_name << "]");
-    L_ret = false ;
   }
 
   return (L_ret);
@@ -596,21 +568,18 @@ bool C_ExternalDataControl::analyze_data (char*P_line) {
 	}
 	
 	if (L_endstr[0] != '\0') {
-	  GEN_ERROR(E_GEN_FATAL_ERROR, "field value ["
+	  GEN_FATAL(E_GEN_FATAL_ERROR, "field value ["
 		    << L_field_value << "] bad format in file ["
 		    << m_file_name << "]");
-	  L_ret = false ;
 	}
 	GEN_DEBUG(1, "C_ExternalDataControl::analyze_data() "
 		  << "signed value = " << L_signed_value);
 	L_value->m_value.m_val_signed = L_signed_value ;
       } else {
-	GEN_ERROR(E_GEN_FATAL_ERROR, "Field empty where number value was expected"
+	GEN_FATAL(E_GEN_FATAL_ERROR, "Field empty where number value was expected"
 		  << " in file ["
 		  << m_file_name << "]");
-	L_ret = false ;
       }
-
     } 
       break ;
     case E_TYPE_NUMBER: {
@@ -628,16 +597,15 @@ bool C_ExternalDataControl::analyze_data (char*P_line) {
 
 
 	if (L_endstr[0] != '\0') {
-	  GEN_ERROR(E_GEN_FATAL_ERROR, "field value ["
+	  GEN_FATAL(E_GEN_FATAL_ERROR, "field value ["
 		    << L_field_value << "] bad format in file ["
 		    << m_file_name << "]");
-	  L_ret = false ;
 	}
 	GEN_DEBUG(1, "C_ExternalDataControl::analyze_data() "
 		  << "unsigned value =" << L_unsigned_value);
 	L_value->m_value.m_val_number = L_unsigned_value ;
       } else {
-	GEN_ERROR(E_GEN_FATAL_ERROR, "Field empty where number value was expected"
+	GEN_FATAL(E_GEN_FATAL_ERROR, "Field empty where number value was expected"
 		  << " in file ["
 		  << m_file_name << "]");
       }
@@ -657,10 +625,9 @@ bool C_ExternalDataControl::analyze_data (char*P_line) {
 	  = convert_hexa_char_to_bin(L_ptr, &L_res_size);
 
 	if (L_value -> m_value.m_val_binary.m_value == NULL ) {
-	  GEN_ERROR(E_GEN_FATAL_ERROR, 
+	  GEN_FATAL(E_GEN_FATAL_ERROR, 
 		    "Bad buffer size for hexadecimal buffer ["
 		    << L_field_value << "]" ); 
-	  L_ret = false ;
 	} else {
 	  L_value -> m_value.m_val_binary.m_size = L_res_size ;	  
 	}
@@ -703,19 +670,17 @@ bool C_ExternalDataControl::analyze_data (char*P_line) {
 	}
 	
 	if (L_endstr[0] != '\0') {
-	  GEN_ERROR(E_GEN_FATAL_ERROR, "field value ["
+	  GEN_FATAL(E_GEN_FATAL_ERROR, "field value ["
 		    << L_field_value << "] bad format in file ["
 		    << m_file_name << "]");
-	  L_ret = false ;
 	}
 	GEN_DEBUG(1, "C_ExternalDataControl::analyze_data() "
 		  << "signed64 value = " << L_signed_value);
 	L_value->m_value.m_val_signed_64 = L_signed_value ;
       } else {
-	GEN_ERROR(E_GEN_FATAL_ERROR, "empty field for number64 expected"
+	GEN_FATAL(E_GEN_FATAL_ERROR, "empty field for number64 expected"
 		  << " in file ["
 		  << m_file_name << "]");
-	L_ret = false ;
       }
 
     } 
@@ -735,16 +700,15 @@ bool C_ExternalDataControl::analyze_data (char*P_line) {
 
 
 	if (L_endstr[0] != '\0') {
-	  GEN_ERROR(E_GEN_FATAL_ERROR, "field value ["
+	  GEN_FATAL(E_GEN_FATAL_ERROR, "field value ["
 		    << L_field_value << "] bad format in file ["
 		    << m_file_name << "]");
-	  L_ret = false ;
 	}
 	GEN_DEBUG(1, "C_ExternalDataControl::analyze_data() "
 		  << "unsigned64 value =" << L_unsigned_value);
 	L_value->m_value.m_val_number_64 = L_unsigned_value ;
       } else {
-	GEN_ERROR(E_GEN_FATAL_ERROR, "empty field for number64 expected"
+	GEN_FATAL(E_GEN_FATAL_ERROR, "empty field for number64 expected"
 		  << " in file ["
 		  << m_file_name << "]");
       }
@@ -772,13 +736,12 @@ bool C_ExternalDataControl::analyze_data (char*P_line) {
   }  
 
   if (L_nb_field != m_nb_field) {
-    GEN_ERROR(E_GEN_FATAL_ERROR, 
+    GEN_FATAL(E_GEN_FATAL_ERROR, 
 	      "Illegal number of field for line ["
 	      << P_line << "] expected [" 
 	      << m_nb_field << "] found [" << L_nb_field
               << "] in texternal data file ["
 	      << m_file_name << "]");
-    L_ret = false ;
   } 
 
   return (L_ret);
