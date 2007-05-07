@@ -54,7 +54,7 @@ C_DataLogControl::C_DataLogControl(size_t         P_max_data,
 
   NEW_VAR(m_output_stream, fstream_output(P_file_name));
   if (!m_output_stream->good()) {
-    GEN_FATAL(0, "Unable to open file ["
+    GEN_FATAL(E_GEN_FATAL_ERROR, "Unable to open file ["
 	      << P_file_name << "] for data logging");
   }
   
