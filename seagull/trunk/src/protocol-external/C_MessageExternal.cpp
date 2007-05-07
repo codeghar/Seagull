@@ -55,6 +55,9 @@ C_MessageExternal::C_MessageExternal() :
   }
   
   m_id = -1 ;
+
+  m_correlation_session_id = NULL ;
+
 }
 
 C_MessageExternal::~C_MessageExternal() {
@@ -90,6 +93,13 @@ C_MessageExternal::~C_MessageExternal() {
 
   m_protocol = NULL ;
   m_nb_values = 0 ;
+
+  if (m_correlation_session_id != NULL) {
+    resetMemory(*m_correlation_session_id);
+    FREE_VAR(m_correlation_session_id)  ;
+  }
+
+
 }
 
 void C_MessageExternal::internal_reset() {
@@ -461,19 +471,24 @@ T_TypeType C_MessageExternal::get_field_type  (int P_id,
 // bool fct (source, dest);
 
 T_pValueData C_MessageExternal::get_field_value (int P_id, 
+                                                 C_ContextFrame *P_ctxt,
                                                  int P_instance,
                                                  int P_sub_id) {
 
-  T_pValueData    L_value = NULL ;
-  
-  if (get_field_value(P_id, 
-                      P_instance,
-                      P_sub_id,
-                      L_value) == false ) {
-    return (NULL) ;
-  }
-  
-  return (L_value);
+
+  if (m_correlation_session_id == NULL ) {
+    ALLOC_VAR(m_correlation_session_id,
+              T_pValueData,
+              sizeof(T_ValueData));
+    if (get_field_value(P_id, 
+                        P_instance,
+                        P_sub_id,
+                        m_correlation_session_id) == false ) {
+      FREE_VAR(m_correlation_session_id);
+    }
+  }  
+  return (m_correlation_session_id);
+
 }
 
 
@@ -544,6 +559,9 @@ C_MessageExternal::C_MessageExternal(C_MessageExternal &P_val) {
 
   m_protocol = P_val.m_protocol ;
   m_id = P_val.m_id ;
+
+  m_correlation_session_id = NULL ;
+
   m_nb_values = P_val.m_nb_values ;
   ALLOC_TABLE(m_header, T_pValueData, 
 	      sizeof(T_ValueData), m_nb_header_fields);
@@ -828,6 +846,8 @@ C_MessageExternal::C_MessageExternal (C_ProtocolExternal *P_protocol,
       m_body[L_i].m_values = NULL ;
     }
   }
+
+  m_correlation_session_id = NULL ;
 
 
   if (!P_body->empty()) {

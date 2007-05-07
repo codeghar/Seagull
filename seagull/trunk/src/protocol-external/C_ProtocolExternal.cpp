@@ -595,8 +595,6 @@ C_ProtocolFrame::T_MsgError C_ProtocolExternal::from_external
               C_MessageExternal(this, L_header, &L_body, &L_body_id, L_body_instance));
       
       L_msg->m_id =  L_msg_id ;
-        // (L_msg_it->second)->m_id 
-      // TODO: delete primitive and component ?????
       ((P_build)->*(m_delete_body))(NULL) ;
       ((P_build)->*(m_delete_header))(NULL) ;
       
