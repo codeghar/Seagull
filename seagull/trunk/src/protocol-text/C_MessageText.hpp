@@ -82,6 +82,7 @@ public:
 
 
   T_pValueData get_field_value (int P_id, 
+                                C_ContextFrame *P_ctxt,
                                 int P_instance,
                                 int P_sub_id) ;
 

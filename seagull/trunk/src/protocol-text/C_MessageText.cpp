@@ -604,18 +604,23 @@ bool C_MessageText::get_field_value(int P_id,
 
 
 T_pValueData C_MessageText::get_field_value (int P_id, 
+                                             C_ContextFrame *P_ctxt,
                                              int P_instance,
                                              int P_sub_id) {
 
   if (m_session_id == NULL ) {
-    ALLOC_VAR(m_session_id,
-              T_pValueData,
-              sizeof(T_ValueData));
-    if (get_field_value(P_id, 
-                        P_instance,
-                        P_sub_id,
-                        m_session_id) == false ) {
-      FREE_VAR(m_session_id);
+    if (P_id == -1) {
+      return(getSessionFromOpenId (P_ctxt));
+    } else {
+      ALLOC_VAR(m_session_id,
+                T_pValueData,
+                sizeof(T_ValueData));
+      if (get_field_value(P_id, 
+                          P_instance,
+                          P_sub_id,
+                          m_session_id) == false ) {
+        FREE_VAR(m_session_id);
+      }
     }
   }  
   return (m_session_id);
@@ -907,13 +912,15 @@ int  C_MessageText::get_buffer (T_pValueData P_dest ,
   int               L_ret   = 0    ;
 
   switch (P_header_body_type) {
+  case E_NOTHING_TYPE :
+  case E_ALL_TYPE    :
+    break;
   case E_HEADER_TYPE :
     copyValue(*P_dest, *m_header, false);
     break;
   case E_BODY_TYPE   :
     copyValue(*P_dest, *m_body, false);
     break;
-  case E_ALL_TYPE    :
   default:
     L_ret = -1 ;
     break ;
