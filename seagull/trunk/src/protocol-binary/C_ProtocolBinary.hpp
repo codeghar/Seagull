@@ -20,6 +20,7 @@
 #ifndef _C_PROTOCOLBINARY_
 #define _C_PROTOCOLBINARY_
 
+
 #include "Utils.hpp"
 #include "C_XmlData.hpp"
 
@@ -29,6 +30,12 @@
 #include "C_ProtocolStats.hpp"
 
 #include "C_ProtocolBinaryFrame.hpp"
+
+#include "ExternalMethod.h"
+#include "ExternalMethodDef.hpp"
+
+
+class C_MessageBinary ;
 
 class C_ProtocolBinary : public C_ProtocolBinaryFrame {
 
@@ -215,6 +222,17 @@ public:
                                                            unsigned char *P_buf, 
                                                            size_t        *P_size) ;
 
+
+  void               encode_header_without_stat (int P_id, 
+                                                 T_pValueData  P_headerVal, 
+                                                 unsigned char*P_buf, size_t *P_size,
+                                                 C_ProtocolFrame::T_pMsgError P_error); 
+
+  virtual C_ProtocolFrame::T_MsgError  encode_body_without_stat   (int            P_nbVal, 
+                                                                   T_pBodyValue   P_val, 
+                                                                   unsigned char *P_buf, 
+                                                                   size_t        *P_size) ;
+
   int                decode_header (unsigned char *P_buf, 
 				    size_t         P_size, 
 				    T_pValueData   P_valDec);
@@ -281,6 +299,11 @@ public:
   int analyze_setfield(C_XmlData          *P_data,
                        T_pValueData        P_value_field);
 
+  typedef T_pValueData (C_MessageBinary:: *T_SessionMethodBinary)(C_ContextFrame *P_void);
+
+  int  get_m_session_id_id() ;
+  T_SessionMethodBinary get_m_session_method() ;
+
 
 protected:
 
@@ -322,10 +345,16 @@ protected:
   T_pNameAndIdList             m_message_name_list            ;
   T_pNameAndIdList             m_message_comp_name_list       ;
 
-
   // separator management
   char *m_header_body_field_separator ;
   int     m_session_id_position       ;
+
+  T_pManagementSessionId           m_value_sessions_table      ;
+  int                              m_value_sessions_table_size ;
+
+  int                          m_session_id_id             ;
+  bool                         m_use_open_id               ;
+  T_SessionMethodBinary        m_session_method            ;  
 
   // type management variables
   T_pTypeDef     m_type_def_table ;
@@ -362,6 +391,16 @@ protected:
   unsigned long      m_padding_value ;
   bool               m_header_length_excluded ;
 
+
+  T_pDefMethodExternList           m_def_method_extern_list    ;
+  T_pDefMethodExternal             m_method_external_table     ;
+  int                              m_nb_method_external_table  ;
+
+  int analyze_extern_method_from_xml(C_XmlData *P_data, 
+                                     T_DefMethodExternList *P_def_method_list);
+
+  T_ExternalMethod find_method_extern(char *P_name) ;
+
   int  add_counter (char *P_name, unsigned long P_init) ;
   
   int  add_type(char *P_name, T_TypeType P_type, unsigned long P_size);
@@ -390,7 +429,9 @@ protected:
   virtual int analyze_body_from_xml (C_XmlData *P_def);
 
   int analyze_dictionnary_from_xml (C_XmlData *P_def); 
-  virtual    int analyze_sessions_id_from_xml (C_XmlData *P_def) ;
+  virtual    int analyze_sessions_from_xml (C_XmlData *P_def) ;
+
+  int     analyze_sessions_id_out_from_xml (C_XmlData *P_def) ;
 
   
   virtual int get_header_body_values_from_xml (C_XmlData *P_def);

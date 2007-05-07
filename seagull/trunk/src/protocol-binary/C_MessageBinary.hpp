@@ -20,6 +20,8 @@
 #ifndef _C_MESSAGEBINARY_
 #define _C_MESSAGEBINARY_
 
+
+
 #include "C_GeneratorConfig.hpp"
 #include "C_MessageFrame.hpp"
 #include "C_ProtocolBinary.hpp"
@@ -27,6 +29,7 @@
 #include "iostream_t.hpp"
 
 #include "C_RegExp.hpp"
+
 
 
 #define MAX_BODY_VALUES 65
@@ -68,8 +71,9 @@ public:
   
 
   virtual T_pValueData  get_session_id (C_ContextFrame *P_ctxt) ;
-
-
+  T_pValueData getSessionFromField (C_ContextFrame *P_ctxt) ;
+  T_pValueData getSessionFromOpenId (C_ContextFrame *P_ctxt) ;
+  virtual T_pValueData getSessionFromBody(int P_id);
 
   unsigned long  get_type () ;
   
@@ -84,7 +88,11 @@ public:
                  size_t *P_size,
                  C_ProtocolFrame::T_pMsgError P_error) ;
 
-  // C_ProtocolBinaryFrame::T_pMsgError P_error
+
+  void   encode_without_stat (unsigned char*               P_buffer, 
+                              size_t*                      P_size,
+                              size_t*                      P_size_header,
+                              C_ProtocolFrame::T_pMsgError P_error) ;
 
   virtual bool           compare_types (C_MessageFrame *P_ref) ;
 
@@ -101,7 +109,8 @@ public:
 
   void get_header_value (T_pValueData P_res, int P_id);
 
-  T_pValueData   get_field_value (int P_id, 
+  T_pValueData   get_field_value (int P_id,
+                                  C_ContextFrame *P_ctxt,
                                   int P_instance,
                                   int P_sub_id) ;
 
@@ -153,6 +162,7 @@ protected:
   T_pValueData   m_header_values    ;
 
   char          *m_header_body_field_separator     ;
+
   T_pValueData               m_session_id            ;
 
   // temporary
