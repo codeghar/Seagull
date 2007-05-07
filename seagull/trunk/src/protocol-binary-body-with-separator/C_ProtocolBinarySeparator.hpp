@@ -35,6 +35,12 @@ public:
 	       unsigned char *P_buf, 
 	       size_t        *P_size) ;
 
+
+  virtual C_ProtocolFrame::T_MsgError  encode_body_without_stat   (int            P_nbVal, 
+                                                                   T_pBodyValue   P_val, 
+                                                                   unsigned char *P_buf, 
+                                                                   size_t        *P_size) ;
+
   virtual C_MessageFrame*    create_new_message (C_MessageFrame *P_msg);
   virtual C_MessageFrame*    create_new_message (void                *P_xml,
                                                  T_pInstanceDataList  P_list,

@@ -519,7 +519,203 @@ C_ProtocolFrame::T_MsgError C_ProtocolBinarySeparator::encode_body (int         
   return (L_error);
 }
 
+C_ProtocolFrame::T_MsgError C_ProtocolBinarySeparator::encode_body_without_stat (int            P_nbVal, 
+                                                                                 T_pBodyValue   P_val,
+                                                                                 unsigned char *P_buf, 
+                                                                                 size_t        *P_size) {
 
+  unsigned char     *L_ptr = P_buf ;
+  int                L_i, L_body_id ;
+  size_t             L_total_size   = 0 ;
+  size_t             L_current_size = 0 ;
+  T_pHeaderBodyValue L_body_fieldValues  ;
+  T_pBodyValue       L_body_val ;
+  unsigned long      L_valueSize  ;
+  int                L_type_id ;
+  T_TypeType         L_type ;
+
+  unsigned char *L_save_length_ptr = NULL;
+  unsigned long  L_save_length = 0;
+  size_t         L_length_size = 0;
+
+  size_t         L_sub_size ;
+  C_ProtocolFrame::T_MsgError  L_error = C_ProtocolFrame::E_MSG_OK;
+  
+
+  GEN_DEBUG(1, "C_ProtocolBinarySeparator::encode_body_without_stat() start");
+
+  L_total_size = 0 ;
+  L_current_size = 0 ;
+
+  for (L_i = 0; L_i < P_nbVal ; L_i ++) {
+
+    L_body_val = &P_val[L_i] ;
+    L_body_id = L_body_val->m_id  ;
+
+    L_body_fieldValues = &m_header_body_value_table[L_body_id] ;
+
+    L_type_id = L_body_fieldValues->m_type_id ;
+    L_type = m_type_def_table[L_type_id].m_type ;
+
+    if (L_type == E_TYPE_STRING) {
+      L_valueSize = 
+	L_body_val -> m_value.m_val_binary.m_size ;
+    } else {
+      L_valueSize = 
+	m_type_def_table[L_type_id].m_size ;
+    }
+   
+    // now add the value of the body
+    switch (L_type) {
+
+    case E_TYPE_NUMBER:
+      convert_ul_to_bin_network(L_ptr,
+				L_valueSize,
+				L_body_val -> m_value.m_val_number);
+
+      GEN_DEBUG(1, "C_ProtocolBinarySeparator::encode_body_without_stat()  with number value = " 
+                   << L_body_val->m_value.m_val_number);
+      break ;
+
+    case E_TYPE_SIGNED:
+      convert_l_to_bin_network(L_ptr,
+			       L_valueSize,
+			       L_body_val -> m_value.m_val_signed);
+
+      GEN_DEBUG(1, "C_ProtocolBinarySeparator::encode_body_without_stat()  with signed value = " 
+                   << L_body_val->m_value.m_val_signed);
+      break ;
+
+    case E_TYPE_STRING: {
+      size_t L_padding ;
+      memcpy(L_ptr, L_body_val->m_value.m_val_binary.m_value, L_valueSize);
+      if (m_padding_value) {
+	L_padding = L_valueSize % m_padding_value ;
+	if (L_padding) { 
+          L_padding = m_padding_value - L_padding ; 
+
+          if ((L_total_size+L_valueSize+L_padding) > *P_size) {
+            GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR,
+                          "Buffer max size reached [" << *P_size << "]");
+            L_error = C_ProtocolFrame::E_MSG_ERROR_ENCODING ;
+            break ;
+          }
+
+        }
+	while (L_padding) {
+	  *(L_ptr+L_valueSize) = '\0' ;
+	  L_valueSize++ ;
+	  L_padding-- ;
+	}
+      } else {
+	L_padding = 0 ;
+      }
+
+      GEN_DEBUG(1, "C_ProtocolBinarySeparator::encode_body_without_stat()  with string value (size: " 
+                   << L_valueSize << " and padding: " << L_padding);
+    }
+	break ;
+
+    case E_TYPE_STRUCT: {
+      size_t   L_sub_value_size = L_valueSize/2 ;   
+
+      convert_ul_to_bin_network(L_ptr,
+				L_sub_value_size,
+				L_body_val -> m_value.m_val_struct.m_id_1);
+      
+      convert_ul_to_bin_network(L_ptr + L_sub_value_size,
+				L_sub_value_size,
+				L_body_val -> m_value.m_val_struct.m_id_2);
+
+      GEN_DEBUG(1, "C_ProtocolBinarySeparator::encode_body_without_stat()  with struct value = [" 
+                   << L_body_val -> m_value.m_val_struct.m_id_1 << ";" 
+                   << L_body_val -> m_value.m_val_struct.m_id_2);
+      }
+	break ;
+
+    case E_TYPE_GROUPED:
+      GEN_DEBUG(1, "C_ProtocolBinarySeparator::encode_body_without_stat()  with grouped value " );
+
+      //      L_sub_size = *P_size - L_total_size ;
+
+      L_sub_size = *P_size - L_total_size ;
+
+      L_error =  encode_body_without_stat(L_body_val->m_value.m_val_number,
+                                          L_body_val->m_sub_val,
+                                          L_ptr,
+                                          &L_sub_size);
+      
+      if (L_error == C_ProtocolFrame::E_MSG_OK) {
+        L_total_size += L_sub_size ;
+
+        if (L_total_size > *P_size) {
+          GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR,
+                        "Buffer max size reached [" << *P_size << "]");
+          L_error = C_ProtocolFrame::E_MSG_ERROR_ENCODING ;
+          break ;
+        }
+
+        L_save_length += L_sub_size ;
+        convert_ul_to_bin_network(L_save_length_ptr,
+                                  L_length_size,
+                                  L_save_length) ;
+        L_ptr += L_sub_size ;
+      }
+
+      break ;
+      
+    case E_TYPE_NUMBER_64:
+      convert_ull_to_bin_network(L_ptr,
+				 L_valueSize,
+				 L_body_val -> m_value.m_val_number_64);
+
+      GEN_DEBUG(1, "C_ProtocolBinarySeparator::encode_body_without_stat()  with number64 value = " 
+                   << L_body_val->m_value.m_val_number_64);
+      break ;
+
+    case E_TYPE_SIGNED_64:
+      convert_ll_to_bin_network(L_ptr,
+			        L_valueSize,
+			        L_body_val -> m_value.m_val_signed_64);
+
+      GEN_DEBUG(1, "C_ProtocolBinarySeparator::encode_body_without_stat()  with signed64 value = " 
+                   << L_body_val->m_value.m_val_signed_64);
+      break ;
+
+    default:
+      GEN_FATAL(E_GEN_FATAL_ERROR, 
+	    "Encoding method not implemented for this value");
+      break ;
+    }
+
+
+    if (L_error != C_ProtocolFrame::E_MSG_OK) {
+      break ;
+    }  
+
+    
+    L_total_size += L_valueSize ;
+    L_ptr += L_valueSize ;
+
+    // Now add the separator
+    if (m_header_body_field_separator_size > 0) {
+      memcpy(L_ptr,
+             m_header_body_field_separator,
+             m_header_body_field_separator_size);
+      
+      L_total_size += m_header_body_field_separator_size ;
+      L_ptr += m_header_body_field_separator_size ;
+    }
+  } // for (L_i ...
+
+  if (L_error == C_ProtocolFrame::E_MSG_OK) {
+    *P_size = L_total_size ;
+  }
+
+  GEN_DEBUG(1, "C_ProtocolBinarySeparator::encode_body_without_stat() end");
+
+  return (L_error);
+}
 
 int C_ProtocolBinarySeparator::decode_body(unsigned char *P_buf, 
                                            size_t         P_size,
