@@ -800,6 +800,12 @@ Seagull will look at parameters indicated by
           and <a href="#action_set-value">set-value</a>
           scenario actions (see <a href="#ref_actions">scenario actions section</a>).</p>
         </section>
+        <section id="scen_corr">
+          <title>Correlation section</title>
+          <p>The <strong>correlation</strong> section is used to define rules to associate several 
+          session-ids to a single call. It supports scenario that use one or multiple channels.</p>
+          <p>Refer to the <a href="#ref_correlation">"Correlation" section</a> for further details.</p>
+        </section>        
         <section id="scen_init">
           <title>Init section</title>
           <p>The <strong>init</strong> section is executed once, at the time of the connection is setup
@@ -808,12 +814,6 @@ Seagull will look at parameters indicated by
           for Diameter protocol).</p>
           <p>The list of scenario commands that can be included in this section is 
             described in the <a href="#ref_scenario_commands">scenario command section</a>.</p>
-        </section>
-        <section id="scen_corr">
-          <title>Correlation section</title>
-          <p>The <strong>correlation</strong> section is used to define rules to maintain several 
-          session-id in one call on one or several channels.</p>
-          <p>Refer to the <a href="#ref_correlation">"Correlation" section for further details</a>.</p>
         </section>
         <section id="scen_default">
           <title>Default section</title>
@@ -1878,7 +1878,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
 </external-method>]]></source>
 
         </section>
-        <section>
+        <section id="ref_dictionary">
           <title>Dictionary</title>
           <p>"dictionary" section contains all possible messages and parameters.</p>
           <p>In addition, several attributes are available:</p>
@@ -1895,48 +1895,58 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
     </section>
     <section id="ref_correlation">
       <title>Correlation</title>
-      <p>Calls are identified with the session-id. In some cases, the session-id change during the call and/or is stored in a different field of the message (header or body).
-      To perform this, the "correlation" feature has been done in Seagull. Now it can hold several session-ids for one call. 
-      For each channel, a list (called "map") of known session-id is hold to match received messages 
-      to current calls. Seagull must know the alternative session-id before he receive any messages with this alternative session-id<br/>
-      Here is an example of call flow:
+      <p>In general, instances of a scenario (aka calls) are identified, see <a href="ref_dictionary"> Dictionary</a>, 
+      either with a session-id (a protocol field) or with an open-id (a socket id).</p> 
+      
+      <warning>The correlation feature described in this section is not compatible with the "open-id" feature (used to identify a call with its socket).</warning> 
+
+      <p>In some cases, the session-id cannot be unique during the whole call: its value may be changed during the call and/or 
+      a different field of the message (header or body) is used for the rest of the call.
+      In particular this can be the case if several channels are used during the scenario.<br/>
+      Here is an example of such call flow for which Seagull could play the role of client, server_1 or server_2:</p>
       <source><![CDATA[   
   client                 server_1               server_2              |
-    |                                                                 | The client define the session-id-1
-    |                                                                 |
+    |                                                                 | 
+    |                                                                 | The client defines the session-id-1
     | session-id-1         |                                          |
     |--------------------->|                                          |
-                           |                                          | The server_1 define session-id-2 and send it to the client into a field of the message
-                           |                                          |
+                           |                                          | 
+                           |                                          | The server_1 defines session-id-2 and sends it to the client via a field of the message
       session-id-1         |                                          |
-    |<---------------------|                                          | The client receives into a field of the message the value session-id-2 and inserts it into its map
-                           |                                          |
-                           |  session-id-2        |                   |
+    |<---------------------|                                          | The client receives a message with session-id-1 as session-id and that contains 
+                           |                                          | the value session-id-2 in another field of the message.
+                           |  session-id-2        |                   | The client keeps this new session-id for the call (storing it into its "map")
                            |--------------------->|                   |
                            |  session-id-2        |                   |
                            |<---------------------|                   |
                                                   |                   |
                                             PAUSE |                   |
                      session-id-2                 |                   |
-    |<--------------------------------------------|                   | The client receives a message with the session-id-2 as session-id
-    |                session-id-2                 |                   | It reconizes the call and continues it
+    |<--------------------------------------------|                   | The client receives a message with session-id-2 as session-id
+    |                session-id-2                 |                   | It recognizes the call and continues it
     |-------------------------------------------->|                   |
     |                      
     
     ...
-    
-    
+        
     ]]></source>
     <p></p>
       
-      
-      
-      
-      For users, this is translated in the scenario with a new section "correlation" and a new tag "label" for scenario commands .</p>
-      <warning>It is not compatible with the "open-id" feature (to identify a call with the socket).</warning> 
-      
-      To activate the correlation, the "correlation" section must be add to the scenario:
-      <p>Example:</p>
+      <p>To support these situations Seagull provides the "correlation" feature. 
+      It allows to use several session-ids for the same call. <br/>
+
+      At Seagull level and for each channel, a list (called "map") of the known session-ids is built 
+      to match received messages to current calls. 
+      A constraint is that Seagull must know the alternative session-id of a call before it can recognize any message 
+      with this alternative session-id. <br/>
+            
+      From a user perspective, the scenario includes a "correlation" section (detailed below) and the "label" tag is used 
+      from the scenario commands (e.g. send and receive) to refer to the specific processing defined in the correlation section.<br/>
+            
+      The correlation section is optional in the scenario file but it must be present to enable the correlation feature. 
+      If not present, the "label" tags are ignored in the scenario commands and a call can only be identified by a single session-id value.
+      </p>
+      <p>Example of a correlation section, see below for the details of the sub-sections:</p>
           <source><![CDATA[
 <correlation>
  <channel name="channel-1">
@@ -1951,8 +1961,8 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
      <!-- And set the call-id field -->
        <set-value name="call-id"
                   format="$(callid-counter)@127.0.0.1"></set-value>
-       
      </pre-action>
+     
      <post-action>
        <store name="SID" entity="call-id"></store>
        <insert-in-map channel="channel-1" name="SID"></insert-in-map>
@@ -1971,29 +1981,37 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
    <retrieve>
      <search-in-map name="call-id"></search-in-map>
    </retrieve>
-
-
- 
  </channel>
-</correlation>]]></source>
+</correlation>
+]]></source>
        
       
-      <p>For each channel, the "channel" section must be added. This will define the retrieve method 
-      and the commands. 
-      The "retrieve" section define all the fields (defined in the dictionary) in which the session-id can 
-      be stored. For each field, add a "insert-in-map" tag.</p>
-      <p>Example:</p>
-          <source><![CDATA[   <retrieve>
+      <p>For each channel used in the scenario, a "channel" sub-section must be added. 
+      It contains at least the retrieve method and optionnally some commands.</p> 
+
+      <p>The "retrieve" sub-section defines all the fields (defined in the dictionary) in which the session-id can 
+      be located. For each such field, a "search-in-map" tag must be added.<br/>
+      For a new received message on a given channel, Seagull gets the value of the field defined in "name" and searches in its "map" 
+      of call contexts to match a known call.<br/>
+      Example:</p>
+   <source><![CDATA[   
+   <retrieve>
      <search-in-map name="Session-Id"></search-in-map>
      <search-in-map name="HbH-id"></search-in-map>
-   </retrieve>]]></source>
+   </retrieve>
+   ]]></source>
       
-      <p>For a new received message, seagull get the value of the field define in "name", and will search in its "map" 
-      of call context to match a known call. 
+       
       
-      To define the new session-id, correlation "command" sections must be added.</p>
-      <p>Example:</p>
-         <source><![CDATA[<command name="command-1">
+      <p>The "command" sub-section can contain any other actions of the scenario but it must be present 
+      to host an "insert-in-map" action when it is necessary to store a new value of session-id for a call.<br/>
+      The "pre-action" tag defines the actions which must be done before the scenario command.<br/> 
+	The "post-action" tag defines the actions which must be done after the scenario command.<br/>
+      The "insert-in-map" action is specific to the correlation feature. 
+      It inserts in the list of known session-ids for the given "channel" the value of the "entity" (that is defined in the dictionary).<br/>
+      Example:</p>
+   <source><![CDATA[
+   <command name="command-1">
      <pre-action>
       <set-value name="HbH-id" format="$(HbH-counter)">
       </set-value>
@@ -2001,18 +2019,20 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
      <post-action>
       <insert-in-map channel="channel-1" entity="HbH-id"></insert-in-map>
      </post-action>
-</command>]]></source>
+   </command>
+   ]]></source>
       
-      <p>The "pre-action" define the actions which must be done before the scenario command. The "post-action" 
-      define the actions which must be done after the scenario command.
-      The "inser-in-map" action is specific to the correlation feature. It inserts in the list of known 
-      session-id the value of the entity for the given channel. By default, the session id is inserted 
-      in the list of the first channel.</p>
+
+<warning>If no "insert-in-map" action is defined in the correlation section, then seagull implements a default behavior. 
+      It processes messages by looking for the session-id field defined in the dictionary and inserting it in the map of the first channel 
+      defined in the configuration file. this would not work in case of multiple channels.</warning>
       
-      <p>To link the correlation "command" to the scenario "command", set the "label" to the 
-      scenario "command".</p>
-      <p>Example:</p>
-      <source><![CDATA[<send channel="channel-1" label="command-1">
+      
+      <p>Finally the correlation "commands" defined above are linked to the scenario by setting a "label" into the 
+      scenario command (send).<br/>
+      Example:</p>
+      <source><![CDATA[
+    <send channel="channel-1" label="command-1">
     <action>
       <start-timer></start-timer>
     </action>
@@ -2039,7 +2059,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
     </action>
   </send>]]></source>
       
-    <p>A example of the correlation feature is proposed in SIP protocol: <a href="sip.html#sip_correlation">SIP correlation example</a>. </p>  
+    <p>An example of the correlation feature is proposed for the SIP protocol: <a href="sip.html#sip_correlation">SIP correlation example</a>. </p>  
       
     </section>
     <section id="support">
