@@ -148,6 +148,7 @@ int main_tool(int P_argc, char**P_argv) {
 
   struct sigaction L_sig_stop   ;
   struct sigaction L_sig_usr1   ;
+  struct sigaction L_sig_pipe   ;
   T_pC_Generator   L_Generator  ;
   T_GeneratorError L_error_code ;
   
@@ -166,7 +167,13 @@ int main_tool(int P_argc, char**P_argv) {
   memset(&L_sig_usr1, 0, sizeof(struct sigaction));
   L_sig_usr1.sa_handler = sig_usr1_actions ;
   if (sigaction(SIGUSR1, &L_sig_usr1, NULL)) {
-    GEN_FATAL(1,"SIGINT handler error");
+    GEN_FATAL(1,"SIGUSR1 handler error");
+  }
+
+  memset(&L_sig_pipe, 0, sizeof(struct sigaction));
+  L_sig_pipe.sa_handler = SIG_IGN;
+  if (sigaction(SIGPIPE, &L_sig_pipe, NULL)) {
+    GEN_FATAL(1,"SIGPIPE handler error");
   }
   
 
