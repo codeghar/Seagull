@@ -596,6 +596,11 @@ Seagull will look at parameters indicated by
 ]]></source></td>
   </tr>
   </table>
+        <p>In some cases, the session-id is not in a unique field and may be found in other fields. To resolve this,
+         multiple out-of-session-ids can be define in the dictionary. If a message is received with no session-id or
+          an unknow value of session-id, seagull will look for the first out-of-session-id. If there is not out-of-session-id or 
+          an unkwon value of session-id, seagull will look for the second out-of-session-id and so on ... .The most 
+          probable out-of-session-id must be placed in top of list of out-of-session-id to optimize the execution.</p> 
         <p>When a message is received and cannot be matched to
         an known session-id, then it is treated as a "new (incoming) call".</p>
       </section>
