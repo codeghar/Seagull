@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE document PUBLIC "-//APACHE//DTD Documentation V2.0//EN" "http://forrest.apache.org/dtd/document-v20.dtd">
+<document>
+  <header>
+    <title>Seagull - Radius protocol</title>
+  </header>
+  <body>
+    <section>
+      <title>Radius protocol</title>
+      <p></p>
+    <note>This section will only discuss about the Radius authentication.</note>
+    </section>
+    <section>
+      <title>Radius authentication</title>
+      
+        <p>The authentication implementation in Radius protocol is example . The "crypto_method" method, used for the authentication, is 
+        defined in <a href="http://gull.svn.sourceforge.net/viewvc/gull/seagull/trunk/src/library-crypto/CryptExternalMethods.hpp?view=markup">"library-crypto/CryptExternalMethods.hpp"</a> 
+        and implemented in <a href="http://gull.svn.sourceforge.net/viewvc/gull/seagull/trunk/src/library-crypto/CryptExternalMethods.cpp?view=markup">"library-crypto/CryptExternalMethods.cpp"</a> 
+        in the sources.<br/> It can be modified to match the exact authentication algorithm.</p>
+        <section id="implementaion">
+          <title>Seagull implementation</title>
+        <p>At first, the message is build with the "Authenticator" field filled with '0000000000000000' in the scenario:
+        <source><![CDATA[<Message name="Accounting-Request">
+      <setfield name="Authenticator" value="0000000000000000"> </setfield>
+      ...
+      ]]></source> <br/>
+      In the pre-action, the "Authenticator" field is set with the result of the authentication method:
+      <source><![CDATA[<set-value name="Authenticator" method="authentication" message_part="all"
+                 format=""></set-value>
+      ]]></source>
+      <p>The "method" field set the function used for the authentication defined in the ditionary.<br/>
+      The "message_part" defined which part of the message is used for the authentication 
+      (in this case, the entire message is used).<br/>
+      The "format" defined some additional parameters if the method need some (in this case, no parameters are add). An example of additional 
+      parameters is explained in the <a href="sip.html#sip_authentication">SIP protocol</a>. 
+      </p>
+      </p>
+      </section>
+      <section id="authentication_dictionary">
+        <title>Authentication dictionary</title>
+        <p>The authentication method must be defined in the dictionary with its name, the implemented function to be 
+        used and the library name in which the function is defined.<br/>
+        Example:
+        <source><![CDATA[<!-- external methods for fields modifications -->
+<external-method>
+        <defmethod name="authentication"
+                   param="lib=lib_crypto.so;function=crypto_method_radius">
+        </defmethod>
+</external-method>
+]]></source>
+        The authentication method "name" will be used in the scenario to call the authentication function.<br/>
+        The "param" defines the name of the library name : "lib=lib_crypto.so" and the function name "function=crypto_method_radius".  
+        </p>
+      </section>
+      <section id="authentication_scenario">
+        <title>Authentication scenario</title>
+        <p>Here is the commented version of the Radius client using the "authentication" method defined 
+        in "library-crypto/CryptExternalMethods.hpp" and implemented in "library-crypto/CryptExternalMethods.cpp" 
+        in the sources</p>
+        <table>
+          <tr>
+            <th>Client XML scenario.</th>
+            <th>Comments</th>
+          </tr>
+          <tr>
+            <td>
+            <source><![CDATA[<?xml version="1.0" encoding="ISO-8859-1" ?>
+
+<scenario name="Simple Radius Accouting Client scenario">
+
+<counter>
+  <counterdef name="session-counter" init="0"> </counterdef>
+  <counterdef name="identifier-counter" init="0"> </counterdef>
+</counter>
+
+
+<!-- Traffic Scenario -->
+<traffic>
+
+  <!-- Start Accouting Request -->
+  <send channel="trans-ip-v4">
+    <action>
+      <!-- For each new call, increment the Acct-Session-Id counter -->
+      <inc-counter name="session-counter"> </inc-counter>
+      <inc-counter name="identifier-counter"> </inc-counter>
+      <set-value name="Acct-Session-Id"
+                 format="$(session-counter)"></set-value>
+      <set-value name="Identifier"
+                 format="$(identifier-counter)"></set-value>
+
+      <set-value name="Authenticator" method="authentication" message_part="all"
+                 format=""></set-value>
+
+    </action>
+    <Message name="Accounting-Request">
+      <setfield name="Authenticator" value="0000000000000000"> </setfield>
+      <Attribute name="Acct-Session-Id" value="value_is_replaced"> </Attribute>
+      <!-- 1 stand for Start -->
+      <Attribute name="Acct-Status-Type" value="1"> </Attribute>
+      <Attribute name="NAS-Identifier" value="ims.hpintelco.org"> </Attribute>
+    </Message>
+    <action>
+      <store name="ACCT_SES_ID" entity="Acct-Session-Id"></store>
+      <start-timer></start-timer>
+    </action>
+
+...
+
+</traffic>
+
+</scenario>
+]]></source>
+            </td>
+            <td>
+              <source><![CDATA[XML header
+
+
+
+The counters are declared ("session-counter" and "session-counter")
+
+ 
+
+
+
+
+
+
+
+Send on "trans-ip-v4" channel as defined in config file
+
+
+For each new call, increment the session-counter and identifier-counter counters
+
+Set the field "Acct-Session-Id" with the "session-counter"     
+       
+Set the field "Identifier with" the "identifier-counter"                  
+
+
+Set the field "Authenticator". The "autentification" method is defined in the dictionary. 
+It used the entire message as defined in "message_part=all". The result of the method is placed in the field after the generation of the rest of the message.
+       
+Send an "Accounting-Request" message
+Set the field "Authenticator" with a default value "0000000000000000". The value will be replaced by the "set-value" action at the execution of the scenario.
+Set the attribute "Acct-Session-Id" with a default value "value_is_replaced". The value will be replaced by the "set-value" action at the execution of the scenario.      
+
+Set the attribute "Acct-Status-Type" with a default value "1".
+Set the attribute "NAS-Identifier" with a default value "ims.hpintelco.org".
+
+
+Store the value of the field "Acct-Session-Id" in the memory zone "ACCT_SES_ID". It will be used to identify the session.
+        
+         
+         
+       
+    
+
+]]></source>
+            </td>
+           </tr>
+          </table>      
+    </section>
+
+    
+   </section>
+
+  </body>
+</document>

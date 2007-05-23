@@ -34,6 +34,12 @@
           <link href="h248.html">H248 protocol documentation</link>
         </li>
         <li>
+          <link href="sip.html">SIP protocol documentation</link>
+        </li>
+        <li>
+          <link href="radius.html">Radius protocol documentation</link>
+        </li>
+        <li>
           <link href="sync.html">Synchronization protocol documentation</link>
         </li>
       </ul>

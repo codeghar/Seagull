@@ -611,7 +611,7 @@ Seagull will look at parameters indicated by
 	 a different protocol.</p>
         <p><img src="images/channels.jpg" alt="Channels and protocols"/></p>
         <p>A channel makes the link between a transport and a protocol.</p>
-        <note>Only one channel can be opened as server and it has to be opened as the FIRST channel.</note>
+        <note>A channel defined as server has to be opened as the FIRST channel. To open more than one channel as server, the <a href="#ref_correlation">"correlation feature"</a> must used.</note>
         <p>Transport and channels are defined in the <a href="#transport_config">generic configuration file</a>
         </p>
         <p>Here are some examples:</p>
@@ -703,12 +703,11 @@ Seagull will look at parameters indicated by
 	a scenario that will send a message on channel 1, receive the answer, on channel 1, then send a message
 	on channel 2 and receive the message on channel 2.</p>
         <p></p>
-        <warning>Limitations: Following the session-id principles, multi-channel
-        scenarios are currently limited. For example, a scenario where the
+        <warning>Following the session-id principles, multi-channel
+        scenarios are complex. To define, for example, a scenario where the
         first command is a message that is sent on channel-1 and the
-        second command is a message received on channel-2 will not be workable in
-        Seagull (this is planned to be addressed by a new feature that will
-        allow to describe how to map calls by a generic mapping method)</warning>
+        second command is a message received on channel-2, 
+        the <a href="#ref_correlation">"correlation feature"</a> must be used.</warning>
       </section>
       <section id="traffic_models">
       <title>Traffic Models</title>
@@ -1886,7 +1885,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             <li><strong>session-method</strong>: can be "field" (a session or "call" is identified
             with a protocol field) or "open-id" (a session or "call" is identified with
             the open id (eg a socket id in case of HTTP)). "open-id" is currently implemented
-            only for "text" protocols.</li>
+            only for "text" and "binary" protocols.</li>
             <li><strong>session-id (optional)</strong>: only for "field" session-method: the field to be used to identify the session</li>
             <li><strong>out-of-session-id (optional)</strong>: only for "field" session-method: the field to be used in backup of session-id</li>
             </ul>
@@ -2642,6 +2641,15 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
               <code>channel="trans-ip-v4"</code>: Use trans-ip-v4 channel.</td>
           </tr>
           <tr>
+            <td>&nbsp;</td>
+            <td>label</td>
+            <td>Optional. Refers to correlation "command" entities, as defined in the  
+            <a href="#ref_correlation">correlation</a> section.
+            </td>
+            <td>
+              <code>label="command-1"</code>: refers to the "command-1".</td>
+          </tr>
+          <tr>
             <th>
               <anchor id="cmd_receive"/>
               <strong>&lt;receive&gt;</strong>
@@ -2660,6 +2668,15 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             </td>
             <td>
               <code>channel="trans-ip-v4"</code>: Use trans-ip-v4 channel.</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>label</td>
+            <td>Optional. Refers to correlation "command" entities, as defined in the  
+            <a href="#ref_correlation">correlation</a> section.
+            </td>
+            <td>
+              <code>label="command-1"</code>: refers to the "command-1".</td>
           </tr>
           <tr>
             <th>

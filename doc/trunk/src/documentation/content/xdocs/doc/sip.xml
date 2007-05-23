@@ -642,7 +642,7 @@ Header
       <title>Miscellaneous considerations</title>
       <p>Users must be aware of the fact that Seagull currently works only with "perfect" SIP scenarios. It means that the following messages are not properly handled:</p>
       <ul>
-         <li>Retransmissions</li>
+         <li>Retransmissions (in reception)</li>
          <li>INFO and NOTIFY messages</li>
          <li>Optional responses</li>
       </ul>
@@ -681,7 +681,7 @@ Header
     <li>Add, in the dictionary, the external method:</li>
     <source><![CDATA[<external-method>
    <defmethod name="authentication"
-              param="lib=libtrans_iptls.so;function=crypto_method">
+              param="lib=lib_crypto.so;function=crypto_method">
    </defmethod>
 </external-method>]]></source>
     For now, "crypto_method" is the only available method.
