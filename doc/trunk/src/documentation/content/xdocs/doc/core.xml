@@ -1899,7 +1899,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
     </section>
     <section id="ref_correlation">
       <title>Correlation</title>
-      <p>In general, instances of a scenario (aka calls) are identified, see <a href="ref_dictionary"> Dictionary</a>, 
+      <p>In general, instances of a scenario (aka calls) are identified, see <a href="#ref_dictionary"> Dictionary</a>, 
       either with a session-id (a protocol field) or with an open-id (a socket id).</p> 
       
       <warning>The correlation feature described in this section is not compatible with the "open-id" feature (used to identify a call with its socket).</warning> 
