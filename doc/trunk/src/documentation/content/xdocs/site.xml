@@ -29,6 +29,7 @@ See http://xml.apache.org/forrest/linking.html for more info
      <sip label='Protocol: sip' href='sip.html' />
      <xcap label='Protocol: xcap' href='xcap.html' />
      <xcap label='Protocol: h248' href='h248.html' />
+     <radius label='Protocol: radius' href='radius.html' />
 <!--     <http label='Protocol: http' href='http.html' /> -->
 <!--     <rawbin label='Protocol: raw binary' href='rawbinary.html' /> -->
      <sync label='Protocol: sync' href='sync.html' />
