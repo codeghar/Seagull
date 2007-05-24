@@ -130,10 +130,6 @@ private:
   int                      m_nb_forced ;
   pthread_t               *m_keyboard_thread ;
 
-
-
-
-
   // generator model
   C_ProtocolControl        *m_protocol_ctrl  ;
   C_TransportControl       *m_transport_ctrl ;
@@ -147,6 +143,8 @@ private:
   T_GeneratorError ForcedStoppingProcedure();
   
   void             ExitProcedure () ;
+  T_GeneratorError ReturnCode ()    ; 
+
 
 } ;
 

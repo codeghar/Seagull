@@ -126,7 +126,6 @@ C_Generator::C_Generator(cmd_line_pt P_cmd_line) : C_TaskControl() {
   m_display_help = NULL ;
 
   m_display_period = 0 ;
-
 }
 
 C_Generator::~C_Generator() {
@@ -602,14 +601,16 @@ T_GeneratorError C_Generator::InitProcedure() {
       ? E_GEN_FATAL_ERROR : E_GEN_NO_ERROR ;
   }
 
+  if (L_genError == E_GEN_NO_ERROR) {
 
-  GEN_DEBUG(1, "C_Generator::InitProcedure() fromXml called success");
-  m_read_control -> set_config (m_config) ;
-  m_scen_control -> set_config (m_config) ;
-  
-  if (m_config->get_value(E_CFG_OPT_RESP_TIME_REPART, &L_repart)) {
-    C_GeneratorStats::instance() 
-      ->setRepartitionResponseTime(L_repart);
+    GEN_DEBUG(1, "C_Generator::InitProcedure() fromXml called success");
+    m_read_control -> set_config (m_config) ;
+    m_scen_control -> set_config (m_config) ;
+    
+    if (m_config->get_value(E_CFG_OPT_RESP_TIME_REPART, &L_repart)) {
+      C_GeneratorStats::instance() 
+        ->setRepartitionResponseTime(L_repart);
+    }
   }
 
 
@@ -656,7 +657,6 @@ T_GeneratorError C_Generator::InitProcedure() {
       ? E_GEN_FATAL_ERROR : E_GEN_NO_ERROR ;
   } 
 
-
   if (L_genError == E_GEN_NO_ERROR) {
     if (L_external_data_file == NULL) {
 	if (m_scen_control->external_data_used() == true) {
@@ -664,8 +664,7 @@ T_GeneratorError C_Generator::InitProcedure() {
 	  L_genError = E_GEN_FATAL_ERROR ;
 	}
     }
-  }
-
+  } 
 
   if (L_genError == E_GEN_NO_ERROR) {
     m_read_control -> set_scenario_control (m_scen_control, L_trafficType) ;
@@ -1105,8 +1104,7 @@ T_GeneratorError C_Generator::InitProcedure() {
 	
       }
       
-    }
-    
+    } // if (L_data_mesure ..)
   }
 
 
@@ -1154,7 +1152,7 @@ T_GeneratorError C_Generator::EndProcedure() {
 
   GEN_DEBUG(1, "C_Generator::EndProcedure() end");
   
-  return (E_GEN_NO_ERROR);
+  return (ReturnCode());
 }
 
 T_GeneratorError C_Generator::ForcedStoppingProcedure() {
@@ -1177,11 +1175,49 @@ T_GeneratorError C_Generator::ForcedStoppingProcedure() {
 T_GeneratorError C_Generator::StoppingProcedure() {
 
   GEN_DEBUG(1, "C_Generator::StoppingProcedure () start");
+
   // just other thread concerned
   m_read_control -> stop() ;
 
   GEN_DEBUG(1, "C_Generator::StoppingProcedure () end");
   return (E_GEN_NO_ERROR);
+}
+
+T_GeneratorError C_Generator::ReturnCode() {
+ 
+  unsigned long      L_counter_value_failed   = 0              ;
+  unsigned long      L_counter_value_rejected = 0              ;
+  unsigned long      L_counter_value_aborted  = 0              ;
+  unsigned long      L_counter_value_timeout  = 0              ;
+
+  T_GeneratorError   L_genError               = E_GEN_NO_ERROR ;
+
+  L_counter_value_failed = 
+    C_GeneratorStats::instance()->getStatAction(C_GeneratorStats::E_CALL_FAILED,
+                                                C_GeneratorStats::CPT_C_FailedCall);
+
+  L_counter_value_rejected = 
+    C_GeneratorStats::instance()->getStatAction(C_GeneratorStats::E_CALL_REFUSED,
+                                                C_GeneratorStats::CPT_C_RefusedCall);
+
+  L_counter_value_aborted = 
+    C_GeneratorStats::instance()->getStatAction(C_GeneratorStats::E_FAILED_ABORTED,
+                                                C_GeneratorStats::CPT_C_FailedCallAborted);
+
+  L_counter_value_timeout = 
+    C_GeneratorStats::instance()->getStatAction(C_GeneratorStats::E_FAILED_TIMEOUT,
+                                                C_GeneratorStats::CPT_C_FailedCallTimeout);
+
+  if (L_counter_value_timeout  == 0  &&
+      L_counter_value_aborted  == 0  &&
+      L_counter_value_rejected == 0  &&
+      L_counter_value_failed   == 0) {
+    L_genError = E_GEN_NO_ERROR ;
+  } else {
+    L_genError = E_GEN_ERROR_CALL_FAILED ;
+  }
+
+  return (L_genError);
 }
 
 void C_Generator::set_screen (char P_key) {

@@ -202,7 +202,7 @@ pthread_t* start_thread_control (C_TaskControl *P_taskControl) {
  			     (void*) P_taskControl) ;
 
   if (L_return != 0) {
-    GEN_FATAL(0, "pthread_create() error");
+    GEN_FATAL(E_GEN_FATAL_ERROR, "pthread_create() error");
   }
 
   GEN_DEBUG(0, "start_controller() end");
