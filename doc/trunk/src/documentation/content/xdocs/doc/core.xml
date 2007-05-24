@@ -596,13 +596,15 @@ Seagull will look at parameters indicated by
 ]]></source></td>
   </tr>
   </table>
-        <p>In some cases, the session-id is not in a unique field and may be found in other fields. To resolve this,
-         multiple out-of-session-ids can be define in the dictionary. If a message is received with no session-id or
-          an unknow value of session-id, seagull will look for the first out-of-session-id. If there is not out-of-session-id or 
-          an unkwon value of session-id, seagull will look for the second out-of-session-id and so on ... .The most 
-          probable out-of-session-id must be placed in top of list of out-of-session-id to optimize the execution.</p> 
+        <p>In some cases, the session-id value is not in a unique field and may need to be found in other fields. To resolve this,
+         multiple out-of-session-id fields can be defined in the dictionary. If a message is received with no session-id field or with
+          an unknow value in the session-id field, then seagull looks for the first out-of-session-id field if defined. 
+          If this first out-of-session-id field is not present or its value is unknown, seagull looks for the second out-of-session-id field 
+          if defined and so on ...
+          The most probable out-of-session-id field must be placed at the top of the list of out-of-session-id fields to optimize the execution.</p> 
         <p>When a message is received and cannot be matched to
-        an known session-id, then it is treated as a "new (incoming) call".</p>
+        a known session-id value (whether this value was related to the session-id field or one of the defined out-of-session-id fields), 
+        then it is treated as a "new (incoming) call".</p>
       </section>
       <section>
         <title>Transport protocols and channels</title>
@@ -705,12 +707,12 @@ Seagull will look at parameters indicated by
       <section>
         <title>Multi-channels</title>
         <p>Seagull supports several channels in one single scenario. This means that you can create
-	a scenario that will send a message on channel 1, receive the answer, on channel 1, then send a message
-	on channel 2 and receive the message on channel 2.</p>
+	a scenario that for example will send a message on channel 1, receive the answer on channel 1, then send a message
+	on channel 2 and receive the answer on channel 2.</p>
         <p></p>
         <warning>Following the session-id principles, multi-channel
-        scenarios are complex. To define, for example, a scenario where the
-        first command is a message that is sent on channel-1 and the
+        scenarios can become complex. For example, to define a scenario where the
+        first command is a message sent on channel-1 and the
         second command is a message received on channel-2, 
         the <a href="#ref_correlation">"correlation feature"</a> must be used.</warning>
       </section>
@@ -1215,7 +1217,7 @@ Seagull will look at parameters indicated by
     <p>Authentication has been introduced in Seagull. Digest/MD5 and Digest/AKA are both supported. <br/>
     To use it, an "external method" must be defined in the dictionary (refer to <a href="#external-method">"external-method"</a>) 
     and the method must be defined in the set value of the field to be encoded (refer to <a href="#action_set-value">"set-value"</a>).
-    See <a href="sip.html#sip_authentication">SIP authentication</a> for further details.
+    See <a href="sip.html#sip_authentication">SIP authentication</a> or <a href="radius.html#radius_authentication">Radius authentication</a> for further details based on examples.
     </p>
     </section>
     <p class="pageBreakBefore"></p>
@@ -1891,8 +1893,8 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             with a protocol field) or "open-id" (a session or "call" is identified with
             the open id (eg a socket id in case of HTTP)). "open-id" is currently implemented
             only for "text" and "binary" protocols.</li>
-            <li><strong>session-id (optional)</strong>: only for "field" session-method: the field to be used to identify the session</li>
-            <li><strong>out-of-session-id (optional)</strong>: only for "field" session-method: the field to be used in backup of session-id</li>
+            <li><strong>session-id (mandatory for a "field" session-method)</strong>: only for "field" session-method: the field to be used to identify the session</li>
+            <li><strong>out-of-session-id (optional for a "field" session-method)</strong>: only for "field" session-method: the field to be used in backup of session-id</li>
             </ul>
         </section>
       </section>
