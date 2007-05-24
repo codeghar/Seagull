@@ -10,7 +10,7 @@
       <p></p>
     <note>This section is currently limited to describe Radius authentication.</note>
     </section>
-    <section>
+    <section id=radius_authentication>
       <title>Radius authentication</title>
       
         <p>The authentication implementation in Radius protocol is to be used as an example. 
