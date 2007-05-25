@@ -62,7 +62,7 @@ T_exeCode    C_SetNewSessionIdAction::execute(T_pCmd_scenario P_pCmd,
       if (L_call_it != L_map[P_pCmd->m_channel_id]->end()) {
         L_map[P_pCmd->m_channel_id]->erase (L_call_it);
         P_callCtxt->reset_id (P_pCmd->m_channel_id);
-        L_value_id = P_callCtxt->set_id (P_pCmd->m_channel_id,L_mem);
+        L_value_id = P_callCtxt->set_id (P_pCmd->m_channel_id,&L_val);
         L_map[P_pCmd->m_channel_id]
           ->insert(C_CallContext::T_CallMap::value_type(*L_value_id, P_callCtxt));
       } 
