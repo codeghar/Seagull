@@ -242,7 +242,7 @@ private:
   T_pCommandActionMap m_post_action_map    ;
 
   bool               m_correlation_section ;
-  bool               m_correlation_insert  ;
+
   int                m_nb_channel          ;
   T_pCharList        m_correl_name_list    ;
   

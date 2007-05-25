@@ -107,7 +107,6 @@ C_ScenarioControl::C_ScenarioControl(C_ProtocolControl  *P_protocol_control,
   m_label_table_size = 0 ;
   NEW_VAR(m_id_label_gen, C_IdGenerator()) ;
   m_correlation_section = false ;
-  m_correlation_insert  = false ;
 
   NEW_VAR (m_correl_name_list, T_CharList);
   m_correl_name_list->clear();
@@ -211,8 +210,6 @@ C_ScenarioControl::~C_ScenarioControl() {
   }
   DELETE_VAR(m_id_label_gen) ;
   m_correlation_section = false ;
-  m_correlation_insert  = false ;
-
 
   if (!m_correl_name_list->empty()) {
     m_correl_name_list->erase(m_correl_name_list->begin(),
@@ -1090,7 +1087,7 @@ int C_ScenarioControl::add_command (T_cmd_type                P_cmd_type,
       } // for
 
       if (L_map_inserted == false) {
-        if (m_correlation_insert == false) {
+        if (m_correlation_section == false) {
           T_CmdAction L_action_map ;
           C_CommandAction** L_action_map_table ;
           ALLOC_TABLE(L_action_map_table, C_CommandAction**, sizeof(C_CommandAction*),1);
@@ -1100,11 +1097,8 @@ int C_ScenarioControl::add_command (T_cmd_type                P_cmd_type,
           L_action_map_table[0] = L_CommandActionFactory.create(L_action_map) ;
           
           P_scen -> define_post_actions(1, (C_CommandAction**)L_action_map_table);
-          if(m_correlation_section == true) {
-            m_correlation_insert  = true ;
-          }
+          L_map_inserted = true ;
         }
-	L_map_inserted = true ;
       }
 
     }
@@ -1117,7 +1111,7 @@ int C_ScenarioControl::add_command (T_cmd_type                P_cmd_type,
   }
 
   GEN_DEBUG(1, "C_ScenarioControl::add_command() end");
-  if (m_correlation_insert == false) {
+  if (m_correlation_section == false) {
     if (L_map_inserted == true) { P_map_inserted[L_channel_id] = true ; }
   }
 
@@ -2655,7 +2649,7 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
   	// (== if not already inserted for this channel)
   	P_inserted = P_map_inserted[P_channel_id];
   	if (P_inserted == false) {
-          if  (m_correlation_insert == false) {
+          if  (m_correlation_section == false) {
             T_CmdAction L_action_map ;
             L_action_map = no_cmd_action ;
             L_action_map . m_type = E_ACTION_SCEN_ADD_IN_CALL_MAP ;
@@ -2668,12 +2662,9 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
             }
 
             P_nb_action++ ;
-            if(m_correlation_section == true) {
-              m_correlation_insert         = true ;
-              // P_map_inserted[P_channel_id] = true ;
-            }
+            P_inserted = true ;
           }
-          P_inserted = true ;
+
 
           for (L_actionListIt  = L_actionList->begin();
                L_actionListIt != L_actionList->end();
@@ -3343,7 +3334,6 @@ bool C_ScenarioControl::fromXml (C_XmlData     *P_data,
               L_correlationList = L_xml_correlation->get_sub_data() ;
               if (L_correlationList != NULL) {
                 m_correlation_section = true ;
-                m_correlation_insert  = true ;
               }
 	    } else {
 	      GEN_ERROR(E_GEN_FATAL_ERROR, "Unkown section ["
@@ -3716,7 +3706,6 @@ bool C_ScenarioControl::analyze_correlation_command  (C_XmlData *P_data,
         L_add_def_action = true ;
       } else {
         if (L_map_inserted == false) {
-          m_correlation_insert  = false ;
           L_add_def_action      = true  ;
         } 
       }
