@@ -153,6 +153,10 @@ bool C_GeneratorConfig::set_data
 	case 'b':
 	  m_option_log_level |= gen_mask_table[LOG_LEVEL_BUF] ;
 	  break ;
+	case 'V':
+	case 'v':
+	  m_option_log_level |= gen_mask_table[LOG_LEVEL_VERDICT] ;
+	  break ;
 	case 'A':
 	case 'a':
 	  m_option_log_level |= gen_mask_table[LOG_LEVEL_ALL] ;
@@ -1147,6 +1151,9 @@ iostream_output& operator<< (iostream_output& P_ostream,
     }
     if (P_conf.m_option_log_level & gen_mask_table[LOG_LEVEL_BUF]) {
       logstring += "B" ;
+    }
+    if (P_conf.m_option_log_level & gen_mask_table[LOG_LEVEL_VERDICT]) {
+      logstring += "V" ;
     }
   }
   P_ostream << GEN_HEADER_LOG << GEN_HEADER_NO_LEVEL << "option_log_level ["
