@@ -45,24 +45,7 @@
 #include "ExternalMethod.h"
 
 #include "message_header_body_t.h"
-
-// STRING related types
-typedef enum _enum_exe_code {
-  E_EXE_NOERROR = 0,
-  
-  E_EXE_TRAFFIC_END,
-  E_EXE_DEFAULT_END,
-  E_EXE_ABORT_END,
-  
-  E_EXE_INIT_END,
-  E_EXE_ERROR_MSG,
-  E_EXE_ERROR_SEND,
-  E_EXE_ERROR_CHECK,
-  E_EXE_SUSPEND,
-  E_EXE_IGNORE,
-  E_EXE_ABORT_CHECK,
-  E_EXE_ERROR
-} T_exeCode ;
+#include "exe_code_t.h"
 
 typedef enum _action_scenario_type {
    E_ACTION_SCEN_OPEN= 0,
