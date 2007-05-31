@@ -51,7 +51,10 @@ T_exeCode    C_AddDefaultInCallMapAction::execute(T_pCmd_scenario P_pCmd,
     C_CallContext::T_contextMapData L_data ;
 
     L_value_id = P_callCtxt->set_id (m_id,L_value_id);
-
+    if(P_callCtxt->m_channel_id_verdict_to_do == false) {
+      P_callCtxt->m_channel_id_verdict_to_do = true ;
+      P_callCtxt->m_channel_id_verdict = m_id ;
+    }
     L_pr =
       L_map[m_id]
       ->insert(C_CallContext::T_CallMap::value_type(*L_value_id, P_callCtxt));

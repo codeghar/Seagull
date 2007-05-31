@@ -47,11 +47,11 @@ T_exeCode    C_InsertInMapActionFromMem::execute(T_pCmd_scenario P_pCmd,
   C_CallContext::T_contextMapData L_data ;
     
   L_mem = P_callCtxt->get_memory(m_mem_id);
-  
-
   L_mem = P_callCtxt->set_id (m_position, L_mem);
-
-
+  if(P_callCtxt->m_channel_id_verdict_to_do == false) {
+    P_callCtxt->m_channel_id_verdict_to_do = true ;
+    P_callCtxt->m_channel_id_verdict = m_id ;
+  }
   L_pr = L_map[m_position]
     ->insert(C_CallContext::T_CallMap::value_type(*L_mem, P_callCtxt));
   

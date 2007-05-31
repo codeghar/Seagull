@@ -61,7 +61,10 @@ T_exeCode    C_InsertInMapAction::execute(T_pCmd_scenario P_pCmd,
 
     L_pr = L_map[m_position]
       ->insert(C_CallContext::T_CallMap::value_type(*L_value_id, P_callCtxt));
-
+    if(P_callCtxt->m_channel_id_verdict_to_do == false) {
+      P_callCtxt->m_channel_id_verdict_to_do = true ;
+      P_callCtxt->m_channel_id_verdict = m_position ;
+    }
     L_data.m_channel = m_position ;
     L_data.m_iterator = L_pr.first ;
     (P_callCtxt->m_map_data_list)->push_back(L_data);

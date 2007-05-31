@@ -47,6 +47,10 @@ T_exeCode    C_AddInCallMapAction::execute(T_pCmd_scenario P_pCmd,
     GEN_ERROR(E_GEN_FATAL_ERROR, "session id is failed");
     L_exeCode = E_EXE_ERROR ;
   } else {
+    if(P_callCtxt->m_channel_id_verdict_to_do == false) {
+      P_callCtxt->m_channel_id_verdict_to_do = true ;
+      P_callCtxt->m_channel_id_verdict = m_id ;
+    }
     L_value_id = P_callCtxt->set_id (m_id,L_value_id);
     L_map[m_id]
       ->insert(C_CallContext::T_CallMap::value_type(*L_value_id, P_callCtxt));
