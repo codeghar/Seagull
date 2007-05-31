@@ -42,7 +42,12 @@ C_CallContext::set_id(int P_channel_id, T_pValueData P_val) {
   }
   return (&m_id_table[P_channel_id]);
 }
-   
+
+
+T_pValueData 
+C_CallContext::get_id(int P_channel_id) {
+  return (&m_id_table[P_channel_id]);
+}   
 
 void C_CallContext::next_cmd() {
   m_current_cmd_idx++;
@@ -100,6 +105,7 @@ C_CallContext::C_CallContext(C_CallControl *P_call_control,
   m_msg_received = NULL ;
   m_current_cmd_idx = -1 ;
   m_selected_line = -1 ;
+  m_exec_result = E_EXE_NOERROR ;
 
   if (P_mem) {
     ALLOC_TABLE(m_memory_table,
@@ -178,7 +184,7 @@ C_CallContext::~C_CallContext() {
   m_selected_line = -1 ;
   reset_id() ;
   m_created_call = false ;
-
+  m_exec_result = E_EXE_NOERROR ;
 
   for (L_i = 0 ; L_i < m_nb_mem; L_i++) {
     reset_memory(L_i) ;
@@ -192,6 +198,9 @@ C_CallContext::~C_CallContext() {
 
   clean_retrans();
   
+  m_channel_id_verdict = -1 ;
+  m_channel_id_verdict_to_do = false ;
+
   FREE_TABLE(m_retrans_time);
   FREE_TABLE(m_nb_retrans_done);
   FREE_TABLE(m_retrans_cmd_idx);
@@ -218,7 +227,9 @@ void C_CallContext::init() {
   }
   
   clean_retrans () ;
-
+  m_exec_result = E_EXE_NOERROR ;
+  m_channel_id_verdict = -1 ;
+  m_channel_id_verdict_to_do = false ;
 }
 
 void C_CallContext::reset() {
@@ -226,7 +237,9 @@ void C_CallContext::reset() {
   m_current_cmd_idx = 0 ;
   m_created_call = false ;
   clean_retrans () ;
-
+  m_exec_result = E_EXE_NOERROR ;
+  m_channel_id_verdict = -1 ;
+  m_channel_id_verdict_to_do = false ;
 }
 
 T_CallContextState C_CallContext::get_state() {
@@ -268,6 +281,9 @@ T_CallContextState C_CallContext::init_state (T_pC_Scenario P_scen,
   m_created_call = false ;
   m_current_time = *P_time ;
   clean_retrans () ;
+  m_exec_result = E_EXE_NOERROR ;
+  m_channel_id_verdict = -1 ;
+  m_channel_id_verdict_to_do = false ;
   
   return (m_state);
 }
@@ -281,6 +297,9 @@ T_CallContextState C_CallContext::init_state (T_pC_Scenario P_scen) {
   reset_id();
   m_created_call = false ;
   clean_retrans () ;
+  m_exec_result = E_EXE_NOERROR ;
+  m_channel_id_verdict = -1 ;
+  m_channel_id_verdict_to_do = false ;
 
   return (m_state);
 }
@@ -293,7 +312,9 @@ void C_CallContext::init_state(C_Scenario *P_scen, T_pReceiveMsgContext P_rcvCtx
   m_current_cmd_idx = 0 ;
   // m_id to be tested
   clean_retrans () ;
-
+  m_exec_result = E_EXE_NOERROR ;
+  m_channel_id_verdict = -1 ;
+  m_channel_id_verdict_to_do = false ;
   m_created_call = false ;
   m_current_time = P_rcvCtxt->m_time ;
 

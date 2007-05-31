@@ -163,7 +163,7 @@ protected:
   typedef T_pCallContext (C_CallControl::* T_CorrelationMethod)(T_ReceiveMsgContext P_rcvCtxt,
                                                                 T_pValueData        *P_value_id);
 
-
+  char*  verdict_string(T_exeCode P_code);
 
   T_CorrelationMethod    m_correlation_method                                 ;
   T_pCallContext         getSessionFromDico(T_ReceiveMsgContext P_rcvCtxt,

@@ -29,6 +29,7 @@
 #include <cmath>
 
 
+
 C_CallControl::C_CallControl(C_GeneratorConfig   *P_config, 
 			     T_pC_ScenarioControl P_scenControl,
 			     C_ChannelControl     *P_channel_ctrl) : C_TaskControl() {
@@ -313,6 +314,12 @@ void C_CallControl::makeCallContextAvailable (T_pCallContext *P_pCallCtxt) {
 
   L_id = L_callCtxt -> get_internal_id();
 
+
+  GEN_LOG_EVENT_CONDITIONAL (LOG_LEVEL_VERDICT, 
+			     L_callCtxt->get_id(L_callCtxt->m_channel_id_verdict) != NULL,
+                             verdict_string(L_callCtxt->m_exec_result) 
+                             << " [" << *L_callCtxt->get_id(L_callCtxt->m_channel_id_verdict) << "]");
+
   if (m_correlation_section == true) {
     L_map_data_list = L_callCtxt->m_map_data_list ;
     if (!L_map_data_list->empty()){
@@ -461,18 +468,12 @@ void C_CallControl::messageReceivedControl () {
         stopRetrans(L_pCallContext);
       }
 
-
       if (L_pCallContext -> msg_received (&L_rcvCtxt) == false) {
 	// scenario in execution but not in receive state
 	GEN_LOG_EVENT_CONDITIONAL (LOG_LEVEL_TRAFFIC_ERR, 
 				   L_value_id != NULL,
-                                   // "Incorrect state (not receive) for call with session-id ["
                                    "Received a message (while not in receive state) for call with session-id ["
                                    << *L_value_id << "]");
-
-        // GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-        //            "The following message is [ " << (*L_msg) <<
-        //            GEN_HEADER_LOG << GEN_HEADER_NO_LEVEL << "]" );
 
 	m_stat -> executeStatAction (C_GeneratorStats::E_FAILED_UNEXPECTED_MSG);
 
@@ -492,6 +493,7 @@ void C_CallControl::messageReceivedControl () {
 	  } else {
 	    GEN_LOG_EVENT (LOG_LEVEL_TRAFFIC_ERR, 
 			   "Unable to find an abort/default scenario");
+            L_pCallContext->m_exec_result = E_EXE_ERROR_MSG;
 	    makeCallContextAvailable(&L_pCallContext); // setted to NULL
 	    m_stat -> executeStatAction (C_GeneratorStats::E_CALL_FAILED) ;
 	  }
@@ -528,6 +530,7 @@ void C_CallControl::messageReceivedControl () {
 	      ->moveToList(L_pCallContext->get_state(), 
 			   L_pCallContext->get_internal_id());
 	  } else {
+            L_pCallContext->m_exec_result = L_exeResult ;
 	    makeCallContextAvailable(&L_pCallContext);
 	    m_stat -> executeStatAction (C_GeneratorStats::E_CALL_FAILED) ;
 	  }
@@ -732,6 +735,8 @@ T_exeCode C_CallControl::execute_scenario_cmd_retrans (int P_index, T_pCallConte
   // ctrl to max_retrans and delay
   L_exeResult = L_scenario->execute_cmd_retrans (P_index, L_callContext);
 
+  P_callContext->m_exec_result = L_exeResult ;
+
   switch (L_exeResult) {
   case E_EXE_NOERROR:
     break ;
@@ -747,6 +752,8 @@ T_exeCode C_CallControl::execute_scenario_cmd_retrans (int P_index, T_pCallConte
     break ;
   }
   GEN_DEBUG (1, "C_CallControl::execute_scenario_cmd_retrans() end");
+  
+  
   return (L_exeResult);
 }
 
@@ -787,6 +794,7 @@ T_exeCode C_CallControl::execute_scenario_cmd (T_pCallContext  P_callContext,
   
   L_scenario = L_callContext->get_scenario() ;
   L_exeResult = L_scenario->execute_cmd (L_callContext, P_resume);
+  L_callContext->m_exec_result = L_exeResult ;
 
   switch (L_exeResult) {
 
@@ -913,20 +921,17 @@ T_GeneratorError C_CallControl::TaskProcedure() {
 
 T_GeneratorError C_CallControl::InitProcedure() {
 
-  T_GeneratorError L_error = E_GEN_NO_ERROR ;
-  int            L_i ;
-  int            L_memory_used, L_channel_used, L_nb_retrans ;
-  C_CallContext *L_pCallContext ;
-  unsigned long  L_config_value ;
-  
-  T_pC_Scenario  L_scenario ;
-  //  T_pCallContext L_call_ctxt ;
-  T_TrafficType  L_type ;
+  T_GeneratorError          L_error = E_GEN_NO_ERROR                    ;
+  int                       L_i                                         ;
+  int                       L_memory_used, L_channel_used, L_nb_retrans ;
+  C_CallContext            *L_pCallContext                              ;
+  unsigned long             L_config_value                              ;
+  T_pC_Scenario             L_scenario                                  ;
+  T_TrafficType             L_type                                      ;
+  T_pWaitValuesSet          L_wait_values                               ;
+  T_pRetransDelayValuesSet  L_retrans_delay_values                      ;
 
-  T_pWaitValuesSet         L_wait_values          ;
 
-  T_pRetransDelayValuesSet L_retrans_delay_values ;
-  
   GEN_DEBUG (1, "C_CallControl::InitProcedure() start");
 
   if (!m_config->get_value(E_CFG_OPT_MAX_SIMULTANEOUS_CALLS, 
@@ -1072,7 +1077,6 @@ T_GeneratorError C_CallControl::InitProcedure() {
                 C_CallContext::T_retransContextList());
       }
 
-
       m_scenario_control -> update_retrans_delay_cmd (m_nb_retrans_delay_values, 
                                                       m_retrans_delay_values);
     }
@@ -1080,33 +1084,6 @@ T_GeneratorError C_CallControl::InitProcedure() {
   }
 
   m_stat->init();
-//    if (L_scenario == NULL) {
-//      GEN_WARNING("no init scenario defined");
-//    } else {
-//      // m_type = L_type ;
-//      switch(L_type) {
-    
-//      case E_TRAFFIC_CLIENT:
-//        GEN_DEBUG (1, "C_CallControl::InitProcedure() E_TRAFFIC_CLIENT");
-//        L_call_ctxt = makeCallContextUnavailable(L_scenario);
-//        if (L_call_ctxt == NULL) {
-//  	GEN_ERROR(E_GEN_FATAL_ERROR,
-//  	      "No context available to execute init scenario");
-//  	L_error = E_GEN_FATAL_ERROR ;
-//        }
-//        break ;
-
-//      case E_TRAFFIC_SERVER:
-//        GEN_DEBUG (1, "C_CallControl::InitProcedure() E_TRAFFIC_SERVER:");
-//        m_scenario_control->switch_to_init();
-//        break ;
-
-//      default:
-//        GEN_FATAL(E_GEN_FATAL_ERROR, "Unknown init scenario type");
-//        break ;
-//      }
-    
-//    }
 
   GEN_DEBUG (1, "C_CallControl::InitProcedure() end");
   return (L_error);
@@ -1114,9 +1091,7 @@ T_GeneratorError C_CallControl::InitProcedure() {
 
 T_GeneratorError C_CallControl::EndProcedure() {
   
-  int                 L_i ;
-  // T_ReceiveMsgContext L_rcvCtxt ;
-
+  int                       L_i                ;
   int                       L_nbMessageSuspend ;
   int                       L_event_id         ;
   T_pCallContext            L_pCallContext     ;
@@ -1459,6 +1434,7 @@ void C_CallControl::messageOpenTimeoutControl() {
       L_pCallContext->clean_suspended() ;
       m_channel_control->close_local_channel(L_pCallContext->m_channel_id,
                                              L_pCallContext->m_channel_table);
+      L_pCallContext->m_exec_result = E_EXE_TIMEOUT;
       makeCallContextAvailable (&L_pCallContext) ;
     }
     L_nbMessageSuspend -- ;
@@ -1512,24 +1488,20 @@ void C_CallControl::messageTimeoutControl() {
         L_scenario = m_scenario_control->get_abort_scenario();
         if (L_scenario != NULL) {
           L_pCallContext -> switch_to_scenario (L_scenario);
-          // abort scenario
+
           m_call_ctxt_mlist
             ->moveToList(L_pCallContext->get_state(), 
                          L_pCallContext->get_internal_id());
         } else {
-
+          L_pCallContext->m_exec_result = E_EXE_TIMEOUT;
           m_stat->executeStatAction(C_GeneratorStats::E_CALL_FAILED);
           makeCallContextAvailable(&L_pCallContext);
         }
        } else {
-
+         L_pCallContext->m_exec_result = E_EXE_TIMEOUT;
          m_stat->executeStatAction(C_GeneratorStats::E_CALL_FAILED);
          makeCallContextAvailable (&L_pCallContext) ;
        }
-      // ATTENTION STAT
-      
-      // makeCallContextAvailable (&L_pCallContext) ;
-	     
     }
     L_nbRecv -- ;
   }
@@ -1664,7 +1636,6 @@ void C_CallControl::makeCallContextSuspended(T_pCallContext P_callContext) {
   // add elements for event list
   L_event_id = P_callContext->m_suspend_id ;
   m_call_suspended->insert(T_SuspendMap::value_type(L_event_id, P_callContext));
-  
 }
 
 T_pCallContext   C_CallControl::retrieve_call_context (int P_channel_id, T_pValueData P_id) {
@@ -1884,5 +1855,37 @@ T_pCallContext  C_CallControl::getSessionFromScen(T_ReceiveMsgContext P_rcvCtxt,
   *P_value_id = L_value_id ;
   
   return (L_pCallContext) ;
+}
+
+char* C_CallControl::verdict_string(T_exeCode P_code) {
+  static const char* verdict_name_table[] = {"Internal state NO Error call-id ", 
+                                             "Scenario Traffic passed call-id ",
+                                             "Scenario Default passed call-id ",
+                                             "Scenario Abort   passed call-id ",
+                                             "Scenario Init    passed call-id ",
+                                             "Error Receive message: Scenario failed call-id ",
+                                             "Error Send message: Scenario failed call-id ",
+                                             "Error check behavior: Scenario failed call-id ",
+                                             "Internal state Suspend call-id ",
+                                             "Scenario Ignore stat behavior call-id ",
+                                             "Abort check behavior: Scenario failed call-id ",
+                                             "Error Timeout: Scenario failed call-id ",
+                                             "Error: Scenario failed call-id "};
+  
+  static const int verdict_code_table[] = {E_EXE_NOERROR,
+                                           E_EXE_TRAFFIC_END,
+                                           E_EXE_DEFAULT_END,
+                                           E_EXE_ABORT_END,
+                                           E_EXE_INIT_END,
+                                           E_EXE_ERROR_MSG,
+                                           E_EXE_ERROR_SEND,
+                                           E_EXE_ERROR_CHECK,
+                                           E_EXE_SUSPEND,
+                                           E_EXE_IGNORE,
+                                           E_EXE_ABORT_CHECK,
+                                           E_EXE_TIMEOUT,
+                                           E_EXE_ERROR};
+ 
+  return ((char*)verdict_name_table[verdict_code_table[P_code]]) ;
 }
 

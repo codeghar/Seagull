@@ -26,6 +26,8 @@
 #include "C_MessageFrame.hpp"
 #include "ReceiveMsgContext.h"
 #include "C_ContextFrame.hpp"
+#include "exe_code_t.h"
+
 
 class C_Scenario ; // prevent from circular include 
                    // => C_Scenario.hpp only in .cpp
@@ -95,7 +97,12 @@ public:
 
   int                       m_channel_received ;
   
-  C_CallControl*            m_call_control ;
+  int                       m_channel_id_verdict ;
+  bool                      m_channel_id_verdict_to_do ;
+
+  T_exeCode                 m_exec_result   ;
+
+  C_CallControl*            m_call_control  ;
 
   T_pContextMapDataList     m_map_data_list ;
 
@@ -104,8 +111,9 @@ public:
                 int P_id, int P_nbChannel, int P_mem=0, int P_nbRetrans=0);
   ~C_CallContext() ;
 
-  T_pValueData 
-  set_id(int P_channel_id, T_pValueData P_val) ;
+  T_pValueData set_id(int P_channel_id, T_pValueData P_val) ;
+  T_pValueData get_id(int P_channel_id);
+
 
   static int m_nb_channel ;
 
