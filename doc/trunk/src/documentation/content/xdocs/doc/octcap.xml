@@ -87,9 +87,15 @@ seagull -conf ../config/conf.client-itu.xml -dico ../config/octcap-itu-dictionna
 -scen ../scenario/client-itu.xml -log ../logs/client.log -llevel ET
 	]]>
 	</source>
+	<note>On some systems, you might need to include the path to the HP-OC SS7 api into the environment 
+  variable SHLIB_PATH : "/opt/OC/lib/" for SS7 3.x and "/opt/HP-AIN/SS7_WBB/sharedlib" for SS7 2.x .
+  Add the following export in your Seagull script: "export SHLIB_PATH=$SHLIB_PATH:/opt/OC/lib/" for HP-OC SS7 3.x 
+  or "export SHLIB_PATH=$SHLIB_PATH:/opt/HP-AIN/SS7_WBB/sharedlib/" for HP-OC SS7 2.x .
+	</note>
 	<note>On some HP-UX systems, you might need to include the following export 
 	in your Seagull script: "export SHLIB_PATH=/usr/local/bin".
 	</note>
+	
         <p>This example is based on one client that sends the TC_BEGIN and exchanges 
 	TC_CONTINUE messages with one server that receives a TC_BEGIN and answers 
 	by TC_CONTINUE messages, until it sends the TC_END message.</p>
