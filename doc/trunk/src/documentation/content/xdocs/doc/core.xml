@@ -1879,7 +1879,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
           <p>Example:</p>
           <source><![CDATA[<external-method>
   <defmethod name="authentication"
-             param="lib=libtrans_iptls.so;function=crypto_method">
+             param="lib=lib_crypto.so;function=crypto_method">
   </defmethod>
 </external-method>]]></source>
 
@@ -2132,6 +2132,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
                   <li>encode-buf-len (default=4096): size of the sending buffer (maximum message size to be sent (can be segmented))</li>
                   <li>read-buf-len (default=1024): amount of bytes to read on the IP socket at a time - several reads 
                     might be necessary if buffer is the message to read is bigger than the buffer (impact on performances)</li>
+                  <li>close-wait-ms (default=10): value in milliseconds before the socket is actualy closed (used for SO_LINGER). </li>
                 </ul>
               </li>
 	      <li>For the "libtrans_iptls.so", the possible values are:
@@ -2731,6 +2732,38 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
               <code><![CDATA[init="1"]]></code>
             </td>
           </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>min</td>
+            <td>Optional. Minimal value of the counter. <br/>
+             (Default value is 0)</td>
+            <td>
+              <code><![CDATA[min="0"]]></code>
+            </td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>max</td>
+            <td>Optional. Maximal value of the counter.(It depends of the platform and 
+            corresponds to a Unsigned long defined in the file "limit.h"). <br/>
+            If "max" is defined, when the "max" value is reached, the counter value 
+            is re-initialized to the value defined by the "behaviour".</td>
+            <td>
+              <code><![CDATA[max="100"]]></code>
+            </td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>behaviour</td>
+            <td>Optional. Possible values are: <br/> 
+            "init"    : when the "max" value is reached, the counter is re-initialized to the "init" value,<br/>
+            "min"     : when the "max" value is reached, the counter is re-initialized to the "min" value,<br/>
+            "no_reset": when the "max" value is reached, the counter is not re-initialized and stays at the "max" value. <br/>
+            (Default value is "min") </td>
+            <td>
+              <code><![CDATA[behaviour="init"]]></code>
+            </td>
+          </tr>
 	  <!-- WHAT IS THE PURPOSE OF END COMMAND?
           <tr>
             <th>
@@ -2930,7 +2963,9 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
           <tr>
             <td>&nbsp;</td>
             <td>format</td>
-            <td>The format is a string that can contains call variables (identified by $(varname)).</td>
+            <td>The format is a string that can contains call variables (identified by $(varname)).<br/>
+                When used with the field "method", this can be used to pass parameters to the method, if nedded (refer to <a href="#Authentication">Authentication</a> 
+                for further details). </td>
             <td>".;1096298391;$(session-counter)": fixed string with a variable part (value of "session-counter" call variable)</td>
           </tr>
           <tr>
@@ -2938,6 +2973,17 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             <td>method</td>
             <td>Optional. The method refers to a "external-method" of the dictionary. It defines the function to encode the value.</td>
             <td>"authentication"</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>message_part</td>
+            <td>Optional for the authentication. The message_part defines the party of the message that could be used by the method to encode the value.
+            Allowed values are :<br/>
+             "" (default value)<br/>
+             "body"<br/>
+             "header"<br/>
+             "all" </td>
+            <td>""</td>
           </tr>
           <tr>
             <th>
