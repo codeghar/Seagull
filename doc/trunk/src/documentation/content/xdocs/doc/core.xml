@@ -16,23 +16,22 @@
         no problem for Seagull to work on other Linux platforms by compiling Seagull from the sources.</li>
           <li>HPUX 11i (PA-RISC and IA64): supported.</li>
           <li>HPUX 11.23 (PA-RISC and IA64): supported.</li>
-          <li>Windows/cygwin: supported, only for IP-based protocols (for functional test and limited production test).</li>
+          <li>Windows/cygwin: supported, only for IP-based protocols (for functional testing and limited load testing).</li>
         </ul>
         <note>
-	  As <a href="ext:hpoc">HP OpenCall SS7</a> is a pre-requisite for TCAP support in Seagull, an HP OpenCall SS7 compliant 
-	  platform must be selected.
+	  For TCAP support in Seagull, <a href="ext:hpoc">HP OpenCall SS7</a> is a pre-requisite, so an HP OpenCall SS7 compliant 
+	  platform must be used.
         </note>
       </section>
       <section id="octave">
         <title>Installing Octave</title>
-        <p>Seagull relies on "<a href="http://www.octave.org/">Octave</a>", to analyze detailed statistics and
-        plotting ability.</p>
-        <note>Installing Octave is optional. It will not prevent Seagull to 
-        run properly. Statistics can also be computed from within Excel, 
+        <p>Seagull relies on "<a href="http://www.octave.org/">Octave</a>" to analyze detailed statistics and
+        to provide plotting capability.</p>
+        <note>Installing Octave is optional (Seagull runs properly without it). Statistics can also be computed from within Excel, 
         but there are many limitations (mainly file size) by doing so.</note>
-        <p>You have 3 options to install Octave:</p>
+        <p>There are 3 options to install Octave:</p>
         <ul>
-          <li>You installed your system using CD/DVDs: locate the octave packages and install them.</li>
+          <li>If you installed your system using CD/DVDs: locate the Octave packages and install them.</li>
           <li>Download Octave for your distribution (using urpmi or apt tools).</li>
           <li>On a Windows PC, install "<a href="http://www.cygwin.com/">Cygwin</a>" 
 	  and install Octave during Cygwin installation.</li>
@@ -57,7 +56,7 @@ tar -xvf seagull-x.y.z.tar</source>
       </section>
       <section>
         <title>Installing Seagull</title>
-        <p>First, unzip and untar the Seagull archive:</p>
+        <p>First, unzip and untar the Seagull archive file that corresponds to your platform:</p>
         <source>seagull-[tool version]-[OS]-[OS release version].tar.gz
         </source>
         <p>Then, use the package installer of your platform:</p>
@@ -77,6 +76,7 @@ tar -xvf seagull-x.y.z.tar</source>
           <li>Cygwin: user auto-extractible executable under Windows. 
           </li>
         </ul>
+        <br></br>
         <p class="pageBreakBefore">Once the installation is done, the following directories are available:</p>
         <ul>
           <li>/usr/local/share/seagull/seagull/doc directory contains the documentation for all the protocols.</li>
@@ -144,7 +144,6 @@ seagull is /usr/local/bin/seagull</source>
             <source>rpm -Uvh seagull-[protocol]-[tool version]-[OS]-[OS release version]-[processor].rpm</source>
           </li>
           <li>On cygwin, follow the install procedure.</li>
-          <li>On cygwin, follow the install procedure.</li>
         </ul>
       </section>
     </section>
@@ -153,11 +152,11 @@ seagull is /usr/local/bin/seagull</source>
       <title>Using Seagull</title>
       <section>
         <title>Traffic profile</title>
-        <p>The traffic profile is the evolution of the scenario attempts 
-        rate (also known as call rate). By default, the traffic profile is constant,
-        meaning that you set the rate at x, and it will remain x until you quit
-        Seagull. You can change the scenario attempt rate interactively (using
-        <a href="#control_keyboard">keyboard</a>) or using the <a href="#control_remote">remote
+        <p>The traffic profile is the evolution over time of the number of scenario attempts per second 
+        (call rate). 
+        By default, the traffic profile is constant, meaning that you set the rate at x, and it will remain x until you quit Seagull. 
+        You can change the rate of scenario attempts interactively using the
+        <a href="#control_keyboard">keyboard</a> or using the <a href="#control_remote">remote
         control interface</a>.</p>
         <p>A simple Perl script (<a href="http://gull.svn.sourceforge.net/viewvc/gull/seagull/trunk/src/tool-ctrl/ctrl.pl?view=markup">ctrl.pl</a>) is provided with Seagull to demonstrate
         the capabilities of the remote control interface as well as providing
@@ -185,9 +184,9 @@ WAIT 10S
 DUMP
 WAIT 10S
 DUMP</source>
-        <p>This scenario will set the scenario attempt per seconds rate to 20, wait 2 seconds (this 
-        is done at ctrl.pl level, not at Seagull level), dump the counters, wait another 2
-        seconds, dump the counters again, set the scenario attempt per seconds rate to 40, and 
+        <p>This scenario sets the rate to 20 scenario attempts per second, waits 2 seconds (this 
+        is done at ctrl.pl level, not at Seagull level), dumps the counters, waits another 2
+        seconds, dumps the counters again, sets the rate to 40 scenario attempts per second, and 
         so on. It creates the following traffic profile:</p>
         <p><img alt="Remote control" src="images/remote_ctrl_scen.png"/></p>
         <note>ctrl.pl is an example of the <a href="#control_remote">remote
@@ -238,13 +237,13 @@ DUMP</source>
   |--- Select a key ----------------------- Next screen : Press the same key ---|]]></source>
           <p></p>
           <p>Notice that all the lines after "h : Help screen" are optional. 
-      They only appear if you have set the protocol statistics on ("3 : Protocol octcap-itu screen(s)" 
-      in our example) and the scenario statistics (lines from A to E in our example).</p>
+      In our example they appear because the protocol statistics (see line "3 : Protocol octcap-itu screen(s)") 
+      and the scenario statistics (lines from A to E) have been turned on.</p>
       <note>
       In case there is not enough space on the screen to display all the 
       optional lines, you have to press the h key again to display the end of 
       the help list.</note>
-          <p>Description of the key functions:</p>
+          <p>Description of the keyboard controls:</p>
           <p></p>
           <table id="ref_keys">
             <caption>Control keys</caption>
@@ -279,30 +278,30 @@ DUMP</source>
             <tr>
               <td>q</td>
               <td>Stop the traffic and quit the tool</td>
-              <td>In <strong>server</strong> mode, Seagull will not accept any
+              <td>In <strong>server</strong> mode, Seagull does not accept any
                 new incoming call. Once all ongoing calls are finished, the
-                tool will exit.<br/>
-                In <strong>client</strong> mode, Seagull will not place any
-                new call. Once all ongoing calls are finished, Seagull will exit<br/>
+                tool exits.<br/>
+                In <strong>client</strong> mode, Seagull does not place any
+                new call. Once all ongoing calls are finished, Seagull exits<br/>
                 Pressing the q/ctrl-C key a second time forces Seagull to quit, even if
                 all ongoing calls are not finished.</td>
             </tr>
             <tr>
               <td>p</td>
               <td>Pause the traffic</td>
-              <td>In <strong>server</strong> mode, Sagull will not accept any
-                new incoming call. Default scenarios will still be active.<br/>
-                In <strong>client</strong> mode, Seagull will not place any
+              <td>In <strong>server</strong> mode, Seagull does not accept any
+                new incoming call. Default scenarios are still active.<br/>
+                In <strong>client</strong> mode, Seagull does not place any
                 new call. Ongoing calls are processed normally.<br/>
-                <strong>Note:</strong> Un-pausing the traffic can trigger a traffic burst
-                as Seagul will try to cope with the call-rate that has been set. For
+                <strong>Note:</strong> Un-pausing the traffic by pressing the p key a second time can trigger a traffic burst
+                as Seagull tries to cope with the call-rate that has been set initially. For
                 a smooth restart, the 'r' key should be used.</td>
             </tr>
             <tr>
               <td>r</td>
               <td>Restart the traffic</td>
-              <td>Once the traffic is paused, restart will smoothly restart the 
-                traffic, to go back to the call rate asked.</td>
+              <td>Once the traffic is paused, restart smoothly restarts the 
+                traffic, to go back to the required call rate.</td>
             </tr>
             <tr>
               <td>f</td>
@@ -319,7 +318,7 @@ DUMP</source>
             </tr>
             <tr>
               <td>1</td>
-              <td>Display the main screen</td>
+              <td>Display the main statistics screen</td>
               <td>Display the main screen with the general statistics. Press "1" 
           again to display the statistics per scenario.</td>
             </tr>
@@ -336,7 +335,7 @@ DUMP</source>
               <td>a</td>
               <td>Activate/deactivate the percentage computation</td>
               <td>This key activates or deactivates the computation of the percentages 
-          of the response time screen, only if the log-stat is set in the 
+          of the response times screen, only if the log-stat is set in the 
           configuration file and if you set the start and stop of the timer 
           in the scenario (see the <a href="#statistics">statistics</a> chapter).</td>
             </tr>
@@ -360,7 +359,7 @@ DUMP</source>
               <td>If you asked for statistics at the scenario level, you can reach the corresponding screen by pressing the 
           corresponding letter.<br/>
           A is for the first section in the scenario, B for the second one, C for the third one, 
-          and so on for all the sections in your scenario used.<br/>
+          and so on for all the sections used in your scenario.<br/>
           The number of scenario section statistics screens is limited to 26.</td>
             </tr>
           </table>
@@ -368,17 +367,16 @@ DUMP</source>
          <section id="control_remote">
           <title>Remote control</title>
           <section><title>Description</title>
-            <p>Seagull can be remote controlled through a remote connection. The 
-            protocol used is HTML, through a dictionary provided at run time (-ctrldicopath command line option),
+            <p>Seagull can be remotely controlled through a remote connection using 
+            the HTML protocol and a dictionary that is provided at run time (-ctrldicopath command line option),
             the default being /usr/local/share/seagull/config/remote-ctrl.xml.<br/>
-            This feature is actived with the option at run time : -ctrl address:port 
-            ("address:port" : the address and the port on which seagull listen for remote control commands)</p>
-            <p>Using HTTP makes it very easy to remote control Seagull, either directly from
-            a browser or from high level languages like Perl or Python.</p>
-            <p>In particular, this allow to:</p>
+            This feature is activated with a run time option : -ctrl address:port 
+            ("address:port" : the address and the port on which seagull listens for remote control commands)</p>
+            <p>Using HTTP makes it very easy to remotely control Seagull, either directly from
+            a browser or from higher level languages like Perl or Python.</p>
+            <p>In particular, this allows to:</p>
             <ul>
-              <li>Control a cluster of Seagull instances (on one host or spread in
-              a Seagull cluster farm)</li>
+              <li>Control a cluster of Seagull instances (hosted on one or several systems)</li>
               <li>Control the traffic profile over time (see the example with ctrl.pl
               Perl script)</li>
               <li>Automate benchmark test sessions</li>
@@ -386,7 +384,7 @@ DUMP</source>
               AJAX, Eclipse plugin, ...)</li>
               <li>Create real time graphs with Seagull statistics (dump command)</li>
             </ul>
-            <p>The following configurations are possible:<br/>
+            <p>The following configurations are possible:<br></br>
             <img alt="Remote control" src="images/remote_ctrl.png"/></p>
           </section>
           <section><title>Control commands</title>
@@ -394,10 +392,10 @@ DUMP</source>
           <ul>
             <li><strong>Dump</strong>: to dump the statistics counters. This is done by sending
             an HTTP "<code>GET</code>" with URI: <source>http://x.y.z.t:p/seagull/counters/all</source></li>
-            <li><strong>Set rate</strong>: to set the scenario attempt per seconds rate. This is done by sending
+            <li><strong>Set rate</strong>: to set the rate of scenario attempts per second. This is done by sending
             an HTTP "<code>PUT</code>" with URI: <source>http://x.y.z.t:p/seagull/command/rate?value=n</source></li>
-            <li><strong>Ramp</strong>: to linearly increase or decrease the scenario attempts per second rate,
-            from the current value to a target value in a number of second.<br/> This is done by sending
+            <li><strong>Ramp</strong>: to linearly increase or decrease the rate of scenario attempts per second,
+            from the current value to a target value in a number of seconds.<br/> This is done by sending
             an HTTP "<code>PUT</code>" with URI: <source>http://x.y.z.t:p/seagull/command/ramp?value=n&amp;duration=d</source></li>
             <li><strong>Stop</strong>: to ask seagull to quit . This is done by sending
             an HTTP "<code>PUT</code>" with URI: <source>http://x.y.z.t:p/seagull/command/stop</source></li>
@@ -412,8 +410,8 @@ DUMP</source>
             <title>Posix signal control</title>
             <p>It is also possible to stop the traffic using POSIX signals. This
             is especially useful when running Seagull in background mode 
-            (<code>-bg</code> option, see the <a href="#cli_help">command line help</a>). 
-            <code>kill -SIGUSR1 pid</code> has the same effect as the 'q' key. You
+            (<code>-bg</code> option, see the <a href="#cli_help">command line help</a>). </p>
+            <p><code>kill -SIGUSR1 pid</code> has the same effect as the 'q' key. You
             can force the traffic to stop by issuing a second <code>kill -SIGUSR1 pid</code>.</p>
          </section>
         
@@ -496,7 +494,7 @@ DUMP</source>
       <section>
         <title>Session-Id</title>
         <p>The Session-Id is a generic concept in Seagull. Under classical usage,
-        session-id are not seen by the user. It can become handy to understand
+        session-ids are not seen by the user. It can become handy to understand
         what a session-id is.</p>
         <p>A Session-Id maps to one or several protocol fields.
         How the mapping is done is indicated in the dictionary. For example, in Diameter, the session-id maps to
@@ -601,7 +599,8 @@ Seagull will look at parameters indicated by
           an unknow value in the session-id field, then seagull looks for the first out-of-session-id field if defined. 
           If this first out-of-session-id field is not present or its value is unknown, seagull looks for the second out-of-session-id field 
           if defined and so on ...
-          The most probable out-of-session-id field must be placed at the top of the list of out-of-session-id fields to optimize the execution.</p> 
+          The most probable out-of-session-id field must be placed at the top of the list of out-of-session-id fields in the dictionary 
+          to optimize the execution.</p> 
         <p>When a message is received and cannot be matched to
         a known session-id value (whether this value was related to the session-id field or one of the defined out-of-session-id fields), 
         then it is treated as a "new (incoming) call".</p>
@@ -618,7 +617,7 @@ Seagull will look at parameters indicated by
 	 a different protocol.</p>
         <p><img src="images/channels.jpg" alt="Channels and protocols"/></p>
         <p>A channel makes the link between a transport and a protocol.</p>
-        <note>A channel defined as server has to be opened as the FIRST channel. To open more than one channel as server, the <a href="#ref_correlation">"correlation feature"</a> must used.</note>
+        <note>A channel defined as server has to be opened as the FIRST channel. To open more than one channel as server, the <a href="#ref_correlation">"correlation feature"</a> must be used.</note>
         <p>Transport and channels are defined in the <a href="#transport_config">generic configuration file</a>
         </p>
         <p>Here are some examples:</p>
@@ -701,14 +700,14 @@ Seagull will look at parameters indicated by
         <title>SCTP transport</title>
         <p>Seagull supports SCTP transport with SCTP library in version 1.5 and SCTP Socket api
         library in version 1.9.0 (refer to <a href="http://www.sctp.de/sctp-download.html">www.sctp.de</a>).
-        <warning>Seagull only supports SCTP upon TCP transport on linux platform. </warning>
+        <warning>Seagull only supports SCTP over TCP transport on linux platform. </warning>
         </p>
       </section>  
       <section>
         <title>Multi-channels</title>
         <p>Seagull supports several channels in one single scenario. This means that you can create
-	a scenario that for example will send a message on channel 1, receive the answer on channel 1, then send a message
-	on channel 2 and receive the answer on channel 2.</p>
+	a scenario that for example sends a message on channel 1, receives the answer on channel 1, then sends a message
+	on channel 2 and receives the answer on channel 2.</p>
         <p></p>
         <warning>Following the session-id principles, multi-channel
         scenarios can become complex. For example, to define a scenario where the
@@ -718,13 +717,13 @@ Seagull will look at parameters indicated by
       </section>
       <section id="traffic_models">
       <title>Traffic Models</title>
-      <p>Seagull generates traffic using different model type:</p>
+      <p>Seagull generates traffic using different model types:</p>
       <li><strong>Uniform</strong> : for each interval, seagull tries to reach the expected call rate, 
-        regardless of what happened during the lastest interval. With this value, the max-receive and 
-        max-send options are automatically set. It is not recommended for low call-rate. To reach high 
-        call-rate, it is necessary to inscrease the call-rate slowly (with keyboard control or remote) 
-        to avoid burst phenomenon.<br/>
-        Exemple of traffic generated for:<br/>
+        regardless of what happened during the last interval. With this value, the max-receive and 
+        max-send options are automatically set. It is not recommended for a low call rate. To reach a high 
+        call rate, it is necessary to increase the call-rate slowly (with the keyboard control or the remote control) 
+        to avoid a burst phenomenon.<br/>
+        Example of traffic generated for:<br/>
         <u>1 call/s </u><br/>
         <img src="images/uniform_1cs.jpg" alt="Uniform 1 c/s"/>
         <br/>
@@ -737,7 +736,7 @@ Seagull will look at parameters indicated by
       <li><strong>Best-effort</strong>: seagull tries to maintain the expected average 
         call rate by adjusting the instantaneous call rate using the rates reached during the previous 
         intervals<br/>
-        Exemple of traffic generated for:<br/>
+        Example of traffic generated for:<br/>
         <u>1 call/s </u><br/>
         <img src="images/best_1cs.jpg" alt="Best 1 c/s"/>
         <br/>
@@ -749,7 +748,7 @@ Seagull will look at parameters indicated by
       </li>
       <li><strong>Poisson</strong>: the real call rate varies around the expected call rate according
          to the Poisson distribution<br/>
-         Exemple of traffic generated for:<br/>
+         Example of traffic generated for:<br/>
         <u>1 call/s </u><br/>
         <img src="images/poisson_1cs.jpg" alt="Poisson 1 c/s"/>
         <br/>
@@ -769,8 +768,8 @@ Seagull will look at parameters indicated by
       <title>Seagull scenario</title>
       <section>
         <title>Scenario sections</title>
-        <p>A scenario describes the messages and their parameters exchanged
-          during traffic.  It contains several sections:</p>
+        <p>A scenario describes the messages exchanged
+          during traffic and their parameters.  It contains several sections:</p>
         <source><![CDATA[  <scenario>
     <counter>
     </counter>
@@ -793,8 +792,8 @@ Seagull will look at parameters indicated by
         <section id="scen_counter">
           <title>Counter section</title>
           <p>The <strong>counter</strong> section contains a list of counters that 
-          are available during the traffic. This is useful, for example, to handle session-id (the name
-          varies depending on the protocol) which are used to identify a call in Seagull.</p>
+          are available during the traffic. This is useful, for example, to handle session-ids (the name
+          varies depending on the protocol) which are used to identify calls in Seagull.</p>
           <p>For example, the following code declares 3 counters: HbH-counter (initial value: 1000), 
           EtE-counter (initial value: 2000) and session-counter (initial value: 0).</p>
           <source><![CDATA[<counter>
@@ -814,7 +813,7 @@ Seagull will look at parameters indicated by
         </section>        
         <section id="scen_init">
           <title>Init section</title>
-          <p>The <strong>init</strong> section is executed once, at the time of the connection is setup
+          <p>The <strong>init</strong> section is executed once, at the time the connection is setup
             (before any traffic). This can be in a server type or in a client type scenario.</p>
           <p>This section can be used as a pre-amble to the traffic (like CER/CEA exchange
           for Diameter protocol).</p>
@@ -825,12 +824,12 @@ Seagull will look at parameters indicated by
           <title>Default section</title>
           <p>The <strong>default</strong> section is executed when an unexpected message (not listed 
             in the traffic section) is received. This can be a server type or a client type scenario.</p>
-          <p>There can be as many default section as needed. Seagull will try to match the
-            message received against the first message of the default section.</p>
-          <p>The default section is generally used to create defense scenarios, so that
+          <p>There can be as many default sections as needed. Seagull tries to match the
+            received message against the first message of the default section.</p>
+          <p>The default section is generally used to create defensive scenarios, so that
             Seagull can react when stress situations from the system under test 
             are encountered.</p>
-          <p>By default, Seagull will count "default" scenario sections as successful calls. You can
+          <p>By default, Seagull counts calls using a "default" scenario section as successful calls. You can
           choose to count them as failed calls or simply ignore them. To do so, you need to add a 
           "<code>behaviour</code>" attribute to the
           default section. Values of the behaviour attribute can be either "ignore" or "failed". Example:</p>
@@ -862,7 +861,7 @@ Seagull will look at parameters indicated by
       <section id="scen_cmds">
         <title>Actions in scenarios</title>
         <p>The &lt;send&gt; and &lt;receive&gt; scenario commands can include &lt;action&gt; and
-              &lt;message&gt; section.</p>
+              &lt;message&gt; sections.</p>
         <note>"message" depends on the protocol. This is "command" for Diameter, "primitive" for TCAP, ...</note>
         <p>The &lt;action&gt; section can be placed before and/or after the &lt;message&gt; section.</p>
         <p>Actions placed before the message (called 
@@ -871,7 +870,7 @@ Seagull will look at parameters indicated by
               "<strong>post-actions</strong>") are executed just after the
               message is sent or received. </p>
         <p>There are many actions available. To name a few, you can increment <a href="#call_variables">call variables</a>, 
-              start or stop a timer, store parameter from an incoming message or re-inject it in an outgoing message,
+              start or stop a timer, store a parameter from an incoming message or re-inject it in an outgoing message,
               do <a href="#control">controls</a> on the message or inject values from an external data file. Click 
               <a href="#ref_actions">there to see the complete list</a>.</p>
         <source><![CDATA[<send>
@@ -883,8 +882,8 @@ Seagull will look at parameters indicated by
   </action>
 </send>]]>
               </source>
-        <p>For example, actions that can be placed <strong>before</strong> a message are actions
-              to increment a counter before sending the message:</p>
+        <p>Actions that can be placed <strong>before</strong> a message are actions
+              to increment a counter before sending the message. Example:</p>
         <source><![CDATA[   <send channel="channel-1">
      <action>
         <inc-counter name="session-counter"></inc-counter>
@@ -894,7 +893,7 @@ Seagull will look at parameters indicated by
      </message>
    </send>
       ]]></source>
-        <p>For example, actions that can be placed <strong>after</strong> a message are actions to store
+        <p>Actions that can be placed <strong>after</strong> a message are actions to store
               parameter values after the message has been received. Example:</p>
         <source><![CDATA[   <receive channel="channel-1">
      <message name="FOO_BAR">
@@ -914,11 +913,11 @@ Seagull will look at parameters indicated by
         <ul>
           <li>Set the value of a protocol entity by using the <a href="#action_set-value">set-value</a> action.</li>
           <li>Increment a call variable within a call by using the <a href="#action_inc-var">inc-var</a> action.</li>
-          <li>Increment a call counter by using the <a href="#action_inc-counter">inc-counter</a> action (note: a counter is a global 
-          (that is, valid for the entire traffic) variable).</li>
+          <li>Increment a call counter by using the <a href="#action_inc-counter">inc-counter</a> action. Note: a counter is a global 
+          (that is, valid for the entire traffic) variable.</li>
           <li>Retrieve the value of a protocol entity in a call variable by using the <a href="#action_store">store</a> action.</li>
           <li>Put the value of a call variable in a protocol entity by using the <a href="#action_restore">restore</a> action. 
-          (in particular, this is how Diameter Hop-by-hop Id and End-To-End Id are handled.</li>
+          In particular, this is how Diameter Hop-by-hop Id and End-To-End Id can be handled.</li>
         </ul>
       </section>
       <section id="store_restore">
@@ -934,10 +933,10 @@ Seagull will look at parameters indicated by
         <ul><li><strong>You want the entire value of a protocol field</strong>: 
         in this case, the store action can simply be used as:
         <source><![CDATA[<store name="MYVAR" entity="via"></store>]]></source>
-        The variable "MYVAR" contains the value of the Via header.<br/>Similarly, 
+        The variable "MYVAR" contains the value of the Via header field.<br/>Similarly, 
         the Via header value can be restored using:
         <source><![CDATA[<restore name="MYVAR" entity="via"></restore>]]></source>
-        Which will put the value of "MYVAR" in the Via header field (as declared
+        which will put the value of "MYVAR" in the Via header field (as declared
         in the dictionary).</li>
         <li><strong>You want part of the value of a protocol field, using a regular expression</strong>:
         in this case, the store action can include a regular expression:
@@ -950,7 +949,7 @@ Seagull will look at parameters indicated by
         The variable "MYVAR" contains the value of the branch field in the SIP via header.<br/>Similarly, 
         the Via branch value can be restored using:
         <source><![CDATA[<restore name="MYVAR" entity="via-branch"></restore>]]></source>
-        Which will put the value of "MYVAR" in the via-branch header field (it will
+        which will put the value of "MYVAR" in the via-branch header field (it will
         need to be declared in the dictionary).</li>
         </ul>
         </li>
@@ -3395,12 +3394,12 @@ seagull Command syntax
     </section>
     <section>
       <title>Miscellaneous tools</title>
-      <p>When you Seagull, there are some useful tools that you will have to use.</p>
+      <p>When working with Seagull, there are some useful and complementary tools:</p>
       <ul>
         <li><a href="http://www.wireshark.org/">Wireshark</a>: formerly known as "Ethereal", Wireshark
         is a protocol decoder. It will most likely decode all the protocols supported by Seagull.</li>
         <li><a href="http://laurent.riesterer.free.fr/regexp/">Visual REGEXP</a>: this invaluable
-        tool can be used to debug your regular expressions (widely used in Seagull!).</li>
+        tool can be used to debug regular expressions (widely used in Seagull!).</li>
       </ul>
     </section>
   </body>
