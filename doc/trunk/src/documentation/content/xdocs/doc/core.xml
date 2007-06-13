@@ -1955,39 +1955,39 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
       <p>Example of a correlation section, see below for the details of the sub-sections:</p>
           <source><![CDATA[
 <correlation>
- <channel name="channel-1">
-   <retrieve>
-     <search-in-map name="call-id"></search-in-map>
-   </retrieve>
+   <channel name="channel-1">
+      <retrieve>
+         <search-in-map name="call-id"></search-in-map>
+      </retrieve>
 
-   <command name="command-1">
-     <pre-action>
-          <!-- For each new call, increment the callid counter -->
-       <inc-counter name="callid-counter"> </inc-counter>
-     <!-- And set the call-id field -->
-       <set-value name="call-id"
-                  format="$(callid-counter)@127.0.0.1"></set-value>
-     </pre-action>
+      <command name="command-1">
+         <pre-action>
+            <!-- For each new call, increment the callid counter -->
+            <inc-counter name="callid-counter"> </inc-counter>
+            <!-- And set the call-id field -->
+            <set-value name="call-id"
+                       format="$(callid-counter)@127.0.0.1"></set-value>
+         </pre-action>
      
-     <post-action>
-       <store name="SID" entity="call-id"></store>
-       <insert-in-map channel="channel-1" name="SID"></insert-in-map>
-     </post-action>
-   </command>
+         <post-action>
+            <store name="SID" entity="call-id"></store>
+            <insert-in-map channel="channel-1" name="SID"></insert-in-map>
+         </post-action>
+      </command>
 
-   <command name="command-1b">
-     <post-action>
-       <store name="alt-sid" entity="o"></store>
-      <insert-in-map channel="channel-2" name="alt-sid"></insert-in-map>
-     </post-action>
-   </command>
+      <command name="command-1b">
+         <post-action>
+            <store name="alt-sid" entity="o"></store>
+            <insert-in-map channel="channel-2" name="alt-sid"></insert-in-map>
+         </post-action>
+      </command>
  
- </channel>
-  <channel name="channel-2">
-   <retrieve>
-     <search-in-map name="call-id"></search-in-map>
-   </retrieve>
- </channel>
+   </channel>
+   <channel name="channel-2">
+      <retrieve>
+         <search-in-map name="call-id"></search-in-map>
+      </retrieve>
+   </channel>
 </correlation>
 ]]></source>
        
@@ -2744,10 +2744,10 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
           <tr>
             <td>&nbsp;</td>
             <td>max</td>
-            <td>Optional. Maximal value of the counter.(It depends of the platform and 
-            corresponds to a Unsigned long defined in the file "limit.h"). <br/>
-            If "max" is defined, when the "max" value is reached, the counter value 
-            is re-initialized to the value defined by the "behaviour".</td>
+            <td>Optional. Maximal value of the counter. The interpretation of the value of this attribute depends on the platform and 
+            corresponds to an Unsigned long defined in the file "limit.h". <br/>
+            If "max" is defined, when the "max" value is reached, the counter  
+            is re-initialized to the value defined by the "behaviour" attribute.</td>
             <td>
               <code><![CDATA[max="100"]]></code>
             </td>
@@ -2755,7 +2755,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
           <tr>
             <td>&nbsp;</td>
             <td>behaviour</td>
-            <td>Optional. Possible values are: <br/> 
+            <td>Optional. Possible values of this attribute are: <br/> 
             "init"    : when the "max" value is reached, the counter is re-initialized to the "init" value,<br/>
             "min"     : when the "max" value is reached, the counter is re-initialized to the "min" value,<br/>
             "no_reset": when the "max" value is reached, the counter is not re-initialized and stays at the "max" value. <br/>
@@ -2796,14 +2796,16 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             <th>'open' action opens an instance of the transport channel. This can
             be used for example to open a new TCP socket for each call. Don't
             forget to use 'close' action at the end of the scenario.</th>
-            <th>&nbsp;</th>
+            <th>
+             <code><![CDATA[<open args="mode=client;dest=10.10.11.157:8080"></open>]]></code>
+            </th>
           </tr>
           <tr>
             <td>&nbsp;</td>
             <td>args</td>
             <td>Argument relevant to the transport channel used</td>
             <td>
-              <code><![CDATA[<open args="mode=client;dest=10.10.11.157:8080"></open>]]></code>
+              mode=client;dest=10.10.11.157:8080
             </td>
           </tr>
           <tr>
@@ -2812,7 +2814,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
               <strong>&lt;close&gt;</strong>
             </th>
             <th>&nbsp;</th>
-            <th>Close the transport channel</th>
+            <th>Close a transport channel</th>
             <th>
               <code><![CDATA[<close name="channel-1"></close>]]></code>
             </th>
@@ -2855,22 +2857,22 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
           <tr>
             <td>&nbsp;</td>
             <td>sub-entity</td>
-            <td>Identifier of parameter of the component to be stored.</td>
+            <td>Identifier of the parameter of the component to be stored.</td>
             <td>sub-entity="operation-code"</td>
           </tr>
           <tr>
             <td>&nbsp;</td>
             <td>begin</td>
             <td>Position from which we start to get the data. Be careful, the 
-	    count for the positions start at zero. Example for the second position:</td>
+	    count for the position starts at zero. Example for the second position:</td>
             <td>begin="1"</td>
           </tr>
           <tr>
             <td>&nbsp;</td>
             <td>end</td>
             <td>Position at which we stop to get the data. Be careful, the 
-	    count for the positions start at zero, and the last piece of data 
-	    injected is at end position minus one.</td>
+	    count for the position starts at zero and the last piece of injected data 
+	    is at the end position minus one.</td>
             <td>end="9"</td>
           </tr>
           <tr>
@@ -2905,22 +2907,22 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
           <tr>
             <td>&nbsp;</td>
             <td>sub-entity</td>
-            <td>Identifier of parameter of the component to be restored.</td>
+            <td>Identifier of the parameter of the component to be restored.</td>
             <td>sub-entity="operation-code"</td>
           </tr>
           <tr>
             <td>&nbsp;</td>
             <td>begin</td>
             <td>Position at which we start to inject the data. Be careful, the 
-	    count for the positions start at zero. Example for the second position:</td>
+	    count for the position starts at zero. Example for the second position:</td>
             <td>begin="1"</td>
           </tr>
           <tr>
             <td>&nbsp;</td>
             <td>end</td>
             <td>Position at which we stop to inject the data. Be careful, the 
-	    count for the positions start at zero, and the last piece of data 
-	    injected is at end position minus one.</td>
+	    count for the position starts at zero and the last piece of injected data 
+	    is at the end position minus one.</td>
             <td>end="9"</td>
           </tr>
           <tr>
@@ -2963,21 +2965,21 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
           <tr>
             <td>&nbsp;</td>
             <td>format</td>
-            <td>The format is a string that can contains call variables (identified by $(varname)).<br/>
-                When used with the field "method", this can be used to pass parameters to the method, if nedded (refer to <a href="#Authentication">Authentication</a> 
+            <td>The format is a string that can contain call variables (identified by $(varname)).<br/>
+                If associated to the "method" attribute, it is used to pass parameters to the method (refer to <a href="#Authentication">Authentication</a> 
                 for further details). </td>
             <td>".;1096298391;$(session-counter)": fixed string with a variable part (value of "session-counter" call variable)</td>
           </tr>
           <tr>
             <td>&nbsp;</td>
             <td>method</td>
-            <td>Optional. The method refers to a "external-method" of the dictionary. It defines the function to encode the value.</td>
+            <td>Optional. The method refers to an "external-method" of the dictionary. It defines the function to encode the value.</td>
             <td>"authentication"</td>
           </tr>
           <tr>
             <td>&nbsp;</td>
             <td>message_part</td>
-            <td>Optional for the authentication. The message_part defines the party of the message that could be used by the method to encode the value.
+            <td>Optional and only if the "method" attribute is used. The message_part defines the part of the message that is used by the method to encode the value.
             Allowed values are :<br/>
              "" (default value)<br/>
              "body"<br/>
@@ -2991,7 +2993,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
               <strong>&lt;set-bit&gt;</strong>
             </th>
             <th>-</th>
-            <th>Set the value of a bit in a call variable (memory zone). This is only available for number or string variable type.
+            <th>Set the value of a bit in a call variable (memory zone). This is only available for variables of number or string type.
                 Value can only be 0 or 1. The position starts at 0 (second position is 1).</th>
             <th>
               <code><![CDATA[<set-bit name="call-variable" entity="field-from-dictionary"
@@ -3008,7 +3010,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
           <tr>
             <td>&nbsp;</td>
             <td>entity</td>
-            <td>Name of the protocol stored entity. Needed to determine the type of the call variable.</td>
+            <td>Name of the stored protocol entity. Needed to determine the type of the call variable.</td>
             <td>Session-Id</td>
           </tr>
           <tr>
@@ -3020,19 +3022,19 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
           <tr>
             <td>&nbsp;</td>
             <td>sub-entity</td>
-            <td>Identifier of parameter of the component to be stored.</td>
+            <td>Identifier of the parameter of the component to be stored.</td>
             <td>sub-entity="operation-code"</td>
           </tr>
           <tr>
             <td>&nbsp;</td>
             <td>position</td>
-            <td>Position of bit to be changed. Position starts at 0. Example for the second position:</td>
+            <td>Position of the bit to be changed. Position starts at 0. Example for the second position:</td>
             <td>position="1"</td>
           </tr>
           <tr>
             <td>&nbsp;</td>
             <td>value</td>
-            <td>New value of the bit. Admited values are 0 or 1.</td>
+            <td>New value of the bit. Admitted values are 0 or 1.</td>
             <td>value="0"</td>
           </tr>
           <tr>
@@ -3041,7 +3043,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
               <strong>&lt;set-value-bit&gt;</strong>
             </th>
             <th>-</th>
-            <th>Set the value of a bit in a field of a message. This is only available for number or string variable type.
+            <th>Set the value of a bit in a field of a message. This is only available for variables of number or string type.
                 Value can only be 0 or 1. The position starts at 0 (second position is 1).</th>
             <th>
               <code><![CDATA[<set-value-bit entity="field-from-dictionary"
@@ -3052,7 +3054,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
           <tr>
             <td>&nbsp;</td>
             <td>entity</td>
-            <td>Name of the protocol stored entity. Needed to determine the type of the call variable.</td>
+            <td>Name of the stored protocol entity. Needed to determine the type of the call variable.</td>
             <td>Session-Id</td>
           </tr>
           <tr>
@@ -3064,19 +3066,19 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
           <tr>
             <td>&nbsp;</td>
             <td>sub-entity</td>
-            <td>Identifier of parameter of the stored component.</td>
+            <td>Identifier of the parameter of the stored component.</td>
             <td>sub-entity="operation-code"</td>
           </tr>
           <tr>
             <td>&nbsp;</td>
             <td>position</td>
-            <td>Position of bit to be changed. Position starts at 0. Example for the second position:</td>
+            <td>Position of the bit to be changed. Position starts at 0. Example for the second position:</td>
             <td>position="1"</td>
           </tr>
           <tr>
             <td>&nbsp;</td>
             <td>value</td>
-            <td>New value of the bit. Admited values are 0 or 1.</td>
+            <td>New value of the bit. Admitted values are 0 or 1.</td>
             <td>value="0"</td>
           </tr>
           <tr>
@@ -3085,8 +3087,8 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
               <strong>&lt;setfield&gt;</strong>
             </th>
             <th>-</th>
-            <th>Set the value of a field of a message. This is only available for protocols 
-                external (header and body fields) and binaries (header fields only).</th>
+            <th>Set the value of a field of a message. This is only available for  
+                external (header and body fields) and binary (header fields only) protocols.</th>
             <th>
               <code><![CDATA[<setfield name="field-from-dictionary" value="XX"></setfield>]]></code>
             </th>
@@ -3189,7 +3191,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
           <tr>
             <td>&nbsp;</td>
             <td>behaviour</td>
-            <td>Behaviour to adopt in case the value is not the one expexted. 
+            <td>Behaviour to adopt in case the value is not the expected one. 
 	    Can be "error" or "warning"</td>
             <td>behaviour="error"</td>
           </tr>
@@ -3212,8 +3214,8 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             </th>
             <th>&nbsp;</th>
             <th>
-              <a href="#control">Check</a> the type of message receveid at a position 
-	      specified</th>
+              <a href="#control">Check</a> the type of message received at a specified position 
+	      </th>
             <th>
               <code><![CDATA[<check-order name="[FIELD_NAME]" behaviour="error" 
 	      position="[X]"> </check-order>]]></code>
@@ -3362,7 +3364,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
           <tr>
             <td>&nbsp;</td>
             <td>value</td>
-            <td>"secure-mode" indicates that the mode will changed to secure one. (the only agreed value) </td>
+            <td>"secure-mode" indicates that the mode will change to secure (the only agreed value). </td>
             <td>value="secure-mode"</td>
           </tr>
 
@@ -3392,7 +3394,7 @@ seagull Command syntax
       </section>
     </section>
     <section>
-      <title>Miscenalleous tools</title>
+      <title>Miscellaneous tools</title>
       <p>When you Seagull, there are some useful tools that you will have to use.</p>
       <ul>
         <li><a href="http://www.wireshark.org/">Wireshark</a>: formerly known as "Ethereal", Wireshark
