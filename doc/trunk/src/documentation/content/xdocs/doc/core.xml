@@ -981,7 +981,7 @@ Seagull will look at parameters indicated by
     <section id="control">
       <title>Message and parameters control</title>
       <p>Even if Seagull is aimed at traffic, load and stress testing, it is 
-        possible to check message and parameters during traffic.</p>
+        possible to check messages and parameters during traffic.</p>
       <note>The more controls you put, the less traffic Seagull can handle.</note>
       <p>Several levels of control are available and described
         in the following sections.</p>
@@ -997,27 +997,26 @@ Seagull will look at parameters indicated by
         </ul>
       </section>
       <section>
-        <title>Behaviour when a check fails</title>
-        <p>You can specify the behaviour of Seagull for the different checks. 
-	  This behaviour can be at the check level or globally. 
-	  For the first case, you'll see examples in the following chapters. 
-	  Here are presented the ways to define global behaviour.
+        <title>Behaviour when a control fails</title>
+        <p>You can specify the behaviour of Seagull for the different controls. 
+	  This behaviour can be defined at the control level (see examples in the following chapters) or globally. 
+	  The rest of this section presents the ways to define a global behaviour.
 	  </p>
-        <p>Define global "Warning" as the behaviour if the check fails in XML configuration file:</p>
+        <p>Define in the XML configuration file "Warning" as the global behaviour when a control fails:</p>
         <source><![CDATA[<define entity="traffic-param"
   name="msg-check-behaviour"
   value="W">
 </define>]]></source>
-        <p>Define global "Error and abort" as the behaviour if the check fails in XML configuration file:</p>
+        <p>Define in the XML configuration file "Error and abort" as the global behaviour when a control fails:</p>
         <source><![CDATA[<define entity="traffic-param"
   name="msg-check-behaviour"
   value="E">
 </define>]]></source>
-        <p>This parameter will be applied to the check if the behaviour attribute 
-	  is not specified for the check.</p>
+        <p>The global behaviour is applied for all controls that do not have their behaviour attribute defined in the scenario.
+	  </p>
 
         <p>If the control is OK, the scenario goes on. If the control fails,
-        the behaviour can be:</p>
+        the behaviour is:</p>
         <ul>
           <li>Log a <strong>warning</strong> and continue the call</li>
           <li>Log an <strong>error</strong> and abort the call</li>
@@ -1026,19 +1025,19 @@ Seagull will look at parameters indicated by
       <p class="pageBreakBefore"></p>
       <section id="check_presence">
         <title>Presence check</title>
-        <p>The goal of this control is to check for presence of parameters as described
+        <p>The goal of this control is to check for the presence of parameters as described
             in the scenario. There are two types of presence check:</p>
         <ul>
           <li>
-            <strong>Presence</strong>: Seagull checks that <strong>at least</strong> parameters
-                listed in the scenario are present in the message received. If additional
-                parameters are present, the call will still be OK. If expected parameters
-                are missing, the control fails.</li>
+            <strong>Presence</strong>: Seagull checks that <strong>at least</strong> the parameters
+                listed in the scenario are present in the received message. If additional
+                parameters are present, the call is still considered OK. But if any expected parameter
+                is missing, then the control fails.</li>
           <li>
             <strong>Additional</strong>: Seagull checks that <strong>all and only</strong> the parameters
-                listed in the scenario are present in the message received. If additional 
-                parameters are present, the call will be marked as failed. If expected
-                parameters are missing, the behaviour indicated is applied.</li>
+                listed in the scenario are present in the received message. If additional 
+                parameters are present, the call is considered failed. If any expected
+                parameter is missing, then the specified behaviour is applied.</li>
         </ul>
         <p>The type of presence check is set in the <a href="#config_generic">generic configuration file</a>:</p>
         <ul>
@@ -1067,40 +1066,38 @@ Seagull will look at parameters indicated by
 ]]></source>
         <note>"command" is specific to Diameter. It should be replaced by the appropriate keyword
           depending on the protocol</note>
-        <warning>The check <strong>must be</strong> in the <a href="#scen_cmds">post-action</a> section
+        <warning>The check <strong>must</strong> be defined in the <a href="#scen_cmds">post-action</a> section
           of the <![CDATA[<receive>]]> scenario command.</warning>
       </section>
       <section id="check_value">
         <title>Parameter value check</title>
-        <p>Seagull can also perform checks on the value of the fields of a message 
-	  or the value on some header fields of a message.</p>
-        <p>Those checks are done in the scenarios.</p>
-        <note>The check is done against the value indicated in the scenario.</note>
+        <p>Seagull can also perform controls on the value of the fields of a message 
+	  or the value of some header fields of a message.</p>
+        <p>Those controls are defined in the scenarios.</p>
+        <note>In general, the control is done against the value indicated in the scenario.</note>
+        <p> Examples (as part of the receive section of a message in the scenario):</p>
         <ul>
-          <li>Check the value of first message received: you check that the first 
-	  message (specified with "name") that you receive has the expected sub-entity 
-	  value (specified with "sub-entity"). This value is specified in your scenario, 
-	  in the receive section.
+
+          <li>Check the value of the field specified with "name" in the received message.
 	  <p></p>
             <source><![CDATA[<!-- Diameter example-->
 <check-value name="Vendor-Specific-Application-Id" behaviour="error">
 </check-value>]]>
 	  </source>
+          </li>
+          <li>Check the value of the sub-entity of the field specified with "name=" and with "instance=" 
+          in the received message 
+	  <p></p>
             <source><![CDATA[<!-- TCAP example-->
 <check-value name="TC_INVOKE" sub-entity="operation-code" behaviour="error"
       instance="Client-1-data">
 </check-value>]]>
 	  </source>
-            <p></p>
           </li>
           <li>Check the value of a header field: you check that the field (specified with 
-	  "name") in the header of the message has the expected value, i.e. the 
-	  value specified in your configuration file.
+	  "name") in the header of the message has the expected value, which in this specific case of TCAP  
+	  is defined in the configuration file.
 	  <p></p>
-            <source><![CDATA[<!-- Diameter example-->
-<check-value name="HbH" behaviour="error">
-</check-value>]]>
-	  </source>
             <source><![CDATA[<!-- TCAP example-->
 <check-value name="d-address-pc" behaviour="error">
 </check-value>]]>
@@ -1112,19 +1109,18 @@ Seagull will look at parameters indicated by
       <section id="check_order">
         <title>Message order check</title>
         <note>Message order check is implemented for TCAP protocol only.</note>
-        <p>Seagull can also perform checks on the order in which the parameters in the messages 
-	  are received.</p>
-        <p>Those checks are done in the scenarios.</p>
-        <p>For TCAP case, you can check the order of reception of the components (eg TC_INVOKE), inside primitives (eg TC_BEGIN).</p>
-        <p>Example: check that the parameter (specified with "name") is received in second position.</p>
+        <p>Seagull can also perform controls on the order in which the parameters are received in the messages. 
+	  </p>
+        <p>Those controls are defined in the scenarios.</p>
+        <p>In the case of TCAP, the order of reception of the components (eg TC_INVOKE) inside primitives (eg TC_BEGIN) can be checked.</p>
+        <p>Example: check that the parameter specified with "name" is received in second position.</p>
         <source><![CDATA[<!-- TCAP example-->
 <check-order name="TC_INVOKE" behaviour="error" position="1">
 </check-order>]]>
           </source>
-        <note> The position starts at zero. To check the second position, check 
-	  at position=1, and so on.</note>
-        <note>If you specify a position that is different than the number of 
-	  messages received an error is logged.</note>
+        <note> The position starts at zero, so position=1 checks for the second position.</note>
+        <note>If the specified position is greater than the number of 
+	  received components, then an error is logged and the call is aborted.</note>
       </section>
 
     </section>
@@ -1135,10 +1131,11 @@ Seagull will look at parameters indicated by
         <title>Description</title>
         <p>Seagull allows to change the content of the messages before sending them, according
         to an external data file (CSV format). 
-        For each new scenario that Seagull executes, a new line is read from the external data file. Lines
-        can be read in sequence or randomly. This lines breaks into fields which can 
-        be used to change the content of a message to send.</p>
-        <p>This feature allow to provision a list of users or subscribers that
+        For each new scenario that Seagull executes, a new line is read from the external data file. 
+        This line contains the values of one or several fields which  
+        are used to change the content of a sent message on a per scenario basis.
+        Lines can be read in sequence or randomly. </p>
+        <p>For example, this feature allows to provision a list of users or subscribers that
         are used during Seagull's traffic.</p>
         <p>To use this feature, you need to specify "external-data-file" (file to
         read from) and "external-data-select" (how to read the file) parameters in the configuration file:</p>
@@ -1154,8 +1151,9 @@ Seagull will look at parameters indicated by
         <p/>
         <p>The value of the "external-data-select" parameter can be <strong>"random"</strong> 
       or <strong>"sequential"</strong>. 
-      In the first case, the new value is taken randomly from the external data file, 
-      in the second it is taken in a sequential order (first line of external data file for first call, second line for second call...).</p>
+      In the first case, the specific content for a message is taken randomly from the external data file.
+      In the second case, the specific content for a message is taken in a sequential order (the first line of the external data file for the first call, 
+the second line for the second call, etc.).</p>
         <p>Here is an example of external data file: </p>
         <source><![CDATA[ "string";"string";"number";
 # FIELD 0        FIELD 1       FIELD 2    
@@ -1168,30 +1166,32 @@ Seagull will look at parameters indicated by
 "0472826077" ;  "0x214365870981" ; "22" ;
 ]]></source>
         <p/>
-        <p> Notice that the comments can be written using # or //. 
-      String values can be in ASCII (for example: "10" will translate to 0x3130) or 
-      hexadecimal (for example: "0xA2").</p>
-        <p> The first line with characters without the comment signs is the line 
-      that defines the type of the data contained in this file. This line is 
-      <strong>mandatory</strong>. The type must be one of the basic types of Seagull: 
+        <p> Notice that the comments can be prefixed by # or // and 
+      that string values can be in ASCII (for example: "10" translates into 0x3130) or 
+      hexadecimal (for example: "0xA2") format.</p>
+        <p> The first line with characters and that does start by the comment sign is the line 
+      that defines the data types contained in the file. This line is 
+      <strong>mandatory</strong>. The types must belong to the basic types of Seagull: 
       string, number, signed, number64 or signed64.</p>
         <p> On each line of data, you can access a field (column) with its index: the first data on the line is 
       field(0), the second one is field(1), and so on.</p>
-        <p>This index is used in the scenario to specify which data is used to fill in the specified field of the message.</p>
-        <p>You can specify also at which position in your buffer you start to inject the data ("begin" field), and
-      until which position you inject it ("end" field).
-      Be careful, when using the "begin" and "end" fields, the count starts at zero. 
-      Here is an example from one client scenario:</p>
+        <p>This index is used in the scenario to define which data field in the external file is used to fill the specified field ("entity") 
+      of the message to be sent.</p>
+        <p>The external data can also be used to fill a defined part of a field. In order to do so, 
+      the position in the buffer that represents the field to fill where to start to inject the data ("begin" parameter)
+      and the position where to stop to inject the data ("end" parameter) need to be defined.
+      When using the "begin" and "end" parameters, be careful that the count starts at zero for the first octet.
+      Here is an example from a client scenario:</p>
         <source><![CDATA[<restore-from-external field="1" entity="FIELD_NAME"
        begin="1" end="3">
        </restore-from-external>]]></source>
-        <p>In this example, the data (2 octets) will be injected starting at the second octet (0 is 
-      the first one, so 1 is the second one). 
-      So you inject 2 bytes of data: one at the second octet and one at the third octet.</p>
-        <p>The field FIELD_NAME must exist in the message, as defined in the dictionary. Its value in the current message 
-      will be changed to the data of the second column (second because field="1").</p>
-        <note>When the size specified (difference between "begin" and "end") is larger than the injected buffer, 
-      the buffer is injected in its full length from the "begin" position, and a warning is logged.</note>
+        <p>In this example, the data (2 octets) is injected starting at the second octet (0 is 
+      the first octet, so 1 is the second octet). Two bytes of data are injected at the second octet and at the third octet.</p>
+        <p>The field FIELD_NAME must exist in the message to be sent, as defined in the dictionary. 
+      Its value in the current message before restore-from-external is executed is changed to the data of the second column
+      (second because field="1").</p>
+        <note>When the specified size (difference between "begin" and "end" values) is larger than the injected data, 
+      then the data is injected in its full length from the "begin" position and a warning is logged.</note>
         <note>When the destination buffer is too short to reach the "begin" position (e.g. buffer with 2 numbers and "begin=5"), 
       zeros are added to the destination buffer so it reaches a size big enough to enable the injection of the buffer at 
       the "begin" position. A warning is logged.</note>
@@ -1215,8 +1215,9 @@ Seagull will look at parameters indicated by
     <title>Authentication</title>
     <p>Authentication has been introduced in Seagull. Digest/MD5 and Digest/AKA are both supported. <br/>
     To use it, an "external method" must be defined in the dictionary (refer to <a href="#external-method">"external-method"</a>) 
-    and the method must be defined in the set value of the field to be encoded (refer to <a href="#action_set-value">"set-value"</a>).
-    See <a href="sip.html#sip_authentication">SIP authentication</a> or <a href="radius.html#radius_authentication">Radius authentication</a> for further details based on examples.
+    and the method must be defined in a set-value action for the field to be encoded (refer to <a href="#action_set-value">"set-value"</a>).
+    <br/>See <a href="sip.html#sip_authentication">SIP authentication</a> or <a href="radius.html#radius_authentication">Radius authentication</a> 
+for further details based on examples.
     </p>
     </section>
     <p class="pageBreakBefore"></p>
