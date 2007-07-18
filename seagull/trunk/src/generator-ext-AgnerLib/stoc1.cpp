@@ -43,7 +43,7 @@ double LnFac(int32 n) {
 
   if (n < FAK_LEN) {
     if (n <= 1) {
-      if (n < 0) FatalError("Parameter negative in LnFac function");
+      if (n < 0) FatalError((char*)"Parameter negative in LnFac function");
       return 0;}
     if (!initialized) { // first time. Must initialize table
       // make table of ln(n!)
@@ -85,7 +85,7 @@ int32 StochasticLib1::Poisson (double L) {
   if (L < 17) {
     if (L < 1.E-6) {
       if (L == 0) return 0;
-      if (L < 0) FatalError("Parameter negative in poisson function");
+      if (L < 0) FatalError((char*)"Parameter negative in poisson function");
 
       //--------------------------------------------------------------
       // calculate probabilities
@@ -107,7 +107,7 @@ int32 StochasticLib1::Poisson (double L) {
       return PoissonInver(L);}}
 
   else {
-    if (L > 2.E9) FatalError("Parameter too big in poisson function");
+    if (L > 2.E9) FatalError((char*)"Parameter too big in poisson function");
 
     //----------------------------------------------------------------
     // ratio-of-uniforms method
