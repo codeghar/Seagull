@@ -976,6 +976,8 @@ Seagull will look at parameters indicated by
         with the content of "MYVAR".
         </li>
         </ul>
+        <warning>As init section and traffic section are hold as different calls, do not store a 
+          value in the init section to restore it in the traffic section.</warning>
       </section>
     </section>
     <section id="control">
@@ -1314,6 +1316,26 @@ for further details based on examples.
           <a href="#action_start-timer"><![CDATA[<start-timer>]]></a> and
           <a href="#action_stop-timer"><![CDATA[<stop-timer>]]></a> in the scenario
           file.</note>
+        <warning>Do not imbricate timers like this:<br/>
+        <source><![CDATA[<start-timer>
+...
+<start-timer>
+...
+<stop-timer>
+...
+<stop-timer>
+        ]]>
+        </source>
+        Always stop a timer before strating a new one:
+        <source><![CDATA[<start-timer>
+...
+<stop-timer>
+...
+<start-timer>
+...
+<stop-timer>
+        ]]>
+        </source></warning>
         <p>The parameters to be set in the configuration file are the following:</p>
         <ul>
           <li>1) <a href="#data_log_period">data-log-period</a>
