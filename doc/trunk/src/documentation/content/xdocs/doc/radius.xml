@@ -6,67 +6,635 @@
   </header>
   <body>
     <section>
-      <title>Radius protocol</title>
-      <p></p>
-    <note>This section is currently limited to describe Radius authentication.</note>
+      <title>Radius protocol details</title>
+      <p>The Radius implementation in Seagull conforms to the RADIUS authentication RFC: <a href="http://tools.ietf.org/html/rfc2865">RFC 2865</a> 
+        and the RADIUS accounting RFC : <a href="http://tools.ietf.org/html/rfc2866">RFC 2866</a>
+      </p>
     </section>
+    <section>
+      <title>Getting started with Radius</title>
+      <section>
+        <title>First try</title>
+        <p>The proposed example is a "Accouting Request" scenario:
+        <source><![CDATA[   
+  Client                         Server
+    | Accounting-Request            |
+    | Acct-Status-Type = 1 (start)  |
+    |------------------------------>|   
+    |                               |
+    | Accounting-Response           |
+    | Acct-Status-Type = 1          |
+    |<------------------------------|   
+    |                               |
+    | PAUSE                         |
+    |                               |
+    | Accounting-Request            |
+    | Acct-Status-Type = 2 (stop)   |
+    |------------------------------>|  
+    | Accounting-Response           |
+    | Acct-Status-Type = 2          |
+    |<------------------------------|]]></source>
+        </p>
+        <note>This scenario is included when you install Seagull. It is located in /usr/local/share/seagull/radius/ directory.</note>        
+        <p>Open two terminal sessions. Terminal 2 will be the server and Terminal 1 the client.
+          Examples are located in the "run" directory. So the first thing you need
+          to do is to go in this directory (in both terminal windows):</p>
+        <source>cd run</source>
+        <p>In Terminal 2 window type:</p>
+        <source>./start_server.ksh</source>
+        <p>In Terminal 1 window type:</p>
+        <source>./start_client.ksh</source>
+        <p>On Terminal 2 (server side), you will see:</p>
+        <source>|------------------------+---------------------------+-------------------------|
+| Start/Current Time     |       2007-07-18 14:37:43 |     2007-07-18 14:38:13 |
+|------------------------+---------------------------+-------------------------|
+|    Counter Name        |      Periodic value       |     Cumulative value    |
+|------------------------+---------------------------+-------------------------|
+| Elapsed Time           | 00:00:01:009              | 00:00:30:300            |
+| Call rate (/s)         |    0.991                  |    0.132                |
+|------------------------+---------------------------+-------------------------|
+| Incoming calls         |        1                  |        4                |
+| Outgoing calls         |        0                  |        0                |
+| Msg Recv/s             |    2.973                  |    0.231                |
+| Msg Sent/s             |    2.973                  |    0.231                |
+| Unexpected msg         |        0                  |        0                |
+| Current calls          |        1                  |    0.033                |
+|------------------------+---------------------------+-------------------------|
+| Successful calls       |        2                  |        3                |
+| Failed calls           |        0                  |        0                |
+| Refused calls          |        0                  |        0                |
+| Aborted calls          |        0                  |        0                |
+| Timeout calls          |        0                  |        0                |
+|------------------------+---------------------------+-------------------------|
+| Last Info              | Incomming traffic                                   |
+| Last Error             | No error                                            |
+|--- Next screen : Press key 1 ----------------------- [h]: Display help ------|
+        </source>
+        </section>
+        <section>
+        <title>First try explained</title>
+        <p>Here is the script (start_client.ksh) that launched the client in our example:</p>
+        <source><![CDATA[#!/bin/ksh
+
+export LD_LIBRARY_PATH=/usr/local/bin
+seagull -conf ../config/conf.client.xml -dico ../config/radius-accounting.xml -scen ../scenario/radius-accounting.client.xml -log ../logs/radius-accounting.client.log -llevel ET]]>
+        </source>
+        <note>On some systems, you might need to include the following export 
+          in your Seagull script: "export SHLIB_PATH=/usr/local/bin".
+        </note>
+        <p>Both sides are relying on the Radius Accounting dictionary provided
+          with Seagull: radius-accounting.xml to encode Radius messages. Refer to 
+          <a href="#config_dict">dictionary configuration</a> section for more information on the
+          format of this dictionary. The dictionary is specified using the <code>-dico</code>
+          parameter on the <a href="core.html#cli_help">command line</a>.</p>
+        <p>The generic configuration (including network and other parameters)
+          is different for the client and the server. The client uses <code>conf.client.xml</code>
+          and the server uses <code>conf.server.xml</code>. The configuration file is specified
+          using the <code>-conf</code> parameter on the  <a href="core.html#cli_help">command line</a>.</p>
+        <p>Here are both files:</p>
+        <table id="conf_client_server_radius">
+          <caption>Example client and server configuration</caption>
+          <tr>
+            <th>conf.client.xml</th>
+            <th>conf.server.xml</th>
+          </tr>
+          <tr>
+            <td>
+              <source><![CDATA[<?xml version="1.0" encoding="ISO-8859-1"?>
+<configuration name="Simple Radius Accounting TCP/IP Client Conf">
+
+  <define entity="transport"
+    name="trans-ip-v4"
+    file="libtrans_ip.so"
+    create_function="create_cipio_instance"
+    delete_function="delete_cipio_instance"
+    init-args="type=tcp">
+  </define>
+
+  <define entity="channel"
+    name="trans-ip-v4"
+    protocol="radius-accounting-v1"
+    transport="trans-ip-v4"
+    open-args="mode=client;dest=127.0.0.1:1813">
+  </define>
+  
+  <define entity="traffic-param" name="call-rate" value="1"></define>
+  <define entity="traffic-param" name="display-period" value="1"></define>
+  <define entity="traffic-param" name="log-stat-period" value="1"></define>
+  <define entity="traffic-param" name="log-stat-file" value="../logs/client-stat.csv"></define>
+  <define entity="traffic-param" name="call-timeout-ms" value="10000"></define>
+  <define entity="traffic-param" name="display-scenario-stat" value="true"></define>
+  <define entity="traffic-param" name="display-protocol-stat" value="true"></define>
+  <define entity="traffic-param" name="log-protocol-stat-period" value="5"></define>
+  <define entity="traffic-param" name="log-protocol-stat-name" value="all"></define>
+  <define entity="traffic-param" name="log-protocol-stat-file" value="../logs/client-protocol-stat.csv"></define>
+
+  <define entity="traffic-param" name="max-send" value="200"></define>
+  <define entity="traffic-param" name="max-receive" value="200"></define>
+  <define entity="traffic-param" name="max-simultaneous-calls" value="2000"></define>
+  <define entity="traffic-param" name="select-timeout-ms" value="50"></define>
+
+  <define entity="traffic-param" name="external-data-file" value="../scenario/external_client_data.csv"></define>
+  <define entity="traffic-param" name="external-data-select" value="sequential"></define>
+
+</configuration>]]></source>
+            </td>
+            <td>
+              <source><![CDATA[<?xml version="1.0" encoding="ISO-8859-1"?>
+<configuration name="Simple Radius TCP/IP Server Conf">
+  <define entity="transport"
+    name="trans-ip-v4"
+    file="libtrans_ip.so"
+    create_function="create_cipio_instance"
+    delete_function="delete_cipio_instance"
+    init-args="type=tcp">
+  </define>
+
+  <define entity="channel"
+    name="trans-ip-v4"
+    protocol="radius-accounting-v1"
+    transport="trans-ip-v4"
+    open-args="mode=server;source=127.0.0.1:1813">
+  </define>
+
+
+  <define entity="traffic-param" name="display-period" value="1"></define>
+
+  <define entity="traffic-param" name="log-stat-period" value="1"></define>
+  <define entity="traffic-param" name="log-stat-file" value="../logs/server-stat.csv"></define>
+
+  <define entity="traffic-param" name="call-timeout-ms" value="10000"></define>
+  <define entity="traffic-param" name="display-scenario-stat" value="true"></define>
+  <define entity="traffic-param" name="display-protocol-stat" value="true"></define>
+  <define entity="traffic-param" name="log-protocol-stat-period" value="5"></define>
+  <define entity="traffic-param" name="log-protocol-stat-name" value="all"></define>
+  <define entity="traffic-param" name="log-protocol-stat-file" value="../logs/server-protocol-stat.csv"></define>
+
+
+  <define entity="traffic-param" name="max-send" value="2000"></define>
+  <define entity="traffic-param" name="max-receive" value="2000"></define>
+  <define entity="traffic-param" name="max-simultaneous-calls" value="2000"></define>
+  <define entity="traffic-param" name="select-timeout-ms" value="50"></define>
+
+  <define entity="traffic-param" name="external-data-file" value="../scenario/external_server_data.csv"></define>
+  <define entity="traffic-param" name="external-data-select" value="sequential"></define>
+
+</configuration>]]></source>
+            </td>
+          </tr>
+        </table>
+        <p>Now comes the real stuff: the scenario.</p>
+        <p>First, the scenario source: <a href="radius-accounting.client.xml.html">radius-accounting.client.xml</a>
+        </p>
+        <p>And now the commented version:</p>
+        <table>
+          <tr>
+            <th><anchor id="config_scenario"/>Scenario</th>
+            <th>Comments</th>
+          </tr>
+          <tr>
+            <td>
+              <source><![CDATA[<?xml version="1.0" encoding="ISO-8859-1" ?>
+
+<scenario name="Simple Radius Accouting Client scenario">
+
+<counter>
+  <counterdef name="session-counter" init="0"> </counterdef>
+  <counterdef name="identifier-counter" init="0"> </counterdef>
+</counter>
+
+<!-- Initialisation Scenario 
+<init>
+</init>
+-->
+
+<!-- Traffic Scenario -->
+<traffic>
+
+  <!-- Start Accouting Request -->
+  <send channel="trans-ip-v4">
+    <action>
+      <!-- For each new call, increment the Acct-Session-Id counter -->
+      <inc-counter name="session-counter"> </inc-counter>
+      <inc-counter name="identifier-counter"> </inc-counter>
+      <set-value name="Acct-Session-Id" 
+                 format="$(session-counter)"></set-value>
+      <set-value name="Identifier" 
+                 format="$(identifier-counter)"></set-value>
+
+      <!-- This field must not be use with a true value -->
+      <restore-from-external field="0" entity="Authenticator"></restore-from-external> 
+
+    </action>
+    <Message name="Accounting-Request">
+      <Attribute name="Acct-Session-Id" value="value_is_replaced"> </Attribute>
+      <!-- 1 stand for Start -->
+      <Attribute name="Acct-Status-Type" value="1"> </Attribute>
+      <Attribute name="NAS-Identifier" value="ims.hpintelco.org"> </Attribute>
+    </Message>
+    <action>
+      <store name="ACCT_SES_ID" entity="Acct-Session-Id"></store>
+      <start-timer></start-timer>
+    </action>
+  </send>
+  
+  <receive channel="trans-ip-v4">
+    <action>
+      <stop-timer></stop-timer>
+    </action>
+    <Message name="Accounting-Response">
+      <Attribute name="Acct-Session-Id" value="na"> </Attribute>
+      <!-- 1 stand for Start -->
+      <Attribute name="Acct-Status-Type" value="1"> </Attribute>
+    </Message>
+  </receive>
+
+  <wait-ms value="500"></wait-ms>
+
+  <!-- Stop Accouting Request -->
+  <send channel="trans-ip-v4">
+    <action>
+      <!-- For each new call, increment the Acct-Session-Id counter -->
+      <inc-counter name="identifier-counter"> </inc-counter>
+      <set-value name="Identifier" 
+                 format="$(identifier-counter)"></set-value>
+
+      <!-- This field must not be use with a true value -->
+      <restore-from-external field="1" entity="Authenticator"></restore-from-external> 
+
+      <restore name="ACCT_SES_ID" entity="Acct-Session-Id"></restore>
+    </action>
+    <Message name="Accounting-Request">
+      <Attribute name="Acct-Session-Id" value="value_is_replaced"> </Attribute>
+      <!-- 2 stand for Stop -->
+      <Attribute name="Acct-Status-Type" value="2"> </Attribute>
+      <Attribute name="NAS-Identifier" value="ims.hpintelco.org"> </Attribute>
+    </Message>
+    <action>
+      <start-timer></start-timer>
+    </action>
+  </send>
+  
+  <receive channel="trans-ip-v4">
+    <action>
+      <stop-timer></stop-timer>
+    </action>
+    <Message name="Accounting-Response">
+      <Attribute name="Acct-Session-Id" value="na"> </Attribute>
+      <!-- 2 stand for Stop -->
+      <Attribute name="Acct-Status-Type" value="2"> </Attribute>
+    </Message>
+  </receive>
+
+</traffic>
+  
+</scenario>
+              ]]></source>
+            </td>
+            <td>
+              <source><![CDATA[XML header
+                                                                                                                 
+Scenario name
+
+Counters definitions
+In this section are initialized the counters that will 
+then be used during the calls.
+For example here: we initialize the two counter that will 
+be incremented every time a call is started.
+
+No init section
+
+
+
+
+Traffic section
+
+
+
+Actions before sending the first Accounting-Request message: 
+Increment the session-counter counter.
+Increment the identifier-counter counter.
+Set the field Acct-Session-Id with the counter session-counter
+
+Set the field Acct-Session-Id with the counter session-counter
+
+
+
+
+restore-from-external gets some data from an external file into the Authentificator field.
+
+
+Send the Accounting-Request message with 3 attributes
+The Acct-Session-Id attribute is added to the message, the value had been changed with set-value action
+
+The Acct-Status-Type attribute is added to the message with the value 1
+The NAS-Identifier attribute is added to the message with the value "ims.hpintelco.org"
+
+Actions after sending the first Accounting-Request message: 
+store the value of the field Acct-Session-Id into the variable ACCT_SES_ID
+start the timer (to measure response time)
+
+
+
+
+Actions before receiving Accounting-Response
+stop the timer
+
+Receive the Accounting-Response message with 2 attributes
+The real values of attributes are set by the remote.
+
+
+
+
+
+Make a pause in scenario (of 500ms)
+
+
+
+Actions before sending the Accounting-Request message
+
+Increment the identifier-counter
+set the value of the field Identifier with the identifier-counter
+
+
+
+restore an external value into the field authentificator
+
+restore the value of the variable ACCT_SES_ID into the field Acct-Session-Id
+
+Send the message Accounting-Request
+The Acct-Session-Id attribute is added to the message, the value had been changed with restore action
+
+The Acct-Status-Type attribute is added to the message with the value 2
+The NAS-Identifier attribute is added to the message with the value "ims.hpintelco.org"
+
+Actions after sending the first Accounting-Request message: 
+start the timer (to measure response time)
+
+
+
+
+Actions before receiving Accounting-Response
+stop the timer
+
+Receive the Accounting-Response message with 2 attributes
+The real values of attributes are set by the remote
+
+              ]]></source>
+            </td>
+          </tr>
+        </table>
+      </section>
+    </section>
+    
+<section id="config">
+      <title>Configuration files</title>
+      <p>There are 3 different configuration files:</p>
+      <ul>
+        <li>
+          <a href="#config_generic">Generic</a> configuration file - describing traffic and network parameters</li>
+        <li>
+          <a href="#config_dict">Protocol dictionary</a> configuration file - rarely to be edited </li>
+        <li>
+          <a href="#config_scenario">Scenario</a> file - description of the message exchanges</li>
+      </ul>
+      <figure alt="Config files" src="images/conf_files.png" width="424"/>
+      <p/>
+      <section id="config_generic">
+       <title>Generic configuration</title>
+        <p>The generic configuration file describes the network environment
+        as well as traffic parameters.</p>
+        <anchor id="cfg_transport"/>
+        <p>The network environment is described through "<a href="core.html#ref_transport">transport channel 
+        entities</a>". The transport entity is then used as an attribute of <a href="core.html#cmd_send"><code>send</code>
+          </a> and
+        <a href="core.html#cmd_receive"><code>receive</code>
+          </a> scenario commands, as well as during the 
+        opening of the transport channel (see below). </p>
+        <source>
+<![CDATA[<!-- Radius example -->
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<configuration name="Simple Radius Accounting TCP/IP Client Conf">
+
+<!-- Define the transport to be used: -->
+  <define entity="transport"
+    name="trans-ip-v4"
+    file="libtrans_ip.so"
+    create_function="create_cipio_instance"
+    delete_function="delete_cipio_instance"
+    init-args="type=tcp">
+  </define>
+  
+<!-- Then you specify the opening of the channel, on the transport previously described. -->
+  
+<!-- For a server listening to port 1813 on interface "127.0.0.1", it will look like this: -->
+  <define entity="channel"
+    name="trans-ip-v4"
+    protocol="radius-accounting-v1"
+    transport="trans-ip-v4"
+    open-args="mode=server;source=127.0.0.1:1813">
+  </define>
+
+<!-- For a client sending messages to port 1813 on interface "127.0.0.1", it will look like this: -->
+  <define entity="channel"
+    name="trans-ip-v4"
+    protocol="radius-accounting-v1"
+    transport="trans-ip-v4"
+    open-args="mode=client;dest=127.0.0.1:1813">
+  </define>
+]]>
+	</source>
+      </section>
+      <section id="config_dict">
+        <title>Radius dictionary</title>
+        <p>Radius messages and parameters are described in XML dictionaries.
+           The tool comes with a complete Radius dictionary.</p>
+        <p>A dictionary contains several XML sections</p>
+        <section>
+          <title>Types</title>
+          <p>"types" section contains all types needed for the protocol. For Diameter, these are:
+          <source><![CDATA[<types>
+  <!-- Types defined for the Attributes   -->
+  <typedef name="Octet"       type="number" size="1"  unit="octet"> </typedef>
+  <typedef name="Integer32"   type="signed" size="4"  unit="octet"> </typedef>
+  <typedef name="Unsigned32"  type="number" size="4"  unit="octet"> </typedef>
+  <typedef name="Address"     type="number" size="4"  unit="octet"> </typedef>
+  <typedef name="Time"        type="number" size="4"  unit="octet"> </typedef>
+  <typedef name="String"      type="string"           unit="octet"> </typedef>
+  <typedef name="Text"        type="string"           unit="octet"> </typedef>
+  <typedef name="Grouped"     type="grouped"                      > </typedef>
+
+  <typedef name="Octet_16"    type="string" size="16" unit="octet"> </typedef>
+  <typedef name="AddressV6"   type="string" size="16" unit="octet"> </typedef>
+  <typedef name="InterfaceId" type="string" size="8"  unit="octet"> </typedef>
+</types>
+          ]]></source>
+          </p>
+        </section>
+    <section>
+          <title>Header</title>
+          <p>"header" section contains the description of message header.
+          For Radius, this is:</p>
+          <source><![CDATA[<header name="Message" length="Length" type="Code">
+  <fielddef name="Code"          size="1" unit="octet"> </fielddef>
+  <fielddef name="Identifier"    size="1" unit="octet"> </fielddef>
+  <fielddef name="Length"        size="2" unit="octet"> </fielddef>
+  <fielddef name="Authenticator" type="Octet_16"> </fielddef> 
+</header>
+          ]]></source>
+                 </section>
+        <section>
+          <title>Body</title>
+          <p>"body" section contains the description of message body (which
+          naturally comes after the header). For Radius, this is: </p>
+          <source><![CDATA[<body>
+  <header name="Attribute" length="Attr-Length" type="Attr-Type">
+     <fielddef name="Attr-Type"   size="1" unit="octet"> </fielddef>
+     <fielddef name="Attr-Length" size="1" unit="octet"> </fielddef>
+  </header>
+</body>
+          ]]></source>
+            </section>
+        <section>
+          <title>Dictionary</title>
+          <p>"dictionary" section contains all possible parameters
+          that a message can contain. Here is a description for some Radius attributes:</p>
+          <source><![CDATA[<dictionary>
+  <!-- RADIUS Attribute definitions -->
+  <Attribute>
+    <!-- RADIUS Base Attribute definitions see RFC 2865 -->
+    <define name="User-Name" type="String">
+      <setfield name="Attr-Type" value="1"></setfield>
+    </define>
+    <define name="User-Password" type="String">
+      <setfield name="Attr-Type" value="2"></setfield>
+    </define>
+    <define name="CHAP-Password" type="String">
+      <setfield name="Attr-Type" value="3"></setfield>
+      <!-- composed by CHAP-Id Octect and String -->
+    </define>
+    <define name="NAS-IP-Address" type="Address">
+      <setfield name="Attr-Type" value="4"></setfield>
+    </define>
+    <define name="NAS-Port" type="Integer32">
+      <setfield name="Attr-Type" value="5"></setfield>
+    </define>
+    <define name="Service-Type" type="Integer32">
+      <setfield name="Attr-Type" value="6"></setfield>
+    </define>
+  </Attribute>
+</dictionary>
+          ]]></source>
+        </section>
+        <section>
+          <title>Message</title>
+          <p>"Message" section contains all possible Diameter messages (from RFC 2865 and 2866).
+          Here is an example of Radius messages:</p>
+          <source><![CDATA[    <define name="Access-Request">
+       <setfield name="Code" value="1"></setfield>
+    </define> 
+    <define name="Access-Accept">
+       <setfield name="Code" value="2"></setfield>
+    </define>
+          ]]></source>
+        </section>
+      </section>
+            <section id="prepostactions_radius">
+              <title>Actions in scenario commands for Radius</title>
+              <p>The &lt;send&gt; and &lt;receive&gt; scenario commands include an &lt;action&gt; and
+              &lt;message&gt; sections.</p>
+              <p>The &lt;action&gt; section can be placed before or after the &lt;message&gt; section.</p>
+              <p>Actions placed before the message (called 
+              "<strong>pre-actions</strong>") are executed before the message is actually
+              sent or received. Actions placed after the message (called 
+              "<strong>post-actions</strong>") are executed after the
+              message is sent or received. </p>
+              <p>For example, actions that can be placed before a message are actions
+              to set the values of some ids or to set some fields using external values, 
+	      before sending a message. Example:</p>
+              <source><![CDATA[  <send channel="trans-ip-v4">
+    <action>
+      <!-- For each new call, increment the Acct-Session-Id counter -->
+      <inc-counter name="session-counter"> </inc-counter>
+      <inc-counter name="identifier-counter"> </inc-counter>
+      <set-value name="Acct-Session-Id" 
+                 format="$(session-counter)"></set-value>
+      <set-value name="Identifier" 
+                 format="$(identifier-counter)"></set-value>
+
+      <!-- This field must not be use with a true value -->
+      <restore-from-external field="0" entity="Authenticator"></restore-from-external> 
+
+    </action>
+
+]]></source>
+              <p>Actions that can be placed after a message are actions to store
+              some values after the message has been received. Example:</p>
+              <source><![CDATA[<action>
+      <store name="ACCT_SES_ID" entity="Acct-Session-Id"></store>
+    </action>
+  </send>]]></source>
+              <p>The list of <a href="#ref_actions">possible actions</a> is available 
+              in the reference section.</p>
+            </section>
+        </section>
+     
+    
     <section id="radius_authentication">
       <title>Radius authentication</title>
-      
-        <p>The authentication implementation in Radius protocol is to be used as an example. 
+      <p>The authentication implementation in Radius protocol is to be used as an example. 
         The "crypto_method" method, used for the authentication, is defined in 
         <a href="http://gull.svn.sourceforge.net/viewvc/gull/seagull/trunk/src/library-crypto/CryptExternalMethods.hpp?view=markup">"library-crypto/CryptExternalMethods.hpp"</a> 
         and implemented in <a href="http://gull.svn.sourceforge.net/viewvc/gull/seagull/trunk/src/library-crypto/CryptExternalMethods.cpp?view=markup">"library-crypto/CryptExternalMethods.cpp"</a> 
         in the sources.<br/> It can be modified to match the exact authentication algorithm.</p>
         <section id="implementaion">
           <title>Seagull implementation</title>
-        <p>At first, the message is built with the "Authenticator" field filled with '0000000000000000' in the scenario:
-        <source><![CDATA[<Message name="Accounting-Request">
+          <p>At first, the message is built with the "Authenticator" field filled with '0000000000000000' in the scenario:
+            <source><![CDATA[<Message name="Accounting-Request">
       <setfield name="Authenticator" value="0000000000000000"> </setfield>
       ...
       ]]></source> <br/>
-      In the pre-action part of the scenario, the "Authenticator" field is set with the result of the authentication method:
-      <source><![CDATA[<set-value name="Authenticator" method="authentication" message_part="all"
+            In the pre-action part of the scenario, the "Authenticator" field is set with the result of the authentication method:
+            <source><![CDATA[<set-value name="Authenticator" method="authentication" message_part="all"
                  format="shared_secret=$(SH_SE)"></set-value>
       ]]></source>
-      <p>The "method" field selects the function to be used for the authentication from the ones defined in the dictionary.<br/>
-      The "message_part" defines which part of the message is used for the authentication 
-      (in this case, the entire message is used).<br/>
-      The "format" defines additional parameters if the method needs some (In this case, 
-      the "shared_secret" parameter is passed to the method with the value of the memory zone "SH_SE". The 
-      memory zone "SH_SE" can be filled by a "restore from_exernal" action for example). 
-      </p>
-      </p>
-      </section>
-      <section id="authentication_dictionary">
-        <title>Authentication dictionary</title>
-        <p>The authentication method must be defined in the dictionary with its name, the name of the function to be 
-        used and the name of the library in which the function is defined.<br/>
-        Example:
-        <source><![CDATA[<!-- external methods for fields modifications -->
+            <p>The "method" field selects the function to be used for the authentication from the ones defined in the dictionary.<br/>
+              The "message_part" defines which part of the message is used for the authentication 
+              (in this case, the entire message is used).<br/>
+              The "format" defines additional parameters if the method needs some (In this case, 
+              the "shared_secret" parameter is passed to the method with the value of the memory zone "SH_SE". The 
+              memory zone "SH_SE" can be filled by a "restore from_exernal" action for example). 
+            </p>
+          </p>
+        </section>
+        <section id="authentication_dictionary">
+          <title>Authentication dictionary</title>
+          <p>The authentication method must be defined in the dictionary with its name, the name of the function to be 
+            used and the name of the library in which the function is defined.<br/>
+            Example:
+            <source><![CDATA[<!-- external methods for fields modifications -->
 <external-method>
         <defmethod name="authentication"
                    param="lib=lib_crypto.so;function=crypto_method_radius">
         </defmethod>
-</external-method>
-]]></source>
-        The authentication method "name" is used in the scenario to call the authentication function.<br/>
-        The "param" defines the name of the library "lib=lib_crypto.so" and the name of the function "function=crypto_method_radius".  
-        </p>
-      </section>
-      <section id="authentication_scenario">
+</external-method>]]></source>
+            The authentication method "name" is used in the scenario to call the authentication function.<br/>
+            The "param" defines the name of the library "lib=lib_crypto.so" and the name of the function "function=crypto_method_radius".  
+          </p>
+        </section>
+        <section id="authentication_scenario">
         <title>Authentication scenario</title>
         <p>Here is the commented version of the Radius client using the "authentication" method defined 
-        in "library-crypto/CryptExternalMethods.hpp" and implemented in "library-crypto/CryptExternalMethods.cpp" 
-        in the sources</p>
-        <table>
-          <tr>
-            <th>Client XML scenario.</th>
-            <th>Comments</th>
-          </tr>
-          <tr>
-            <td>
-            <source><![CDATA[<?xml version="1.0" encoding="ISO-8859-1" ?>
+          in "library-crypto/CryptExternalMethods.hpp" and implemented in "library-crypto/CryptExternalMethods.cpp" 
+          in the sources</p>
+          <table>
+            <tr>
+              <th>Client XML scenario.</th>
+              <th>Comments</th>
+            </tr>
+            <tr>
+              <td>
+                <source><![CDATA[<?xml version="1.0" encoding="ISO-8859-1" ?>
 
 <scenario name="Simple Radius Accouting Client scenario">
 
@@ -110,9 +678,8 @@
 
 </traffic>
 
-</scenario>
-]]></source>
-            </td>
+</scenario>]]></source>
+              </td>
             <td>
               <source><![CDATA[XML header
 
@@ -159,12 +726,9 @@ Store the value of the field "Acct-Session-Id" in the memory zone "ACCT_SES_ID".
 
 ]]></source>
             </td>
-           </tr>
-          </table>      
+          </tr>
+        </table>      
+      </section>
     </section>
-
-    
-   </section>
-
   </body>
 </document>
