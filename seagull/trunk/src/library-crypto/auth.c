@@ -29,6 +29,8 @@
 #include <openssl/md5.h>
 #include "milenage.h"
 
+#include "Utils.hpp"
+
 #define MAX_HEADER_LEN  2049
 #define MD5_HASH_SIZE 16
 #define HASH_HEX_SIZE 2*MD5_HASH_SIZE
@@ -376,7 +378,7 @@ char * base64_decode_string( const char *buf, unsigned int len, int *newlen )
   unsigned int i ;
   int j,x1,x2,x3,x4;
   char *out;
-  out = (char *)malloc( ( len * 3/4 ) + 8 );
+  ALLOC_VAR(out,char *,(( len * 3/4 ) + 8 ));
   for(i=0,j=0;i+3<len;i+=4){
     x1=base64_val(buf[i]);
     x2=base64_val(buf[i+1]);
@@ -431,7 +433,7 @@ char * base64_encode_string( const char *buf, unsigned int len, int *newlen )
   
   triplets = len/3;
   rest = len%3;
-  out = (char *)malloc( ( triplets * 4 ) + 8 );
+  ALLOC_VAR(out,char *,(( triplets * 4 ) + 8 ));
   
   ptr = out;
   for(i=0;i<triplets*3;i+=3){
