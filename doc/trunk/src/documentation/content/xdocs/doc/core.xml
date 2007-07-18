@@ -2372,6 +2372,16 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             value="client.log">]]></code>: the logs are saved in client.2004-10-13.13:23:01.120.log log file.</td>
             </tr>
             <tr>
+              <td>files-no-timestamp</td>
+              <td>To specify to not insert the date between
+            the name and the extension in the log files names.</td>
+              <td>-</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param"
+            name="files-no-timestamp"
+            value="true">]]></code>: the logs are saved in "client.log" log file.</td>
+            </tr>
+            <tr>
               <td>
                 <anchor id="display-protocol-stat"/>display-protocol-stat</td>
               <td>Enable (true) / disable (false) the protocol statistics. 
