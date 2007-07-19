@@ -207,7 +207,7 @@ int main_tool(int P_argc, char**P_argv) {
 
   destroy_cmd(L_cmd_line);
   L_cmd_line->m_nb_args += 2 ;
-  DELETE_VAR(L_cmd_line);
+  FREE_VAR(L_cmd_line);
 
   // Close trace
   close_trace () ;
