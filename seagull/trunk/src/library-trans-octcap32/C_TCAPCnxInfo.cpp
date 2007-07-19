@@ -43,8 +43,7 @@ void  delete_CnxInfo(T_pCnxInfo *P_CnxInfo) {
   T_pCnxInfo L_CnxInfo = NULL ;
   if (P_CnxInfo != NULL) {
     L_CnxInfo = *P_CnxInfo ;
-
-    FREE_VAR(L_CnxInfo->m_class_value);
+    FREE_TABLE(L_CnxInfo->m_class_value);
     *P_CnxInfo = NULL ;
   }
   
