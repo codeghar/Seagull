@@ -1992,7 +1992,6 @@ C_MessageText* C_ProtocolText::create(C_ProtocolText *P_protocol,
       }
 
       if (L_new_buffer_body != NULL ) {
-        
         *L_value_body = valueFromString(L_new_buffer_body, 
                                         E_TYPE_STRING , L_result);
       } else { 
@@ -2296,9 +2295,9 @@ unsigned long  C_ProtocolText::calculate_size(char* P_varibleString) {
       if ((L_pos + 2) <= (P_varibleString+L_size_buffer)) { 
 	L_search = search_variable((L_pos + 2)) ;
 	if (L_search != NULL) {
-          L_size_variable_config += strlen(L_search);
 	  L_value_conf  = find_config_value(L_search);
 	  if (L_value_conf != NULL) {
+            L_size_variable_config += strlen(L_search);
             L_size_value_config += strlen(L_value_conf);
           }
           L_ptr = L_pos + strlen(L_search) + 3 ;
@@ -2310,7 +2309,7 @@ unsigned long  C_ProtocolText::calculate_size(char* P_varibleString) {
     } // while
     L_ret = L_size_buffer - L_size_variable_config + L_size_value_config ;
   }
-  
+
   GEN_DEBUG(1, "C_ProtocolText::calculate_size() end");
   return (L_ret);
 }
@@ -2349,7 +2348,6 @@ char* C_ProtocolText::search_variable(char* P_varibleString) {
               L_value_size+1);
   memcpy(L_value, L_ptr, L_value_size);
   L_value[L_value_size] = 0 ;
-
   return (L_value);
 }
 
@@ -2372,18 +2370,16 @@ char* C_ProtocolText::replace_variable_config(char* P_buffer, unsigned long P_si
     L_size_end = L_size_buffer ;
     ALLOC_TABLE(L_result, 
 		char*, 
-		sizeof(char), 
-		P_size_config);
+		sizeof(char),
+                P_size_config+1);
 
     L_new = L_result ; 
-
     while((L_ptr) && (L_pos = strstr(L_ptr,(char*)"$(")) != NULL) {
       L_size = L_pos - L_ptr ;
       if (L_size > 0) {
 	memcpy(L_new, L_ptr, L_size);
 	L_new += L_size ;
       }
-      
       // test end needed ? for L_ptr
       if ((L_pos + 2) <= (P_buffer+L_size_buffer)) { 
 	L_search = search_variable((L_pos + 2)) ;
