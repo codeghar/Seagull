@@ -1433,7 +1433,7 @@ for each response time value between 0 and data-log-rtdistrib milliseconds.</p>
         <ul>
           <li>1) <a href="#display-protocol-stat">display-protocol-stat</a>
             <p>Setting this parameter to true enables the protocol statistics. 
-	    If it is not set to true, you will not get any protocol statistics, 
+	    If it is not set to true, you will not get any protocol statistics at screen of in log files, 
 	    even if the following parameters are set.</p>
           </li>
           <li>2) <a href="#log-protocol-stat-period">log-protocol-stat-period</a>
@@ -1605,7 +1605,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
           <strong>W</strong>-Warnings - non blocking errors
             <ul>
               <li>No init scenario</li>
-            <li>No more call context availables</li>
+              <li>No more call context availables</li>
           </ul>
         </li>
         <li>
@@ -1620,6 +1620,16 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
           <strong>M</strong>-Messages (decoded messages)</li>
         <li>
           <strong>B</strong>-Buffer (hex dumps)</li>
+        <li>
+          <strong>V</strong>-Verdict (Trace the result of each call with its session-id in the log file) <br/>
+            If the call has no session id, no logs are traced.<br/>
+            Be awared that the session-id may not be unique in the log file.<br/>
+            The "Init" section is considered as a independant call.
+            <ul>
+              <li>passed : call is succesful</li>
+              <li>failed : call is failed</li>
+          </ul>
+        </li>
         <li>
           <strong>A</strong>-All</li>
         <li>
@@ -3433,6 +3443,15 @@ seagull Command syntax
 [ -notimelog  ] no time stamp on the log (default time stamp)
 [ -msgcheck  ] check the field of the messages received (default no check)]]></source>
       </section>
+      <section id="cli_return_code">
+        <title>Seagull return code</title>
+        <p>Seagull returns a global status of the calls through the return code:</p>
+        <ul>
+          <li>	0 : ok, seagull did not meet any problems and all calls finished well.</li>
+          <li>	-1 : fatal error, seagull met a fatal error and stopped.</li>
+          <li>	>1 : error, at least, one call failed ("Ignored" calls are not considered as failed; the init section is concidered as a independant call).</li>
+        </ul>
+      </section>
     </section>
     <section>
       <title>Miscellaneous tools</title>
@@ -3444,5 +3463,6 @@ seagull Command syntax
         tool can be used to debug regular expressions (widely used in Seagull!).</li>
       </ul>
     </section>
+
   </body>
 </document>
