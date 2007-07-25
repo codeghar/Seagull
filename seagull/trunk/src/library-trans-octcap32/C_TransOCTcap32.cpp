@@ -458,7 +458,7 @@ char *C_TransOCTcap32::verify_path(char * P_libPath, char * P_libName) {
   char             *L_Path = NULL ;
   FILE             *L_fp ;
 
-  ALLOC_TABLE(L_Path, char*, sizeof(char), strlen(P_libName)+strlen(P_libPath)+1);
+  ALLOC_TABLE(L_Path, char*, sizeof(char), strlen(P_libName)+strlen(P_libPath)+2);
   sprintf(L_Path,"%s/%s",P_libPath,P_libName);
 
   if((L_fp = (fopen(L_Path,"rb"))) == NULL) {
