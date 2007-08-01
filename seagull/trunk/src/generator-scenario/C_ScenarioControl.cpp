@@ -1925,6 +1925,20 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 	    L_actionData->m_mem_id = 
 	      add_memory (L_actionArg);
 	    
+	    L_actionData->m_position = 1 ;
+	    L_actionArg = L_action -> find_value((char*) "value");
+	    if (L_actionArg != NULL) {
+	      L_position = (int)strtoul_f (L_actionArg, &L_end_str, 10);
+	      if (L_end_str[0] != '\0') {
+		GEN_ERROR(E_GEN_FATAL_ERROR, "bad format, ["
+			  << L_actionArg << "] not a number");
+		L_ret = -1 ;
+		break;
+	      }
+	      L_actionData->m_position = L_position ;
+	    }
+
+
 	    break ;
 	    
 	case E_ACTION_SCEN_CHECK_VALUE:
