@@ -2435,15 +2435,20 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
           
           L_actionArg = L_action -> find_value((char*)"name");
           if (L_actionArg != NULL) {
+            L_actionData -> m_type = E_ACTION_SCEN_INSERT_IN_MAP_FROM_MEM  ;
             L_actionData->m_mem_id = check_memory (L_actionArg) ;
             if (L_actionData->m_mem_id == -1) {
-              GEN_ERROR(E_GEN_FATAL_ERROR,
-                        "Unable to find definition for ["
-                        << L_actionArg << "]");
-              L_ret = -1 ;
-              break ;
+              if (strcmp(L_actionArg, (char*)"default-session-id") == 0) {
+                L_actionData -> m_type = E_ACTION_SCEN_ADD_DEFAULT_IN_CALL_MAP;
+                L_actionData -> m_id   =  L_actionData->m_position ;
+              } else {
+                GEN_ERROR(E_GEN_FATAL_ERROR,
+                          "Unable to find definition for ["
+                          << L_actionArg << "]");
+                L_ret = -1 ;
+                break ;
+              }
             }
-            L_actionData -> m_type = E_ACTION_SCEN_INSERT_IN_MAP_FROM_MEM  ;
           } else {    
             L_actionArg2 = L_action -> find_value((char*) "entity");
             if (L_actionArg2 == NULL) {
