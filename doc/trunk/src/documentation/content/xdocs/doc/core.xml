@@ -908,16 +908,26 @@ Seagull will look at parameters indicated by
       <section id="call_variables">
         <title>Call variables</title>
         <p>In order to have dynamical scenarios, Seagull has "call variables".
-          Those variables are local to each call (each instance of the scenario).</p>
+          Those variables are local to each call (each instance of the scenario) 
+          except for the counters which are global to the seagull instance.</p>
         <p>Here is what is possible to do with call variables:</p>
         <ul>
           <li>Set the value of a protocol entity by using the <a href="#action_set-value">set-value</a> action.</li>
           <li>Increment a call variable within a call by using the <a href="#action_inc-var">inc-var</a> action.</li>
-          <li>Increment a call counter by using the <a href="#action_inc-counter">inc-counter</a> action. Note: a counter is a global 
-          (that is, valid for the entire traffic) variable.</li>
           <li>Retrieve the value of a protocol entity in a call variable by using the <a href="#action_store">store</a> action.</li>
           <li>Put the value of a call variable in a protocol entity by using the <a href="#action_restore">restore</a> action. 
           In particular, this is how Diameter Hop-by-hop Id and End-To-End Id can be handled.</li>
+        </ul>
+      </section>
+      <section id="counters">
+        <title>Counters</title>
+        <p>In order to have unique identifier for a seagull instance, Seagull has "counters".
+          Those counters are as global variables to the seagull instance.</p>
+        <p>Here is what is possible to do with counters:</p>
+        <ul>
+          <li>Set the value of a protocol entity by using the <a href="#action_set-value">set-value</a> action.</li>
+          <li>Increment a call counter by using the <a href="#action_inc-counter">inc-counter</a> action.</li>
+          <li>Put the value of a call variable in a protocol entity by using the <a href="#action_restore">restore</a> action.</li>
         </ul>
       </section>
       <section id="store_restore">
@@ -1073,8 +1083,8 @@ Seagull will look at parameters indicated by
       </section>
       <section id="check_value">
         <title>Parameter value check</title>
-        <p>Seagull can also perform controls on the value of the fields of a message 
-	  or the value of some header fields of a message.</p>
+        <p>Seagull can also perform controls on the value of the fields (of the header or 
+        the body) of a message.</p>
         <p>Those controls are defined in the scenarios.</p>
         <note>In general, the control is done against the value indicated in the scenario.</note>
         <p> Examples (as part of the receive section of a message in the scenario):</p>
@@ -1122,7 +1132,7 @@ Seagull will look at parameters indicated by
           </source>
         <note> The position starts at zero, so position=1 checks for the second position.</note>
         <note>If the specified position is greater than the number of 
-	  received components, then an error is logged and the call is aborted.</note>
+	  received components, then an error is logged (as defined with "behaviour") and the call is aborted.</note>
       </section>
 
     </section>
@@ -1196,7 +1206,7 @@ the second line for the second call, etc.).</p>
       then the data is injected in its full length from the "begin" position and a warning is logged.</note>
         <note>When the destination buffer is too short to reach the "begin" position (e.g. buffer with 2 numbers and "begin=5"), 
       zeros are added to the destination buffer so it reaches a size big enough to enable the injection of the buffer at 
-      the "begin" position. A warning is logged.</note>
+      the "begin" position (example: insert "11" at position 5 in buffer "22", the buffer becames "2200011"). A warning is logged.</note>
       </section>
       <section>
         <title>Example</title>
@@ -1382,7 +1392,7 @@ for further details based on examples.
 16201.378906;2196.880000;
 17151.288086;2149.990000;]]></source>
         <p>where the response-time-ms values correspond to the average response time since the previous statistics response time has been logged.</p>
-        <p>If data-log-rtdistrib is defined in the configuration file, then the response time 
+        <p>If all data-log-* parameters are defined in the configuration file, then the response time 
 	  statistics look like:</p>
         <source><![CDATA[Dump Periodic;
 1149;1;
@@ -1743,10 +1753,10 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
               <ul>
               <li><strong>name</strong>: a name used to identify the protocol in the config file</li>
               <li><strong>type</strong>: can be "text" (like XCAP or H248 text), "binary" (like Diameter), "external-library" (like OCTCAP) or "binary-body-not-interpreted" (to support some custom protocols)</li>
-              <li><strong>use-transport-library</strong>: "trans-ip" (TCP or UDP), "trans-extsctp" for SCTP, "trans-octcap" for OCTCAP.</li>
+              <li><strong>use-transport-library</strong>: "trans-ip" (TCP or UDP), "trans-extsctp" for SCTP, "trans-octcap" for OCTCAP (this refers to the name of the library file).</li>
               </ul>
             </li>
-            <li>binary type
+            <li>For binary type
               <ul>
               <li><strong>padding</strong> (optional): padding to be used for the message length. A padding of 4 makes sure that the message size is a multiple of 4 octets.</li>
               <li><strong>length</strong> (optional): by default, Seagull includes the headers to compute the message length. 
@@ -1766,7 +1776,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
 
               </ul>
             </li>
-            <li>text type
+            <li>For text type
               <ul>
               <li><strong>filter</strong>: to specify a filter to be used when reading the XML scenario before sending it. 
               Used to remove heading and trailing spaces or tabs, add additional CR/LF, ....
@@ -1779,8 +1789,8 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             </li>
             <li>external-library type
               <ul>
-              <li><strong>context-factory-constructor</strong>: to be completed</li> 
-              <li><strong>context-factory-destructor</strong>: to be completed</li> 
+              <li><strong>context-factory-constructor</strong>: name of the constructor method of message (which is defined in the external library).  </li> 
+              <li><strong>context-factory-destructor</strong>: name of the destructor method of message (which is defined in the external library).</li> 
               </ul>
             </li>
             <li>binary-body-not-interpreted type
@@ -1795,6 +1805,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
           <title>Types</title>
           <p>"types": this section contains all the types needed for the protocol. An example of 
             the Types section for the Diameter protocol is available <a href="diameter.html#Types">there</a>.</p>
+          <p>This section is optional (but becames mandatory if the protocol needs specific types).</p>  
         </section>
         <section>
           <title>Header</title>
@@ -1817,6 +1828,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
           set-function="set_primitive_uid"
           get-function="get_primitive_uid">
 </fielddef>]]></source></p>
+          <p>This section is mandatory.</p> 
           <table>
             <caption>List of fielddef attributes</caption>
             
@@ -1852,12 +1864,12 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             </tr>
             <tr>
               <td>to-string</td>
-              <td>Optional. For external protocol. Name of the function to convert the field from a string value to an integer value of the field.</td>
+              <td>Optional. For external protocol. Name of the function to convert the field from an integer value to a string value of the field.</td>
               <td>-</td>
             </tr>
             <tr>
               <td>from-string</td>
-              <td>Optional. For external protocol. Name of the function to convert the field from an integer value to a string value of the field.</td>
+              <td>Optional. For external protocol. Name of the function to convert the field from a string value to an integer value of the field.</td>
               <td>-</td>
             </tr>
             <tr>
@@ -1886,6 +1898,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
           <title>Body</title>
           <p>"body": this section contains the description of the message body (which comes after the header). 
           An example of the Body section for the Diameter protocol is available <a href="diameter.html#Body">there</a>.</p>
+          <p>This section is mandatory.</p>
         </section>
         <section>
           <title>body-method</title>
@@ -1902,11 +1915,12 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
           </ul>
           <p>Example:</p>
           <fixme author="Olivier">Add body-method example</fixme>
+          <p>This section is mandatory.</p>
         </section>
         <section>
           <title>external-method</title>
           <p>"external-method": this section contains the methods to be used to encode fields. It is composed of several
-          "def-method" sections. The concerned fields must refer to this method in the 'set-value' action in the 
+          "defmethod" sections. The concerned fields must refer to this method in the 'set-value' action in the 
           scenario with the attribute 'method' (see "<a href="#action_set-value">set_value</a>" action). 
           For now, "crypto_method" from "libtrans_iptls.so" library is the only available method.<br/>
           An example is described for the SIP protocol at <a href="sip.html#sip_authentication">SIP authentication</a>. </p>
@@ -1921,7 +1935,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
              param="lib=lib_crypto.so;function=crypto_method">
   </defmethod>
 </external-method>]]></source>
-
+        <p>This section is optional.</p>
         </section>
         <section id="ref_dictionary">
           <title>Dictionary</title>
@@ -1937,6 +1951,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             <li><strong>out-of-session-id (optional for a "field" session-method)</strong>: Only for a "field" session-method. 
             It specifies a field to be used in backup of the one defined by the session-id attribute.</li>
             </ul>
+            <p>This section is mandatory.</p>
         </section>
       </section>
     </section>
@@ -3418,7 +3433,29 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             <td>"secure-mode" indicates that the mode will change to secure (the only agreed value). </td>
             <td>value="secure-mode"</td>
           </tr>
-
+          <tr>
+            <th>
+              <anchor id="insert-in-map"/>
+              <strong>&lt;insert-in-map&gt;</strong>
+            </th>
+            <th>&nbsp;</th>
+            <th>
+              Specific to "Correlation" feature. It inserts in the list of known session-ids for the given "channel" the value of the "entity" (that is defined in the dictionary).</th>
+            <th>
+              <code><![CDATA[<insert-in-map channel="channel-1" entity="HbH-id"></insert-in-map>]]></code>
+            </th>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>channel</td>
+            <td>Value that was used to identify the channel.</td>
+            <td>channel="channel-1"</td>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>entity</td>
+            <td>Add the value of the "entity" to te map of known session-ids.</td>
+          </tr>
         </table>
       </section>
       <!--
