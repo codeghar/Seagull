@@ -243,7 +243,7 @@ C_GeneratorConfig::C_GeneratorConfig (int P_argc, char** P_argv) {
      { E_CMDLINE_log_level, (char*)"llevel", 
        C_GeneratorConfig::E_OT_OPTIONAL, 1 , one_value_string, 
        (char*)"<logging level mask>", 
-       (char*)"levels: \n          M: msg,     B: buffer,   E: error,\n          W: warning, N: no error, T: traffic error,\n          A: all.     Default E"},
+       (char*)"levels: \n          M: msg,     B: buffer,   E: error,\n          W: warning, N: no error, T: traffic error,\n          V: Verdict, A: all.      Default E"},
 
      { E_CMDLINE_help, (char*)"help",
        C_GeneratorConfig::E_OT_OPTIONAL, 0, NULL,
