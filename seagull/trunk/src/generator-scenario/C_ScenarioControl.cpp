@@ -610,11 +610,6 @@ int C_ScenarioControl::add_scenario
 	L_ret = -1 ;
 	GEN_ERROR(E_GEN_FATAL_ERROR, "Default scenario must be server");
       }
-
-      if (L_nb_cmd > 3) { 
-	L_ret = -1 ;
-	GEN_ERROR(E_GEN_FATAL_ERROR, "Default scenario must have two commands");
-      }
       break ;
 
     case E_SCENARIO_ABORT:
