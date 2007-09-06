@@ -2528,6 +2528,16 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             be terminated.</td>
             </tr>
             <tr>
+              <td>call-timeout-behaviour-abort</td>
+              <td>If a timeout is detected for a call, this parameter defines the behaviour before closing the call.  
+            If it is set to "true", the section "abort" is executed before closing the call.<br/>
+            A message is logged if this parameter is set to true and the section "abort" is missing in the sceanrio. </td>
+              <td>true</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param" name="call-timeout-behaviour-abort" value="true"> </define>]]></code> 
+            </td>
+            </tr>
+            <tr>
               <td>msg-check-level</td>
               <td>Type of message check. Possible values are "P" (Presence check) and
             "A" (Additional field check). The default value is "P".</td>
