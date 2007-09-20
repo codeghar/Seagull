@@ -91,11 +91,11 @@ private :
 
   void rate(unsigned long P_value);
   void ramp(unsigned long P_value, unsigned long P_duration);
-  char* dump_stat();
 
   void quit();
   void pause();
   void resume();
+  void burst();
 
   char* resultOK();
   char* resultKO();

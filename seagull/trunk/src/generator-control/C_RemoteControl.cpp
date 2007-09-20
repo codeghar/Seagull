@@ -510,11 +510,6 @@ char *C_RemoteControl::resultKO() {
   return (L_result);
 }
 
-char* C_RemoteControl::dump_stat() {
-
-  return(m_stat->dumpCounters()) ;
-
-}
 
 void C_RemoteControl::rate(unsigned long P_value) {
   m_gen->change_call_rate(E_GEN_OP_SET_VALUE, P_value);
@@ -547,6 +542,10 @@ void C_RemoteControl::pause() {
 
 void C_RemoteControl::resume() {
   m_gen->restart_traffic() ;
+}
+
+void C_RemoteControl::burst() {
+  m_gen->burst_traffic() ;
 }
 
 void C_RemoteControl::ramp(unsigned long P_value, unsigned long P_duration) {
@@ -793,12 +792,12 @@ char* C_RemoteControl::decode_uri(char *P_uri) {
     return (L_result);
   }  
 
-  L_file = find_file(L_ptr,(char*)"resume");
+  L_file = find_file(L_ptr,(char*)"burst");
   if (L_file) {
     L_result = resultOK() ;
-    resume();
+    burst();
     return (L_result);
-  }  
+  } 
 
   return (L_result);
 }
@@ -816,7 +815,7 @@ char* C_RemoteControl::decode_get_uri(char *P_uri, char **P_result_data) {
       L_ptr = L_result_ptr ;
       L_result_ptr = find_file(L_ptr,(char*)"all");
       if (L_result_ptr) {
-        (*P_result_data) = dump_stat();
+        (*P_result_data) = m_stat->dumpCounters();
         L_result = resultOK();
       }
     } else {
