@@ -765,10 +765,11 @@ T_GeneratorError C_Generator::InitProcedure() {
 		     (char*)"Tool exit (forced when pressed two times)");
 	m_display_control
 	  ->add_help('p',
-		     (char*)"Pause traffic");
+		     (char*)"Pause/Restart traffic");
+
 	m_display_control
-	  ->add_help('r',
-		     (char*)"Resume traffic (after pause)");
+	  ->add_help('b',
+		     (char*)"Burst traffic (after pause)");
 	m_display_control
 	  ->add_help('f',
 		     (char*)"Force init scenario (switch to traffic)");
@@ -1250,6 +1251,14 @@ void C_Generator::restart_traffic () {
     m_read_control -> restart_traffic () ;
   }
   GEN_DEBUG(2, "C_Generator::restart_traffic()");
+}
+
+void C_Generator::burst_traffic () {
+  GEN_DEBUG(1, "C_Generator::burst_traffic()");
+  if (m_read_control != NULL) {
+    m_read_control -> burst_traffic () ;
+  }
+  GEN_DEBUG(2, "C_Generator::burst_traffic()");
 }
 
 void C_Generator::force_init() {

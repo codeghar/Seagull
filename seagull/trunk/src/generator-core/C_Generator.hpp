@@ -65,6 +65,8 @@ public:
 
   void pause_traffic () ;
   void restart_traffic () ;
+  void burst_traffic() ;
+
   void force_init () ;
   void pause_display () ;
   unsigned long get_call_rate() ;

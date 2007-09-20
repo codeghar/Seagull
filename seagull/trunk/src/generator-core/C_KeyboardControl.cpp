@@ -147,8 +147,8 @@ void C_KeyboardControl::execute_cmd(char P_char) {
   case 'p':
     m_gen->pause_traffic();
     break ;
-  case 'r':
-    m_gen->restart_traffic();
+  case 'b':
+    m_gen->burst_traffic();
     break ;
     
   case 'f':
