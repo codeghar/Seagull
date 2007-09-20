@@ -1523,7 +1523,7 @@ void C_CallControl::pause_traffic() {
   case true:
     m_accept_new_call = true ;
     m_pause = false ;
-    m_stat->info_msg((char*)"Incomming traffic (pause end)");
+    m_stat->info_msg((char*)"Incomming traffic (restarted)");
     break ;
   case false:
     m_accept_new_call = false ;
@@ -1535,7 +1535,9 @@ void C_CallControl::pause_traffic() {
 }
 
 void C_CallControl::restart_traffic() {
-  pause_traffic() ;
+}
+
+void C_CallControl::burst_traffic() {
 }
 
 void C_CallControlClient::pause_traffic() {
@@ -1543,8 +1545,7 @@ void C_CallControlClient::pause_traffic() {
   switch(m_pause) {
   case true :
     m_pause = false ;
-    m_outgoing_traffic = true ;
-    m_stat->info_msg((char*)"Outgoing traffic (pause end)");
+    restart_traffic();
     break ;
   case false :
     m_pause = true ;
@@ -1557,19 +1558,27 @@ void C_CallControlClient::pause_traffic() {
 
 void C_CallControlClient::restart_traffic() {
   GEN_DEBUG (1, "C_CallControl::restart_traffic() start");
+  m_outgoing_traffic = true ;
+  m_traffic_model->init(m_call_rate, m_burst_limit,(long)0, m_call_rate_scale) ;
+  m_traffic_model->start() ;
+  m_stat->info_msg((char*)"Outgoing traffic (restarted)");
+  GEN_DEBUG (1, "C_CallControl::restart_traffic() end");
+}
+
+void C_CallControlClient::burst_traffic() {
+  GEN_DEBUG (1, "C_CallControl::burst_traffic() start");
   switch(m_pause) {
   case true :
     m_pause = false ;
     m_outgoing_traffic = true ;
-    m_traffic_model->init(m_call_rate, m_burst_limit,(long)0, m_call_rate_scale) ;
-    m_traffic_model->start() ;
-    m_stat->info_msg((char*)"Outgoing traffic (restart)");
+    m_stat->info_msg((char*)"Outgoing traffic (bursted)");
     break ;
   default:
     break ;
   }
-  GEN_DEBUG (1, "C_CallControl::restart_traffic() end");
+  GEN_DEBUG (1, "C_CallControl::burst_traffic() end");
 }
+
 
 void C_CallControl::force_init() {
   init_done() ;

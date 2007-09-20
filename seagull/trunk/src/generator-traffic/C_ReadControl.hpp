@@ -53,6 +53,8 @@ public:
 
   void pause_traffic() ;
   void restart_traffic () ;
+  void burst_traffic() ;
+
   void force_init () ;
   unsigned long get_call_rate();
   void change_call_rate(T_GenChangeOperation P_op, unsigned long P_rate);

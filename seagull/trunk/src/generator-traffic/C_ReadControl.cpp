@@ -475,6 +475,14 @@ void C_ReadControl::restart_traffic() {
   GEN_DEBUG(1, "C_ReadControl::restart_traffic() end");
 }
 
+void C_ReadControl::burst_traffic() {
+  GEN_DEBUG(1, "C_ReadControl::burst_traffic() start");
+  if (m_call_controller != NULL) {
+    m_call_controller -> burst_traffic() ;
+  }
+  GEN_DEBUG(1, "C_ReadControl::burst_traffic() end");
+}
+
 void C_ReadControl::force_init() {
   if (m_call_controller != NULL) {
     m_call_controller->force_init();

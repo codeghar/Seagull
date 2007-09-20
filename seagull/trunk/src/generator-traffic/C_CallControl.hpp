@@ -78,6 +78,8 @@ public:
 
   virtual void pause_traffic () ;
   virtual void restart_traffic () ;
+  virtual void burst_traffic () ;
+
           void force_init() ;
   virtual unsigned long get_call_rate();
   virtual void change_call_rate(T_GenChangeOperation P_op,
@@ -235,6 +237,8 @@ protected:
   void             init_done () ;
   void             pause_traffic() ;
   void             restart_traffic() ;
+  void             burst_traffic () ;
+
 
   virtual void clean_traffic () ;
 
