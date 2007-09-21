@@ -218,7 +218,7 @@ DUMP</source>
   |- : Decrease call rate by call-rate-scale (default 1)                        |
   |c : Command mode (format : set var value)                                    |
   |    set call-rate      50 : call-rate become 50 c/s                          |
-  |    set call-rate-scale 5 : use Â± key to increase/decrease call-rate by 5    |
+  |    set call-rate-scale 5 : use ± key to increase/decrease call-rate by 5    |
   |q : Tool exit (forced when pressed two times)                                |
   |p : Pause traffic                                                            |
   |r : Resume traffic (after pause)                                             |
@@ -2526,6 +2526,16 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
                 <code><![CDATA[<define entity="traffic-param" name="call-timeout-ms" value="30000"> </define>]]></code> 
             specifies that a call that is stuck for more than 30s will
             be terminated.</td>
+            </tr>
+            <tr>
+              <td>call-open-timeout-ms</td>
+              <td>call-open-timeout-ms defines a timer after which, if the socket used by the call has not been properly open
+            (if the system is overloaded for example), the call is marked as failed. 0 means that this
+            feature is de-activated.</td>
+              <td>0</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param" name="call-open-timeout-ms" value="5000"> </define>]]></code> 
+            mark the call as failed if the socket creation process has not been achieved within 5s.</td>
             </tr>
             <tr>
               <td>call-timeout-behaviour-abort</td>
