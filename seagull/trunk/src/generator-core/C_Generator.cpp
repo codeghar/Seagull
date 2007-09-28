@@ -646,6 +646,12 @@ T_GeneratorError C_Generator::InitProcedure() {
     }
   }
 
+  if (L_genError == E_GEN_NO_ERROR) {
+    init_trace (L_logLevel, 
+		L_log_file, 
+		m_config->get_timestamp_log()) ;
+  }
+
   // scenario management 
   if (L_genError == E_GEN_NO_ERROR) {
     m_scen_control->set_external_data_controller(m_external_data_control);
@@ -668,13 +674,6 @@ T_GeneratorError C_Generator::InitProcedure() {
 
   if (L_genError == E_GEN_NO_ERROR) {
     m_read_control -> set_scenario_control (m_scen_control, L_trafficType) ;
-  }
-
-
-  if (L_genError == E_GEN_NO_ERROR) {
-    init_trace (L_logLevel, 
-		L_log_file, 
-		m_config->get_timestamp_log()) ;
   }
 
 

@@ -33,6 +33,7 @@ const unsigned int gen_mask_table [] = {
   0x00000008,
   0x00000010,
   0x00000020,
+  0x00000040,
   0xFFFFFFFF
 } ;
 
@@ -44,6 +45,7 @@ const char gen_mask_char_table [] = {
   'B',
   'T',
   'V',
+  'U',
   'A'
 } ;
 

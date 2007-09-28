@@ -40,6 +40,7 @@ typedef enum _log_level {
  LOG_LEVEL_BUF,
  LOG_LEVEL_TRAFFIC_ERR,
  LOG_LEVEL_VERDICT,
+ LOG_LEVEL_USER,
  LOG_LEVEL_ALL
 } T_LogLevel ;
 
