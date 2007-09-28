@@ -45,7 +45,7 @@
 #include "C_InsertInMapAction.hpp"
 #include "C_InsertInMapActionFromMem.hpp"
 #include "C_AddDefaultInCallMapAction.hpp"
-
+#include "C_LogAction.hpp"
 
 
 #include "Utils.hpp"
@@ -164,6 +164,11 @@ C_CommandAction* C_CommandActionFactory::create(T_CmdAction P_cmdAction) {
   case E_ACTION_SCEN_INSERT_IN_MAP:
     NEW_VAR(L_action, 
             C_InsertInMapAction(P_cmdAction,&m_controllers));
+    break ;
+
+  case E_ACTION_SCEN_LOG:
+    NEW_VAR(L_action,
+            C_LogAction(P_cmdAction,&m_controllers));
     break ;
 
   case E_ACTION_SCEN_INSERT_IN_MAP_FROM_MEM:
