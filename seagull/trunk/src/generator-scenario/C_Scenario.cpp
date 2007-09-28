@@ -56,6 +56,7 @@ const char* action_name_table [] = {
   "set-bit",
   "set-value-bit",
   "insert-in-map",
+  "log",
   "E_NB_ACTION_SCEN",  // internal actions after this value
   "E_ACTION_SCEN_INTERNAL_INIT_DONE",
   "E_ACTION_SCEN_CHECK_ALL_MSG",
@@ -359,8 +360,6 @@ T_exeCode C_Scenario::execute_cmd (T_pCallContext P_callCtxt,
         DELETE_VAR(L_sendMsg);
       }
     }
-
-
   }
     
     break ;
@@ -529,9 +528,10 @@ T_exeCode C_Scenario::execute_cmd (T_pCallContext P_callCtxt,
   case E_EXE_DEFAULT_END:
   case E_EXE_ABORT_END:
   case E_EXE_INIT_END:
+  case E_EXE_SUSPEND:
     break ;
   default:
-    if (L_channel_id > 0) {
+    if (L_channel_id >= 0) {
       GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
 		    "Execution error on call with session-id ["
 		    << P_callCtxt->m_id_table[L_channel_id] << "]");
@@ -798,12 +798,19 @@ T_exeCode C_Scenario::execute_action(T_pCmd_scenario P_pCmd,
                                           P_callCtxt,
                                           P_msg,
                                           P_ref);
-    
-    if (L_exeCode == E_EXE_SUSPEND ) {
+    switch (L_exeCode) {
+    case E_EXE_ERROR       :
+    case E_EXE_ERROR_CHECK :
+    case E_EXE_ABORT_CHECK :
+      L_i = P_nbActions ;
+      break ;
+    case E_EXE_SUSPEND:
       L_suspend = true;
+      break ;
+    default:
+      break;
     }
   } // for L_i
-
 
   if ((L_exeCode == E_EXE_NOERROR) && (L_suspend == true)) {
     L_exeCode = E_EXE_SUSPEND ;

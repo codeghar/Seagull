@@ -66,6 +66,7 @@ typedef enum _action_scenario_type {
    E_ACTION_SCEN_SET_BIT,
    E_ACTION_SCEN_SET_VALUE_BIT,
    E_ACTION_SCEN_INSERT_IN_MAP,
+   E_ACTION_SCEN_LOG,
 
    E_NB_ACTION_SCEN,  // internal actions after this value
    E_ACTION_SCEN_INTERNAL_INIT_DONE,

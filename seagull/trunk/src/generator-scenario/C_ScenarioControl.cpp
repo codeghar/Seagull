@@ -1447,7 +1447,8 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 	  break ;
 
 	case E_ACTION_SCEN_SET_VALUE :
-	  
+
+          L_len_format = 0 ;
 	  L_actionArg = L_action -> find_value((char*) "name");
 	  if (L_actionArg == NULL) {
 	    GEN_ERROR(E_GEN_FATAL_ERROR, "name value mandatory for action ["
@@ -2581,7 +2582,33 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
             
           } // else
           break ;
+
+        case E_ACTION_SCEN_LOG:
+          L_len_format = 0 ;
+          L_actionArg2 = L_action -> find_value((char*) "format");
+          if (L_actionArg2 == NULL) {
+            GEN_ERROR(E_GEN_FATAL_ERROR,
+                      "format value mandatory for action ["
+                      << L_actionName << "]");
+            L_ret = -1 ;
+            break ;
+          } else {
+            L_len_format = strlen(L_actionArg2) ;
+          }
           
+          if (L_len_format > 0) {
+            L_ret = add_expression(L_actionArg2, P_protocol,
+                                   &L_actionData->m_string_expr) ;
+            if (L_ret == -1) {
+              GEN_ERROR(E_GEN_FATAL_ERROR,
+                        "Format error for ["
+                        << L_actionArg2 << "]");
+              break ;
+            }
+          }
+          break ;
+          
+
 	default:
 	  GEN_ERROR(E_GEN_FATAL_ERROR, "Action not implemented");
 	  L_ret = -1 ;
@@ -2589,14 +2616,8 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 	} // switch L_actionType
 	
 	if (L_ret != -1) {
-          if ( m_config->get_execute_check_action() == false) {
-            switch (L_actionType) {
-            case E_ACTION_SCEN_CHECK_PRESENCE:
-            case E_ACTION_SCEN_CHECK_VALUE:
-            case E_ACTION_SCEN_CHECK_ORDER:
-              FREE_VAR(L_actionData);
-              break ;
-            default:
+          if (L_actionType == E_ACTION_SCEN_LOG) {
+            if (genTraceLevel & gen_mask_table[LOG_LEVEL_USER]) {
               P_CommandActionLst.push_back(P_CmdActionFactory.create(*L_actionData));
               if ((m_correlation_section == true) &&
                   (P_label_command != NULL)) {
@@ -2605,20 +2626,40 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
               }
               FREE_VAR(L_actionData);
               P_nb_action++ ;
-              break ;
+            } else {
+              FREE_VAR(L_actionData);
             }
           } else {
-            P_CommandActionLst.push_back(P_CmdActionFactory.create(*L_actionData));
-            if ((m_correlation_section == true) &&
-                (P_label_command != NULL)) {
-              P_CommandActionLabelLst.push_back
-                (P_CmdActionFactory.create(*L_actionData));
+            if ( m_config->get_execute_check_action() == false) {
+              switch (L_actionType) {
+              case E_ACTION_SCEN_CHECK_PRESENCE:
+              case E_ACTION_SCEN_CHECK_VALUE:
+              case E_ACTION_SCEN_CHECK_ORDER:
+                FREE_VAR(L_actionData);
+                break ;
+              default:
+                P_CommandActionLst.push_back(P_CmdActionFactory.create(*L_actionData));
+                if ((m_correlation_section == true) &&
+                    (P_label_command != NULL)) {
+                  P_CommandActionLabelLst.push_back
+                    (P_CmdActionFactory.create(*L_actionData));
+                }
+                FREE_VAR(L_actionData);
+                P_nb_action++ ;
+                break ;
+              }
+            } else {
+              P_CommandActionLst.push_back(P_CmdActionFactory.create(*L_actionData));
+              if ((m_correlation_section == true) &&
+                  (P_label_command != NULL)) {
+                P_CommandActionLabelLst.push_back
+                  (P_CmdActionFactory.create(*L_actionData));
+              }
+              FREE_VAR(L_actionData);
+              P_nb_action++ ;
             }
-            FREE_VAR(L_actionData);
-            P_nb_action++ ;
-          }
-	} 
-	
+          } // if (L_actionType == E_ACTION_SCEN_LOG)
+	} // if (L_ret != -1)
       } else {
 	GEN_ERROR(E_GEN_FATAL_ERROR, "Unknown action name [" << L_actionName << "]");
 	L_ret = -1 ;
