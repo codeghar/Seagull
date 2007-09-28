@@ -48,6 +48,8 @@ void pretty_binary_buffer (unsigned char*P_buf, size_t P_size, char* P_res);
 
 void pretty_binary_printable_buffer (unsigned char*P_buf, size_t P_size, char* P_res, char *P_print) ;
 
+void pretty_ascii_printable_buffer (unsigned char*P_buf, size_t P_size, char *P_print) ;
+
 T_UnsignedInteger64 convert_bin_network_to_ull(unsigned char*P_buf, 
                                                size_t P_size);
 

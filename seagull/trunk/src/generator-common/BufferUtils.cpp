@@ -300,6 +300,19 @@ void pretty_binary_printable_buffer (unsigned char*P_buf, size_t P_size, char* P
   }
 
 }
+
+void pretty_ascii_printable_buffer (unsigned char*P_buf, size_t P_size, char *P_print) {
+
+  unsigned long  L_i = 0 ;
+  char          *L_print = P_print ;
+
+  for(L_i = 0; L_i < P_size; L_i++) {
+    (void)sprintf(L_print,"%c", ((((int)P_buf[L_i] >= 32) && ((int)P_buf[L_i] <= 126)) ? P_buf[L_i] : '.'));
+    L_print += 1 ;
+  }
+}
+
+
 T_UnsignedInteger64 convert_bin_network_to_ull(unsigned char*P_buf, 
                                                size_t        P_size) {
 
