@@ -56,6 +56,8 @@ C_ProtocolStats::C_ProtocolStats(C_ProtocolFrame *P_protocol)
   m_counter_msg_comp_table  = NULL ;
   m_message_component_names = NULL ;
 
+  m_outputStream            = NULL ;
+
   m_counter_message = 0 ;
   m_counter_message_comp = 0 ;
 
