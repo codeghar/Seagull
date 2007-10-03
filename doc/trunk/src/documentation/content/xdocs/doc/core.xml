@@ -218,7 +218,7 @@ DUMP</source>
   |- : Decrease call rate by call-rate-scale (default 1)                        |
   |c : Command mode (format : set var value)                                    |
   |    set call-rate      50 : call-rate become 50 c/s                          |
-  |    set call-rate-scale 5 : use ± key to increase/decrease call-rate by 5    |
+  |    set call-rate-scale 5 : use Â± key to increase/decrease call-rate by 5    |
   |q : Tool exit (forced when pressed two times)                                |
   |p : Pause traffic                                                            |
   |r : Resume traffic (after pause)                                             |
