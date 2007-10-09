@@ -60,6 +60,9 @@ public:
   void do_log       () ;
 
   void reset_cumul_counters () ;  
+  char *get_protocol_structure();
+  char *get_protocol_data();
+
 
 
 protected:

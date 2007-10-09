@@ -39,6 +39,10 @@
 	printf("| %-30s | %8s | %8s | %9s | %9s |\r\n", (T1), (T2), (T3), (T4), (T5))
 
 
+#define MAX_CHAR_BUFFER_SIZE          256
+#define MAX_DATA_BUFFER_SIZE          4096
+static const char* COMMAND_SEPARATOR = "#" ;
+
 C_ProtocolStats::C_ProtocolStats(C_ProtocolFrame *P_protocol)
 
  : C_ProtocolStatsFrame(P_protocol, (C_DisplayObject*)this) {
@@ -495,6 +499,163 @@ void C_ProtocolStats::display_stats_sub_message() {
     DISPLAY_NEXT() ;
   }
 }
+
+char *C_ProtocolStats::get_protocol_structure() {
+  char* L_result_data = NULL; 
+  char  L_buffer[MAX_CHAR_BUFFER_SIZE];
+
+  ALLOC_TABLE(L_result_data, char*, sizeof(char), MAX_DATA_BUFFER_SIZE);
+  
+  sprintf(L_result_data, "%s", (char*)"Start");
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"5"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"Message"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"Periodic sent"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"Periodic received"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"Cumulative sent"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"Cumulative received"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%d", m_nb_counter_msg + 1 + m_nb_counter_msg_comp + 1); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"== ");
+  strcat(L_result_data, L_buffer);
+  
+  sprintf(L_buffer, "%s", m_message_name);
+  strcat(L_result_data, L_buffer);
+  
+  sprintf(L_buffer, "%s", (char*)" ==");
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  for(int L_i = 0 ; L_i < m_nb_counter_msg; L_i ++) {
+    sprintf(L_buffer, "%s", m_message_names[L_i]); 
+    strcat(L_result_data, L_buffer);
+    strcat(L_result_data, COMMAND_SEPARATOR);  
+  }
+  
+  sprintf(L_buffer, "%s", (char*)"== ");
+  strcat(L_result_data, L_buffer);
+  
+  sprintf(L_buffer, "%s", m_message_component_name);
+  strcat(L_result_data, L_buffer);
+  
+  sprintf(L_buffer, "%s", (char*)" ==");
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  for(int L_i = 0; L_i < m_nb_counter_msg_comp; L_i ++) {
+    sprintf(L_buffer, "%s", m_message_component_names[L_i]); 
+    strcat(L_result_data, L_buffer);
+    strcat(L_result_data, COMMAND_SEPARATOR);  
+  }
+  
+  return (L_result_data);
+}
+  
+char *C_ProtocolStats::get_protocol_data() {
+
+  char* L_result_data = NULL; 
+  char  L_buffer[MAX_CHAR_BUFFER_SIZE];
+
+  ALLOC_TABLE(L_result_data, char*, sizeof(char), MAX_DATA_BUFFER_SIZE);
+  sprintf(L_result_data, "%s", (char*)"Start");
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)" ");
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  sprintf(L_buffer, "%s", (char*)" "); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  sprintf(L_buffer, "%s", (char*)" "); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  sprintf(L_buffer, "%s", (char*)" "); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  for(int L_i = 0; L_i < m_nb_counter_msg; L_i ++) {
+    m_counter_msg_table[L_i][(int)E_SEND].m_sem.P();
+    m_counter_msg_table[L_i][(int)E_RECEIVE].m_sem.P();
+    
+    sprintf(L_buffer, "%d", m_counter_msg_table[L_i][(int)E_SEND].m_counter_periodic_value); 
+    strcat(L_result_data, L_buffer);
+    strcat(L_result_data, COMMAND_SEPARATOR);
+    sprintf(L_buffer, "%d", m_counter_msg_table[L_i][(int)E_RECEIVE].m_counter_periodic_value); 
+    strcat(L_result_data, L_buffer);
+    strcat(L_result_data, COMMAND_SEPARATOR);
+    sprintf(L_buffer, "%d", m_counter_msg_table[L_i][(int)E_SEND].m_counter_value); 
+    strcat(L_result_data, L_buffer);
+    strcat(L_result_data, COMMAND_SEPARATOR);
+    sprintf(L_buffer, "%d", m_counter_msg_table[L_i][(int)E_RECEIVE].m_counter_value); 
+    strcat(L_result_data, L_buffer);
+    strcat(L_result_data, COMMAND_SEPARATOR);
+    
+    m_counter_msg_table[L_i][(int)E_SEND].m_counter_periodic_value = 0;
+    m_counter_msg_table[L_i][(int)E_RECEIVE].m_counter_periodic_value = 0;
+    m_counter_msg_table[L_i][(int)E_RECEIVE].m_sem.V();
+    m_counter_msg_table[L_i][(int)E_SEND].m_sem.V();
+  }
+  
+  sprintf(L_buffer, "%s", (char*)" "); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  sprintf(L_buffer, "%s", (char*)" "); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  sprintf(L_buffer, "%s", (char*)" "); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  sprintf(L_buffer, "%s", (char*)" "); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  for(int L_i = 0 ; L_i < m_nb_counter_msg_comp; L_i ++) {
+    m_counter_msg_comp_table[L_i][(int)E_SEND].m_sem.P();
+    m_counter_msg_comp_table[L_i][(int)E_RECEIVE].m_sem.P();
+    
+    sprintf(L_buffer, "%d", m_counter_msg_comp_table[L_i][(int)E_SEND].m_counter_periodic_value); 
+    strcat(L_result_data, L_buffer);
+    strcat(L_result_data, COMMAND_SEPARATOR);
+    sprintf(L_buffer, "%d", m_counter_msg_comp_table[L_i][(int)E_RECEIVE].m_counter_periodic_value); 
+    strcat(L_result_data, L_buffer);
+    strcat(L_result_data, COMMAND_SEPARATOR);
+    sprintf(L_buffer, "%d", m_counter_msg_comp_table[L_i][(int)E_SEND].m_counter_value); 
+    strcat(L_result_data, L_buffer);
+    strcat(L_result_data, COMMAND_SEPARATOR);
+    sprintf(L_buffer, "%d", m_counter_msg_comp_table[L_i][(int)E_RECEIVE].m_counter_value); 
+    strcat(L_result_data, L_buffer);
+    strcat(L_result_data, COMMAND_SEPARATOR);
+    
+    m_counter_msg_comp_table[L_i][(int)E_SEND].m_counter_periodic_value = 0;
+    m_counter_msg_comp_table[L_i][(int)E_RECEIVE].m_counter_periodic_value = 0;
+    m_counter_msg_comp_table[L_i][(int)E_RECEIVE].m_sem.V();
+    m_counter_msg_comp_table[L_i][(int)E_SEND].m_sem.V();
+  }
+  
+  return (L_result_data);
+}
+
 
 
 void C_ProtocolStats::set_file_name(char * P_name)
