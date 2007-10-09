@@ -31,6 +31,11 @@
 #include "iostream_t.hpp"
 
 
+#define MAX_CHAR_BUFFER_SIZE          256
+#define MAX_DATA_BUFFER_SIZE          4096
+static const char* COMMAND_SEPARATOR = "#" ;
+
+
 C_GeneratorStats* C_GeneratorStats::instance()
 {
    if (m_instance == NULL) {
@@ -1459,29 +1464,164 @@ void C_GeneratorStats::reset_cumul_counters () {
 
 }
 
+
 void C_GeneratorStats::makeDisplay1 (bool P_display) {
 
-  long           localElapsedTime  ;
-  long           globalElapsedTime ;
-  struct timeval currentTime       ;
-
-  float          MsgSendPerS;
-  float          MsgRecvPerS;
-  float          AverageMsgRecvPerS;
-  float          AverageMsgSendPerS;
-  float          AverageCurrentCallPerS ;
-
-  unsigned long  numberOfCall;
-  float          realInstantCallRate ;
-  float          averageCallRate ;
-
   int            L_i             ;
-  unsigned long  L_PD_successful_call ;
-  unsigned long  L_C_successful_call ;
-
   
+  //retrieve the data
+  T_pCommonTrafficData L_traffic_data = store_traffic_stat();
 
+  if (P_display) {
+    DISPLAY_CROSS_LINE ();
+    
+    {
+      char L_start_time[TIME_LENGTH];
+      char L_current_time[TIME_LENGTH];
+      formatTime(L_start_time, &m_startTime);
+      formatTime(L_current_time, &L_traffic_data->currentTime);
+      DISPLAY_3TXT ("Start/Current Time", 
+		    L_start_time, 
+		    L_current_time);
+    }
 
+    // printing the header in the middle
+    DISPLAY_CROSS_LINE();
+    DISPLAY_HEADER();
+    
+    DISPLAY_CROSS_LINE();
+    
+    DISPLAY_TXT_COL ("Elapsed Time", msToHHMMSSmmm(L_traffic_data->localElapsedTime),   msToHHMMSSmmm(L_traffic_data->globalElapsedTime));
+    
+    DISPLAY_VAL_RATEF_TPS ("Call rate (/s)",  L_traffic_data->realInstantCallRate, L_traffic_data->averageCallRate);
+    DISPLAY_CROSS_LINE ();
+    
+    DISPLAY_2VAL  ("Incoming calls", 
+		   m_displayCounters[CPT_PD_IncomingCallCreated],
+		   m_displayCounters[CPT_C_IncomingCallCreated]);
+    
+    DISPLAY_2VAL  ("Outgoing calls", 
+		   m_displayCounters[CPT_PD_OutgoingCallCreated],
+		   m_displayCounters[CPT_C_OutgoingCallCreated]);
+    
+    
+    DISPLAY_2VAL_RATEF ( "Msg Recv/s" ,
+			 L_traffic_data->MsgRecvPerS,
+			 L_traffic_data->AverageMsgRecvPerS);
+    
+    DISPLAY_2VAL_RATEF ( "Msg Sent/s" ,
+			 L_traffic_data->MsgSendPerS,
+			 L_traffic_data->AverageMsgSendPerS);
+    
+    DISPLAY_2VAL  ("Unexpected msg",      
+		   m_displayCounters[CPT_PD_FailedCallUnexpectedMessage], 
+		   m_displayCounters[CPT_C_FailedCallUnexpectedMessage]);
+    
+    DISPLAY_2VAL_CURRENTF ("Current calls",       
+			   m_displayCounters[CPT_C_CurrentCall],
+			   L_traffic_data->AverageCurrentCallPerS);
+    
+    DISPLAY_CROSS_LINE ();
+    
+
+    //    DISPLAY_2VAL  ("Successful calls", 
+    //  		 m_displayCounters[CPT_PD_SuccessfulCall], 
+    //  		 m_displayCounters[CPT_C_SuccessfulCall]);
+    
+    //    char L_values_periodic[100], L_values_cumulated[100];
+    
+    //    sprintf(L_values_periodic, "%ld/%ld/%ld/%ld", 
+    //  	  m_displayCounters[CPT_PD_InitSuccessfulCall],
+    //  	  m_displayCounters[CPT_PD_TrafficSuccessfulCall],
+    //  	  m_displayCounters[CPT_PD_DefaultSuccessfulCall],
+    //  	  m_displayCounters[CPT_PD_AbortSuccessfulCall]);
+    //    sprintf(L_values_cumulated, "%ld/%ld/%ld/%ld", 
+    //  	  m_displayCounters[CPT_C_InitSuccessfulCall],
+    //  	  m_displayCounters[CPT_C_TrafficSuccessfulCall],
+    //  	  m_displayCounters[CPT_C_DefaultSuccessfulCall],
+    //  	  m_displayCounters[CPT_C_AbortSuccessfulCall]);
+    
+    //    DISPLAY_3TXT  ("Success calls(i/t/d/a)", 
+    //  		 L_values_periodic,
+    //  		 L_values_cumulated);
+    
+
+    DISPLAY_2VAL  ("Successful calls", 
+		   L_traffic_data->L_PD_successful_call,
+		   L_traffic_data->L_C_successful_call);
+
+    
+    DISPLAY_2VAL  ("Failed calls",      
+		   m_displayCounters[CPT_PD_FailedCall], 
+		   m_displayCounters[CPT_C_FailedCall]);
+    
+    DISPLAY_2VAL  ("Refused calls",      
+		   m_displayCounters[CPT_PD_RefusedCall], 
+		   m_displayCounters[CPT_C_RefusedCall]);
+    
+    DISPLAY_2VAL  ("Aborted calls",      
+		   m_displayCounters[CPT_PD_FailedCallAborted], 
+		   m_displayCounters[CPT_C_FailedCallAborted]);
+    
+    DISPLAY_2VAL  ("Timeout calls",      
+		   m_displayCounters[CPT_PD_FailedCallTimeout], 
+		   m_displayCounters[CPT_C_FailedCallTimeout]);
+    
+    DISPLAY_CROSS_LINE ();
+    DISPLAY_TXT("Last Info", m_info_msg);
+    DISPLAY_TXT("Last Error", m_err_msg);
+    
+    printf("|--- Next screen : Press key 1 ----------------------- [h]: Display help ------|\r\n");
+    
+  } else {
+    DISPLAY_CROSS_LINE ();
+
+    //    DISPLAY_CUMUL ("Total Call created", 
+    //	   m_counters[CPT_C_IncomingCallCreated] +
+    //	   m_counters[CPT_C_OutgoingCallCreated]);
+
+    DISPLAY_2VAL  ("Success init calls", 
+		   m_displayCounters[CPT_PD_InitSuccessfulCall], 
+		   m_displayCounters[CPT_C_InitSuccessfulCall]);
+    
+    
+    DISPLAY_2VAL  ("Success traffic calls", 
+		   m_displayCounters[CPT_PD_TrafficSuccessfulCall], 
+		   m_displayCounters[CPT_C_TrafficSuccessfulCall]);
+    
+    DISPLAY_2VAL  ("Success default calls", 
+		   m_displayCounters[CPT_PD_DefaultSuccessfulCall], 
+		   m_displayCounters[CPT_C_DefaultSuccessfulCall]);
+    
+    DISPLAY_2VAL  ("Success abort calls", 
+		   m_displayCounters[CPT_PD_AbortSuccessfulCall], 
+		   m_displayCounters[CPT_C_AbortSuccessfulCall]);
+
+    
+    
+    DISPLAY_CROSS_LINE ();
+    
+    // DELETE_VAR(L_traffic_data);
+    
+    for (L_i = 0 ; L_i < 17 ; L_i ++) {
+      DISPLAY_INFO((char*)"") ;
+    }
+    printf("|--- Next screen : Press key 1 ----------------------- [h]: Display help ------|\r\n");
+
+  }
+
+  FREE_VAR(L_traffic_data);
+
+}
+
+C_GeneratorStats::T_pCommonTrafficData C_GeneratorStats::store_traffic_stat ()
+{
+  T_pCommonTrafficData L_traffic_data = NULL ;
+
+  ALLOC_VAR(L_traffic_data,
+	    T_pCommonTrafficData,
+	    sizeof(T_CommonTrafficData));
+	
   // CRITICAL SECTION:
   // First of call: copy all accessible counters
 
@@ -1590,201 +1730,65 @@ void C_GeneratorStats::makeDisplay1 (bool P_display) {
 
   // END CRITICAL SECTION
 
-  GET_TIME (&currentTime);
+  GET_TIME (&(L_traffic_data->currentTime));
   // computing the real call rate
-  globalElapsedTime   = ms_difftime (&currentTime, &m_startTime);
-  localElapsedTime    = ms_difftime (&currentTime, &m_pdStartTime);
+  L_traffic_data->globalElapsedTime   = ms_difftime (&(L_traffic_data->currentTime), &m_startTime);
+  L_traffic_data->localElapsedTime    = ms_difftime (&(L_traffic_data->currentTime), &m_pdStartTime);
 
 
-  numberOfCall        
+  L_traffic_data->numberOfCall        
     = m_displayCounters[CPT_C_IncomingCallCreated] 
     + m_displayCounters[CPT_C_OutgoingCallCreated];
 
-  averageCallRate     
-    = (globalElapsedTime > 0 ? 
-       1000*(float)numberOfCall/(float)globalElapsedTime : 0.0);
+  L_traffic_data->averageCallRate     
+    = (L_traffic_data->globalElapsedTime > 0 ? 
+       1000*(float)L_traffic_data->numberOfCall/(float)L_traffic_data->globalElapsedTime : 0.0);
 
-  numberOfCall        
+  L_traffic_data->numberOfCall        
     = m_displayCounters[CPT_PD_IncomingCallCreated] 
     + m_displayCounters[CPT_PD_OutgoingCallCreated];
 
-  realInstantCallRate 
-    = (localElapsedTime  > 0 ? 
-       1000*(float)numberOfCall / (float)localElapsedTime :
+  L_traffic_data->realInstantCallRate 
+    = (L_traffic_data->localElapsedTime  > 0 ? 
+       1000*(float)L_traffic_data->numberOfCall / (float)L_traffic_data->localElapsedTime :
        0.0);
 
-  MsgRecvPerS = (localElapsedTime  > 0 ? 
-		    1000*((float)m_displayCounters[CPT_PD_MsgRecv]) / (float)localElapsedTime :
+  L_traffic_data->MsgRecvPerS = (L_traffic_data->localElapsedTime  > 0 ? 
+		    1000*((float)m_displayCounters[CPT_PD_MsgRecv]) / (float)L_traffic_data->localElapsedTime :
 		    0.0);
 
-  MsgSendPerS = (localElapsedTime  > 0 ? 
-		    1000*((float)m_displayCounters[CPT_PD_MsgSend]) / (float)localElapsedTime :
+  L_traffic_data->MsgSendPerS = (L_traffic_data->localElapsedTime  > 0 ? 
+		    1000*((float)m_displayCounters[CPT_PD_MsgSend]) / (float)L_traffic_data->localElapsedTime :
 		    0.0);
 
-  AverageMsgRecvPerS = (globalElapsedTime  > 0 ? 
-		    1000*((float)m_displayCounters[CPT_C_MsgRecv]) / (float)globalElapsedTime :
+  L_traffic_data->AverageMsgRecvPerS = (L_traffic_data->globalElapsedTime  > 0 ? 
+		    1000*((float)m_displayCounters[CPT_C_MsgRecv]) / (float)L_traffic_data->globalElapsedTime :
 		    0.0);
 
-  AverageMsgSendPerS = (globalElapsedTime  > 0 ? 
-		    1000*((float)m_displayCounters[CPT_C_MsgSend]) / (float)globalElapsedTime :
+  L_traffic_data->AverageMsgSendPerS = (L_traffic_data->globalElapsedTime  > 0 ? 
+		    1000*((float)m_displayCounters[CPT_C_MsgSend]) / (float)L_traffic_data->globalElapsedTime :
 		    0.0);
 
-  AverageCurrentCallPerS = (globalElapsedTime  > 0 ? 
-			    1000*((float)m_displayCounters[CPT_C_CurrentCall]) / (float)globalElapsedTime :
+  L_traffic_data->AverageCurrentCallPerS = (L_traffic_data->globalElapsedTime  > 0 ? 
+			    1000*((float)m_displayCounters[CPT_C_CurrentCall]) / (float)L_traffic_data->globalElapsedTime :
 			    0.0);
 
   
-  L_PD_successful_call = 
+  L_traffic_data->L_PD_successful_call = 
     m_displayCounters[CPT_PD_InitSuccessfulCall] +
     m_displayCounters[CPT_PD_TrafficSuccessfulCall] +
     m_displayCounters[CPT_PD_DefaultSuccessfulCall] +
     m_displayCounters[CPT_PD_AbortSuccessfulCall] ;
 
-  L_C_successful_call = 
+  L_traffic_data->L_C_successful_call = 
     m_displayCounters[CPT_C_InitSuccessfulCall] +
     m_displayCounters[CPT_C_TrafficSuccessfulCall] +
     m_displayCounters[CPT_C_DefaultSuccessfulCall] +
     m_displayCounters[CPT_C_AbortSuccessfulCall] ;
-
-
-    
-
-  if (P_display) {
-    DISPLAY_CROSS_LINE ();
-    
-    {
-      char L_start_time[TIME_LENGTH];
-      char L_current_time[TIME_LENGTH];
-      formatTime(L_start_time, &m_startTime);
-      formatTime(L_current_time, &currentTime);
-      DISPLAY_3TXT ("Start/Current Time", 
-		    L_start_time, 
-		    L_current_time);
-    }
-
-    // printing the header in the middle
-    DISPLAY_CROSS_LINE();
-    DISPLAY_HEADER();
-    
-    DISPLAY_CROSS_LINE();
-    
-    DISPLAY_TXT_COL ("Elapsed Time", msToHHMMSSmmm(localElapsedTime),   msToHHMMSSmmm(globalElapsedTime));
-    
-    DISPLAY_VAL_RATEF_TPS ("Call rate (/s)",  realInstantCallRate, averageCallRate);
-    DISPLAY_CROSS_LINE ();
-    
-    DISPLAY_2VAL  ("Incoming calls", 
-		   m_displayCounters[CPT_PD_IncomingCallCreated],
-		   m_displayCounters[CPT_C_IncomingCallCreated]);
-    
-    DISPLAY_2VAL  ("Outgoing calls", 
-		   m_displayCounters[CPT_PD_OutgoingCallCreated],
-		   m_displayCounters[CPT_C_OutgoingCallCreated]);
-    
-    
-    DISPLAY_2VAL_RATEF ( "Msg Recv/s" ,
-			 MsgRecvPerS,
-			 AverageMsgRecvPerS);
-    
-    DISPLAY_2VAL_RATEF ( "Msg Sent/s" ,
-			 MsgSendPerS,
-			 AverageMsgSendPerS);
-    
-    DISPLAY_2VAL  ("Unexpected msg",      
-		   m_displayCounters[CPT_PD_FailedCallUnexpectedMessage], 
-		   m_displayCounters[CPT_C_FailedCallUnexpectedMessage]);
-    
-    DISPLAY_2VAL_CURRENTF ("Current calls",       
-			   m_displayCounters[CPT_C_CurrentCall],
-			   AverageCurrentCallPerS);
-    
-    DISPLAY_CROSS_LINE ();
-    
-
-    //    DISPLAY_2VAL  ("Successful calls", 
-    //  		 m_displayCounters[CPT_PD_SuccessfulCall], 
-    //  		 m_displayCounters[CPT_C_SuccessfulCall]);
-    
-    //    char L_values_periodic[100], L_values_cumulated[100];
-    
-    //    sprintf(L_values_periodic, "%ld/%ld/%ld/%ld", 
-    //  	  m_displayCounters[CPT_PD_InitSuccessfulCall],
-    //  	  m_displayCounters[CPT_PD_TrafficSuccessfulCall],
-    //  	  m_displayCounters[CPT_PD_DefaultSuccessfulCall],
-    //  	  m_displayCounters[CPT_PD_AbortSuccessfulCall]);
-    //    sprintf(L_values_cumulated, "%ld/%ld/%ld/%ld", 
-    //  	  m_displayCounters[CPT_C_InitSuccessfulCall],
-    //  	  m_displayCounters[CPT_C_TrafficSuccessfulCall],
-    //  	  m_displayCounters[CPT_C_DefaultSuccessfulCall],
-    //  	  m_displayCounters[CPT_C_AbortSuccessfulCall]);
-    
-    //    DISPLAY_3TXT  ("Success calls(i/t/d/a)", 
-    //  		 L_values_periodic,
-    //  		 L_values_cumulated);
-    
-
-    DISPLAY_2VAL  ("Successful calls", 
-		   L_PD_successful_call,
-		   L_C_successful_call);
-
-    
-    DISPLAY_2VAL  ("Failed calls",      
-		   m_displayCounters[CPT_PD_FailedCall], 
-		   m_displayCounters[CPT_C_FailedCall]);
-    
-    DISPLAY_2VAL  ("Refused calls",      
-		   m_displayCounters[CPT_PD_RefusedCall], 
-		   m_displayCounters[CPT_C_RefusedCall]);
-    
-    DISPLAY_2VAL  ("Aborted calls",      
-		   m_displayCounters[CPT_PD_FailedCallAborted], 
-		   m_displayCounters[CPT_C_FailedCallAborted]);
-    
-    DISPLAY_2VAL  ("Timeout calls",      
-		   m_displayCounters[CPT_PD_FailedCallTimeout], 
-		   m_displayCounters[CPT_C_FailedCallTimeout]);
-    
-    DISPLAY_CROSS_LINE ();
-    DISPLAY_TXT("Last Info", m_info_msg);
-    DISPLAY_TXT("Last Error", m_err_msg);
-    
-    printf("|--- Next screen : Press key 1 ----------------------- [h]: Display help ------|\r\n");
-    
-  } else {
-    DISPLAY_CROSS_LINE ();
-
-    //    DISPLAY_CUMUL ("Total Call created", 
-    //	   m_counters[CPT_C_IncomingCallCreated] +
-    //	   m_counters[CPT_C_OutgoingCallCreated]);
-
-    DISPLAY_2VAL  ("Success init calls", 
-		   m_displayCounters[CPT_PD_InitSuccessfulCall], 
-		   m_displayCounters[CPT_C_InitSuccessfulCall]);
-    
-    
-    DISPLAY_2VAL  ("Success traffic calls", 
-		   m_displayCounters[CPT_PD_TrafficSuccessfulCall], 
-		   m_displayCounters[CPT_C_TrafficSuccessfulCall]);
-    
-    DISPLAY_2VAL  ("Success default calls", 
-		   m_displayCounters[CPT_PD_DefaultSuccessfulCall], 
-		   m_displayCounters[CPT_C_DefaultSuccessfulCall]);
-    
-    DISPLAY_2VAL  ("Success abort calls", 
-		   m_displayCounters[CPT_PD_AbortSuccessfulCall], 
-		   m_displayCounters[CPT_C_AbortSuccessfulCall]);
-
-    
-    
-    DISPLAY_CROSS_LINE ();
-    
-    for (L_i = 0 ; L_i < 17 ; L_i ++) {
-      DISPLAY_INFO((char*)"") ;
-    }
-    printf("|--- Next screen : Press key 1 ----------------------- [h]: Display help ------|\r\n");
-
-  }
+	
+  return (L_traffic_data);
 }
+
 
 void C_GeneratorStats::makeDisplay2 () {
 
@@ -2024,6 +2028,419 @@ char* C_GeneratorStats::dumpCounters() {
 
 
   return(L_result_data);
+}
+
+
+char* C_GeneratorStats::get_traffic_structure() {
+  
+  char* L_result_data = NULL; 
+  char  L_buffer[MAX_CHAR_BUFFER_SIZE];
+  
+  ALLOC_TABLE(L_result_data, char*, sizeof(char), MAX_DATA_BUFFER_SIZE);
+  
+  //header to prevent error
+  sprintf(L_result_data, "%s", (char*)"Start");
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"3");
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"Counter Name"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"Periodic value"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"Cumulative value"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"20"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"Start/Current Time"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  //    DISPLAY_CROSS_LINE();
+  
+  sprintf(L_buffer, "%s", (char*)"Elapsed Time"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"Call rate (/s)"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  //    DISPLAY_CROSS_LINE();
+  sprintf(L_buffer, "%s", (char*)"Incoming calls"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"Outgoing calls"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"Msg Recv/s"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"Msg Sent/s"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"Unexpected msg"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"Current calls"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  //    DISPLAY_CROSS_LINE();
+  
+  sprintf(L_buffer, "%s", (char*)"Successful calls"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"Failed calls"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"Refused calls"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"Aborted calls"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"Timeout calls"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  //    DISPLAY_CROSS_LINE();   
+  sprintf(L_buffer, "%s", (char*)"Last Info"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"Last Error"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  //    DISPLAY_CROSS_LINE();
+  sprintf(L_buffer, "%s", (char*)"Success init calls"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"Success traffic calls"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"Success default calls"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"Success abort calls"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  //    DISPLAY_CROSS_LINE()
+  
+  return (L_result_data);
+}
+
+char* C_GeneratorStats::get_traffic_data() {
+  
+  char* L_result_data = NULL; 
+  char   L_buffer[MAX_CHAR_BUFFER_SIZE];
+  ALLOC_TABLE(L_result_data, char*, sizeof(char), MAX_DATA_BUFFER_SIZE);
+  
+  //retrieve the data
+  T_pCommonTrafficData L_traffic_data = store_traffic_stat();
+  
+  //header to prevent error
+  sprintf(L_result_data, "%s", (char*)"Start");
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  char L_start_time[TIME_LENGTH];
+  char L_current_time[TIME_LENGTH];
+  formatTime(L_start_time, &m_startTime);
+  formatTime(L_current_time, &L_traffic_data->currentTime);
+  sprintf(L_buffer, "%s", L_start_time); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);  
+  sprintf(L_buffer, "%s", L_current_time); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", msToHHMMSSmmm(L_traffic_data->localElapsedTime)); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);  
+  sprintf(L_buffer, "%s", msToHHMMSSmmm(L_traffic_data->globalElapsedTime)); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%8.3f", L_traffic_data->realInstantCallRate ); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);  
+  sprintf(L_buffer, "%8.3f", L_traffic_data->averageCallRate); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%8ld", m_displayCounters[CPT_PD_IncomingCallCreated]); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);  
+  sprintf(L_buffer, "%8ld", m_displayCounters[CPT_C_IncomingCallCreated]); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%8ld", m_displayCounters[CPT_PD_OutgoingCallCreated]); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);  
+  sprintf(L_buffer, "%8ld", m_displayCounters[CPT_C_OutgoingCallCreated]); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%8.3f", L_traffic_data->MsgRecvPerS); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);  
+  sprintf(L_buffer, "%8.3f", L_traffic_data->AverageMsgRecvPerS); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%8.3f", L_traffic_data->MsgSendPerS); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);  
+  sprintf(L_buffer, "%8.3f", L_traffic_data->AverageMsgSendPerS); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%8ld", m_displayCounters[CPT_PD_FailedCallUnexpectedMessage]); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);  
+  sprintf(L_buffer, "%8ld", m_displayCounters[CPT_C_FailedCallUnexpectedMessage]); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+    
+  sprintf(L_buffer, "%8ld", m_displayCounters[CPT_C_CurrentCall]); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);  
+  sprintf(L_buffer, "%8.3f",  L_traffic_data->AverageCurrentCallPerS); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+    
+  sprintf(L_buffer, "%8ld", L_traffic_data->L_PD_successful_call); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);  
+  sprintf(L_buffer, "%8ld", L_traffic_data->L_C_successful_call); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+
+  sprintf(L_buffer, "%8ld", m_displayCounters[CPT_PD_FailedCall]); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);  
+  sprintf(L_buffer, "%8ld", m_displayCounters[CPT_C_FailedCall]); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+    
+  sprintf(L_buffer, "%8ld", m_displayCounters[CPT_PD_RefusedCall]); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);  
+  sprintf(L_buffer, "%8ld", m_displayCounters[CPT_C_RefusedCall]); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+    
+  sprintf(L_buffer, "%8ld", m_displayCounters[CPT_PD_FailedCallAborted]); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);  
+  sprintf(L_buffer, "%8ld", m_displayCounters[CPT_C_FailedCallAborted]); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+    
+  sprintf(L_buffer, "%8ld", m_displayCounters[CPT_PD_FailedCallTimeout]); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);  
+  sprintf(L_buffer, "%8ld", m_displayCounters[CPT_C_FailedCallTimeout]); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+    
+  sprintf(L_buffer, "%s", m_info_msg); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);  
+  sprintf(L_buffer, "%s", ""); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+ 
+  sprintf(L_buffer, "%s", m_err_msg); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);  
+  sprintf(L_buffer, "%s", ""); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+    
+  sprintf(L_buffer, "%8ld", m_displayCounters[CPT_PD_InitSuccessfulCall]); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);  
+  sprintf(L_buffer, "%8ld", m_displayCounters[CPT_C_InitSuccessfulCall]); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+    
+  sprintf(L_buffer, "%8ld", m_displayCounters[CPT_PD_TrafficSuccessfulCall]); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);  
+  sprintf(L_buffer, "%8ld", m_displayCounters[CPT_C_TrafficSuccessfulCall]); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+    
+  sprintf(L_buffer, "%8ld", m_displayCounters[CPT_PD_DefaultSuccessfulCall]); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);  
+  sprintf(L_buffer, "%8ld", m_displayCounters[CPT_C_DefaultSuccessfulCall]); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+    
+  sprintf(L_buffer, "%8ld", m_displayCounters[CPT_PD_AbortSuccessfulCall]); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);  
+  sprintf(L_buffer, "%8ld", m_displayCounters[CPT_C_AbortSuccessfulCall]); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);  
+     
+  FREE_VAR(L_traffic_data);
+  
+  return (L_result_data);
+}
+
+char* C_GeneratorStats::get_timer_structure() {
+  
+  char* L_result_data = NULL; 
+  char  L_buffer[MAX_CHAR_BUFFER_SIZE];
+  ALLOC_TABLE(L_result_data, char*, sizeof(char), MAX_DATA_BUFFER_SIZE);
+  
+  int            L_i;
+  sprintf(L_result_data, "%s", (char*)"Start");
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  if(m_ResponseTimeRepartition != NULL) {
+    
+    sprintf(L_buffer, "%s", (char*)"3"); 
+    strcat(L_result_data, L_buffer);
+    strcat(L_result_data, COMMAND_SEPARATOR);
+    
+    sprintf(L_buffer, "%s", (char*)"Timer range"); 
+    strcat(L_result_data, L_buffer);
+    strcat(L_result_data, COMMAND_SEPARATOR);
+    
+    sprintf(L_buffer, "%s", (char*)"Timer in range"); 
+    strcat(L_result_data, L_buffer);
+    strcat(L_result_data, COMMAND_SEPARATOR);
+    
+    sprintf(L_buffer, "%s", (char*)"Percent"); 
+    strcat(L_result_data, L_buffer);
+    strcat(L_result_data, COMMAND_SEPARATOR);
+    
+    sprintf(L_buffer, "%d", m_SizeOfResponseTimeRepartition + 1); 
+    strcat(L_result_data, L_buffer);
+    strcat(L_result_data, COMMAND_SEPARATOR);
+    
+    sprintf(L_buffer, "%s", (char*)"Time (Periodic/Average)"); 
+    strcat(L_result_data, L_buffer);
+    strcat(L_result_data, COMMAND_SEPARATOR);
+    
+    sprintf(L_buffer, "%6d ms <= n <%6d ms", 0,m_ResponseTimeRepartition[0].borderMax); 
+    strcat(L_result_data, L_buffer);
+    strcat(L_result_data, COMMAND_SEPARATOR);  
+    
+    for(L_i = 1 ; L_i < (m_SizeOfResponseTimeRepartition-1); L_i++) {   
+      sprintf(L_buffer, "%6d ms <= n <%6d ms", m_ResponseTimeRepartition[L_i-1].borderMax,m_ResponseTimeRepartition[L_i].borderMax); 
+      strcat(L_result_data, L_buffer);
+      strcat(L_result_data, COMMAND_SEPARATOR);  
+    }
+    
+    sprintf(L_buffer, "n >%6d ms", m_ResponseTimeRepartition[m_SizeOfResponseTimeRepartition-1].borderMax); 
+    strcat(L_result_data, L_buffer);
+    strcat(L_result_data, COMMAND_SEPARATOR);  
+  } else {
+    sprintf(L_buffer, "%s", (char*)"1"); 
+    strcat(L_result_data, L_buffer);
+    strcat(L_result_data, COMMAND_SEPARATOR);
+    
+    sprintf(L_buffer, "%s", (char*)"<No repartion defined>"); 
+    strcat(L_result_data, L_buffer);
+    strcat(L_result_data, COMMAND_SEPARATOR);
+    
+    sprintf(L_buffer, "%s", (char*)"0"); 
+    strcat(L_result_data, L_buffer);
+    strcat(L_result_data, COMMAND_SEPARATOR);
+  }
+  
+  return (L_result_data);
+}
+
+char* C_GeneratorStats::get_timer_data() {
+  
+  char* L_result_data = NULL; 
+  char  L_buffer[MAX_CHAR_BUFFER_SIZE];
+  ALLOC_TABLE(L_result_data, char*, sizeof(char), MAX_DATA_BUFFER_SIZE);
+  sprintf(L_result_data, "%s", (char*)"Start");
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  int            L_total_nb_border = 0 ;
+  int            L_i                   ;
+  float          L_percent_traffic     ;
+  
+  m_mutexTable[CPT_C_AverageResponseTime].lock() ;
+  m_displayCounters[CPT_C_AverageResponseTime]
+    = m_counters[CPT_C_AverageResponseTime];
+  m_displayCounters[CPT_PD_AverageResponseTime]
+    = m_counters[CPT_PD_AverageResponseTime];
+  m_mutexTable[CPT_C_AverageResponseTime].unlock() ;
+  
+  sprintf(L_buffer, "%s", msToHHMMSSmmm( m_displayCounters [CPT_PD_AverageResponseTime] )); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", msToHHMMSSmmm( m_displayCounters [CPT_C_AverageResponseTime] )); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  m_mutexTable[CPT_C_AverageResponseTime].lock() ;
+  if(m_ResponseTimeRepartition != NULL) {
+    
+    //0 false
+    //1 true
+    if(m_current_display_rep_id) {
+      L_total_nb_border = 0 ;
+      for(L_i = 0 ; L_i < m_SizeOfResponseTimeRepartition ; L_i++) {   
+	L_total_nb_border += m_ResponseTimeRepartition[L_i].nbInThisBorder ;
+      }
+    }
+    
+    for(L_i = 0 ; L_i < (m_SizeOfResponseTimeRepartition); L_i++) {   
+      
+      sprintf(L_buffer, "%10ld", m_ResponseTimeRepartition[L_i].nbInThisBorder); 
+      strcat(L_result_data, L_buffer);
+      strcat(L_result_data, COMMAND_SEPARATOR);
+      
+      if(m_current_display_rep_id) {//print percent
+	L_percent_traffic = (L_total_nb_border > 0 ?
+			     (100.0*m_ResponseTimeRepartition[L_i].nbInThisBorder)/ (float)L_total_nb_border :
+			     0.0);
+	sprintf(L_buffer, "%8.3f", L_percent_traffic); 
+	strcat(L_result_data, L_buffer);
+	sprintf(L_buffer, "%s", (char*)"%"); 
+	strcat(L_result_data, L_buffer);
+	strcat(L_result_data, COMMAND_SEPARATOR);
+      } else {
+	sprintf(L_buffer, "%s", " - "); 
+	strcat(L_result_data, L_buffer);
+	strcat(L_result_data, COMMAND_SEPARATOR);
+      }
+    }
+  } 
+  m_mutexTable[CPT_C_AverageResponseTime].unlock() ;
+  
+  return (L_result_data);
 }
 
 void C_GeneratorStats::dumpData ()

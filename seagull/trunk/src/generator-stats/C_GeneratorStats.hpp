@@ -61,150 +61,172 @@ public:
     unsigned long nbInThisBorder; 
   } T_dynamicalRepartition; 
 
+
+  typedef struct _T_common_traffic_data
+  {
+    long           localElapsedTime  ;
+    long           globalElapsedTime ;
+    struct timeval currentTime       ;
+    float          MsgSendPerS       ;
+    float          MsgRecvPerS       ;
+    float          AverageMsgRecvPerS;
+    float          AverageMsgSendPerS;
+    float          AverageCurrentCallPerS ;
+    
+    unsigned long  numberOfCall;
+    float          realInstantCallRate ;
+    float          averageCallRate ;
+    
+    unsigned long  L_PD_successful_call ;
+    unsigned long  L_C_successful_call ;
+  } T_CommonTrafficData, *T_pCommonTrafficData;
+
+  
   /**
-	* Actions on counters
-	*/
+   * Actions on counters
+   */
   enum E_Action
-  {
-    E_CREATE_INCOMING_CALL,
-    E_CALL_FAILED, 
-    E_CALL_REFUSED,
-    //    E_CALL_SUCCESSFULLY_ENDED,
+    {
+      E_CREATE_INCOMING_CALL,
+      E_CALL_FAILED, 
+      E_CALL_REFUSED,
+      //    E_CALL_SUCCESSFULLY_ENDED,
+      
+      
+      E_CALL_INIT_SUCCESSFULLY_ENDED,
+      E_CALL_TRAFFIC_SUCCESSFULLY_ENDED,
+      E_CALL_DEFAULT_SUCCESSFULLY_ENDED,
+      E_CALL_ABORT_SUCCESSFULLY_ENDED,
+      
+      E_SEND_MSG,    
+      E_RECV_MSG,
+      
+      E_RESET_PD_COUNTERS,
+      E_RESET_PL_COUNTERS,
+      
+      E_FAILED_UNEXPECTED_MSG,
+      E_FAILED_CANNOT_SEND_MSG,
+      E_FAILED_ABORTED,
+      
+      E_FAILED_TIMEOUT,
+      
+      E_CREATE_OUTGOING_CALL,
+      
+      
+      // Not used 
+      E_ADD_CALL_DURATION,
+      E_ADD_RESPONSE_TIME_DURATION,
+      E_FAILED_CALL_REJECTED,
+      E_FAILED_MAX_UDP_RETRANS,
+      E_FAILED_CMD_NOT_SENT,
+      E_FAILED_REGEXP_DOESNT_MATCH,
+      E_FAILED_REGEXP_HDR_NOT_FOUND
+    };
 
-
-    E_CALL_INIT_SUCCESSFULLY_ENDED,
-    E_CALL_TRAFFIC_SUCCESSFULLY_ENDED,
-    E_CALL_DEFAULT_SUCCESSFULLY_ENDED,
-    E_CALL_ABORT_SUCCESSFULLY_ENDED,
-
-    E_SEND_MSG,    
-    E_RECV_MSG,
-
-    E_RESET_PD_COUNTERS,
-    E_RESET_PL_COUNTERS,
-
-    E_FAILED_UNEXPECTED_MSG,
-    E_FAILED_CANNOT_SEND_MSG,
-    E_FAILED_ABORTED,
-
-    E_FAILED_TIMEOUT,
-
-    E_CREATE_OUTGOING_CALL,
-   
-
-    // Not used 
-    E_ADD_CALL_DURATION,
-    E_ADD_RESPONSE_TIME_DURATION,
-    E_FAILED_CALL_REJECTED,
-    E_FAILED_MAX_UDP_RETRANS,
-    E_FAILED_CMD_NOT_SENT,
-    E_FAILED_REGEXP_DOESNT_MATCH,
-    E_FAILED_REGEXP_HDR_NOT_FOUND
-  };
   /**
-	* Counters management
-	*/
+   * Counters management
+   */
   enum E_CounterName
-  {
-	 // Cumulative counter
-	 CPT_C_IncomingCallCreated,
-         CPT_C_MsgSend,    
-         CPT_C_MsgRecv,
-	 CPT_C_CurrentCall,
+    {
+      // Cumulative counter
+      CPT_C_IncomingCallCreated,
+      CPT_C_MsgSend,    
+      CPT_C_MsgRecv,
+      CPT_C_CurrentCall,
+      
+      
+      CPT_C_InitSuccessfulCall,
+      CPT_C_TrafficSuccessfulCall,
+      CPT_C_DefaultSuccessfulCall,
+      CPT_C_AbortSuccessfulCall,
+      CPT_C_FailedCall,
+      CPT_C_RefusedCall,
+      CPT_C_FailedCallAborted,
+      CPT_C_FailedCallTimeout,
+      
+      CPT_C_FailedCallCannotSendMessage,
+      CPT_C_FailedCallUnexpectedMessage,
+      CPT_C_OutgoingCallCreated,
+      CPT_C_NbOfCallUsedForAverageResponseTime,
+      CPT_C_AverageResponseTime,
+      
+      // not used
+      CPT_C_NbOfCallUsedForAverageCallLength,
+      CPT_C_AverageCallLength,
+      CPT_C_FailedCallMaxUdpRetrans,
+      CPT_C_FailedCallCallRejected,
+      CPT_C_FailedCallCmdNotSent,
+      CPT_C_FailedCallRegexpDoesntMatch,
+      CPT_C_FailedCallRegexpHdrNotFound,
+      
+      // Periodic Display counter
+      CPT_PD_IncomingCallCreated, // must be the first PD counter (RESET_PD_COUNTER macro)
+      CPT_PD_MsgSend,    
+      CPT_PD_MsgRecv,
+      
+      
+      CPT_PD_InitSuccessfulCall,
+      CPT_PD_TrafficSuccessfulCall,
+      CPT_PD_DefaultSuccessfulCall,
+      CPT_PD_AbortSuccessfulCall,
+      CPT_PD_FailedCall,
+      CPT_PD_RefusedCall,
+      CPT_PD_FailedCallAborted,
+      CPT_PD_FailedCallTimeout,
+      
+      CPT_PD_FailedCallCannotSendMessage,
+      CPT_PD_FailedCallUnexpectedMessage,
+      CPT_PD_OutgoingCallCreated,
+      CPT_PD_NbOfCallUsedForAverageResponseTime,
+      CPT_PD_AverageResponseTime,
+      
+      
+      // not used
+      CPT_PD_NbOfCallUsedForAverageCallLength,
+      CPT_PD_AverageCallLength,
+      CPT_PD_FailedCallMaxUdpRetrans,
+      CPT_PD_FailedCallCallRejected,
+      CPT_PD_FailedCallCmdNotSent,
+      CPT_PD_FailedCallRegexpDoesntMatch,
+      CPT_PD_FailedCallRegexpHdrNotFound, // must be the last PD counter (RESET_PD_COUNTER macro)
+      
+      // Periodic logging counter
+      CPT_PL_IncomingCallCreated, // must be the first PL counter (RESET_PL_COUNTER macro)
+      CPT_PL_MsgSend,    
+      CPT_PL_MsgRecv,
+      
+      
+      CPT_PL_InitSuccessfulCall,
+      CPT_PL_TrafficSuccessfulCall,
+      CPT_PL_DefaultSuccessfulCall,
+      CPT_PL_AbortSuccessfulCall,
+      CPT_PL_FailedCall,
+      CPT_PL_RefusedCall,
+      CPT_PL_FailedCallAborted,
+      CPT_PL_FailedCallTimeout,
+      
+      
+      CPT_PL_FailedCallCannotSendMessage,
+      CPT_PL_FailedCallUnexpectedMessage,
+      CPT_PL_OutgoingCallCreated,
+      CPT_PL_NbOfCallUsedForAverageResponseTime,
+      CPT_PL_AverageResponseTime,
+      
+      
+      // not used
+      CPT_PL_NbOfCallUsedForAverageCallLength,
+      CPT_PL_AverageCallLength,
+      CPT_PL_FailedCallMaxUdpRetrans,
+      CPT_PL_FailedCallCallRejected,
+      CPT_PL_FailedCallCmdNotSent,
+      CPT_PL_FailedCallRegexpDoesntMatch,
+      CPT_PL_FailedCallRegexpHdrNotFound, // must be the last PL counter (RESET_PL_COUNTER macro)
+      
+      E_NB_COUNTER
+    };
 
 
-	 CPT_C_InitSuccessfulCall,
-	 CPT_C_TrafficSuccessfulCall,
-	 CPT_C_DefaultSuccessfulCall,
-	 CPT_C_AbortSuccessfulCall,
-	 CPT_C_FailedCall,
-	 CPT_C_RefusedCall,
-	 CPT_C_FailedCallAborted,
-	 CPT_C_FailedCallTimeout,
-
-	 CPT_C_FailedCallCannotSendMessage,
-	 CPT_C_FailedCallUnexpectedMessage,
-	 CPT_C_OutgoingCallCreated,
-	 CPT_C_NbOfCallUsedForAverageResponseTime,
-	 CPT_C_AverageResponseTime,
-
-	 // not used
-	 CPT_C_NbOfCallUsedForAverageCallLength,
-	 CPT_C_AverageCallLength,
-	 CPT_C_FailedCallMaxUdpRetrans,
-	 CPT_C_FailedCallCallRejected,
-	 CPT_C_FailedCallCmdNotSent,
-	 CPT_C_FailedCallRegexpDoesntMatch,
-	 CPT_C_FailedCallRegexpHdrNotFound,
-
-	 // Periodic Display counter
-	 CPT_PD_IncomingCallCreated, // must be the first PD counter (RESET_PD_COUNTER macro)
-         CPT_PD_MsgSend,    
-         CPT_PD_MsgRecv,
-
-
-	 CPT_PD_InitSuccessfulCall,
-	 CPT_PD_TrafficSuccessfulCall,
-	 CPT_PD_DefaultSuccessfulCall,
-	 CPT_PD_AbortSuccessfulCall,
-	 CPT_PD_FailedCall,
-         CPT_PD_RefusedCall,
-	 CPT_PD_FailedCallAborted,
-	 CPT_PD_FailedCallTimeout,
-
-	 CPT_PD_FailedCallCannotSendMessage,
-	 CPT_PD_FailedCallUnexpectedMessage,
-	 CPT_PD_OutgoingCallCreated,
-	 CPT_PD_NbOfCallUsedForAverageResponseTime,
-	 CPT_PD_AverageResponseTime,
-
-
-	 // not used
-	 CPT_PD_NbOfCallUsedForAverageCallLength,
-	 CPT_PD_AverageCallLength,
-	 CPT_PD_FailedCallMaxUdpRetrans,
-	 CPT_PD_FailedCallCallRejected,
-	 CPT_PD_FailedCallCmdNotSent,
-	 CPT_PD_FailedCallRegexpDoesntMatch,
-	 CPT_PD_FailedCallRegexpHdrNotFound, // must be the last PD counter (RESET_PD_COUNTER macro)
-
-	 // Periodic logging counter
-	 CPT_PL_IncomingCallCreated, // must be the first PL counter (RESET_PL_COUNTER macro)
-         CPT_PL_MsgSend,    
-         CPT_PL_MsgRecv,
-
-
-	 CPT_PL_InitSuccessfulCall,
-	 CPT_PL_TrafficSuccessfulCall,
-	 CPT_PL_DefaultSuccessfulCall,
-	 CPT_PL_AbortSuccessfulCall,
-	 CPT_PL_FailedCall,
-         CPT_PL_RefusedCall,
-	 CPT_PL_FailedCallAborted,
-	 CPT_PL_FailedCallTimeout,
-
-
-	 CPT_PL_FailedCallCannotSendMessage,
-	 CPT_PL_FailedCallUnexpectedMessage,
-	 CPT_PL_OutgoingCallCreated,
- 	 CPT_PL_NbOfCallUsedForAverageResponseTime,
-	 CPT_PL_AverageResponseTime,
-
-
-	 // not used
-	 CPT_PL_NbOfCallUsedForAverageCallLength,
-	 CPT_PL_AverageCallLength,
-	 CPT_PL_FailedCallMaxUdpRetrans,
-	 CPT_PL_FailedCallCallRejected,
-	 CPT_PL_FailedCallCmdNotSent,
-	 CPT_PL_FailedCallRegexpDoesntMatch,
-	 CPT_PL_FailedCallRegexpHdrNotFound, // must be the last PL counter (RESET_PL_COUNTER macro)
-
-	 E_NB_COUNTER
-  };
-
-
-
+  
   /*
   ** exported methods
   */
@@ -306,6 +328,11 @@ public:
   void makeDisplay2 () ;
 
   char *dumpCounters();
+
+  char *get_traffic_structure ();
+  char *get_traffic_data ();
+  char *get_timer_structure ();
+  char *get_timer_data ();
 
 private:
 
@@ -499,6 +526,9 @@ private:
 	* To prevent public operator= usage: no implementation
 	*/
   C_GeneratorStats& operator=(const C_GeneratorStats&);
+
+
+  T_pCommonTrafficData store_traffic_stat();
 
 };
 
