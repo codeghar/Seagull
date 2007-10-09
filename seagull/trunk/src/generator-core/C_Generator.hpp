@@ -85,6 +85,8 @@ public:
   void reset_cumul_counters () ;
   void activate_percent_traffic () ;
 
+  char* get_view();
+  C_Scenario * get_right_scenario(unsigned long P_value);
   
 protected:
 

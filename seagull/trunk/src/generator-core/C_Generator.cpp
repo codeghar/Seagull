@@ -40,6 +40,10 @@
 
 #include <cstdlib>
 
+#define MAX_CHAR_BUFFER_SIZE          256
+#define MAX_DATA_BUFFER_SIZE          4096
+static const char* COMMAND_SEPARATOR = "#" ;
+
 
 typedef struct _end_trace_arg {
   C_TaskControl *m_instance ;
@@ -1485,6 +1489,95 @@ void C_Generator::activate_percent_traffic () {
   }
 }
 
+char* C_Generator::get_view() {
+  char* L_result_data = NULL; 
+  char  L_buffer[MAX_CHAR_BUFFER_SIZE];  
+  char  L_buffer_scenario[MAX_DATA_BUFFER_SIZE];  
+  C_Scenario * L_scenario_temp = NULL;  
+  ALLOC_TABLE(L_result_data, char*, sizeof(char), MAX_DATA_BUFFER_SIZE);
+  
+  int L_nb_protocol = m_protocol_ctrl->get_nb_protocol();
+  sprintf(L_result_data, "%d", L_nb_protocol);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  for (int L_i = 0; L_i < L_nb_protocol ; L_i++) {
+    C_ProtocolFrame* L_protocol_temp 
+      = m_protocol_ctrl->get_protocol(L_i);
+    
+    sprintf(L_buffer, "%s", L_protocol_temp->name()); 
+    strcat(L_result_data, L_buffer);
+    strcat(L_result_data, COMMAND_SEPARATOR);
+  }
+  
+  int L_cpt_counter = 0;
+  L_scenario_temp = m_scen_control->get_init_scenario() ;
+  if (L_scenario_temp != NULL) {
+    L_cpt_counter++;
+    sprintf(L_buffer, "%s", (char*)"Init"); 
+    strcat(L_buffer_scenario, L_buffer);
+    strcat(L_buffer_scenario, COMMAND_SEPARATOR);
+  }
+  
+  L_scenario_temp = m_scen_control->get_traffic_scenario() ;
+  if (L_scenario_temp != NULL) {
+    L_cpt_counter++;
+    sprintf(L_buffer, "%s", (char*)"Traffic"); 
+    strcat(L_buffer_scenario, L_buffer);
+    strcat(L_buffer_scenario, COMMAND_SEPARATOR);
+  }
+  
+  L_scenario_temp = m_scen_control->get_abort_scenario() ;
+  if (L_scenario_temp != NULL) {
+    L_cpt_counter++;
+    sprintf(L_buffer, "%s", (char*)"Abort"); 
+    strcat(L_buffer_scenario, L_buffer);
+    strcat(L_buffer_scenario, COMMAND_SEPARATOR);
+  }
+  
+  int L_nb_scenario = m_scen_control->get_nb_default_scenario();
+  L_cpt_counter += L_nb_scenario;
+  sprintf(L_buffer, "%d", L_cpt_counter); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  strcat(L_result_data, L_buffer_scenario);
+  
+  for (int L_i = 0; L_i <L_nb_scenario;L_i++) {
+    sprintf(L_buffer, "%s%d", (char*)"Default", (L_i + 1)); 
+    strcat(L_result_data, L_buffer);
+    strcat(L_result_data, COMMAND_SEPARATOR);
+  }
+  
+  return (L_result_data);
+}
+
+C_Scenario * C_Generator::get_right_scenario(unsigned long P_value) {
+  int L_right_scenario = P_value;
+  C_Scenario * L_scenario_temp = NULL;  
+  
+  L_scenario_temp = m_scen_control->get_init_scenario() ;
+  if (L_scenario_temp != NULL) {
+    if(L_right_scenario == 0)
+      return (L_scenario_temp);
+    L_right_scenario--;
+  }
+  
+  L_scenario_temp = m_scen_control->get_traffic_scenario() ;
+  if (L_scenario_temp != NULL) {
+    if(L_right_scenario == 0)
+      return (L_scenario_temp);
+    L_right_scenario--;
+  }
+  
+  L_scenario_temp = m_scen_control->get_abort_scenario() ;
+  if (L_scenario_temp != NULL) {
+    if(L_right_scenario == 0)
+      return (L_scenario_temp);
+    L_right_scenario--;
+  }
+  
+  return (m_scen_control->get_default_scenario(L_right_scenario));
+}
 
 
 
