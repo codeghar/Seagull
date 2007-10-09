@@ -52,6 +52,8 @@ public:
   virtual void make_log       ()              = 0 ;
   virtual void do_log         ()              = 0 ;
   virtual void reset_cumul_counters ()        = 0 ;
+  virtual char *get_protocol_structure()      = 0 ;
+  virtual char *get_protocol_data()           = 0 ;
 
 
 protected:
