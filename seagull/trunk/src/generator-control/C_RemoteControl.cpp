@@ -548,6 +548,31 @@ void C_RemoteControl::burst() {
   m_gen->burst_traffic() ;
 }
 
+void C_RemoteControl::increase() {
+  m_gen->change_call_rate(E_GEN_OP_INCREASE, 0L) ;
+}
+
+void C_RemoteControl::decrease() {
+  m_gen->change_call_rate(E_GEN_OP_DECREASE, 0L) ;
+}
+
+void C_RemoteControl::scale(unsigned long P_value) {
+  m_gen->change_rate_scale(P_value) ;
+}
+
+void C_RemoteControl::resetcumul() {
+  m_gen->reset_cumul_counters() ;
+}
+
+void C_RemoteControl::percent() {
+  m_gen->activate_percent_traffic() ;
+}
+
+void C_RemoteControl::forceinit() {
+  m_gen->force_init() ;
+}
+
+
 void C_RemoteControl::ramp(unsigned long P_value, unsigned long P_duration) {
 
   unsigned long L_current_rate ;
@@ -720,14 +745,13 @@ char* C_RemoteControl::decode_put_uri(char *P_uri) {
   if (L_ptr) {
     L_ptr = find_directory(L_ptr,(char*)"command");
     if (L_ptr) {
-      L_result = decode_uri(L_ptr);
+      L_result = decode_command_uri(L_ptr);
     } 
   }
   return (L_result);
 }
 
-char* C_RemoteControl::decode_uri(char *P_uri) {
-
+char* C_RemoteControl::decode_command_uri(char *P_uri) {
   char *L_result = NULL ;
   char *L_ptr = P_uri ;
   char *L_ptr_value = NULL ;
@@ -799,6 +823,179 @@ char* C_RemoteControl::decode_uri(char *P_uri) {
     return (L_result);
   } 
 
+  L_file = find_file(L_ptr,(char*)"increase");
+  if (L_file) {
+    L_result = resultOK() ;
+    increase();
+    return (L_result);
+  }  
+  
+  L_file = find_file(L_ptr,(char*)"decrease");
+  if (L_file) {
+    L_result = resultOK() ;
+    decrease();
+    return (L_result);
+  }  
+  
+  L_file = find_file(L_ptr,(char*)"scale");
+  if (L_file) {
+    L_ptr_value = find_value(L_file, (char*)"value");
+    if (L_ptr_value) {
+      L_value = strtoul_f(L_ptr_value, &L_end_str,10) ;
+      if (L_end_str[0] != '\0') { // not a number
+        FREE_TABLE(L_ptr_value);
+      } else {
+        FREE_TABLE(L_ptr_value);
+        L_result = resultOK() ;
+        scale(L_value);
+      }
+    }
+    return (L_result);
+  }  
+  
+  L_file = find_file(L_ptr,(char*)"resetcumul");
+  if (L_file) {
+    L_result = resultOK() ;
+    resetcumul();
+    return (L_result);
+  }  
+  
+  L_file = find_file(L_ptr,(char*)"percent");
+  if (L_file) {
+    L_result = resultOK() ;
+    percent();
+    return (L_result);
+  }  
+  
+  L_file = find_file(L_ptr,(char*)"forceinit");
+  if (L_file) {
+    L_result = resultOK() ;
+    forceinit();
+    return (L_result);
+  }  
+
+  return (L_result);
+}
+
+char* C_RemoteControl::decode_data_uri(char *P_uri,char **P_result_data) {
+  
+  char *L_result = resultKO() ;
+  char *L_ptr = P_uri ;
+  char *L_ptr_value = NULL ;
+  
+  unsigned long L_value = 0 ;
+  char *L_end_str = NULL ;
+  char *L_file ;  
+  
+  L_file = find_file(L_ptr,(char*)"view");
+  if (L_file) {
+    L_result = resultOK() ;
+    (*P_result_data) = m_gen->get_view();
+    return (L_result);
+  }  
+  
+  L_file = find_file(L_ptr,(char*)"trafficstructure");
+  if (L_file) {
+    L_result = resultOK() ;
+    (*P_result_data) = m_stat->get_traffic_structure();
+    return (L_result);
+  }  
+  
+  L_file = find_file(L_ptr,(char*)"timerstructure");
+  if (L_file) {
+    L_result = resultOK() ;
+    (*P_result_data) = m_stat->get_timer_structure();
+    return (L_result);
+  }  
+  
+  L_file = find_file(L_ptr,(char*)"protocolstructure");
+  if (L_file) {
+    L_ptr_value = find_value(L_file,(char*)"value");
+    if (L_ptr_value) {
+      L_value = strtoul_f(L_ptr_value, &L_end_str,10) ;
+      if (L_end_str[0] != '\0') { // not a number
+      } else {
+        (*P_result_data) = m_protocol_ctrl
+	  ->get_protocol(L_value)
+	  ->get_stats()
+	  ->get_protocol_structure();
+    	L_result = resultOK() ;
+      }
+      FREE_TABLE(L_ptr_value);
+    }
+    return (L_result);
+  }  
+  
+  L_file = find_file(L_ptr,(char*)"scenariostructure");
+  if (L_file) {
+    L_ptr_value = find_value(L_file,(char*)"value");
+    if (L_ptr_value) {
+      L_value = strtoul_f(L_ptr_value, &L_end_str,10) ;
+      if (L_end_str[0] != '\0') { // not a number
+      } else {
+    	(*P_result_data) = m_gen
+	  -> get_right_scenario(L_value)
+          -> get_stats()
+	  -> get_scenario_structure();
+    	L_result = resultOK() ;
+      }
+      FREE_TABLE(L_ptr_value);
+    }
+    return (L_result);
+  }  
+  
+  L_file = find_file(L_ptr,(char*)"trafficdata");
+  if (L_file) {
+    L_result = resultOK() ;
+    (*P_result_data) = m_stat->get_traffic_data();
+    m_stat->executeStatAction(C_GeneratorStats::E_RESET_PD_COUNTERS);	
+    return (L_result);
+  }  
+  
+  L_file = find_file(L_ptr,(char*)"timerdata");
+  if (L_file) {
+    L_result = resultOK() ;
+    (*P_result_data) = m_stat->get_timer_data();
+    m_stat->executeStatAction(C_GeneratorStats::E_RESET_PD_COUNTERS);	
+    return (L_result);
+  }  
+  
+  L_file = find_file(L_ptr,(char*)"protocoldata");
+  if (L_file) {
+    L_ptr_value = find_value(L_file,(char*)"value");
+    if (L_ptr_value) {
+      L_value = strtoul_f(L_ptr_value, &L_end_str,10) ;
+      if (L_end_str[0] != '\0') { // not a number
+      } else {
+        (*P_result_data) = m_protocol_ctrl
+	  ->get_protocol(L_value)
+	  ->get_stats()
+	  ->get_protocol_data();
+    	L_result = resultOK() ;
+      }
+      FREE_TABLE(L_ptr_value);
+    }
+    return (L_result);
+  }  
+  
+  L_file = find_file(L_ptr,(char*)"scenariodata");
+  if (L_file) {
+    L_ptr_value = find_value(L_file,(char*)"value");
+    if (L_ptr_value) {
+      L_value = strtoul_f(L_ptr_value, &L_end_str,10) ;
+      if (L_end_str[0] != '\0') { // not a number
+      } else {
+        (*P_result_data) = m_gen 
+	  ->get_right_scenario(L_value)	
+	  ->get_stats()
+	  ->get_scenario_data();
+    	L_result = resultOK() ;
+      }
+      FREE_TABLE(L_ptr_value);
+    }
+    return (L_result);
+  }  
+  
   return (L_result);
 }
 
@@ -821,7 +1018,12 @@ char* C_RemoteControl::decode_get_uri(char *P_uri, char **P_result_data) {
     } else {
       L_result_ptr = find_directory(L_ptr,(char*)"command");
       if (L_result_ptr) {
-        L_result = decode_uri(L_result_ptr);
+        L_result = decode_command_uri(L_result_ptr);
+      } else {
+      	L_result_ptr = find_directory(L_ptr,(char*)"data");
+      	if (L_result_ptr) {
+	  L_result = decode_data_uri(L_result_ptr,P_result_data);
+      	}
       }
     }
   }
@@ -887,6 +1089,8 @@ C_MessageFrame* C_RemoteControl::analyze_command(C_MessageFrame *P_msg) {
                                             (char*)"Command Success" :
                                             L_result_data) ;
   }
+
+  FREE_TABLE(L_result_data);
 
   return (L_msg_send);
 

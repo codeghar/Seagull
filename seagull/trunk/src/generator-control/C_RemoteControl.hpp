@@ -83,7 +83,9 @@ private :
   char* decode_put_uri(char *P_uri);
   char* decode_get_uri(char *P_uri, char **P_result_data);
 
-  char* decode_uri(char *P_uri);
+  char* decode_command_uri(char *P_uri);
+  char* decode_data_uri(char *P_uri,char **P_result_data);
+
 
   char* find_directory(char *P_buf,char *P_dir) ;
   char* find_file(char *P_buf,char *P_dir) ;
@@ -96,6 +98,13 @@ private :
   void pause();
   void resume();
   void burst();
+  void increase();
+  void decrease();
+  void scale(unsigned long P_value);
+  void resetcumul();
+  void percent();
+  void forceinit();
+
 
   char* resultOK();
   char* resultKO();
