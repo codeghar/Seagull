@@ -754,6 +754,7 @@ C_MessageFrame* C_ProtocolText::create_new_message(void                *P_xml,
                 << L_header 
                 << "]: message not in dictionary?");
     }
+    FREE_TABLE(L_body);
   }
   
   // delete L_list_value 
@@ -2005,7 +2006,6 @@ C_MessageText* C_ProtocolText::create(C_ProtocolText *P_protocol,
     FREE_VAR(L_value_body);
 
     FREE_TABLE(L_buffer_header);
-    FREE_TABLE(L_buffer_body);
 
     return (NULL); 
   } 
@@ -2019,7 +2019,6 @@ C_MessageText* C_ProtocolText::create(C_ProtocolText *P_protocol,
 
 
   FREE_TABLE(L_buffer_header);
-  FREE_TABLE(L_buffer_body);
 
   GEN_DEBUG(1, "C_ProtocolText::create() end");
   return (L_msg);
