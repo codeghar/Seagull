@@ -57,6 +57,9 @@ public:
   void setCurrentScreen(bool P_first) ;
 
   void reset_cumul_counters () ;
+  char * get_scenario_structure();
+  char * get_scenario_data();
+
 
 
 protected:

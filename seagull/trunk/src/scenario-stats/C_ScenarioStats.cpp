@@ -42,6 +42,9 @@
 #define DISPLAY_3TXT(T1, T2, T3)\
 	printf("| %-24s | %23s | %23s |\r\n", (T1), (T2), (T3))
 
+#define MAX_CHAR_BUFFER_SIZE          256
+#define MAX_DATA_BUFFER_SIZE          4096
+static const char* COMMAND_SEPARATOR = "#" ;
 
 
 C_ScenarioStats::C_ScenarioStats(C_Scenario *P_scen) {
@@ -262,3 +265,111 @@ void C_ScenarioStats::reset_cumul_counters() {
     }
   } 
 }
+
+char* C_ScenarioStats::get_scenario_structure() {
+  char* L_result_data = NULL; 
+  char  L_buffer[MAX_CHAR_BUFFER_SIZE];  
+
+  ALLOC_TABLE(L_result_data, char*, sizeof(char), MAX_DATA_BUFFER_SIZE);
+  sprintf(L_result_data, "%s", (char*)"Start");
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"5"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)" "); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"Messages"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"Retrans"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"Timeout"); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%s", (char*)"Unexp."); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  sprintf(L_buffer, "%d", m_nb_command); 
+  strcat(L_result_data, L_buffer);
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  for (int L_i = 0 ; L_i < m_nb_command ; L_i++) {
+    sprintf(L_buffer, "%s", m_counter_cmd_table[L_i].m_name); 
+    strcat(L_result_data, L_buffer);
+    strcat(L_result_data, COMMAND_SEPARATOR);
+  }   
+  return (L_result_data);
+} 
+
+char* C_ScenarioStats::get_scenario_data() {
+  char* L_result_data = NULL; 
+  char  L_buffer[MAX_CHAR_BUFFER_SIZE];  
+
+  ALLOC_TABLE(L_result_data, char*, sizeof(char), MAX_DATA_BUFFER_SIZE);
+  sprintf(L_result_data, "%s", (char*)"Start");
+  strcat(L_result_data, COMMAND_SEPARATOR);
+  
+  T_CounterType L_message, L_timeout, L_unexpected, L_retrans ;
+  
+  for (int L_i = 0 ; L_i < m_nb_command ; L_i++) {
+    if (m_counter_cmd_table[L_i].m_counters) {
+      m_counter_cmd_table[L_i].m_counters[(int)E_MESSAGE].m_sem.P();
+      L_message = m_counter_cmd_table[L_i].m_counters[(int)E_MESSAGE].m_counter_value;
+      m_counter_cmd_table[L_i].m_counters[(int)E_MESSAGE].m_sem.V();
+      
+      m_counter_cmd_table[L_i].m_counters[(int)E_TIMEOUT].m_sem.P();
+      L_timeout = m_counter_cmd_table[L_i].m_counters[(int)E_TIMEOUT].m_counter_value;
+      m_counter_cmd_table[L_i].m_counters[(int)E_TIMEOUT].m_sem.V();
+      
+      m_counter_cmd_table[L_i].m_counters[(int)E_UNEXPECTED].m_sem.P();
+      L_unexpected = m_counter_cmd_table[L_i].m_counters[(int)E_UNEXPECTED].m_counter_value;
+      m_counter_cmd_table[L_i].m_counters[(int)E_UNEXPECTED].m_sem.V();
+      
+      m_counter_cmd_table[L_i].m_counters[(int)E_RETRANS].m_sem.P();
+      L_retrans = m_counter_cmd_table[L_i].m_counters[(int)E_RETRANS].m_counter_value;
+      m_counter_cmd_table[L_i].m_counters[(int)E_RETRANS].m_sem.V();	
+      
+      sprintf(L_buffer, "%d", L_message); 
+      strcat(L_result_data, L_buffer);
+      strcat(L_result_data, COMMAND_SEPARATOR);
+      
+      sprintf(L_buffer, "%d", L_retrans); 
+      strcat(L_result_data, L_buffer);
+      strcat(L_result_data, COMMAND_SEPARATOR);
+      
+      sprintf(L_buffer, "%d", L_timeout); 
+      strcat(L_result_data, L_buffer);
+      strcat(L_result_data, COMMAND_SEPARATOR);
+      
+      sprintf(L_buffer, "%d", L_unexpected); 
+      strcat(L_result_data, L_buffer);
+      strcat(L_result_data, COMMAND_SEPARATOR);
+      
+    } else {
+      sprintf(L_buffer, "%s", (char*)" "); 
+      strcat(L_result_data, L_buffer);
+      strcat(L_result_data, COMMAND_SEPARATOR);
+      sprintf(L_buffer, "%s", (char*)" "); 
+      strcat(L_result_data, L_buffer);
+      strcat(L_result_data, COMMAND_SEPARATOR);
+      sprintf(L_buffer, "%s", (char*)" "); 
+      strcat(L_result_data, L_buffer);
+      strcat(L_result_data, COMMAND_SEPARATOR);
+      sprintf(L_buffer, "%s", (char*)" "); 
+      strcat(L_result_data, L_buffer);
+      strcat(L_result_data, COMMAND_SEPARATOR);
+    }
+    
+  }
+  return (L_result_data); 
+}
+
