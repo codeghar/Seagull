@@ -54,9 +54,9 @@ int C_TrafficDistribPoisson::authorize_new_call ()
 {
   long L_desiredAverageRate ;
 
-  float L_poissonMean;
+  float L_poissonMean = 0.0;
   float L_poissonVal = 0.0;
-  long  L_DeltaSinceLastFuncCall;   // ms
+  long  L_DeltaSinceLastFuncCall = 0;   // ms
 
   reset ();
   update ();
@@ -65,14 +65,16 @@ int C_TrafficDistribPoisson::authorize_new_call ()
   L_desiredAverageRate = m_desiredAverageRate ;
   m_sem_desired->V();
 
-  if (m_currentTrafficDuration <= ms_setup_time) {
+  if ((m_currentTrafficDuration <= ms_setup_time) || (m_currentTrafficDuration < m_LastFctCallTS)) {
+    m_LastFctCallTS = m_currentTrafficDuration;
     return (0);
   }
 
   L_DeltaSinceLastFuncCall = m_currentTrafficDuration - m_LastFctCallTS;
-//  L_DeltaSinceLastFuncCall = m_currentPeriodDuration ;
+
   L_poissonMean =( (float)  ( (float) L_DeltaSinceLastFuncCall / (float) 1000.0)  *
      (float) L_desiredAverageRate);
+
   L_poissonVal = m_sto->Poisson(L_poissonMean);
   
   m_LastFctCallTS = m_currentTrafficDuration;
