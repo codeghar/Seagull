@@ -1648,6 +1648,8 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
           </ul>
         </li>
         <li>
+          <strong>U</strong>-User logs (possibility to user to add user comments in the log file)</li>
+        <li>
           <strong>A</strong>-All</li>
         <li>
           <strong>N</strong>-None</li>
@@ -3482,6 +3484,26 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             <td>&nbsp;</td>
             <td>entity</td>
             <td>Add the value of the "entity" to te map of known session-ids.</td>
+          </tr>
+          <tr>
+            <th>
+              <anchor id="log-user"/>
+              <strong>&lt;log&gt;</strong>
+            </th>
+            <th>&nbsp;</th>
+            <th>
+              Add a user comments in the log file (with the possibility to dump variables, 
+              stored with the "store" action, and counters). To activate user logs, the "U" 
+              log level is needed in the command line.</th>
+            <th>
+              <code><![CDATA[<log format="User log, call-id= $(SID)"></log>]]></code>
+            </th>
+          </tr>
+          <tr>
+            <td>&nbsp;</td>
+            <td>format</td>
+            <td>User comment to be added to the log file.</td>
+            <td>format="User log, call-id= $(SID)"</td>
           </tr>
         </table>
       </section>
