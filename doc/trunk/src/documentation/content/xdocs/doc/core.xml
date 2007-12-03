@@ -220,8 +220,8 @@ DUMP</source>
   |    set call-rate      50 : call-rate become 50 c/s                          |
   |    set call-rate-scale 5 : use ± key to increase/decrease call-rate by 5    |
   |q : Tool exit (forced when pressed two times)                                |
-  |p : Pause traffic                                                            |
-  |r : Resume traffic (after pause)                                             |
+  |p : Pause/Restart traffic                                                            |
+  |b : Burst traffic (after pause)                                             |
   |f : Force init scenario (switch to traffic)                                  |
   |d : Reset cumulative counters for each stat set in config file               |
   |a : activate/deactivate: percentage in Response time screen                  |
@@ -288,20 +288,23 @@ DUMP</source>
             </tr>
             <tr>
               <td>p</td>
-              <td>Pause the traffic</td>
+              <td>Pause/Restart the traffic</td>
               <td>In <strong>server</strong> mode, Seagull does not accept any
-                new incoming call. Default scenarios are still active.<br/>
+                new incoming call. Current calls continue.<br/>
                 In <strong>client</strong> mode, Seagull does not place any
                 new call. Ongoing calls are processed normally.<br/>
-                <strong>Note:</strong> Un-pausing the traffic by pressing the p key a second time can trigger a traffic burst
-                as Seagull tries to cope with the call-rate that has been set initially. For
-                a smooth restart, the 'r' key should be used.</td>
+                By pressing p key a second time, seagull will restart traffic.<br/> 
+                In <strong>server</strong> mode, Seagull accepts again new incoming call.<br/> 
+                In <strong>client</strong> mode, Seagull smoothly restarts the traffic,
+                 to go back to the required call rate.</td>
             </tr>
             <tr>
-              <td>r</td>
-              <td>Restart the traffic</td>
-              <td>Once the traffic is paused, restart smoothly restarts the 
-                traffic, to go back to the required call rate.</td>
+              <td>b</td>
+              <td>Burst traffic (only available in <strong>client</strong> mode) </td>
+              <td>Once the traffic is paused, restart traffic.<br/>
+               In <strong>client</strong> mode, Seagull will try to 
+              create all missed calls during the pause (for example, for a 5s pause with a 10c/s call rate, 
+              seagull will try to start 5*10=500 calls when the "b" key is pressed).</td>
             </tr>
             <tr>
               <td>f</td>
@@ -401,8 +404,8 @@ DUMP</source>
             an HTTP "<code>PUT</code>" with URI: <source>http://x.y.z.t:p/seagull/command/stop</source></li>
             <li><strong>Pause</strong>: to ask seagull to pause/restart the traffic. This is done by sending
             an HTTP "<code>PUT</code>" with URI: <source>http://x.y.z.t:p/seagull/command/pause</source></li>
-            <li><strong>Resume</strong>: to ask seagull to resume the traffic. This is done by sending
-            an HTTP "<code>PUT</code>" with URI: <source>http://x.y.z.t:p/seagull/command/resume</source></li>
+            <li><strong>Burst</strong>: to ask seagull to make a burst when the traffic is paused seagull will try to create all 
+            missed calls during the pause (only for client).<br/> This is done by sending an HTTP "<code>PUT</code>" with URI: <source>http://x.y.z.t:p/seagull/command/burst</source></li>
           </ul>
           </section>
          </section>
@@ -701,6 +704,7 @@ Seagull will look at parameters indicated by
         <p>Seagull supports SCTP transport with SCTP library in version 1.5 and SCTP Socket api
         library in version 1.9.0 (refer to <a href="http://www.sctp.de/sctp-download.html">www.sctp.de</a>).
         <warning>Seagull only supports SCTP over TCP transport on linux platform. </warning>
+        <warning>"Root" privileges are something needed to execute Seagull with SCTP transport. </warning>
         </p>
       </section>  
       <section>
@@ -856,6 +860,9 @@ Seagull will look at parameters indicated by
 	    or in a client type scenario.</p>
           <p>The list of scenario commands that can be included in this section is 
             described in the <a href="#ref_scenario_commands">scenario command section</a>.</p>
+        <warning>When "init" and "traffic" are both present, Seagull only supports same nature sections:<br/>
+        if the "init" section starts with a "send" command, the "traffic" section must start with a "send" command,<br/>
+        if the "init" section starts with a "receive" command, the "traffic" section must start with a "receive" command. </warning>
         </section>
       </section>
       <section id="scen_cmds">
@@ -988,6 +995,7 @@ Seagull will look at parameters indicated by
         </ul>
         <warning>As init section and traffic section are hold as different calls, do not store a 
           value in the init section to restore it in the traffic section.</warning>
+        <warning>The "store" action on an unavailable field will make the call to be marked as failed. </warning> 
       </section>
     </section>
     <section id="control">
@@ -1319,7 +1327,7 @@ for further details based on examples.
 2004-12-02 11:11:01;2004-12-02 11:11:25;2004-12-02 11:11:26;00:00:05;00:00:25;50.9287;48.838;0;0;
 2004-12-02 11:11:01;2004-12-02 11:11:30;2004-12-02 11:11:31;00:00:05;00:00:30;50.729;49.153;0;0;]]>
           </source>
-          <p>Here is a real example of generated file: <a href="server-stat.csv"> server-stat.csv </a>.</p>
+          <p>Here is a real example of generated file: <a href="../doc/server-stat.csv?view=markup"> server-stat.csv </a>.</p>
       </section>
       <section id="stats_responsetime">
         <title>Response time statistics</title>
@@ -3523,7 +3531,7 @@ seagull Command syntax
 [ -llevel <logging level mask> ] levels:
           M: msg,     B: buffer,   E: error,
           W: warning, N: no error, T: traffic error,
-          A: all.     Default E
+          V: Verdict, U: User,     A: all.      Default E
 [ -help  ] display syntax command line
 [ -bg  ] background mode
 [ -notimelog  ] no time stamp on the log (default time stamp)
