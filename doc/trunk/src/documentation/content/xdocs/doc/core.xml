@@ -1327,7 +1327,7 @@ for further details based on examples.
 2004-12-02 11:11:01;2004-12-02 11:11:25;2004-12-02 11:11:26;00:00:05;00:00:25;50.9287;48.838;0;0;
 2004-12-02 11:11:01;2004-12-02 11:11:30;2004-12-02 11:11:31;00:00:05;00:00:30;50.729;49.153;0;0;]]>
           </source>
-          <p>Here is a real example of generated file: <a href="../doc/server-stat.csv?view=markup"> server-stat.csv </a>.</p>
+          <p>Here is a real example of generated file: <a href="server-stat.csv"> server-stat.csv </a>.</p>
       </section>
       <section id="stats_responsetime">
         <title>Response time statistics</title>
