@@ -1,0 +1,143 @@
+<!--
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+ (c)Copyright 2006 Hewlett-Packard Development Company, LP.
+
+-->
+
+<!-- http-dictionary definition                  -->
+<!-- http protocol definition                    -->
+<!-- seagull configuration file set              -->
+
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<protocol name="http-protocol" 
+          type="text"
+          filter="lib=libparser_xml.so;function=filter_xml"
+          field-separator="\r\n"
+          body-separator="\r\n">
+
+<configuration-parameters>
+</configuration-parameters>
+
+<types>
+</types>
+
+
+<body-method>
+   <defmethod name="body-with-content-length"
+              method="length"
+              param="content-length"
+              default="yes">
+   </defmethod>
+
+   <defmethod name="body-to-be-parsed"
+              method="parser"
+              param="lib=libparser_xml.so;function=parse_xml">
+   </defmethod>
+
+</body-method>
+
+<header name="message"
+        type="type">
+   <fielddef name="type">
+     <regexp name="request-type" 
+             expr="[[:space:]]*([^ ]+)[[:space:]]+[^ ]+[[:space:]]+HTTP\/1\.1[[:space:]]*$"
+             nbexpr="2"
+             line="0"
+             subexpr="1"> 
+     </regexp>
+     <regexp name="request-param" 
+             expr="[[:space:]]*([^ ]+)[[:space:]]+([^ ]+)[[:space:]]+HTTP\/1\.1[[:space:]]*$"
+             nbexpr="3"
+             line="0"
+             subexpr="2"> 
+     </regexp>
+     <regexp name="answer-type"
+             expr="HTTP\/1\.1[[:space:]]+([0-9]+)[[:space:]]+"
+             nbexpr="2"
+             line="0"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+   <fielddef name="content-length"
+             format="Content-length: $(field-value)\r\n">
+     <regexp name="cl"
+             expr="[Cc][Oo][Nn][Tt][Ee][Nn][Tt]-[Ll][Ee][Nn][Gg][Tt][Hh][ 	]*:[ 	]*([!-}]*).*$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+   <fielddef name="get-uri"
+             format="GET $(field-value) HTTP/1.1\r\n">
+     <regexp name="geturiparam"
+             expr="GET[   ]*([!-}]*)[   ]*HTTP\/1\.1"
+             nbexpr="2"
+             line="0"
+             subexpr="1"> 
+     </regexp>
+   </fielddef>
+   <fielddef name="Set-Cookie"
+             format="Set-Cookie: $(field-value)\r\n">
+    <regexp  name="setcookie"
+             expr="[Ss][Ee][Tt]-[Cc][Oo][Oo][Kk][Ii][Ee][ \t]*:[ \t]*([!-}]*).*$"
+             nbexpr="2"
+             subexpr="1">
+    </regexp>
+   </fielddef>
+   <fielddef name="Cookie"
+             format="Cookie: $(field-value)\r\n">
+    <regexp  name="cookie"
+             expr="[Cc][Oo][Oo][Kk][Ii][Ee][     ]*:[     ]*([!-}]*).*$"
+             nbexpr="2"
+             subexpr="1">
+    </regexp>
+   </fielddef>
+</header>
+
+<body name="data" type="data-type">
+</body>
+
+<dictionary session-method="open-id">
+  <message name="GET"></message>
+  <message name="PUT"></message>
+  <message name="HEAD"></message>
+  <message name="DELETE"></message>
+  <message name="OPTIONS"></message>
+  <message name="POST"></message>
+
+  <message name="200"></message>   <!-- Answer: OK -->
+  <message name="201"></message>   <!-- Answer: Created -->
+  <message name="202"></message>   <!-- Answer: Accepted -->
+  <message name="204"></message>   <!-- Answer: No Content -->
+  <message name="301"></message>   <!-- Answer: Moved Permanently -->
+  <message name="302"></message>   <!-- Answer: Moved Temporarily -->
+  <message name="304"></message>   <!-- Answer: Not Modified -->
+  <message name="400"></message>   <!-- Answer: Bad Request -->
+  <message name="401"></message>   <!-- Answer: Unauthorized -->
+  <message name="403"></message>   <!-- Answer: Forbidden -->
+  <message name="404"></message>   <!-- Answer: Not Found -->
+  <message name="409"></message>   <!-- Answer: Conflict -->
+  <message name="412"></message>   <!-- Answer: Precondition Failed -->
+  <message name="500"></message>   <!-- Answer: Internal Server Error -->
+  <message name="501"></message>   <!-- Answer: Not Implemented -->
+  <message name="502"></message>   <!-- Answer: Bad Gateway -->
+  <message name="503"></message>   <!-- Answer: Service Unavailable -->
+
+</dictionary>
+
+</protocol>
+

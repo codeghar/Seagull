@@ -1,0 +1,82 @@
+/*
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * (c)Copyright 2006 Hewlett-Packard Development Company, LP.
+ *
+ */
+
+#include "C_MsgBuildContext.hpp"
+#include "C_MsgBuildContextFactory.hpp"
+
+#include "list_t.hpp"
+
+#ifdef _ITU_STANDARD
+#include "C_TCAPMsgBuildContextITU.hpp"
+#else 
+#include "C_TCAPMsgBuildContextANSI.hpp"
+#endif
+
+class C_TCAPMsgBuildContextFactoryNoFlavour 
+  : public C_MsgBuildContextFactory {
+public:
+           C_TCAPMsgBuildContextFactoryNoFlavour() ;
+  virtual ~C_TCAPMsgBuildContextFactoryNoFlavour() ;
+
+  C_MsgBuildContext::T_ContextFunction get_function (char *P_name);
+  C_MsgBuildContext::T_ContextStringFunction get_string_function (char *P_name);
+  C_MsgBuildContext* create_context() ;
+  void               delete_context(C_MsgBuildContext**) ;
+private:
+
+  typedef struct _fct_build_data {
+    char *m_name ;
+    C_TCAPMsgBuildContextNoFlavour::T_TCAPFunction m_fct ;
+  } T_FctBuildData, *T_pFctBuildData ;
+  typedef list_t<T_FctBuildData> T_FctBuildDataList, *T_pFctBuildDataList ;
+
+  typedef struct _fct_string_data {
+    char *m_name ;
+    C_TCAPMsgBuildContextNoFlavour::T_TCAPStringFunction m_fct ;
+  } T_FctStringData, *T_pFctStringData ;
+  typedef list_t<T_FctStringData> T_FctStringDataList, *T_pFctStringDataList ;
+
+  C_TCAPMsgBuildContextNoFlavour::T_TCAPFunction       *m_fct;
+  int                                                   m_nb_functions ;
+  char**                                                m_retrieve_function_table ;
+
+  C_TCAPMsgBuildContextNoFlavour::T_TCAPStringFunction *m_fct_string;
+  int                                                   m_nb_string_functions ;
+  char**                                                m_retrieve_string_function_table ;
+
+  void add_build_function (T_pFctBuildDataList P_list,
+			   char *P_name,
+			   C_TCAPMsgBuildContextNoFlavour::T_TCAPFunction P_fct);
+  void add_string_function (T_pFctStringDataList P_list,
+			    char *P_name,
+			    C_TCAPMsgBuildContextNoFlavour::T_TCAPStringFunction P_fct);
+  void create_table (T_pFctBuildDataList P_list, T_pFctStringDataList P_list_string);
+
+} ;
+
+extern "C" C_MsgBuildContextFactory* 
+           create_tcap_noflavour_msg_context_factory ();
+extern "C" void 
+           delete_tcap_noflavour_msg_context_factory 
+                           (C_MsgBuildContextFactory**);
+
+
+
+
+

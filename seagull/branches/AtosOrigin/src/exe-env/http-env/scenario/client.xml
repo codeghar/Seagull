@@ -1,0 +1,106 @@
+<!--
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+ (c)Copyright 2006 Hewlett-Packard Development Company, LP.
+
+-->
+
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<scenario>
+
+<counter>
+  <counterdef name="user-counter" init="1000"> </counterdef>
+</counter>
+
+<traffic>
+  <send channel="channel-1">
+    <!-- Open a new transport (TCP) socket for this call -->
+    <action>
+      <open args="mode=client;dest=127.0.0.1:8888"></open>
+      <inc-counter name="user-counter"></inc-counter>
+      <set-value name="get-uri" format="/test/$(user-counter)"> </set-value>
+    </action>
+    <message>
+      <!-- header -->
+      <![CDATA[GET / HTTP/1.1
+    Host: www.google.fr
+    User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1) Gecko/20061010 Firefox/2.0
+    Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+    Accept-Language: en-us,en;q=0.5
+    Accept-Encoding: gzip,deflate
+    Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+    Keep-Alive: 300
+    Connection: keep-alive]]>
+    </message>
+  </send>
+
+  <receive channel="channel-1">
+    <message>
+    <!-- header -->
+    <![CDATA[    HTTP/1.1 200 OK
+    Cache-Control: private
+    Content-Type: text/html
+    Set-Cookie: PREF=ID=c62354295f883d75:TM=1162703879:LM=1162703879:S=GfmpOR3ab7w5cO0T; expires=Sun, 17-Jan-2038 19:14:07 GMT; path=/; domain=.google.fr
+    Content-Encoding: gzip
+    Server: GWS/2.1
+    Content-Length: 1683
+    Date: Sun, 05 Nov 2006 05:17:59 GMT]]>
+    </message>
+    <action>
+      <store name="COOKIE" entity="Set-Cookie"></store>
+    </action>
+  </receive>
+
+  <send channel="channel-1">
+    <action>
+      <restore name="COOKIE" entity="Cookie"></restore>
+    </action>
+    <message>
+      <!-- header -->
+      <![CDATA[    GET /complete/search?hl=en HTTP/1.1
+    Host: www.google.fr
+    User-Agent: Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1) Gecko/20061010 Firefox/2.0
+    Accept: text/xml,application/xml,application/xhtml+xml,text/html;q=0.9,text/plain;q=0.8,image/png,*/*;q=0.5
+    Accept-Language: en-us,en;q=0.5
+    Accept-Encoding: gzip,deflate
+    Accept-Charset: ISO-8859-1,utf-8;q=0.7,*;q=0.7
+    Keep-Alive: 300
+    Connection: keep-alive
+    Referer: http://www.google.fr/
+    Cookie: PREF=ID=c62354295f883d75:TM=1162703879:LM=1162703879:S=GfmpOR3ab7w5cO0T]]>
+    </message>
+  </send>
+  
+  <receive channel="channel-1">
+    <message>
+    <!-- header -->
+    <![CDATA[HTTP/1.1 200 OK
+    Content-Type: text/html; charset=utf-8
+    Content-Encoding: gzip
+    Server: Auto-Completion Server
+    Cache-Control: private, x-gzip-ok=""
+    Content-Length: 235
+    Date: Sun, 05 Nov 2006 05:17:59 GMT]]>
+    </message>
+    <action>
+      <!-- Close the TCP socket we opened at the beginning -->
+      <close></close>
+    </action>
+  </receive>
+
+  </traffic>
+</scenario>
+

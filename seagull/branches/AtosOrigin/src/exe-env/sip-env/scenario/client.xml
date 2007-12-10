@@ -1,0 +1,196 @@
+<!--
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+ (c)Copyright 2006 Hewlett-Packard Development Company, LP.
+
+-->
+
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<scenario>
+
+<counter>
+  <counterdef name="callid-counter" init="0"> </counterdef>
+</counter>
+
+<traffic>
+   <send channel="channel-1">
+     <action>
+     <!-- For each new call, increment the callid counter -->
+       <inc-counter name="callid-counter"> </inc-counter>
+     <!-- And set the call-id field -->
+       <set-value name="call-id"
+                  format="$(callid-counter)@255.255.255.255"></set-value>
+       
+       <!-- Get address from the external file --> 
+       <restore-from-external field="1" entity="call-id-addr"></restore-from-external>
+       
+       <!-- Store it for other fields -->
+       <store  name="local_ip"  entity="call-id-addr"></store>
+
+     <!-- Set the VIA field -->
+       <set-value name="via"
+                  format="SIP/2.0/UDP 255.255.255.255"></set-value>
+       <restore name="local_ip" entity="via-addr"></restore>
+       <!-- Get protocol from external file -->
+       <restore-from-external field="4" entity="via-transport"></restore-from-external>
+
+     <!-- Set the From field -->
+       <set-value name="from"
+                  format="seagull <sip:seagull@255.255.255.255>;tag=1"></set-value>
+       <!-- Get Name from external file -->
+       <restore-from-external field="0" entity="from-name"></restore-from-external>
+       
+       <!-- Store it for other fields -->
+       <store name="local_name"  entity="from-name"></store>
+       
+       <restore name="local_ip" entity="from-addr"></restore>
+
+     <!-- Set the To field -->
+       <set-value name="to"
+                  format="sut <sip:service@255.255.255.255:5060>"></set-value>
+       <!-- Get Name from external file -->
+       <restore-from-external field="2" entity="to-name"></restore-from-external>
+       <!-- Get address from external file -->
+       <restore-from-external field="3" entity="to-addr"></restore-from-external>
+
+       <!-- Set the INVITE request address and name-->
+       <restore name="local_name" entity="invite-name"></restore>
+       <restore name="local_ip" entity="invite-addr"></restore>
+ 
+     </action>
+     <message>
+     <!-- header -->
+     <! [ CDATA[INVITE sip:schooler@cs.caltech.edu SIP/2.0
+         Via: SIP/2.0/UDP north.east.isi.edu
+         From: Mark Handley <sip:mjh@isi.edu>
+         To: Eve Schooler <sip:schooler@caltech.edu>
+         Call-ID: 2963313058@north.east.isi.edu
+         CSeq: 1 INVITE
+         Subject: SIP will be discussed, too
+         Content-Type: application/sdp
+         Content-Length: 187]]>
+     <!-- body --> 
+     <![CDATA[v=0
+              o=user1 53655765 2353687637 IN IP4 155.208.221.173
+              s=Mbone Audio
+              i=Discussion of Mbone Engineering Issues
+              e=mbone@somewhere.com
+              c=IN IP4 155.208.221.173
+              t=0 0
+              m=audio 3456 RTP/AVP 0
+	      a=rtpmap:0 PCMU/8000]]>
+     </message>
+     <action>
+       <!-- Store completed fields for future msg-->
+       <store name="SID" entity="call-id"></store>
+       <store name="VIA" entity="via"></store>
+       <store name="FROM" entity="from"></store>
+       <store name="TO" entity="to"></store>
+       </action>
+   </send>
+
+   <receive channel="channel-1">
+    <message>
+     <!-- header -->
+      <! [CDATA[SIP/2.0 180 Ringing
+         Via: SIP/2.0/UDP north.east.isi.edu
+         From: Mark Handley <sip:mjh@isi.edu>
+         To: Eve Schooler <sip:schooler@caltech.edu> ;tag=9883472
+         Call-ID: 2963313058@north.east.isi.edu
+         CSeq: 1 INVITE]]>
+    </message>
+   </receive>
+
+   <receive channel="channel-1">
+    <message>
+     <!-- header -->
+     <! [CDATA[SIP/2.0 200 OK
+              Via: SIP/2.0/UDP north.east.isi.edu
+              From: Mark Handley <sip:mjh@isi.edu>
+              To: Eve Schooler <sip:schooler@caltech.edu> ;tag=9883472
+              Call-ID: 2963313058@north.east.isi.edu
+              CSeq: 1 INVITE
+              Contact: sip:es@jove.cs.caltech.edu]]>
+    </message>
+   </receive>
+
+   <send channel="channel-1">
+    <action>
+      <!-- restore fields -->
+      <restore name="SID" entity="call-id"></restore>
+      <restore name="VIA" entity="via"></restore>
+      <restore name="FROM" entity="from"></restore>
+      <restore name="TO" entity="to"></restore>
+      <!-- set name and address in the Ack request -->
+      <restore name="local_name" entity="ack-name"></restore>
+      <restore name="local_ip" entity="ack-addr"></restore>
+    </action>
+    <message>
+       <!-- header -->
+     <! [ CDATA[ACK sip:es@jove.cs.caltech.edu SIP/2.0
+         Via: SIP/2.0/UDP north.east.isi.edu
+         From: Mark Handley <sip:mjh@isi.edu>
+         To: Eve Schooler <sip:schooler@caltech.edu> ;tag=9883472
+         Call-ID: 2963313058@north.east.isi.edu
+         CSeq: 1 ACK]]>
+    </message>
+   </send>
+
+   <send channel="channel-1">
+     <action>
+       <!-- restore fields -->
+       <restore name="SID" entity="call-id"></restore>
+       <restore name="VIA" entity="via"></restore>
+       <restore name="FROM" entity="from"></restore>
+       <restore name="TO" entity="to"></restore>
+       <!-- set name and address in the BYE request -->
+       <restore name="local_name" entity="bye-name"></restore>
+       <restore name="local_ip" entity="bye-addr"></restore>
+     </action>    <message>
+     <!-- header -->
+     <! [ CDATA[BYE sip:watson@y.bell-tel.com SIP/2.0
+         Via:      SIP/2.0/UDP c.bell-tel.com
+         From:     A. Bell <sip:a.g.bell@bell-tel.com>
+         To:       T. Watson <sip:t.watson@ieee.org>;tag=35253448
+         Call-ID:  2963313058@north.east.isi.edu
+         CSeq:     2 BYE]]>
+    </message>
+   </send>
+
+   <receive channel="channel-1">
+    <message>
+     <!-- header -->
+     <! [CDATA[SIP/2.0 200 OK
+         Via:      SIP/2.0/UDP c.bell-tel.com
+         From:     A. Bell <sip:a.g.bell@bell-tel.com>
+         To:       T. Watson <sip:t.watson@ieee.org>;tag=35253448
+         Call-ID:  2963313058@north.east.isi.edu
+         CSeq:     2 BYE]]>
+    </message>
+   </receive>
+
+</traffic>
+
+</scenario>
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,172 @@
+<!--
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+ (c)Copyright 2006 Hewlett-Packard Development Company, LP.
+
+-->
+
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<scenario>
+
+<counter>
+  <counterdef name="transaction-counter" init="0"> </counterdef>
+</counter>
+
+<traffic>
+  <send channel="channel-1">
+    <action>
+      <inc-counter name="transaction-counter"> </inc-counter>
+      <set-value name="transaction-id"
+                 format="$(transaction-counter)">
+      </set-value>
+    </action>
+    <message>
+      <!-- header -->
+      <![CDATA[!/1 [16.16.88.188\]:55554
+               T=18571]]>
+      <!-- body -->
+      <![CDATA[C=${A=${M{TS{SI=iv,BF=off},
+               ST=1{O{MO=sr,RV=off,RG=off},
+                 R{m=audio 49152 RTP/AVP 3 97 98 8 0 101
+                   c=IN IP4 16.16.214.175
+                   a=rtpmap:3 GSM/8000
+                   a=rtpmap:97 iLBC/8000
+                   a=rtpmap:98 iLBC/8000
+                   a=fmtp:98 mode=20
+                   a=rtpmap:8 PCMA/8000
+                   a=rtpmap:0 PCMU/8000
+                   a=rtpmap:101 telephone-event/8000
+                   a=fmtp:101 0-11,16
+                 }}}}}}]]>
+     </message>
+     <action>
+       <!-- Store the transaction-id for following messages -->
+       <store name="TID" entity="transaction-id">
+         <regexp name="t-id"
+           expr="[Tt][[:space:]]*[=][[:space:]]*([0-9]+)"
+           nbexpr="2"
+           subexpr="1">
+         </regexp>
+       </store>
+     </action>
+   </send>
+
+   <receive channel="channel-1">
+     <message>
+       <!-- header -->
+       <![CDATA[MEGACO/1 [16.16.88.188\]:55555
+                Reply=18571]]>
+       <!-- body -->
+       <![CDATA[Context=1{Add=T1{Media{TerminationState{ServiceStates=inservice,Buffer=off},
+          Stream=1{LocalControl{Mode=sendreceive,ReservedValue=off,ReservedGroup=off},
+          Local{
+            v=0
+            o=user 0 0 IN IP4 16.16.88.188
+            s=-
+            t=0 0
+            m=audio 3436 RTP/AVP 8 0 101
+            c=IN IP4 16.16.88.188
+            a=rtpmap:8 PCMA/8000/1
+            a=rtpmap:0 PCMU/8000/1
+            a=rtpmap:101 telephone-event/8000/1
+          },
+          Remote{
+            v=0
+            o=user 0 0 IN IP4 16.16.88.188
+            s=-
+            t=0 0
+            m=audio 49152 RTP/AVP 3 97 98 8 0 101
+            c=IN IP4 16.16.214.175
+            a=rtpmap:3 GSM/8000
+            a=rtpmap:97 iLBC/8000
+            a=rtpmap:98 iLBC/8000
+            a=fmtp:98 mode=20
+            a=rtpmap:8 PCMA/8000
+            a=rtpmap:0 PCMU/8000
+            a=rtpmap:101 telephone-event/8000
+            a=fmtp:101 0-11,16
+          }}}}}}]]>
+     </message>
+   </receive>
+
+   <send channel="channel-1">
+     <action>
+       <restore name="TID" entity="transaction-id-in-body"></restore>
+     </action>
+     <message>
+       <!-- header -->
+       <![CDATA[!/1 [16.16.88.188\]:55554 
+                TransactionResponseAck]]>
+       <!-- body -->
+       <![CDATA[18571}]]>
+     </message>
+   </send>
+
+  <send channel="channel-1">
+    <action>
+      <restore name="TID" entity="transaction-id"></restore>
+    </action>
+    <message>
+      <!-- header -->
+      <![CDATA[!/1 [16.16.88.188\]:55554
+               Transaction=18572]]>
+      <!-- body -->
+      <![CDATA[C=1{MF=T1
+                {SG{aasdc/play
+                {an="sid=<file://home/ocmpadm/tests_tools.d/prompts.d/welcome.wav>"}
+              },
+              E=100{g/sc}}}}]]> 
+    </message>
+  </send>
+
+  <send channel="channel-1">
+    <action>
+      <restore name="TID" entity="transaction-id"></restore>
+    </action>
+    <message>
+      <!-- header -->
+      <![CDATA[!/1 [16.16.88.188\]:55554
+               Transaction=18572]]>
+      <!-- body -->
+      <![CDATA[C=1{S=T1}}]]> 
+    </message>
+  </send>
+
+  <receive channel="channel-1">
+    <message>
+      <!-- header -->
+      <![CDATA[MEGACO/1 [16.16.88.188\]:55555
+               Reply=18572]]>
+      <!-- body -->
+      <![CDATA[Context=1{Subtract=T1}}]]>
+    </message>
+  </receive>
+
+  <send channel="channel-1">
+    <action>
+      <restore name="TID" entity="transaction-id-in-body"></restore>
+    </action>
+    <message>
+      <!-- header -->
+      <![CDATA[!/1 [16.16.88.188\]:55554
+               TransactionResponseAck]]>
+      <!-- body -->
+      <![CDATA[68836}]]> 
+    </message>
+  </send>
+
+</traffic>
+</scenario>

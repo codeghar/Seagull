@@ -1,0 +1,87 @@
+<!--
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+ (c)Copyright 2006 Hewlett-Packard Development Company, LP.
+
+-->
+
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<scenario>
+
+
+
+<counter>
+  <counterdef name="session-counter" init="0"> </counterdef>
+</counter>
+
+<traffic>
+   <send channel="channel-1">
+    <action>
+     <inc-counter name="session-counter"> </inc-counter>
+     <set-value name="session-id"
+                 format="$(session-counter)">
+     </set-value>
+<!--
+      <open args="mode=client;dest=127.0.0.1:8493"></open>
+-->
+    </action>
+   <message>
+     <!-- header -->
+     <! [ CDATA[MSRP d93kswow SEND
+                To-Path: msrp://bob.example.com:8888/9di4ea;tcp
+                From-Path: msrp://alicepc.example.com:7777/iau39;tcp
+                Message-ID: 12339sdqwer
+                Content-Type: text/plain
+                Hi, I'm Alice !]]>
+     <!-- body -->
+     <![CDATA[d93kswow$
+             ]]>
+     </message>
+   </send>
+
+   <receive channel="channel-1">
+     <message>
+     <! -- header -->
+     <![CDATA[MSRP d93kswow 200 OK
+              To-Path: msrp://alicepc.example.com:7777/iau39;tcp
+              From-Path: msrp://bob.example.com:8888/9di4ea;tcp
+       ]]>
+     <!-- body -->
+     <![CDATA[d93kswow$
+             ]]>
+     </message>
+
+   <action>
+     <!-- close the socket -->
+<!--
+     <close></close>
+-->
+   </action>
+
+   </receive>
+</traffic>
+
+</scenario>
+
+
+
+
+
+
+
+
+
+

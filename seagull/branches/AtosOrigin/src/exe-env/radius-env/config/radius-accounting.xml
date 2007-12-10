@@ -1,0 +1,284 @@
+<!--
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+ (c)Copyright 2006 Hewlett-Packard Development Company, LP.
+
+-->
+
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<protocol name="radius-accounting-v1" type="binary">
+
+<types>
+  <!-- Types defined for the Attributes   -->
+  <typedef name="Octet"       type="number" size="1"  unit="octet"> </typedef>
+  <typedef name="Integer32"   type="signed" size="4"  unit="octet"> </typedef>
+  <typedef name="Unsigned32"  type="number" size="4"  unit="octet"> </typedef>
+  <typedef name="Address"     type="number" size="4"  unit="octet"> </typedef>
+  <typedef name="Time"        type="number" size="4"  unit="octet"> </typedef>
+  <typedef name="String"      type="string"           unit="octet"> </typedef>
+  <typedef name="Text"        type="string"           unit="octet"> </typedef>
+  <typedef name="Grouped"     type="grouped"                      > </typedef>
+
+  <typedef name="Octet_16"    type="string" size="16" unit="octet"> </typedef>
+  <typedef name="AddressV6"   type="string" size="16" unit="octet"> </typedef>
+  <typedef name="InterfaceId" type="string" size="8"  unit="octet"> </typedef>
+</types>
+
+<header name="Message" length="Length" type="Code">
+  <fielddef name="Code"          size="1" unit="octet"> </fielddef>
+  <fielddef name="Identifier"    size="1" unit="octet"> </fielddef>
+  <fielddef name="Length"        size="2" unit="octet"> </fielddef>
+  <fielddef name="Authenticator" type="Octet_16"> </fielddef> 
+</header>
+
+<body>
+  <header name="Attribute" length="Attr-Length" type="Attr-Type">
+     <fielddef name="Attr-Type"   size="1" unit="octet"> </fielddef>
+     <fielddef name="Attr-Length" size="1" unit="octet"> </fielddef>
+  </header>
+</body>
+
+<dictionary>
+  <!-- RADIUS Attribute definitions -->
+  <Attribute>
+    <!-- RADIUS Base Attribute definitions see RFC 2865 -->
+    <define name="User-Name" type="String">
+      <setfield name="Attr-Type" value="1"></setfield>
+    </define>
+    <define name="User-Password" type="String">
+      <setfield name="Attr-Type" value="2"></setfield>
+    </define>
+    <define name="CHAP-Password" type="String">
+      <setfield name="Attr-Type" value="3"></setfield>
+      <!-- composed by CHAP-Id Octect and String -->
+    </define>
+    <define name="NAS-IP-Address" type="Address">
+      <setfield name="Attr-Type" value="4"></setfield>
+    </define>
+    <define name="NAS-Port" type="Integer32">
+      <setfield name="Attr-Type" value="5"></setfield>
+    </define>
+    <define name="Service-Type" type="Integer32">
+      <setfield name="Attr-Type" value="6"></setfield>
+    </define>
+    <define name="Framed-Protocol" type="Integer32">
+      <setfield name="Attr-Type" value="7"></setfield>
+    </define>
+    <define name="Framed-IP-Address" type="Address">
+      <setfield name="Attr-Type" value="8"></setfield>
+    </define>
+    <define name="Framed-IP-Netmask" type="Address">
+      <setfield name="Attr-Type" value="9"></setfield>
+    </define>
+    <define name="Framed-Routing" type="Integer32">
+      <setfield name="Attr-Type" value="10"></setfield>
+    </define>
+    <define name="Filter-Id" type="Text">
+      <setfield name="Attr-Type" value="11"></setfield>
+    </define>
+    <define name="Framed-MTU" type="Integer32">
+      <setfield name="Attr-Type" value="12"></setfield>
+    </define>
+    <define name="Framed-Compression" type="Integer32">
+      <setfield name="Attr-Type" value="13"></setfield>
+    </define>
+    <define name="Login-IP-Host" type="Address">
+      <setfield name="Attr-Type" value="14"></setfield>
+    </define>
+    <define name="Login-Service" type="Integer32">
+      <setfield name="Attr-Type" value="15"></setfield>
+    </define>
+    <define name="Login-TCP-Port" type="Integer32">
+      <setfield name="Attr-Type" value="16"></setfield>
+    </define>
+    <!-- Attribute 17 unassigned see RFC 2865 -->
+    <define name="Reply-Message" type="Text">
+      <setfield name="Attr-Type" value="18"></setfield>
+    </define>
+    <define name="Callback-Number" type="String">
+      <setfield name="Attr-Type" value="19"></setfield>
+    </define>
+    <define name="Callback-Id" type="String">
+      <setfield name="Attr-Type" value="20"></setfield>
+    </define>
+    <!-- Attribute 21 unassigned see RFC 2865 -->
+    <define name="Framed-Route" type="Text">
+      <setfield name="Attr-Type" value="22"></setfield>
+    </define>
+    <define name="Framed-IPX-Network" type="Integer32">
+      <setfield name="Attr-Type" value="23"></setfield>
+    </define>
+    <define name="State" type="String">
+      <setfield name="Attr-Type" value="24"></setfield>
+    </define>
+    <define name="Class" type="String">
+      <setfield name="Attr-Type" value="25"></setfield>
+    </define>
+    <define name="Vendor-Specific" type="String">
+      <setfield name="Attr-Type" value="26"></setfield>
+      <!-- composed by Vendor-Id Integer32 and String -->
+      <!-- grouped on string content -->
+    </define>
+    <define name="Session-Timeout" type="Integer32">
+      <setfield name="Attr-Type" value="27"></setfield>
+    </define>
+    <define name="Idle-Timeout" type="Integer32">
+      <setfield name="Attr-Type" value="28"></setfield>
+    </define>
+    <define name="Terminate-Action" type="Integer32">
+      <setfield name="Attr-Type" value="29"></setfield>
+    </define>
+    <define name="Called-Station-Id" type="String">
+      <setfield name="Attr-Type" value="30"></setfield>
+    </define>
+    <define name="Calling-Station-Id" type="String">
+      <setfield name="Attr-Type" value="31"></setfield>
+    </define>
+    <define name="NAS-Identifier" type="String">
+      <setfield name="Attr-Type" value="32"></setfield>
+    </define>
+    <define name="Proxy-State" type="String">
+      <setfield name="Attr-Type" value="33"></setfield>
+    </define>
+    <define name="Login-LAT-Service" type="String">
+      <setfield name="Attr-Type" value="34"></setfield>
+    </define>
+    <define name="Login-LAT-Node" type="String">
+      <setfield name="Attr-Type" value="35"></setfield>
+    </define>
+    <define name="Login-LAT-Group" type="String">
+      <setfield name="Attr-Type" value="36"></setfield>
+    </define>
+    <define name="Framed-AppleTalk-Link" type="Integer32">
+      <setfield name="Attr-Type" value="37"></setfield>
+    </define>
+    <define name="Framed-AppleTalk-Network" type="Integer32">
+      <setfield name="Attr-Type" value="38"></setfield>
+    </define>
+    <define name="Framed-AppleTalk-Zone" type="Integer32">
+      <setfield name="Attr-Type" value="39"></setfield>
+    </define>
+    <define name="CHAP-Challenge" type="String">
+      <setfield name="Attr-Type" value="60"></setfield>
+    </define>
+    <define name="NAS-Port-Type" type="Integer32">
+      <setfield name="Attr-Type" value="61"></setfield>
+    </define>
+    <define name="Port-Limit" type="Integer32">
+      <setfield name="Attr-Type" value="62"></setfield>
+    </define>
+    <define name="Login-LAT-Port" type="String">
+      <setfield name="Attr-Type" value="63"></setfield>
+    </define>
+
+    <!-- RADIUS Accounting Attribute definitions see RFC 2866 -->
+    <define name="Acct-Status-Type" type="Integer32">
+      <setfield name="Attr-Type" value="40"></setfield>
+    </define>
+    <define name="Acct-Delay-Time" type="Integer32">
+      <setfield name="Attr-Type" value="41"></setfield>
+    </define>
+    <define name="Acct-Input-Octets" type="Integer32">
+      <setfield name="Attr-Type" value="42"></setfield>
+    </define>
+    <define name="Acct-Ouput-Octets" type="Integer32">
+      <setfield name="Attr-Type" value="43"></setfield>
+    </define>
+    <define name="Acct-Session-Id" type="Text">
+      <setfield name="Attr-Type" value="44"></setfield>
+    </define>
+    <define name="Acct-Authentic" type="Integer32">
+      <setfield name="Attr-Type" value="45"></setfield>
+    </define>
+    <define name="Acct-Session-Time" type="Integer32">
+      <setfield name="Attr-Type" value="46"></setfield>
+    </define>
+    <define name="Acct-Input-Packets" type="Integer32">
+      <setfield name="Attr-Type" value="47"></setfield>
+    </define>
+    <define name="Acct-Output-Packets" type="Integer32">
+      <setfield name="Attr-Type" value="48"></setfield>
+    </define>
+    <define name="Acct-Terminate-Cause" type="Integer32">
+      <setfield name="Attr-Type" value="49"></setfield>
+    </define>
+    <define name="Acct-Multi-Session-Id" type="String">
+      <setfield name="Attr-Type" value="50"></setfield>
+    </define>
+    <define name="Acct-Link-Count" type="Integer32">
+      <setfield name="Attr-Type" value="51"></setfield>
+    </define>
+
+    <!-- RADIUS And IPV6 Attribute definitions see RFC 3162 -->
+    <define name="NAS-IPv6-Address" type="AddressV6">
+      <setfield name="Attr-Type" value="95"></setfield>
+    </define>
+    <define name="Framed-Interace-Id" type="InterfaceId">
+      <setfield name="Attr-Type" value="96"></setfield>
+    </define>
+    <define name="Framed-IPv6-Prefix" type="String">
+      <setfield name="Attr-Type" value="97"></setfield>
+      <!-- composed by Reserved 1 byte Prefix-Length 1 byte 
+           and Prefix value string -->
+    </define>
+    <define name="Login-IPv6-Host" type="AddressV6">
+      <setfield name="Attr-Type" value="98"></setfield>
+    </define>
+    <define name="Framed-IPv6-Route" type="Text">
+      <setfield name="Attr-Type" value="99"></setfield>
+    </define>
+    <define name="Framed-IPv6-Pool" type="String">
+      <setfield name="Attr-Type" value="100"></setfield>
+    </define>
+
+  </Attribute>
+
+  <!-- RADIUS Message definitions -->
+  <Message session-id="Acct-Session-Id" out-of-session-id="Authenticator">
+
+    <!-- RADIUS Base Message definitions see RFC 2865 -->
+    <define name="Access-Request">
+       <setfield name="Code" value="1"></setfield>
+    </define> 
+    <define name="Access-Accept">
+       <setfield name="Code" value="2"></setfield>
+    </define> 
+    <define name="Access-Reject">
+       <setfield name="Code" value="3"></setfield>
+    </define> 
+    <define name="Access-Challenge">
+       <setfield name="Code" value="11"></setfield>
+    </define> 
+    <define name="Status-Server">
+       <setfield name="Code" value="12"></setfield>
+    </define> 
+    <define name="Status-Client">
+       <setfield name="Code" value="13"></setfield>
+    </define> 
+
+    <!-- RADIUS Accounting Message definitions see RFC 2866 -->
+    <define name="Accounting-Request">
+       <setfield name="Code" value="4"></setfield>
+    </define> 
+    <define name="Accounting-Response">
+       <setfield name="Code" value="5"></setfield>
+    </define> 
+  </Message>
+
+</dictionary>
+
+</protocol>
+

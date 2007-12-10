@@ -1,0 +1,555 @@
+<!--
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+ (c)Copyright 2006 Hewlett-Packard Development Company, LP.
+
+-->
+
+<!-- octcap-ansi-dictionnary definition                      -->
+<!-- external library protocol definition                    -->
+<!-- seagull configuration file set                          -->
+
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<protocol name="octcap-ansi" type="external-library" 
+          use-transport-library="trans-octcap"
+	  context-factory-constructor="create_tcap_ansi_msg_context_factory"
+	  context-factory-destructor="delete_tcap_ansi_msg_context_factory"
+	  library="liboctcap_msgbuild.so">
+
+
+<configuration-parameters>
+
+<!-- configuration parameter sample with all possible fields -->
+<!-- paramdef section fields                                 -->
+<!-- name : name of the configuration parameter              -->
+<!-- mandatory : configuration parameter mandatory on the    -->
+<!--             the confifiguration xml file                -->
+<!-- default : default value needed if param not mandatory   -->
+
+   <paramdef name="orig-address-pc"
+             default="0">
+   </paramdef>
+
+   <paramdef name="dest-address-pc"
+             default="0">
+   </paramdef>
+
+   <paramdef name="orig-address-ssn"
+             default="0">
+   </paramdef>
+
+   <paramdef name="dest-address-ssn"
+             default="0">
+   </paramdef>
+
+
+   <paramdef name="orig-routing-type"
+             mandatory="true"
+             default="SSN">
+   </paramdef>
+
+   <paramdef name="dest-routing-type"
+             mandatory="true"
+             default="SSN">
+   </paramdef>
+
+
+   <paramdef name="orig-gt"
+             default="123">
+   </paramdef>
+
+   <paramdef name="dest-gt"
+             default="123">
+   </paramdef>
+
+   <paramdef name="orig-gt-indicator"
+            default="tc_gt_type1">
+   </paramdef>
+
+   <paramdef name="orig-gt-translation"
+             default="tc_t_unused">
+   </paramdef>
+
+   <paramdef name="orig-gt-numbering"
+             default="tc_unknown_num">
+   </paramdef>
+
+<!--
+   <paramdef name="orig-gt-encoding"
+             default="123">
+   </paramdef>
+-->
+
+   <paramdef name="orig-gt-nature"
+             default="tc_subscriber_nb">
+   </paramdef>
+
+   <paramdef name="dest-gt-indicator"
+             default="tc_gt_type1">
+   </paramdef>
+
+   <paramdef name="dest-gt-translation"
+             default="tc_t_unused">
+   </paramdef>
+
+   <paramdef name="dest-gt-numbering"
+             default="tc_unknown_num">
+   </paramdef>
+
+<!--
+   <paramdef name="dest-gt-encoding"
+             default="123">
+   </paramdef>
+-->
+
+   <paramdef name="dest-gt-nature"
+             default="tc_subscriber_nb">
+   </paramdef>
+
+
+   <paramdef name="parameter-type-set"
+             default="SEQUENCE_TYPE">
+   </paramdef>
+
+
+</configuration-parameters>
+
+<types>
+</types>
+
+<header name="primitive" type="type" 
+        create-function="create_primitive" 
+        delete-function="delete_primitive">
+
+  <fielddef name="type"         type="number" 
+            set-function="set_primitive_type" 
+	    get-function="get_primitive_type">
+  </fielddef>
+
+  <fielddef name="d-address-pc"  type="number"
+            set-function="set_primitive_d_address_pc" 
+	    get-function="get_primitive_d_address_pc"
+            config-field="dest-address-pc"> 
+  </fielddef>
+  
+  <fielddef name="d-address-ssn" type="number"
+            set-function="set_primitive_d_address_ssn" 
+	    get-function="get_primitive_d_address_ssn"
+            config-field="dest-address-ssn"> 
+  </fielddef>
+
+  <fielddef name="o-address-pc"  type="number"
+            set-function="set_primitive_o_address_pc" 
+	    get-function="get_primitive_o_address_pc"
+            config-field="orig-address-pc"> 
+  </fielddef>
+
+  <fielddef name="o-address-ssn" type="number"
+            set-function="set_primitive_o_address_ssn" 
+	    get-function="get_primitive_o_address_ssn"
+	    config-field="orig-address-ssn"> 
+  </fielddef>
+
+  <fielddef name="uid"  type="number"
+            set-function="set_primitive_uid" 
+	    get-function="get_primitive_uid"> 
+  </fielddef>
+
+  <fielddef name="pid" type="number"
+            set-function="set_primitive_pid" 
+	    get-function="get_primitive_pid">
+  </fielddef>
+
+  <fielddef name="p-abort-cause" type="number"
+            to-string="primitive_p_abort_cause_to_string"
+            from-string="primitive_p_abort_cause_from_string"
+            set-function="set_primitive_p_abort_cause" 
+	    get-function="get_primitive_p_abort_cause">
+  </fielddef>
+
+  <fielddef name="u-abort-cause" type="string"
+            set-function="set_primitive_u_abort_cause" 
+	    get-function="get_primitive_u_abort_cause">
+  </fielddef>
+
+
+  <!--  Report or  Notice -->
+  <fielddef name="report-cause" type="number"
+            to-string="primitive_report_cause_to_string"
+            from-string="primitive_report_cause_from_string"
+            set-function="set_primitive_report_cause" 
+	    get-function="get_primitive_report_cause">
+  </fielddef>
+
+  <fielddef name="termination" type="number"
+            to-string="primitive_termination_to_string"
+            from-string="primitive_termination_from_string"
+            set-function="set_primitive_termination"
+            get-function="get_primitive_termination"
+	    default="BASIC">
+  </fielddef>
+
+</header>
+
+<body name="component" type="component-type" 
+      create-function="create_component" 
+      delete-function="delete_component"
+      value-field="operation-data"
+      add-function="add_component"
+      get-function="get_component">
+
+     <fielddef name="component-type" type="number" 
+               set-function="set_component_type" 
+	       get-function="get_component_type"> 
+     </fielddef>
+
+   <!-- class field value definition
+        This parameter in significant only in a send command
+        Be careful for the last send, if not correctly set TC_L_REJECT
+        can be reseived !!!!!! 
+        value: behaviour
+              1: class 1 both RESULT and ERROR may be sent back
+              2: class 2 only ERROR may be sent back
+              3: class 3 only RESULT may be sent back
+              4: class 4 neither RESULT nor ERROR may be sent back
+    -->
+     
+     <fielddef name="class" type="number"
+               set-function="set_component_class" 
+	       get-function="get_component_class"
+               default="1"> 
+     </fielddef>
+
+     <fielddef name="timeout" type="number"
+               set-function="set_component_timeout" 
+	       get-function="get_component_timeout"
+	       default="30000"> 
+     </fielddef>
+<!--
+   // control the default type 
+   // type Number 0
+   // type signed 0
+   // type string ""
+-->
+
+    <fielddef name="operation-code-tag" type="number"
+              to-string="component_operation_code_tag_to_string"
+              from-string="component_operation_code_tag_from_string"
+              set-function="set_component_operation_code_tag" 
+              get-function="get_component_operation_code_tag"
+              default="NATIONAL">
+    </fielddef>
+
+     <fielddef name="operation-code" type="number"
+               set-function="set_component_code" 
+               get-function="get_component_code"> 
+     </fielddef>
+
+     <fielddef name="operation-data" type="string"
+               set-function="set_component_data" 
+               get-function="get_component_data"> 
+     </fielddef>
+
+     <fielddef name="invoke-id" type="number"
+               set-function="set_component_invoke_id" 
+               get-function="get_component_invoke_id"> 
+     </fielddef>
+
+     <fielddef name="error-code" type="number"
+               set-function="set_component_error_code" 
+               get-function="get_component_error_code"> 
+     </fielddef>
+
+     <fielddef name="error-tag" type="number"
+               to-string="component_error_tag_to_string"
+               from-string="component_error_tag_from_string"
+               set-function="set_component_error_tag"
+               get-function="get_component_error_tag"
+               default="NATIONAL">
+     </fielddef>
+
+     <fielddef name="problem-code" type="number"
+               to-string="component_problem_code_to_string"
+               from-string="component_problem_code_from_string"
+               set-function="set_component_problem_code" 
+               get-function="get_component_problem_code">
+     </fielddef>
+
+     <fielddef name="problem-code-identifier" type="number"
+               to-string="component_pb_code_identifier_to_string"
+               from-string="component_pb_code_identifier_from_string"
+               set-function="set_component_problem_code_identifier" 
+               get-function="get_component_problem_code_identifier">
+     </fielddef>
+
+     <fielddef name="correlation-id" type="signed"
+               set-function="set_component_correlation_id" 
+               get-function="get_component_correlation_id">
+     </fielddef>
+
+     <fielddef name="parameter-type" type="number"
+               to-string="component_parameter_type_to_string"
+               from-string="component_parameter_type_from_string"
+               set-function="set_component_parameter_type" 
+               get-function="get_component_parameter_type">
+     </fielddef>
+
+</body>
+
+<dictionary session-id="uid" out-of-session-id="uid" >
+
+  <component name="TC_INVOKE_L">
+    <setfield name="component-type" value="0"></setfield>
+    <setfield name="class" value="1"></setfield>
+    <setfield name="timeout" value="30000"></setfield>
+    <setfield name="correlation-id" value="-1"></setfield> 
+    <not-present name="problem-code"></not-present>
+    <not-present name="problem-code-identifier"></not-present>
+    <not-present name="error-code"></not-present>
+    <not-present name="error-tag"></not-present>
+  </component>
+  
+  <component name="TC_INVOKE_NL" component-type="1" >
+     <setfield   name="class" value="3"></setfield>
+     <setfield   name="timeout" value="30000"></setfield>
+     <not-present name="problem-code"></not-present>
+     <not-present name="problem-code-identifier"></not-present>
+     <not-present name="error-code"></not-present>
+     <not-present name="error-tag"></not-present>
+  </component>
+
+  <component name="TC_RESULT_L" component-type="2">
+    <not-present name="class"></not-present>
+    <not-present name="operation-code"></not-present>
+    <not-present name="problem-code"></not-present>
+    <not-present name="problem-code-identifier"></not-present>
+    <not-present name="error-code"> </not-present>
+    <not-present name="error-tag"></not-present>
+  </component>
+
+  <component name="TC_RESULT_NL" component-type="3">
+    <not-present name="class"></not-present>
+    <not-present name="operation-code"></not-present>
+    <not-present name="problem-code"></not-present>
+    <not-present name="problem-code-identifier"></not-present>
+    <not-present name="error-code"> </not-present>
+    <not-present name="error-tag"></not-present>
+  </component>
+
+  <component name="TC_U_ERROR"   component-type="4">
+    <not-present name="class"></not-present>
+    <not-present name="operation-code"></not-present>
+    <not-present name="problem-code"></not-present>
+    <not-present name="problem-code-identifier"></not-present>
+  </component>
+
+  <component name="TC_L_CANCEL"  component-type="5">
+    <not-present name="class"></not-present>
+    <not-present name="operation-code"></not-present>
+    <not-present name="operation-data"> </not-present>
+    <not-present name="problem-code"></not-present>
+    <not-present name="problem-code-identifier"></not-present>
+    <not-present name="error-code"> </not-present>
+    <not-present name="parameter-type"> </not-present>
+    <not-present name="error-tag"></not-present>
+  </component>
+
+  <component name="TC_U_CANCEL"  component-type="6">
+    <not-present name="class"></not-present>
+    <not-present name="operation-code"></not-present>
+    <not-present name="operation-data"> </not-present>
+    <not-present name="problem-code"></not-present>
+    <not-present name="problem-code-identifier"></not-present>
+    <not-present name="error-code"> </not-present>
+    <not-present name="parameter-type"> </not-present>
+    <not-present name="error-tag"></not-present>
+  </component>
+
+  <component name="TC_L_REJECT"  component-type="7">
+    <not-present name="class"></not-present>
+    <not-present name="operation-code"></not-present>
+    <not-present name="error-code"> </not-present>
+    <not-present name="parameter-type"> </not-present>
+    <not-present name="error-tag"></not-present>
+  </component>
+
+  <component name="TC_R_REJECT"  component-type="8">
+    <not-present name="class"></not-present>
+    <not-present name="operation-code"></not-present>
+    <not-present name="error-code"> </not-present>
+    <not-present name="parameter-type"> </not-present>
+    <not-present name="error-tag"></not-present>
+  </component>
+
+  <component name="TC_U_REJECT"  component-type="9">
+    <not-present name="class"></not-present>
+    <not-present name="operation-code"></not-present>
+    <not-present name="error-code"> </not-present>
+    <not-present name="parameter-type"> </not-present>
+    <not-present name="error-tag"></not-present>
+  </component>
+
+  <primitive name="TC_UNI"
+             type="0">
+     <not-present name="p-abort-cause"></not-present>
+     <not-present name="u-abort-cause"></not-present>
+     <not-present name="report-cause"></not-present>
+     <not-present name="termination"></not-present>
+  </primitive>
+
+  <primitive name="TC_QUERY_W_PERM"
+             type="1">
+     <not-present name="p-abort-cause"></not-present>
+     <not-present name="u-abort-cause"></not-present>
+     <not-present name="report-cause"></not-present>
+     <not-present name="termination"></not-present>
+  </primitive>
+
+  <primitive name="TC_QUERY_WO_PERM"
+             type="2">
+     <not-present name="p-abort-cause"></not-present>
+     <not-present name="u-abort-cause"></not-present>
+     <not-present name="report-cause"></not-present>
+     <not-present name="termination"></not-present>
+  </primitive>
+
+  <primitive name="TC_CONV_W_PERM"
+             type="3">
+     <not-present name="p-abort-cause"></not-present>
+     <not-present name="u-abort-cause"></not-present>
+     <not-present name="report-cause"></not-present>
+     <not-present name="termination"></not-present>
+  </primitive>
+
+  <primitive name="TC_CONV_WO_PERM"
+             type="4">
+     <not-present name="p-abort-cause"></not-present>
+     <not-present name="u-abort-cause"></not-present>
+     <not-present name="report-cause"></not-present>
+     <not-present name="termination"></not-present>
+  </primitive>
+
+  <primitive name="TC_RESPONSE"
+             type="5">
+     <not-present name="p-abort-cause"></not-present>
+     <not-present name="u-abort-cause"></not-present>
+     <not-present name="report-cause"></not-present>
+  </primitive>
+
+  <primitive name="TC_U_ABORT"
+             type="6">
+     <not-present name="p-abort-cause"></not-present>
+     <not-present name="report-cause"></not-present>
+     <not-present name="termination"></not-present>
+  </primitive>
+
+  <primitive name="TC_P_ABORT"
+             type="7">
+     <not-present name="report-cause"></not-present>
+     <not-present name="u-abort-cause"></not-present>
+     <not-present name="termination"></not-present>
+  </primitive>
+
+  <primitive name="TC_NOTICE"
+             type="8">
+     <not-present name="o-address-pc"></not-present>
+     <not-present name="d-address-pc"></not-present>
+     <not-present name="o-address-ssn"></not-present>
+     <not-present name="d-address-ssn"></not-present>
+     <not-present name="p-abort-cause"></not-present>
+     <not-present name="u-abort-cause"></not-present>
+     <not-present name="termination"></not-present>
+  </primitive>
+
+  <primitive name="MGT"
+             type="9">
+     <not-present name="p-abort-cause"></not-present>
+     <not-present name="u-abort-cause"></not-present>
+     <not-present name="report-cause"></not-present>
+     <not-present name="termination"></not-present>
+  </primitive>
+
+  <primitive name="SCCP_USER_STATUS"
+             type="10">
+     <not-present name="p-abort-cause"></not-present>
+     <not-present name="u-abort-cause"></not-present>
+     <not-present name="report-cause"></not-present>
+     <not-present name="termination"></not-present>
+  </primitive>
+
+  <primitive name="SCCP_PC_STATUS"
+             type="11">
+     <not-present name="p-abort-cause"></not-present>
+     <not-present name="u-abort-cause"></not-present>
+     <not-present name="report-cause"></not-present>
+     <not-present name="termination"></not-present>
+  </primitive>
+
+  <primitive name="SCCP_N_COORD"
+             type="12">
+     <not-present name="p-abort-cause"></not-present>
+     <not-present name="u-abort-cause"></not-present>
+     <not-present name="report-cause"></not-present>
+     <not-present name="termination"></not-present>
+  </primitive>
+
+  <primitive name="SCCP_N_COORD_RES"
+             type="13">
+     <not-present name="p-abort-cause"></not-present>
+     <not-present name="u-abort-cause"></not-present>
+     <not-present name="report-cause"></not-present>
+     <not-present name="termination"></not-present>
+  </primitive>
+
+  <primitive name="NO_PRIMITIVE"
+             type="14">
+     <not-present name="o-address-pc"></not-present>
+     <not-present name="d-address-pc"></not-present>
+     <not-present name="o-address-ssn"></not-present>
+     <not-present name="d-address-ssn"></not-present>
+     <not-present name="p-abort-cause"></not-present>
+     <not-present name="u-abort-cause"></not-present>
+     <not-present name="report-cause"></not-present>
+     <not-present name="termination"></not-present>
+  </primitive>
+
+  <primitive name="SWITCH_STARTED"
+             type="15">
+     <not-present name="p-abort-cause"></not-present>
+     <not-present name="u-abort-cause"></not-present>
+     <not-present name="report-cause"></not-present>
+     <not-present name="termination"></not-present>
+  </primitive>
+
+  <primitive name="SWITCH_DONE"
+             type="16">
+     <not-present name="p-abort-cause"></not-present>
+     <not-present name="u-abort-cause"></not-present>
+     <not-present name="report-cause"></not-present>
+     <not-present name="termination"></not-present>
+  </primitive>
+
+</dictionary>
+
+</protocol>
+
+
+
+
+
+
+
+

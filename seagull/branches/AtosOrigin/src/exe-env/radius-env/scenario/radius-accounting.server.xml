@@ -1,0 +1,104 @@
+<!--
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+ (c)Copyright 2006 Hewlett-Packard Development Company, LP.
+
+-->
+
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<scenario name ="Simple Radius Server scenario">
+
+<!-- No Init scenario in Radius
+<init>
+</init>
+-->
+
+<traffic>
+
+  <!-- Wait for Start Accouting Request -->
+
+  <receive channel="trans-ip-v4">
+    <Message name="Accounting-Request">
+      <!-- Only need to specify what needs to be parsed -->
+      <Attribute name="Acct-Session-Id" value="value_is_replaced"> </Attribute>
+      <!-- 1 stand for Start -->
+      <Attribute name="Acct-Status-Type" value="1"> </Attribute>
+      <Attribute name="NAS-Identifier" value="ims.hpintelco.org"> </Attribute>
+    </Message>
+
+    <!-- Store action is at the end of the Message -->
+    <action>
+      <store name="IDENTIFIER" entity="Identifier"></store>
+      <store name="ACCT_SES_ID" entity="Acct-Session-Id"></store>
+    </action>
+  </receive>
+  
+  <send channel="trans-ip-v4">
+    <!-- Restore action is before the Message -->
+    <action>
+      <restore name="IDENTIFIER" entity="Identifier"></restore>
+      <restore name="ACCT_SES_ID" entity="Acct-Session-Id"></restore>
+
+      <!-- This field must not be use with a true value -->
+      <restore-from-external field="0" entity="Authenticator"></restore-from-external>
+
+    </action>
+    <!-- Warning: content of Accounting-Response to check -->
+    <Message name="Accounting-Response">
+      <Attribute name="Acct-Session-Id" value="will_be_replace"> </Attribute>
+      <!-- 1 stand for Start -->
+      <Attribute name="Acct-Status-Type" value="1"> </Attribute>
+    </Message>
+  </send>
+
+  <!-- Wait for Stop Accouting Request -->
+
+  <receive channel="trans-ip-v4">
+    <Message name="Accounting-Request">
+      <!-- Only need to specify what needs to be parsed -->
+      <Attribute name="Acct-Session-Id" value="value_is_replaced"> </Attribute>
+      <!-- 2 stand for Stop -->
+      <Attribute name="Acct-Status-Type" value="2"> </Attribute>
+      <Attribute name="NAS-Identifier" value="ims.hpintelco.org"> </Attribute>
+    </Message>
+
+    <!-- Store action is at the end of the Message -->
+    <action>
+      <store name="IDENTIFIER" entity="Identifier"></store>
+    </action>
+  </receive>
+  
+  <send channel="trans-ip-v4">
+    <!-- Restore action is before the Message -->
+    <action>
+      <restore name="IDENTIFIER" entity="Identifier"></restore>
+      <restore name="ACCT_SES_ID" entity="Acct-Session-Id"></restore>
+
+      <!-- This field must not be use with a true value -->
+      <restore-from-external field="1" entity="Authenticator"></restore-from-external>
+
+    </action>
+    <!-- Warning: content of Accounting-Response to check -->
+    <Message name="Accounting-Response">
+      <Attribute name="Acct-Session-Id" value="will_be_replace"> </Attribute>
+      <!-- 1 stand for Start -->
+      <Attribute name="Acct-Status-Type" value="1"> </Attribute>
+    </Message>
+  </send>
+
+</traffic>
+
+</scenario>

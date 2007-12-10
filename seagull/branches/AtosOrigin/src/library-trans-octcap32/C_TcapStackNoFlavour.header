@@ -1,0 +1,159 @@
+/*
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * (c)Copyright 2006 Hewlett-Packard Development Company, LP.
+ *
+ */
+
+#include "tcap_stack_t.hpp"
+
+#include "list_t.hpp"
+#include "C_TcapStack.hpp"
+#include "ReceiveMsgContext.h" 
+#include "C_ProtocolExternalFrame.hpp"
+#include "C_MsgBuildContextFactory.hpp"
+
+#define CNX_ARRAY_MAX_SIZE 32
+
+class C_TcapStackNoFlavour : public C_TcapStack {
+public:
+  typedef struct _recv_data_t {
+    struct timeval   m_time ;
+    tcx_primitive   *m_primitive ;
+    tcx_component  **m_components ;
+  } T_RecvData, *T_pRecvData ;
+
+  C_TcapStackNoFlavour(char *P_library_name);
+  ~C_TcapStackNoFlavour();
+
+  int init(T_logFunction P_logError, 
+	   T_logFunction P_logInfo) ;
+  int config (T_pConfigValueList P_config_param_list) ;
+
+  int open  (int                      P_channel_id, 
+	     char                    *P_class, 
+	     int                      P_appl, 
+	     int                      P_inst, 
+	     int                      P_ossn,
+	     C_ProtocolExternalFrame *P_protocol) ;
+  int close (int P_cnx);
+  
+  int pre_select (int               P_n, 
+		  fd_set            *P_readfds,  
+		  fd_set            *P_writefds,
+		  fd_set            *P_exceptfds, 
+		  struct timeval    *P_timeout) ; 
+
+  int post_select (int                  P_n, 
+		   fd_set              *P_readfds,  
+		   fd_set              *P_writefds,
+		   fd_set              *P_exceptfds, 
+		   T_pC_TransportEvent  P_eventTable,
+		   size_t              *P_nb)  ;
+
+  bool get_message(int P_id, T_pReceiveMsgContext P_ctxt);
+  int  send_message(int P_id, C_MessageFrame *P_msg) ;
+
+  int set_orig_routing_type (char *P_data);
+  int set_dest_routing_type (char *P_data);  
+
+  int set_orig_gt (char *P_data) ;
+  int set_dest_gt (char *P_data) ;
+
+  int set_orig_gt_indicator (char *P_data) ;
+  int set_dest_gt_indicator (char *P_data) ;
+  int set_orig_gt_translation (char *P_data);
+  int set_dest_gt_translation (char *P_data);
+  int set_orig_gt_numbering (char *P_data);
+  int set_dest_gt_numbering (char *P_data);
+  int set_orig_gt_nature (char *P_data);
+  int set_dest_gt_nature (char *P_data);
+
+  
+#ifdef _ANSI_STANDARD
+  int set_parameter_type (char *P_data);
+#endif // _ANSI_STANDARD
+
+
+
+  T_TCAP_stack_fct*  get_fct() ;
+
+  tc_address_type          m_o_routing_type          ;
+  tc_address_type          m_d_routing_type          ;
+  char                    *m_o_gt                    ;
+  char                    *m_d_gt                    ;
+
+  tc_gt_indicator          m_o_gt_indicator          ;
+  tc_gt_indicator          m_d_gt_indicator          ;
+  tc_translation           m_o_gt_translation        ;
+  tc_translation           m_d_gt_translation        ;
+
+  tc_numbering_plan        m_o_gt_numbering_plan     ;
+  tc_numbering_plan        m_d_gt_numbering_plan     ;
+
+  tc_address_nature        m_o_gt_nature             ;
+  tc_address_nature        m_d_gt_nature             ;
+
+#ifdef _ANSI_STANDARD
+  tc_parm_type             m_parameter_type          ;
+#endif // _ANSI_STANDARD
+
+
+
+
+protected:
+private:
+
+  typedef enum _cnx_state_t {
+    E_CNX_OPEN,
+    E_CNX_CLOSE,
+    E_CNX_UNKNOWN
+  } T_CnxState, *T_pCnxState ;
+
+
+  typedef list_t<T_pRecvData> T_RecvDataList, *T_pRecvDataList ;
+
+  T_TCAP_stack_fct         m_stack_fct      ;
+  int                      m_num_cnx_active ;
+
+  C_ProtocolExternalFrame  *m_protocol ;
+  C_MsgBuildContextFactory *m_context_factory ;
+
+  int                     *m_cnx_active     ;
+  T_pCnxState              m_cnx_state      ;
+  T_pRecvDataList          m_recv_data_list ;
+
+
+  int              m_channel_id ;
+  int              m_response ;
+
+  int event_handler (C_TransportEvent *P_evt);
+
+  T_pRecvData create_recv_data() ;
+
+  void        delete_recv_data(T_pRecvData *P_data);
+  int         analyze_config(T_ConfigValue& P_config) ;
+
+  T_logFunction m_log_error, m_log_info ;
+
+} ;
+
+
+
+
+
+
+
+

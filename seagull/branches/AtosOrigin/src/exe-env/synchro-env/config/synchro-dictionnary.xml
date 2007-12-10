@@ -1,0 +1,114 @@
+<!--
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+ (c)Copyright 2006 Hewlett-Packard Development Company, LP.
+
+-->
+
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<protocol name="command-synchro-v1" type="binary">
+
+
+<types>
+  <typedef name="String" type="string" unit="octet"> </typedef>
+  <typedef name="Integer32" type="signed" size="4" unit="octet"> </typedef>
+</types>
+
+<header name="command-synchro" length="size" type="type">
+  <fielddef name="type" size="4" unit="octet"> </fielddef>
+  <fielddef name="size" size="4" unit="octet"> </fielddef>
+  <fielddef name="user-id-1" size="4" unit="octet"> </fielddef>
+  <fielddef name="user-id-2" size="4" unit="octet"> </fielddef>
+</header>
+
+<body>
+  <header name="parameter" length="parameter-length" type="parameter-code">
+     <fielddef name="parameter-code" size="4" unit="octet"> </fielddef>
+     <fielddef name="parameter-length" size="4" unit="octet"> </fielddef>
+  </header>
+</body>
+
+<dictionary>
+
+  <parameter>
+
+    <define name="field-bin-1-data" type="String">
+      <setfield name="parameter-code" value="0x00"></setfield>
+    </define>
+
+    <define name="field-bin-2-data" type="String">
+      <setfield name="parameter-code" value="0x01"></setfield>
+    </define>
+
+    <define name="field-bin-3-data" type="String">
+      <setfield name="parameter-code" value="0x02"></setfield>
+    </define>
+
+    <define name="field-bin-4-data" type="String">
+      <setfield name="parameter-code" value="0x03"></setfield>
+    </define>
+
+    <define name="field-int-1-data" type="Integer32">
+      <setfield name="parameter-code" value="0x04"></setfield>
+    </define>
+
+    <define name="field-int-2-data" type="Integer32">
+      <setfield name="parameter-code" value="0x05"></setfield>
+    </define>
+
+    <define name="field-int-3-data" type="Integer32">
+      <setfield name="parameter-code" value="0x06"></setfield>
+    </define>
+
+    <define name="field-int-4-data" type="Integer32">
+      <setfield name="parameter-code" value="0x07"></setfield>
+    </define>
+
+  </parameter>
+
+
+
+  <command-synchro session-id="user-id-1" out-of-session-id="user-id-2">
+
+
+ <define name="CMD_INITSYNCHRO">
+    <setfield name="type" value="0x00"> </setfield>
+ </define>
+ <define name="CMD_ENDSYNCHRO">
+    <setfield name="type" value="0x01"> </setfield>
+ </define>
+ <define name="CMD_CALLCREATE">
+    <setfield name="type" value="0x02"> </setfield>
+ </define>
+ <define name="CMD_CALLDATA">
+    <setfield name="type" value="0x03"> </setfield>
+ </define>
+ <define name="CMD_CALLRESULT">
+    <setfield name="type" value="0x04"> </setfield>
+ </define>
+ <define name="CMD_CALLDELETE">
+    <setfield name="type" value="0x05"> </setfield>
+ </define>
+
+
+
+
+  </command-synchro>
+
+</dictionary>
+
+</protocol>

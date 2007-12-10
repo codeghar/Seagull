@@ -1,0 +1,136 @@
+<!--
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+ (c)Copyright 2006 Hewlett-Packard Development Company, LP.
+
+-->
+
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<scenario>
+
+<counter>
+  <counterdef name="server-uid-counter"     init="1"></counterdef>
+</counter>
+
+<traffic>
+  <receive channel="channel-1">
+    <primitive name="TC_BEGIN" o-address-pc="$(dest-address-pc)"
+                               o-address-ssn="$(dest-address-ssn)"
+                               d-address-pc="$(orig-address-pc)"
+                               d-address-ssn="$(orig-address-ssn)">
+      <component name="TC_INVOKE" instance="InitialDP-data"
+                 class="1"
+                 operation-code="0"
+		 operation-data="0x308188990000">
+      </component>
+    </primitive>
+    <action>
+      <start-timer></start-timer>
+      <set-value name="uid" format="$(server-uid-counter)"></set-value>
+      <store name="SERVER-UID" entity="uid"></store>
+      <store name="SERVER-PID" entity="pid"></store>
+      <inc-counter name="server-uid-counter"></inc-counter>
+    </action>
+  </receive>
+  
+  <send channel="channel-1">
+    <action>
+      <restore name="SERVER-UID" entity="uid"></restore>
+      <restore name="SERVER-PID" entity="pid"></restore>
+    </action>
+    <primitive name="TC_CONTINUE">
+      <component name="TC_INVOKE"  instance="InitialDP-2-data"
+                 class="2"
+		 timeout="60000"
+		 invoke-id="1"
+                 operation-code="18"
+                 operation-data="0x3081889900501400">
+      </component>
+      <component name="TC_INVOKE"  instance="InitialDP-3-data"
+                 class="2"
+		 timeout="60000"
+		 invoke-id="2"
+                 operation-code="23"
+                 operation-data="0x308188990050163030">
+      </component>
+    </primitive>
+  </send>
+
+  <receive channel="channel-1">
+    <primitive name="TC_CONTINUE" o-address-pc="$(dest-address-pc)"
+                                  o-address-ssn="$(dest-address-ssn)"
+                                  d-address-pc="$(orig-address-pc)"
+                                  d-address-ssn="$(orig-address-ssn)">
+      <component name="TC_INVOKE" instance="InitialDP-data"
+                 class="1"
+                 operation-code="33"
+		 invoke-id="2"
+		 operation-data="0x308188990017">
+      </component>
+    </primitive>
+   </receive>
+
+  <send channel="channel-1">
+    <action>
+      <restore name="SERVER-UID" entity="uid"></restore>
+      <restore name="SERVER-PID" entity="pid"></restore>
+      <stop-timer></stop-timer>
+    </action>
+    <primitive name="TC_END">
+      <component name="TC_RESULT_L" instance="InitialDP-data"
+		 timeout="60000"
+		 invoke-id="2"
+                 operation-code="33"
+                 operation-data="0x310E9F82310A02030405060708090102">
+      </component>
+    </primitive>
+  </send>
+</traffic>
+
+
+<default behaviour="ignore">
+  <receive channel="channel-1">
+    <primitive name="SCCP_USER_STATUS">
+    </primitive>
+  </receive>
+</default>
+
+<default>
+  <receive channel="channel-1">
+    <primitive name="NO_PRIMITIVE">
+      <component name="TC_L_CANCEL"></component>
+    </primitive>
+  </receive>
+</default>
+
+<default behaviour="failed">
+  <receive channel="channel-1">
+    <primitive name="TC_P_ABORT">
+    </primitive>
+  </receive>
+</default>
+
+<abort>
+  <send channel="channel-1">
+    <primitive name="TC_U_ABORT">
+    </primitive>
+  </send>
+</abort>
+
+</scenario>
+
+
+

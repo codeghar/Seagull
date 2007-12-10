@@ -1,0 +1,52 @@
+//
+//  This program is free software; you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation; either version 2 of the License, or
+//  (at your option) any later version.
+//
+//  This program is distributed in the hope that it will be useful,
+//  but WITHOUT ANY WARRANTY; without even the implied warranty of
+//  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//  GNU General Public License for more details.
+//
+//  You should have received a copy of the GNU General Public License
+//  along with this program; if not, write to the Free Software
+//  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+//
+// (c)Copyright 2006 Hewlett-Packard Development Company, LP.
+//
+//
+
+To compile Seagull from the source:
+- Edit build.conf to fit your needs (default should be OK)
+- run "./build.ksh -target clean"
+- run "./build.ksh -target all"
+- run "./install.ksh" to copy Seagull binaries and config files _or_
+  Seagull binaries are in build-x.y.z/: copy all of them in /usr/local/bin/
+- Add /usr/local/bin in your PATH environment variable 
+  (eg. export "PATH=$PATH:/usr/local/bin")
+- Execution environment are in exe-env/XXX-env/, XXX being the protocol
+- Go in one execution environment, then "cd run", then start a server script
+  in a terminal session and a client script in another terminal session
+- Seagull is running!
+- From there, follow the documentation: http://gull.sourceforge.net/
+
+SCTP support:
+- To enable SCTP support, download sctplib-1.0.4.tar.gz and 
+  socketapi-1.7.0.tar.gz from http://www.sctp.de/ in external-lib-src 
+  directory. Note: glib 1.x > 1.2.8 is a pre-requisite to sctplib
+  and socketapi. You will need to install it also.
+- Modify build-ext-lib.conf to match sctplib and socketapi filenames 
+  (library versions might have been changed)
+- Run build-ext-lib.ksh
+- Modify build.conf to add SCTP support (uncomment BUILD_9_ lines)
+- Compile Seagull (see before)
+
+TLS support:
+- To enable TLS support, download openssl-0.9.8 or greater in
+  external-lib-src directory.
+- Modify build-ext-lib.conf to match openssl filename
+  (library versions might have been changed)
+- Run build-ext-lib.ksh
+- Modify build.conf to add TLS support (uncomment BUILD_10_ lines)
+- Compile Seagull (see before)

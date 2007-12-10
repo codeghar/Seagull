@@ -1,0 +1,99 @@
+<!--
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+ (c)Copyright 2006 Hewlett-Packard Development Company, LP.
+
+-->
+
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<protocol name="cmd-seagull-protocol" 
+          type="text"
+
+          field-separator="\r\n"
+          body-separator="\r\n">
+
+<configuration-parameters>
+</configuration-parameters>
+
+<types>
+</types>
+
+
+<body-method>
+   <defmethod name="body-with-content-length"
+              method="length"
+              param="content-length"
+              default="yes">
+   </defmethod>
+
+</body-method>
+
+<header name="command"
+        type="type">
+   <fielddef name="type">
+     <regexp name="request-type" 
+             expr="[[:space:]]*([^ ]+)[[:space:]]+[^ ]+[[:space:]]+HTTP\/1\.1[[:space:]]*$"
+             nbexpr="2"
+             line="0"
+             subexpr="1"> 
+     </regexp>
+     <regexp name="request-param" 
+             expr="[[:space:]]*([^ ]+)[[:space:]]+([^ ]+)[[:space:]]+HTTP\/1\.1[[:space:]]*$"
+             nbexpr="3"
+             line="0"
+             subexpr="2"> 
+     </regexp>
+     <regexp name="answer-type"
+             expr="HTTP\/1\.1[[:space:]]+([0-9]+)[[:space:]]+"
+             nbexpr="2"
+             line="0"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+   <fielddef name="uri">
+     <regexp name="request-param" 
+             expr="[[:space:]]*([^ ]+)[[:space:]]+([^ ]+)[[:space:]]+HTTP\/1\.1[[:space:]]*$"
+             nbexpr="3"
+             line="0"
+             subexpr="2"> 
+     </regexp>
+   </fielddef>
+   <fielddef name="content-length"
+             format="content-length: $(field-value)\r\n">
+     <regexp name="cl"
+             expr="[Cc][Oo][Nn][Tt][Ee][Nn][Tt]-[Ll][Ee][Nn][Gg][Tt][Hh][ 	]*:[ 	]*([!-}]*).*$"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+</header>
+
+<body name="data" type="data-type">
+</body>
+
+<dictionary session-method="open-id">
+
+  <command name="PUT"></command>
+  <command name="GET"></command>
+  <command name="200"></command>   <!-- Answer: OK -->
+  <command name="400"></command>   <!-- Answer: Bad Request -->
+
+</dictionary>
+
+</protocol>
+
+

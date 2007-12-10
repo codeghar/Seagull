@@ -1,0 +1,105 @@
+<!--
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+ (c)Copyright 2006 Hewlett-Packard Development Company, LP.
+
+-->
+
+<!-- msrp-dictionnary definition                -->
+<!-- text protocol definition                   -->
+<!-- seagull configuration file set             -->
+
+<?xml version="1.0" encoding="ISO-8859-1"?>
+
+<protocol name="msrp-text" 
+          type="text"
+          filter="lib=libparser_msrp.so;function=filter_msrp"
+          field-separator="\r\n"
+          body-separator="-------">
+
+<configuration-parameters>
+</configuration-parameters>
+
+<types>
+</types>
+
+<body-method>
+
+   <defmethod name="body-to-be-parsed"
+              method="parser"
+              param="lib=libparser_msrp.so;function=parse_msrp">
+   </defmethod>
+
+</body-method>
+
+
+<header name="message"
+        type="type">
+   <fielddef name="type">
+     <regexp name="message-type" 
+             expr="[[:space:]]*MSRP[[:space:]]+[^ ]+[[:space:]]*([!-}]*)"
+             nbexpr="2"
+             line="0"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+
+   <fielddef name="session-id">
+     <regexp name="session-id"
+             expr="[[:space:]]*MSRP[[:space:]]+([^ ]+)[[:space:]]*[^ ]+"
+             nbexpr="2"
+             subexpr="1">
+     </regexp>
+   </fielddef>
+
+</header>
+
+<body name="data" type="data-type">
+</body>
+
+
+<dictionary session-method="field" 
+            session-id="session-id" 
+            out-of-session-id="session-id">
+
+<!--
+out-of-session-id="session-id"
+<dictionary session-method="open-id">
+-->
+  <message name="SEND"></message>
+  <message name="REPORT"></message>
+  <message name="200"></message>   <!-- successful       -->
+  <message name="400"></message>   <!-- unintelligible -->
+  <message name="403"></message>   <!-- not allowed -->
+  <message name="408"></message>
+  <message name="413"></message>   <!-- undesired message -->
+  <message name="415"></message>   <!-- not understood -->
+  <message name="423"></message>   <!-- out of bounds -->
+  <message name="481"></message>   <!-- not exist -->
+  <message name="501"></message>
+  <message name="506"></message>
+
+</dictionary>
+
+</protocol>
+
+
+
+
+
+
+
+

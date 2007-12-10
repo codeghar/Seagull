@@ -1,0 +1,79 @@
+<!--
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+ (c)Copyright 2006 Hewlett-Packard Development Company, LP.
+
+-->
+
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<configuration name="Simple TCAP ANSI Client Conf">
+
+  <define entity="transport"
+    name="trans-octcap"
+    file="libtrans_octcap.so"
+    create_function="create_ctransoctcap_instance"
+    delete_function="delete_ctransoctcap_instance"
+    init-args="flavour=AAA">
+  </define>
+
+  <define entity="channel"
+    name="channel-1"
+    protocol="octcap-ansi"
+    transport="trans-octcap"
+    open-args="class=SDK_Stack_2;ossn=10;application=2;instance=2">
+  </define>
+
+  <define entity="traffic-param" name="call-rate" value="1"></define>	
+  <define entity="traffic-param" name="display-period" value="1"></define>
+  <define entity="traffic-param" name="log-stat-period" value="1"></define>
+  <define entity="traffic-param" name="log-stat-file" value="../logs/client-stat.csv"></define>
+  <define entity="traffic-param" name="call-timeout-ms" value="10000"></define>
+  <define entity="traffic-param" name="display-scenario-stat" value="true"></define>
+  <define entity="traffic-param" name="display-protocol-stat" value="true"></define>
+  <define entity="traffic-param" name="log-protocol-stat-period" value="5"></define>
+  <define entity="traffic-param" name="log-protocol-stat-name" value="all"></define>
+  <define entity="traffic-param" name="log-protocol-stat-file" value="../logs/client-protocol-stat.csv"></define>
+
+<!--
+  <define entity="traffic-param" name="data-log-period" value="10"></define>
+  <define entity="traffic-param" name="data-log-number" value="1000"></define>
+  <define entity="traffic-param" name="data-log-file" value="../logs/client-rtt.csv"></define>
+  <define entity="traffic-param" name="data-log-rtdistrib" value="3000"></define>
+-->
+
+  <define entity="traffic-param" name="max-send" value="1000"></define>
+  <define entity="traffic-param" name="max-receive" value="1000"></define>
+  <define entity="traffic-param" name="max-simultaneous-calls" value="5000"></define>
+
+<!--
+  <define entity="traffic-param" name="number-calls" value="1"></define>
+-->
+
+  <define entity="traffic-param" name="external-data-file" value="external_data.csv"></define>
+  <define entity="traffic-param" name="external-data-select" value="sequential"></define>
+  <define entity="traffic-param" name="msg-check-level" value="P"></define>
+  <define entity="traffic-param" name="msg-check-behaviour" value="E"></define>
+  <define entity="config-param"  name="dest-routing-type" value="DPC_SSN"></define>
+  <define entity="config-param"  name="orig-routing-type" value="DPC_SSN"></define>
+  <define entity="config-param"  name="orig-address-pc" value="131584"></define> 
+  <define entity="config-param"  name="dest-address-pc" value="65792"></define> 
+  <define entity="config-param"  name="orig-address-ssn" value="10"></define> 
+  <define entity="config-param"  name="dest-address-ssn" value="10"></define> 
+
+</configuration>
+
+
+

@@ -1,0 +1,97 @@
+<!--
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+ (c)Copyright 2006 Hewlett-Packard Development Company, LP.
+
+-->
+
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<scenario>
+
+<traffic>
+  <receive channel="channel-1">
+    <message>
+    <!-- header -->
+      <![CDATA[PUT /xcap/test-auid1/users/sip:user@hp.com/doc.xml HTTP/1.1
+        Content-type: application/note+xml;charset=UTF-8
+        X-XCAP-Asserted-Identity: "sip:user@hp.com"
+        User-Agent: Seagull-gull.sourceforge.net
+        Host: clever5:8090
+        Accept: text/html, image/gif, *; q=.2, */*; q=.2
+        Connection: keep-alive]]>
+      <!-- Body -->
+      <![CDATA[<?xml version="1.0" encoding="UTF-8"?>
+      <note xmlns:dog="the:namespace:for:dog">
+        <dog:to>Jani</dog:to>
+        <from>Tove</from>
+        <heading>Re: Reminder</heading>
+        <body>I will not forget you this week end!</body>
+      </note>]]>
+    </message>
+  </receive>
+
+  <send channel="channel-1">
+    <message>
+    <!-- header -->
+    <![CDATA[HTTP/1.1 201 Created
+      Server: Apache-Coyote/1.1
+      Pragma: No-cache
+      Cache-Control: no-cache
+      Expires: Wed, 31 Dec 1969 18:00:00 CST
+      X-Powered-By: Servlet 2.4; JBoss-4.0.4.GA (build: CVSTag=JBoss_4_0_4_GA date=200605151000)/Tomcat-5.5
+      ETag: 1
+      Content-Length: 0
+      Date: Mon, 07 Aug 2006 21:14:46 GMT]]>
+    </message>
+  </send>
+
+  <receive channel="channel-1">
+    <message>
+      <!-- header -->
+      <![CDATA[DELETE /xcap/test-auid1/users/sip:user@hp.com/doc.xml HTTP/1.1
+        X-XCAP-Asserted-Identity: "sip:user@hp.com"
+        User-Agent: Seagull-gull.sourceforge.net
+        Host: clever5:8090
+        Accept: text/html, image/gif, *; q=.2, */*; q=.2
+        Connection: keep-alive
+        Content-type: application/x-www-form-urlencoded
+      ]]>
+    </message>
+  </receive>
+
+  <send channel="channel-1">
+    <message>
+    <!-- header -->
+    <![CDATA[HTTP/1.1 200 OK
+      Server: Apache-Coyote/1.1
+      Pragma: No-cache
+      Cache-Control: no-cache
+      Expires: Wed, 31 Dec 1969 18:00:00 CST
+      X-Powered-By: Servlet 2.4; JBoss-4.0.4.GA (build: CVSTag=JBoss_4_0_4_GA date=200605151000)/Tomcat-5.5
+      ETag: 1
+      Content-Length: 0
+      Date: Mon, 07 Aug 2006 21:14:46 GMT]]>
+    </message>
+  </send>
+  
+</traffic>
+</scenario>
+
+
+
+
+
+
