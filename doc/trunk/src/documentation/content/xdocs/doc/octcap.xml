@@ -14,6 +14,10 @@
       over SIGTRAN / M3UA or SUA.</p>
       <p>Both ITU and ANSI flavors are supported. A Seagull dictionary is available
       for each of those.</p>
+      <warning>For ANSI, Seagull only supports ANSI90 (HP OpenCall SS7 does not officially support ANSI96).
+      It uses TCAP_API100 compile flag and must be linked to first version of the libSS7utilsAAA.so library 
+      (libSS7utilAAA.so.1) if several versions of this library exist on the system (refer to <a href="#config_generic">Generic configuration</a> section).
+      </warning>
     </section>
     <section>
       <title>Compiling Seagull with OCTCAP support</title>
@@ -661,6 +665,9 @@ End of scenario
     <li>init-args="flavour=AAA": for an OCSS7 3.x+ with AAA (ANSI) flavour</li>
     <li>init-args="path=/opt/HP-AIN/SS7_WBB/sharedlib;flavour=WBB;library=libSS7util.sl": for an OCSS7 2.2 with WBB (ITU) flavour</li>
    </ul>
+   <warning>For ANSI, with HP OpenCall SS7 3.2 on IA64 and with HP OpenCall 3.3 and upper on all plaform, 
+   the library name must be specified to "library=libSS7util.so.1".
+   </warning>
 	 <p>Then you can open one channel for the transport that you have defined.</p>
 	 <note>You can open only one TCAP channel !</note>
 	 <p>A channel makes the link between a transport and a protocol.</p>
@@ -1493,9 +1500,9 @@ End of scenario
           </tr>
           <tr>
             <td>parameter-type-set</td>
-            <td>ANSI only. 
-	    This parameter's default value is "SEQUENCE_TYPE". It can also be set to 
-	    "SET_TYPE".</td>
+            <td>Parameter set indentifier. ANSI only. 
+                This parameter's default value is "SEQUENCE_TYPE". It can also be set to 
+                "SET_TYPE".</td>
             <td>SEQUENCE_TYPE</td>
             <td>
               <code><![CDATA[<define entity="config-param"
