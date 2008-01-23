@@ -1954,6 +1954,22 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
 </external-method>]]></source>
         <p>This section is optional.</p>
         </section>
+	<table>
+            <caption>List of general purpose methods</caption>
+            <tr>
+              <th>Name</th>
+              <th>Library</th>
+              <th>Description</th>
+              <th>Supported Seagull version</th>
+            </tr>
+            <tr>
+              <td>sys_time_ms</td>
+              <td>lib_generalmethods.so</td>
+              <td>System time in milliseconds.</td>
+              <td>&gt1.7</td>
+            </tr>
+	</table>
+
         <section id="ref_dictionary">
           <title>Dictionary</title>
           <p>"dictionary": this section contains all possible messages and parameters.</p>
