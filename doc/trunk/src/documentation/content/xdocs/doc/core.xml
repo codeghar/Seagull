@@ -1965,7 +1965,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
               <td>sys_time_ms</td>
               <td>lib_generalmethods.so</td>
               <td>System time in milliseconds.</td>
-              <td>&gt1.7</td>
+              <td>&gt;1.7</td>
             </tr>
 	</table>
         </section>
