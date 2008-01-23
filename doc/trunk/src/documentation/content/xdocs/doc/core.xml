@@ -1953,7 +1953,6 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
   </defmethod>
 </external-method>]]></source>
         <p>This section is optional.</p>
-        </section>
 	<table>
             <caption>List of general purpose methods</caption>
             <tr>
@@ -1969,6 +1968,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
               <td>&gt1.7</td>
             </tr>
 	</table>
+        </section>
 
         <section id="ref_dictionary">
           <title>Dictionary</title>
