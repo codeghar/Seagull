@@ -163,8 +163,9 @@ int C_TransIP::open (int   P_channel_id,
 
   *P_status = E_OPEN_FAILED ;
   L_openAddr = create_IpAddr() ;
+  L_openAddrStandby = create_IpAddr() ;
 
-  if (analyze_open_string(P_buf, L_openAddr) == true) {
+  if (analyze_open_string(P_buf, L_openAddr, L_openAddrStandby) == true) {
 
     if (L_openAddr->m_open != NULL) {
       extract_ip_addr(L_openAddr);
@@ -180,6 +181,25 @@ int C_TransIP::open (int   P_channel_id,
 	if (L_ret > m_max_fd) { m_max_fd = L_ret;  } ;
       }
 
+      m_ip_addr_map.insert(T_IpAddrMap::value_type(L_ret,L_openAddr));
+
+    } else if (L_openAddrStandby->m_open != NULL) {
+      extract_ip_addr(L_openAddrStandby);
+      resolve_addr(L_openAddrStandby);
+
+      L_socket =
+        open(P_channel_id, L_openAddrStandby, P_status,
+             (C_ProtocolBinaryFrame*)P_protocol) ;
+
+      if (L_socket != NULL) {
+        L_ret = L_socket -> get_id () ;
+        m_socket_map.insert (T_SocketMap::value_type(L_ret,L_socket));
+        if (L_ret > m_max_fd) { m_max_fd = L_ret;  } ;
+      }
+
+      m_ip_addr_map.insert(T_IpAddrMap::value_type(L_ret,L_openAddrStandby));
+
+
     } else {
       L_ret = -1 ;
     }
@@ -187,10 +207,9 @@ int C_TransIP::open (int   P_channel_id,
     L_ret = -1 ;
   }
   
-  if (L_ret != -1) {
-    m_ip_addr_map.insert(T_IpAddrMap::value_type(L_ret,L_openAddr));
-  } else {
+  if (L_ret == -1) {
     delete_IpAddr(&L_openAddr);
+    delete_IpAddr(&L_openAddrStandby);
   }
   return(L_ret) ;
 }
@@ -736,7 +755,7 @@ bool C_TransIP::analyze_init_string(char *P_buf) {
   
 }
 
-bool C_TransIP::analyze_open_string (char *P_buf, T_pIpAddr P_addr) {
+bool C_TransIP::analyze_open_string (char *P_buf, T_pIpAddr P_addr, T_pIpAddr P_addrStandby) {
 
   char            L_tmp  [255] ;
   char           *L_buf, *L_ptr ;
@@ -781,6 +800,19 @@ bool C_TransIP::analyze_open_string (char *P_buf, T_pIpAddr P_addr) {
 		  char*,sizeof(char),
 		  strlen(L_tmp)+1);
       strcpy(P_addr->m_open, L_tmp);
+    }
+  }
+
+  L_buf = P_buf ;
+  L_ptr = strstr(L_buf, "deststandby=");
+  if (L_ptr != NULL) {
+    sscanf(L_ptr+12, "%[^;]*s", L_tmp);
+    GEN_DEBUG(1, "C_TransIP::analyze_open_string() d [" << L_tmp << "]");
+    if (strlen(L_tmp)>0) {
+      ALLOC_TABLE(P_addrStandby->m_open,
+                  char*,sizeof(char),
+                  strlen(L_tmp)+1);
+      strcpy(P_addrStandby->m_open, L_tmp);
     }
   }
 
