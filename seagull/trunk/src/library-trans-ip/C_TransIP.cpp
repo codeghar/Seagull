@@ -94,6 +94,9 @@ C_TransIP::C_TransIP() {
   m_encode_buffer = NULL ;
 
   m_read_buffer_size = DEFAULT_READ_BUFFER_SIZE ;
+
+  m_active = true;
+
 }
 
 C_TransIP::~C_TransIP() {
@@ -164,7 +167,7 @@ int C_TransIP::open (int   P_channel_id,
   *P_status = E_OPEN_FAILED ;
   L_openAddr = create_IpAddr() ;
 
-  if (analyze_open_string(P_buf, L_openAddr) == true) {
+  if (analyze_open_string(P_buf, L_openAddr, m_active) == true) {
 
     if (L_openAddr->m_open != NULL) {
       extract_ip_addr(L_openAddr);
@@ -192,6 +195,7 @@ int C_TransIP::open (int   P_channel_id,
   } else {
     delete_IpAddr(&L_openAddr);
   }
+  m_active = !m_active;
   return(L_ret) ;
 }
 
@@ -736,7 +740,7 @@ bool C_TransIP::analyze_init_string(char *P_buf) {
   
 }
 
-bool C_TransIP::analyze_open_string (char *P_buf, T_pIpAddr P_addr) {
+bool C_TransIP::analyze_open_string (char *P_buf, T_pIpAddr P_addr, bool active) {
 
   char            L_tmp  [255] ;
   char           *L_buf, *L_ptr ;
@@ -771,18 +775,51 @@ bool C_TransIP::analyze_open_string (char *P_buf, T_pIpAddr P_addr) {
       strcpy(P_addr->m_open_src, L_tmp);
     } 
   }
-  L_buf = P_buf ;
-  L_ptr = strstr(L_buf, "dest=");
-  if (L_ptr != NULL) {
-    sscanf(L_ptr+5, "%[^;]*s", L_tmp);
-    GEN_DEBUG(1, "C_TransIP::analyze_open_string() d [" << L_tmp << "]");
-    if (strlen(L_tmp)>0) {
-      ALLOC_TABLE(P_addr->m_open,
-		  char*,sizeof(char),
-		  strlen(L_tmp)+1);
-      strcpy(P_addr->m_open, L_tmp);
+
+  if (active) {
+    L_buf = P_buf ;
+    L_ptr = strstr(L_buf, "dest=");
+    if (L_ptr != NULL) {
+      sscanf(L_ptr+5, "%[^;]*s", L_tmp);
+      GEN_DEBUG(1, "C_TransIP::analyze_open_string() d [" << L_tmp << "]");
+      if (strlen(L_tmp)>0) {
+        ALLOC_TABLE(P_addr->m_open,
+                  char*,sizeof(char),
+                  strlen(L_tmp)+1);
+        strcpy(P_addr->m_open, L_tmp);
+      }
+    }
+  } else {
+    L_buf = P_buf ;
+    L_ptr = strstr(L_buf, "standby=");
+    if (L_ptr != NULL) {
+      sscanf(L_ptr+8, "%[^;]*s", L_tmp);
+      GEN_DEBUG(1, "C_TransIP::analyze_open_string() d [" << L_tmp << "]");
+      if (strlen(L_tmp)>0) {
+        ALLOC_TABLE(P_addr->m_open,
+                    char*,sizeof(char),
+                    strlen(L_tmp)+1);
+        strcpy(P_addr->m_open, L_tmp);
+
+      } else {
+        // if standby is not provided, default is dest
+        L_buf = P_buf ;
+        L_ptr = strstr(L_buf, "dest=");
+        if (L_ptr != NULL) {
+          sscanf(L_ptr+5, "%[^;]*s", L_tmp);
+          GEN_DEBUG(1, "C_TransIP::analyze_open_string() d [" << L_tmp << "]");
+          if (strlen(L_tmp)>0) {
+            ALLOC_TABLE(P_addr->m_open,
+                        char*,sizeof(char),
+                        strlen(L_tmp)+1);
+            strcpy(P_addr->m_open, L_tmp);
+          }
+        }
+
+      }
     }
   }
+
 
   L_buf = P_buf ;
   L_ptr = strstr(L_buf, "buffer=");
