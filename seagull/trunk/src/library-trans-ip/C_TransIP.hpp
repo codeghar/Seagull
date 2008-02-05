@@ -82,6 +82,8 @@ protected:
   T_SocketMap     m_socket_map ;
 
   int             m_max_fd     ;
+
+  bool            m_active     ;
   
   T_IpAddrMap     m_ip_addr_map ;
 
