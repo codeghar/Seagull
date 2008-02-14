@@ -1293,7 +1293,7 @@ End of scenario
             <td>dest-routing-type</td>
             <td>
 	    It defines the way the messages are routed for outgoing messages. Possible values are: GT (routing on Global Title), 
-	    SSN (routing on SSN only) and DPC_SSN (routing on DPC and SSN).</td>
+	    SSN (routing on SSN only), GT_SSN (routing on Global Title and SSN) and DPC_SSN (routing on DPC and SSN).</td>
             <td></td>
             <td>
               <code><![CDATA[<define entity="config-param"
@@ -1306,7 +1306,7 @@ End of scenario
             <td>orig-routing-type</td>
             <td>
 	    It defines the way the messages are routed for incoming messages. Possible values are: GT (routing on Global Title), 
-	    SSN (routing on SSN only) and DPC_SSN (routing on DPC and SSN).</td>
+	    SSN (routing on SSN only), GT_SSN (routing on Global Title and SSN) and DPC_SSN (routing on DPC and SSN).</td>
             <td></td>
             <td>
               <code><![CDATA[<define entity="config-param"
