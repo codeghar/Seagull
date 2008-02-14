@@ -606,21 +606,18 @@ int C_SocketClient::_open(T_pOpenStatus  P_status,
       L_rc = call_connect (m_socket_id, 
                            (struct sockaddr*)(void*)&(m_remote_addr_info->m_addr),
                            SOCKADDR_IN_SIZE(&(m_remote_addr_info->m_addr))) ;
-      if (L_rc) {
-        if (errno != EINPROGRESS) {
+
+      // Fix: check for FAILED status only, E_SOCKET_STATE_READY state will be set by the event mechanism
+      // Vidhya 14/02/2008
+      if ((L_rc) && (errno != EINPROGRESS) ) {
           SOCKET_ERROR(1, "connect failed [" 
                        << L_rc << "][" 
                        << strerror(errno) << "]");
           *P_status = E_OPEN_FAILED ;
-        } else {
+      } else {
           m_state = E_SOCKET_STATE_INPROGESS ;
           *P_status = E_OPEN_DELAYED ;
           L_rc = 0 ;
-        }
-        
-      } else {
-        m_state = E_SOCKET_STATE_READY ;
-        *P_status = E_OPEN_OK ;
       }
     } else {
       L_rc = call_bind(m_socket_id, 

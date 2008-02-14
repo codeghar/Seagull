@@ -89,7 +89,7 @@ protected:
 
   virtual bool      analyze_init_string (char *P_buf) ;
   void              analyze_optional_init_string (char *P_buf) ;
-  bool              analyze_open_string (char *P_buf, T_pIpAddr P_addr, bool active) ;
+  bool              analyze_open_string (char *P_buf, T_pIpAddr P_addr);
 
   virtual C_Socket* open              (int              P_channel_id, 
                                        T_pIpAddr        P_Addr,

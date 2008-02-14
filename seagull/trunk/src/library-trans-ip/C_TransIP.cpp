@@ -167,7 +167,7 @@ int C_TransIP::open (int   P_channel_id,
   *P_status = E_OPEN_FAILED ;
   L_openAddr = create_IpAddr() ;
 
-  if (analyze_open_string(P_buf, L_openAddr, m_active) == true) {
+  if (analyze_open_string(P_buf, L_openAddr) == true) {
 
     if (L_openAddr->m_open != NULL) {
       extract_ip_addr(L_openAddr);
@@ -195,7 +195,6 @@ int C_TransIP::open (int   P_channel_id,
   } else {
     delete_IpAddr(&L_openAddr);
   }
-  m_active = !m_active;
   return(L_ret) ;
 }
 
@@ -323,6 +322,7 @@ int C_TransIP::post_select (int                 P_n,
           
         case C_TransportEvent::E_TRANS_CLOSED:
           GEN_DEBUG(0, "C_TransIP::post_select() E_TRANS_CLOSED");
+          m_active = !m_active;
           L_id = (L_socket)->get_id() ;
           if (!((L_socket)->get_list())->empty()) {
             L_socket->set_closing();
@@ -357,6 +357,7 @@ int C_TransIP::post_select (int                 P_n,
           
         case C_TransportEvent::E_TRANS_OPEN_FAILED:
           L_id = (L_socket)->get_id() ;
+          m_active = !m_active;
           (L_socket)->_close() ;
           m_delete_list.push_back(L_it) ;
           DELETE_VAR(L_socket);
@@ -740,7 +741,7 @@ bool C_TransIP::analyze_init_string(char *P_buf) {
   
 }
 
-bool C_TransIP::analyze_open_string (char *P_buf, T_pIpAddr P_addr, bool active) {
+bool C_TransIP::analyze_open_string (char *P_buf, T_pIpAddr P_addr) {
 
   char            L_tmp  [255] ;
   char           *L_buf, *L_ptr ;
@@ -776,7 +777,7 @@ bool C_TransIP::analyze_open_string (char *P_buf, T_pIpAddr P_addr, bool active)
     } 
   }
 
-  if (active) {
+  if (m_active) {
     L_buf = P_buf ;
     L_ptr = strstr(L_buf, "dest=");
     if (L_ptr != NULL) {
