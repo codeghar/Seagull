@@ -2300,6 +2300,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
                     </ul>
                     Example of value for a client for a IP-based protocol: 
 	    "mode=<strong>client</strong>;<strong>dest</strong>=127.0.0.1:3868"<br/>
+                    Example of value for active and standby clients for a IP-based protocol: 
 	    "mode=<strong>client</strong>;<strong>dest</strong>=127.0.0.1:3868;<strong>standby</strong>=127.0.0.1:3869"<br/>
 	    Example of value for a server for a IP-based protocol: 
 	    "mode=<strong>server</strong>;<strong>source</strong>=127.0.0.1:3868"
