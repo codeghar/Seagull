@@ -2294,11 +2294,13 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
                       <li>mode (mandatory): "client" (first message on the channel is sent) or 
                                 "server" (first message on the channel is received)</li>
                       <li>dest (mandatory): destination IP address/port to send messages</li>
+                      <li>standby (optional): standy destination IP address/port to send messages.(Note that this feature is useful only when reconnect feature is used, in which case seagull tried to connect to the active and standby destinations alternatively)</li>
                       <li>source (optional): source IP address/port to send messages (if not specified,
                       the system chooses the best one)</li>
                     </ul>
                     Example of value for a client for a IP-based protocol: 
 	    "mode=<strong>client</strong>;<strong>dest</strong>=127.0.0.1:3868"<br/>
+	    "mode=<strong>client</strong>;<strong>dest</strong>=127.0.0.1:3868;<strong>standby</strong>=127.0.0.1:3869"<br/>
 	    Example of value for a server for a IP-based protocol: 
 	    "mode=<strong>server</strong>;<strong>source</strong>=127.0.0.1:3868"
                   </li>
