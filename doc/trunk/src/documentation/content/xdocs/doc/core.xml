@@ -1351,7 +1351,7 @@ for further details based on examples.
 <stop-timer>
         ]]>
         </source>
-        Always stop a timer before strating a new one:
+        Always stop a timer before starting a new one:
         <source><![CDATA[<start-timer>
 ...
 <stop-timer>
@@ -1993,8 +1993,6 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
       <p>In general, instances of a scenario (aka calls) are identified, see <a href="#ref_dictionary"> Dictionary</a>, 
       either with a session-id (a protocol field) or with an open-id (a socket id).</p> 
       
-      <warning>The correlation feature described in this section is not compatible with the "open-id" feature (used to identify a call with its socket).</warning> 
-
       <p>In some cases, the session-id cannot be unique during the whole call: its value may be changed during the call and/or 
       a different field of the message (header or body) is used for the rest of the call.
       In particular this can be the case if several channels are used during the scenario.<br/>
@@ -2156,6 +2154,48 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
       
     <p>An example of the correlation feature is proposed for the SIP protocol: <a href="sip.html#sip_correlation">SIP correlation example</a>. </p>  
       
+      <section id="corr-openid">
+      <title>Correlation with open id feature</title>
+      <p>The open-id feature is compatible with the correlation one. <br/>
+      The configuration is the same as a open id one:<br/>
+      Example:
+      <source><![CDATA[<define entity="channel"
+    name="channel-2"
+    protocol="xcap-protocol"
+    transport="trans-1"
+    global="no"
+    open-args="mode=client;dest=127.0.0.1:8080">
+  </define>
+
+      ]]></source>  
+      The traffic section is not changed except the label:<br/>
+      Example:
+      <source><![CDATA[<send channel="channel-2" label="command-2">
+      <action>
+        <open args="mode=client;dest=127.0.0.1:8080"></open>
+      </action>
+      <message> 
+      ...]]></source>  
+      </p>
+      <p>The correlation section has to be defined like this :<br/>
+      Example:
+        <source><![CDATA[<channel name="channel-2">
+    <retrieve>
+      <search-in-map name="session-method-open-id"></search-in-map>
+    </retrieve>
+
+    <command name="command-2">
+      <post-action>
+        <insert-in-map channel="channel-2" name="default-session-id"></insert-in-map>
+      </post-action>
+    </command>
+
+ </channel>]]></source>  
+       "session-method-open-id" is the key word to define a search of the id of the call by the socket.<br/>
+       "default-session-id" is the key word to let Seagull insert the id of the call into the map (here the socket of the call).<br/>
+  </p>
+
+      </section>
     </section>
     <section id="support">
       <title>Getting support</title>
