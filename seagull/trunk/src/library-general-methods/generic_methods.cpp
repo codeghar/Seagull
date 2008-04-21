@@ -94,7 +94,7 @@ int sys_time_ms (T_pValueData  P_msgPart,
 
   l_ret = args_analysis (P_args, &L_args);
   P_result->m_type = E_TYPE_NUMBER ;
-  P_result->m_value.m_val_number = time(NULL) + atoi(L_args.m_startoffset);
+  P_result->m_value.m_val_number = time(NULL) + atol(L_args.m_startoffset);
   return (L_ret);
 }
 
