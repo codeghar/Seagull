@@ -147,6 +147,10 @@ protected:
   size_t                  m_read_buf_size ;
   char                   *m_read_buf      ;
 
+  size_t                  m_write_buf_size ;
+  unsigned char           *m_write_buf      ;
+  unsigned char           *m_write_buf_start      ;
+
 
   T_SockAddrStorage       m_remote_sockaddr     ; 
   tool_socklen_t          m_len_remote_sockaddr ;

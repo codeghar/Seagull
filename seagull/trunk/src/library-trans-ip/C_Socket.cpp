@@ -84,14 +84,53 @@ size_t C_SocketWithData::send_buffer(unsigned char     *P_data,
                                      size_t             P_size){
   //                                     T_SockAddrStorage *P_remote_sockaddr,
   //                                     tool_socklen_t    *P_len_remote_sockaddr) {
+
   size_t L_size = 0 ;
   int    L_rc       ;
+
+  if (m_write_buf_size != 0) { 
+
+    // Try to send pending data 
+    if (m_type == E_SOCKET_TCP_MODE) {
+      L_rc = _call_write(m_write_buf, m_write_buf_size) ;
+    } else {
+      L_rc = _write(m_write_buf, m_write_buf_size) ;
+    }
+
+    if (L_rc < 0) {
+      SOCKET_ERROR(0,
+                   "send failed [" << L_rc << "] [" << strerror(errno) << "]");
+      switch (errno) {
+      case EAGAIN:
+        SOCKET_ERROR(0, "Flow control not implemented");
+        break ;
+      case ECONNRESET:
+        break ;
+      default:
+        SOCKET_ERROR(0, "process error [" << errno << "] not implemented");
+        break ;
+      }
+      return(0);
+    } else {
+      m_write_buf_size -= (size_t)L_rc;
+      if ( m_write_buf_size == 0 )  {
+        free(m_write_buf_start);
+      } else {
+        m_write_buf      += L_rc;
+        return(0);
+      }
+    }
+
+  }
+
 
   SOCKET_DEBUG(0, "C_Socket::send_buffer(" 
 	    << m_socket_id << "," << P_data << "," << P_size << ")");
   
   SOCKET_DEBUG(0, "C_TransIP::send_buffer() id OK");
   
+  L_size = 0 ;
+
   if (m_type == E_SOCKET_TCP_MODE) {
     L_rc = _call_write(P_data, P_size) ;
   } else {
@@ -115,6 +154,10 @@ size_t C_SocketWithData::send_buffer(unsigned char     *P_data,
     L_size = P_size ;
     if(L_size != (size_t)L_rc){
        SOCKET_ERROR(0, "Sent message is incomplete");
+       m_write_buf_size = P_size - L_rc;
+       m_write_buf = (unsigned char *) malloc(m_write_buf_size);
+       m_write_buf_start = m_write_buf; 
+       memcpy(m_write_buf, P_data + L_rc, m_write_buf_size);
     }
 
   }
@@ -678,6 +721,8 @@ C_SocketWithData::C_SocketWithData(int P_channel_id,
   m_read_buf_size = P_read_buf_size ;
   ALLOC_TABLE(m_read_buf, char*, sizeof(char), m_read_buf_size);
 
+  m_write_buf_size = 0;
+
 }
 
 C_SocketWithData::C_SocketWithData(T_SocketType P_type,
@@ -696,6 +741,8 @@ C_SocketWithData::C_SocketWithData(T_SocketType P_type,
 
   m_read_buf_size = P_read_buf_size ;
   ALLOC_TABLE(m_read_buf, char*, sizeof(char), m_read_buf_size);
+
+  m_write_buf_size = 0;
 
   m_remote_sockaddr_ptr     = NULL ;
   m_len_remote_sockaddr_ptr = NULL ;
@@ -727,6 +774,8 @@ C_SocketWithData::~C_SocketWithData() {
 
   m_read_buf_size = 0 ;
   FREE_TABLE(m_read_buf);
+  m_write_buf_size = 0 ;
+  FREE_TABLE(m_write_buf);
 }
 
 int C_SocketWithData::_call_read() { 
