@@ -23,7 +23,7 @@
 #include "C_ProtocolFrame.hpp"
 
 
-extern "C" int sys_time_ms (T_pValueData  P_msgPart,
+extern "C" int sys_time_secs (T_pValueData  P_msgPart,
                               T_pValueData  P_args,
                               T_pValueData  P_result);
 

@@ -27,7 +27,11 @@
 
 char* external_find_text_value (char *P_buf, char *P_field) {
 
+  if ((P_buf == NULL) || (P_field == NULL))
+    return NULL;
+
   char *L_value = NULL ;
+
 
   regex_t    L_reg_expr ;
   int        L_status ;
@@ -83,18 +87,28 @@ int args_analysis (T_pValueData  P_args, T_pArgsStr P_result) {
   return (L_ret);
 }
 
-int sys_time_ms (T_pValueData  P_msgPart,
+int sys_time_secs (T_pValueData  P_msgPart,
                    T_pValueData  P_args,
                    T_pValueData  P_result) {
+
   int             L_ret    = 0    ;
+  char             L_Path[50];
 
-  T_ArgsStr L_args;
 
-  int l_ret = 0;
+
+   T_ArgsStr L_args;
+
+   int l_ret = 0;
 
   l_ret = args_analysis (P_args, &L_args);
-  P_result->m_type = E_TYPE_NUMBER ;
-  P_result->m_value.m_val_number = time(NULL) + atol(L_args.m_startoffset);
+  P_result->m_type = E_TYPE_STRING ;
+
+  sprintf(L_Path, "%ld", (long)((long long)time(NULL) + atoll(L_args.m_startoffset)));
+  ALLOC_TABLE(P_result->m_value.m_val_binary.m_value, unsigned char*, sizeof(unsigned char), strlen(L_Path));
+  memcpy(P_result->m_value.m_val_binary.m_value, L_Path, strlen(L_Path));
+
+  P_result->m_value.m_val_binary.m_size = strlen((char*)P_result->m_value.m_val_binary.m_value);
+
   return (L_ret);
 }
 

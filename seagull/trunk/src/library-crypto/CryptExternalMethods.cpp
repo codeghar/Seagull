@@ -40,6 +40,10 @@ extern int createAuthHeaderAKAv1MD5(char * user, char * OP,
 
 char* external_find_text_value (char *P_buf, char *P_field) {
 
+  if ((P_buf == NULL) || (P_field == NULL))
+    return NULL;
+
+
   char *L_value = NULL ;
 
   regex_t    L_reg_expr ;

@@ -108,7 +108,9 @@ T_exeCode    C_SetValueActionMethodExtern::execute(T_pCmd_scenario P_pCmd,
     }
     resetMemory(L_result);
     resetMemory(L_value);
-    resetMemory(L_mem);
+    // Temporary fixed, commented the below line. search_memory method doesnt allocate using malloc, hence free dumps
+    // to be fixed
+    //resetMemory(L_mem);
   }
 
   if (L_reset_value == true) {
