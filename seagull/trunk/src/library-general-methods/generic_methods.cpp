@@ -71,7 +71,7 @@ typedef struct args_string {
 } T_ArgsStr, *T_pArgsStr ;
 
 static const T_ArgsStr Args_Str_init = {
-  "0"
+  (char *)"0"
 } ;
 
 
@@ -83,7 +83,7 @@ int args_analysis (T_pValueData  P_args, T_pArgsStr P_result) {
   P_result->m_startoffset = external_find_text_value((char*)P_args->m_value.m_val_binary.m_value,
                                              (char*)"startoffset")  ;
   if (P_result->m_startoffset == NULL)
-  P_result->m_startoffset = "0";
+  P_result->m_startoffset = (char *)"0";
   return (L_ret);
 }
 
@@ -103,7 +103,7 @@ int sys_time_secs (T_pValueData  P_msgPart,
   l_ret = args_analysis (P_args, &L_args);
   P_result->m_type = E_TYPE_STRING ;
 
-  sprintf(L_Path, "%ld", (long)((long long)time(NULL) + atoll(L_args.m_startoffset)));
+  sprintf(L_Path, "%ld", (long)((long long)time(NULL) + atol(L_args.m_startoffset)));
   ALLOC_TABLE(P_result->m_value.m_val_binary.m_value, unsigned char*, sizeof(unsigned char), strlen(L_Path));
   memcpy(P_result->m_value.m_val_binary.m_value, L_Path, strlen(L_Path));
 
