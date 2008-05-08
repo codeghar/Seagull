@@ -775,7 +775,6 @@ C_SocketWithData::~C_SocketWithData() {
   m_read_buf_size = 0 ;
   FREE_TABLE(m_read_buf);
   m_write_buf_size = 0 ;
-  FREE_TABLE(m_write_buf);
 }
 
 int C_SocketWithData::_call_read() { 
