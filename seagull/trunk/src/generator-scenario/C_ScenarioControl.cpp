@@ -2996,12 +2996,6 @@ int C_ScenarioControl::check_expression (T_pCmdAction  P_action,
 	L_ret = -1 ;
 	break ;
       }
-      if (P_action->m_string_expr->m_portions[0].m_type != E_STR_COUNTER) {
-	GEN_ERROR(E_GEN_FATAL_ERROR, 
-		  "Just one counter value allowed for this kind of field");
-	L_ret = -1 ;
-	break ;
-      }
       break ;
 
     case E_TYPE_STRING:

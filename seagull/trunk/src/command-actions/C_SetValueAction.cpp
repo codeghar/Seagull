@@ -61,24 +61,37 @@ T_ValueData  C_SetValueAction::search_memory(T_pCallContext  P_callCtxt,
   static char         L_tmp_string_filled [250]    ;
 
 
+///////////////////////////////////
   L_mem.m_type = E_TYPE_NUMBER ;
 
   L_mem.m_type = P_msg->get_field_type(m_id,0);
-  
-  switch (L_mem.m_type) {
-    
-  case E_TYPE_NUMBER:
-    
-    L_mem.m_value.m_val_number = m_controllers.m_scenario_control->get_counter_value
+
+  if ((L_mem.m_type == E_TYPE_NUMBER)
+    && (m_string_expr->m_portions[0].m_type == E_STR_COUNTER)) {
+        L_mem.m_value.m_val_number = m_controllers.m_scenario_control->get_counter_value
+          (m_string_expr->m_portions[0].m_data.m_id) ;
+    }
+  else if ((L_mem.m_type == E_TYPE_SIGNED)
+    && (m_string_expr->m_portions[0].m_type == E_STR_COUNTER)) {
+        L_mem.m_value.m_val_signed = (T_Integer32) m_controllers.m_scenario_control->get_counter_value
+          (m_string_expr->m_portions[0].m_data.m_id) ;
+    }
+  else if ((L_mem.m_type == E_TYPE_NUMBER_64)
+    && (m_string_expr->m_portions[0].m_type == E_STR_COUNTER)) {
+        L_mem.m_value.m_val_number_64 = (T_UnsignedInteger64) m_controllers.m_scenario_control->get_counter_value
+          (m_string_expr->m_portions[0].m_data.m_id) ;
+    }
+  else if ((L_mem.m_type == E_TYPE_SIGNED_64)
+    && (m_string_expr->m_portions[0].m_type == E_STR_COUNTER)) {
+    L_mem.m_value.m_val_signed_64 = (T_Integer64) m_controllers.m_scenario_control->get_counter_value
       (m_string_expr->m_portions[0].m_data.m_id) ;
-    break ;
-    
-  case E_TYPE_SIGNED:
-    L_mem.m_value.m_val_signed = (T_Integer32) m_controllers.m_scenario_control->get_counter_value
-      (m_string_expr->m_portions[0].m_data.m_id) ;
-    break ;
-    
-  case E_TYPE_STRING:
+    }
+  else if ((L_mem.m_type == E_TYPE_STRING)  ||
+           (L_mem.m_type == E_TYPE_NUMBER)  ||
+           (L_mem.m_type == E_TYPE_SIGNED)  ||
+           (L_mem.m_type == E_TYPE_NUMBER_64)  ||
+           (L_mem.m_type == E_TYPE_SIGNED_64)  ) {
+    L_mem.m_type = E_TYPE_STRING ;
     L_tmp_string[0] = '\0' ;
     L_ptr = L_tmp_string ;
     L_size = 0 ;
@@ -87,14 +100,14 @@ T_ValueData  C_SetValueAction::search_memory(T_pCallContext  P_callCtxt,
          L_j ++) {
       switch (m_string_expr->m_portions[L_j].m_type) {
       case E_STR_STATIC:
-        strcpy(L_ptr, 
+        strcpy(L_ptr,
                m_string_expr->m_portions[L_j].m_data.m_value);
         L_current_size = strlen(L_ptr) ;
         L_size += L_current_size ;
         L_ptr += L_current_size ;
         break ;
       case E_STR_COUNTER:
-        sprintf(L_ptr, "%ld", 
+        sprintf(L_ptr, "%ld",
                 m_controllers.m_scenario_control->get_counter_value
                 (m_string_expr
                  ->m_portions[L_j].m_data.m_id)) ;
@@ -116,9 +129,10 @@ T_ValueData  C_SetValueAction::search_memory(T_pCallContext  P_callCtxt,
       }
     }
     L_mem.m_value.m_val_binary.m_size = L_size ;
-    L_mem.m_value.m_val_binary.m_value 
+    L_mem.m_value.m_val_binary.m_value
       = (unsigned char *) L_tmp_string;
-    
+
+
     if (m_size != -1) {
       if (m_size > (int)L_size) {
         int L_filled_size = m_size - L_size ;
@@ -126,7 +140,7 @@ T_ValueData  C_SetValueAction::search_memory(T_pCallContext  P_callCtxt,
         memcpy(L_tmp_string_filled+L_filled_size,
                L_tmp_string,
                L_size);
-        
+
         while ((L_fill_idx+(m_pattern_size)) > L_filled_size) {
           memcpy(L_tmp_string_filled+L_fill_idx,
                  m_pattern,
@@ -134,19 +148,18 @@ T_ValueData  C_SetValueAction::search_memory(T_pCallContext  P_callCtxt,
           L_fill_idx += m_pattern_size ;
         }
         L_mem.m_value.m_val_binary.m_size = m_size ;
-        L_mem.m_value.m_val_binary.m_value 
+        L_mem.m_value.m_val_binary.m_value
           = (unsigned char *) L_tmp_string_filled;
-        
+
       }
     }
-    
+
     P_reset_value = true ;
-    
-    break;
-    
-  case E_TYPE_STRUCT:{ 
-    
-    P_msg -> get_field_value(m_id, 
+
+    }
+    else if ((L_mem.m_type == E_TYPE_STRUCT) )  {
+
+    P_msg -> get_field_value(m_id,
                              0,0,
                              &L_mem);
     switch (m_string_expr->m_nb_portion) {
@@ -154,7 +167,7 @@ T_ValueData  C_SetValueAction::search_memory(T_pCallContext  P_callCtxt,
       L_values = m_string_expr->m_portions[0].m_data.m_value ;
       L_chr = strrchr(L_values, ';');
       if (L_values == L_chr) {
-        // L_mem.m_value.m_val_struct.m_id_1 not setted 
+        // L_mem.m_value.m_val_struct.m_id_1 not setted
         if (*(L_chr+1) != '\0') {
           L_value = strtoul_f (L_chr+1, &L_end_ptr, 10);
           if (L_end_ptr[0] == '\0') { // good format
@@ -162,7 +175,7 @@ T_ValueData  C_SetValueAction::search_memory(T_pCallContext  P_callCtxt,
               = L_value ;
           }
         }
-        
+
       } else {
         *L_chr = '\0';
         L_value = strtoul_f (L_values, &L_end_ptr, 10);
@@ -177,10 +190,10 @@ T_ValueData  C_SetValueAction::search_memory(T_pCallContext  P_callCtxt,
               = L_value ;
           }
         }
-        *L_chr = ';' ; 
+        *L_chr = ';' ;
       }
       break ;
-      
+
     case 2:
       if (m_string_expr->m_portions[0].m_type == E_STR_COUNTER){
         L_mem.m_value.m_val_struct.m_id_1 = m_controllers.m_scenario_control->get_counter_value
@@ -194,55 +207,39 @@ T_ValueData  C_SetValueAction::search_memory(T_pCallContext  P_callCtxt,
               = L_value ;
           }
         }
-        
+
       } else {
-        
+
         L_values = m_string_expr->m_portions[0].m_data.m_value ;
         L_chr = strrchr(L_values, ';');
         if (L_values != L_chr) {
-          *L_chr = '\0' ;      
+          *L_chr = '\0' ;
           L_value = strtoul_f (L_values, &L_end_ptr, 10);
           if (L_end_ptr[0] == '\0') { // good format
             L_mem.m_value.m_val_struct.m_id_1
               = L_value ;
           }
-          *L_chr = ';' ;      
+          *L_chr = ';' ;
         }
         L_mem.m_value.m_val_struct.m_id_2 = m_controllers.m_scenario_control->get_counter_value
           (m_string_expr->m_portions[1].m_data.m_id) ;
-        
-      } 
-      
+
+      }
+
       break ;
     case 3:
       L_mem.m_value.m_val_struct.m_id_1 = m_controllers.m_scenario_control->get_counter_value
         (m_string_expr->m_portions[0].m_data.m_id) ;
       L_mem.m_value.m_val_struct.m_id_2 = m_controllers.m_scenario_control->get_counter_value
         (m_string_expr->m_portions[2].m_data.m_id) ;
-      break ;
-    default:
-      break ;
     }
-  }
-  break ;
-  
-  case E_TYPE_NUMBER_64:
-    L_mem.m_value.m_val_number_64 = (T_UnsignedInteger64) m_controllers.m_scenario_control->get_counter_value
-      (m_string_expr->m_portions[0].m_data.m_id) ;
-    break ;
-    
-  case E_TYPE_SIGNED_64:
-    L_mem.m_value.m_val_signed_64 = (T_Integer64) m_controllers.m_scenario_control->get_counter_value
-      (m_string_expr->m_portions[0].m_data.m_id) ;
-    break ;
-    
-  default:
+    }
+  else {
     GEN_FATAL(E_GEN_FATAL_ERROR, "Unsupported type for action execution");
-    break ;
   }
-
   return (L_mem);
 }
+
 
 T_exeCode    C_SetValueAction::execute(T_pCmd_scenario P_pCmd,
                                        T_pCallContext  P_callCtxt,

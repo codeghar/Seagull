@@ -92,7 +92,6 @@ int sys_time_secs (T_pValueData  P_msgPart,
                    T_pValueData  P_result) {
 
   int             L_ret    = 0    ;
-  char             L_Path[50];
 
 
 
@@ -101,13 +100,8 @@ int sys_time_secs (T_pValueData  P_msgPart,
    int l_ret = 0;
 
   l_ret = args_analysis (P_args, &L_args);
-  P_result->m_type = E_TYPE_STRING ;
-
-  sprintf(L_Path, "%ld", (long)((long long)time(NULL) + atol(L_args.m_startoffset)));
-  ALLOC_TABLE(P_result->m_value.m_val_binary.m_value, unsigned char*, sizeof(unsigned char), strlen(L_Path));
-  memcpy(P_result->m_value.m_val_binary.m_value, L_Path, strlen(L_Path));
-
-  P_result->m_value.m_val_binary.m_size = strlen((char*)P_result->m_value.m_val_binary.m_value);
+  P_result->m_type = E_TYPE_SIGNED ;
+  P_result->m_value.m_val_signed = time(NULL) + atol(L_args.m_startoffset);
 
   return (L_ret);
 }
