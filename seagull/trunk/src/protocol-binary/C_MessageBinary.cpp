@@ -502,16 +502,30 @@ bool C_MessageBinary::set_body_value (int P_id, T_pValueData P_val) {
   int  L_i ;
   bool L_found = false ;
 
-  for (L_i=0 ; L_i < m_nb_body_values ; L_i++) {
-    if (m_body_val[L_i].m_id == P_id) { L_found=true; break; }
-  }
-  if (L_found == true) {
-    m_protocol->set_body_value(&m_body_val[L_i], P_val) ;
-  }
+  for (L_i=0 ; L_i < m_nb_body_values ; L_i++)
+      if(( L_found = set_body_value(P_id, &m_body_val[L_i], P_val))==true)
+        break;
 
   return (L_found);
-  
+
 }
+
+bool C_MessageBinary::set_body_value (int P_id,
+                                      C_ProtocolBinary::T_pBodyValue P_body_val,
+                                      T_pValueData P_val) {
+    if (P_body_val->m_id == P_id) {
+      m_protocol->set_body_value(P_body_val, P_val) ;
+      return (true);
+    } else if (P_body_val->m_sub_val != NULL) { // grouped
+      for (int L_i=0 ; L_i < (int)P_body_val->m_value.m_val_number ; L_i++) {
+           if (set_body_value(P_id, &P_body_val->m_sub_val[L_i], P_val))
+               return (true);
+      }
+    }
+    return (false);
+
+}
+
 
 
 iostream_output& operator<< (iostream_output& P_stream, C_MessageBinary &P_msg) {

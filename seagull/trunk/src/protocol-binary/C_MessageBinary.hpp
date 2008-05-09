@@ -117,6 +117,7 @@ public:
   // virtual void get_body_value (T_pValueData P_res, int P_id);
   virtual bool get_body_value (T_pValueData P_res, int P_id);
   virtual bool set_body_value (int P_id, T_pValueData P_val);
+  virtual bool set_body_value (int P_id, C_ProtocolBinary::T_pBodyValue P_body_val, T_pValueData P_val) ;
 
   C_MessageBinary& operator= (C_MessageBinary & P_val);
   friend iostream_output& operator<< (iostream_output&, C_MessageBinary &);

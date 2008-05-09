@@ -2863,6 +2863,7 @@ int  C_ProtocolTlv::set_body_value(int          P_id,
 
   GEN_DEBUG(1, " L_type_id = " << L_type_id);
 
+  P_res->m_sub_val = NULL;
   switch (m_type_def_table[L_type_id].m_type) {
 
   case E_TYPE_NUMBER :
@@ -3088,6 +3089,7 @@ void C_ProtocolTlv::set_body_value(T_pBodyValue P_res, T_pBodyValue P_val) {
   // retrieve type definition of the field
   L_type_id = m_header_body_value_table[P_res->m_id].m_type_id ;
 
+  P_res->m_sub_val = NULL;
   switch (m_type_def_table[L_type_id].m_type) {
   case E_TYPE_NUMBER :
     P_res->m_value.m_val_number = P_val->m_value.m_val_number;
@@ -3617,6 +3619,7 @@ int C_ProtocolTlv::decode_body(unsigned char     **P_buf,
                 << m_type_def_table[L_type_id].m_name
                 << " ("<<L_type<<")]");
       
+      P_valDec[L_nbValDec].m_sub_val = NULL;
       switch (L_type) {
       case E_TYPE_NUMBER:
         GEN_DEBUG(1, "  Number value decoding (" << L_nbValDec << ")");
@@ -4590,6 +4593,7 @@ void C_ProtocolTlv::set_body_values (int P_nb,
     L_type = m_type_def_table[L_type_id].m_type ;
     
 
+    P_dest[L_i].m_sub_val = NULL;
     switch (L_type) {
     case E_TYPE_NUMBER:
     case E_TYPE_SIGNED:
