@@ -477,24 +477,36 @@ void C_MessageBinary::get_header_value (T_pValueData P_res,
   *P_res = m_header_values[P_id] ;
 }
 
-bool C_MessageBinary::get_body_value (T_pValueData P_res, 
+
+bool C_MessageBinary::get_body_value (T_pValueData P_res,
                                       int          P_id) {
-  
+
   int  L_i ;
   bool L_found = false ;
 
   // Search the body value in the array
-  for (L_i=0 ; L_i < m_nb_body_values ; L_i++) {
-    if (m_body_val[L_i].m_id == P_id) { 
-      L_found=true; 
-      break; 
-    }
-  }
-  if (L_found == true) {
-    m_protocol->get_body_value(P_res, &m_body_val[L_i]) ;
-  } 
+  for (L_i=0 ; L_i < m_nb_body_values ; L_i++)
+      if(( L_found = get_body_value(P_id, P_res, &m_body_val[L_i]))==true)
+        break;
 
-  return (L_found) ;
+  return (L_found);
+}
+
+
+bool C_MessageBinary::get_body_value (int P_id,
+                                      T_pValueData P_val,
+                                      C_ProtocolBinary::T_pBodyValue P_body_val) {
+    if (P_body_val->m_id == P_id) {
+      m_protocol->get_body_value(P_val, P_body_val) ;
+      return (true);
+    } else if (P_body_val->m_sub_val != NULL) { // grouped
+      for (int L_i=0 ; L_i < (int)P_body_val->m_value.m_val_number ; L_i++) {
+           if (get_body_value(P_id, P_val, &P_body_val->m_sub_val[L_i]))
+               return (true);
+      }
+    }
+    return (false);
+
 }
 
 bool C_MessageBinary::set_body_value (int P_id, T_pValueData P_val) {
