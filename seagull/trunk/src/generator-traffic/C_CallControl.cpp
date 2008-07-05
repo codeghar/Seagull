@@ -430,7 +430,9 @@ void C_CallControl::messageReceivedControl () {
 	  // => message unexpected
 	  //	  GEN_ERROR(1,"No scenario found");
 
-	  GEN_ERROR(1,"Unexpexted message that doesn't match the scenario.");
+	  GEN_ERROR(1,"Unexpexted message that doesn't match the scenario.[ " << (*L_msg) <<
+                        GEN_HEADER_LOG << GEN_HEADER_NO_LEVEL << "]" );
+
 
 	  if (!(genTraceLevel & gen_mask_table[LOG_LEVEL_TRAFFIC_ERR])) {
 	    GEN_ERROR(1,"Activate 'T' log level");
