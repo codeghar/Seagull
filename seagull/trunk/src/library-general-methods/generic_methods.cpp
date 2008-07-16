@@ -23,6 +23,8 @@
 #include "string_t.hpp"
 #include "Utils.hpp"
 #include <time.h>
+#include <string.h>
+#include <stdio.h>
 
 
 char* external_find_text_value (char *P_buf, char *P_field) {
@@ -66,6 +68,7 @@ char* external_find_text_value (char *P_buf, char *P_field) {
   return (L_value);
 }
 
+
 typedef struct args_string {
   char * m_startoffset;
 } T_ArgsStr, *T_pArgsStr ;
@@ -82,9 +85,60 @@ int args_analysis (T_pValueData  P_args, T_pArgsStr P_result) {
   *P_result = Args_Str_init ;
   P_result->m_startoffset = external_find_text_value((char*)P_args->m_value.m_val_binary.m_value,
                                              (char*)"startoffset")  ;
-  if (P_result->m_startoffset == NULL)
-  P_result->m_startoffset = (char *)"0";
+
   return (L_ret);
+}
+
+int add (int A[], int B[], int C[], int N) {
+        int     i, carry, sum;
+        int BASE = 10;
+        carry = 0;
+        for (i=0; i<N; i++) {
+          sum = A[i] + B[i] + carry;
+          if (sum>=0) {
+            carry = sum / BASE;
+            sum  %= BASE;
+          }  else { // subtraction logic also.
+            carry = sum / BASE - 1;
+            sum  = BASE + sum% BASE;
+          }
+          C[i] = sum;
+        }
+        if (carry) {
+        C[N] = carry;
+        return N;
+        }
+        return N-1;
+}
+
+
+char * add (char *A, T_Integer32 B) {
+
+    int sign = 1;
+    if (strncmp(A, "-", 1) == 0)
+        sign = -1;
+    int a[20] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    int c[20] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    int b[20] = {B,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    int i = 0, length = strlen(A);
+    char ch[2];
+    ch[1] = '\0';
+    while (i<length) {
+        ch[0] = A[length-1-i];
+        a[i] = sign * atoi(ch);
+        i++;
+    }
+    length = add(a,b,c, length);
+    i = length;
+    char ret[20];
+    while (i>=0) {
+        strcat(ret, ltoa(c[i--]));
+    }
+    char * L_value;
+    ALLOC_TABLE(L_value, char*, sizeof(char), strlen(ret)+1);
+      memcpy(L_value, ret, strlen(ret));
+      L_value[strlen(ret)]='\0' ;
+    return  L_value;
 }
 
 int sys_time_secs (T_pValueData  P_msgPart,
@@ -100,9 +154,22 @@ int sys_time_secs (T_pValueData  P_msgPart,
    int l_ret = 0;
 
   l_ret = args_analysis (P_args, &L_args);
-  P_result->m_type = E_TYPE_SIGNED_64 ;
-  P_result->m_value.m_val_signed_64 = time(NULL) + atol(L_args.m_startoffset);
 
+  if (L_args.m_startoffset == NULL) {
+      P_result->m_type = E_TYPE_NUMBER ;
+      P_result->m_value.m_val_number = (T_UnsignedInteger32)time(NULL) ;
+  } else { // the offset can be very long, so dirty work....
+      P_result->m_type = E_TYPE_STRING ;
+      T_Integer32 tm = time(NULL) ;
+      char *c = add(L_args.m_startoffset, tm);
+      P_result->m_type = E_TYPE_STRING ;
+      P_result->m_value.m_val_binary.m_value =  (unsigned char *)c;
+      P_result->m_value.m_val_binary.m_size = strlen(c);
+
+  }
+
+
+  FREE_TABLE(L_args.m_startoffset);
   return (L_ret);
 }
 

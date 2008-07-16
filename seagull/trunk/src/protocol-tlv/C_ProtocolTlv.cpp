@@ -4527,14 +4527,6 @@ void C_ProtocolTlv::set_header_value (int          P_id,
       break ;
     }
   } else {
-    // Take care to do any casting as required
-    if ((L_type == E_TYPE_NUMBER) && (P_orig->m_type == E_TYPE_SIGNED_64)) {
-      P_dest->m_value.m_val_number = (T_UnsignedInteger32) P_orig->m_value.m_val_signed_64  ;
-    } else if ((L_type == E_TYPE_SIGNED) && (P_orig->m_type == E_TYPE_SIGNED_64)) {
-      P_dest->m_value.m_val_signed = (T_Integer32)P_orig->m_value.m_val_signed_64  ;
-    } else if ((L_type == E_TYPE_NUMBER_64) && (P_orig->m_type == E_TYPE_SIGNED_64)) {
-      P_dest->m_value.m_val_number_64 = (T_UnsignedInteger64)P_orig->m_value.m_val_signed_64 ;
-    } else {
     GEN_FATAL(E_GEN_FATAL_ERROR,
           "Type ["
           << L_type
@@ -4543,7 +4535,6 @@ void C_ProtocolTlv::set_header_value (int          P_id,
           << "] not compatible for setting for ["
           << L_body_fieldValues->m_name
           << "]");
-    }
 
   }
 
@@ -5133,14 +5124,6 @@ void C_ProtocolTlv::set_body_value (T_pBodyValue P_dest, T_pValueData P_orig) {
       break ;
     }
   } else {
-    // Take care to do any casting as required
-    if ((L_type == E_TYPE_NUMBER) && (P_orig->m_type == E_TYPE_SIGNED_64)) {
-      P_dest->m_value.m_val_number = (T_UnsignedInteger32) P_orig->m_value.m_val_signed_64  ;
-    } else if ((L_type == E_TYPE_SIGNED) && (P_orig->m_type == E_TYPE_SIGNED_64)) {
-      P_dest->m_value.m_val_signed = (T_Integer32)P_orig->m_value.m_val_signed_64  ;
-    } else if ((L_type == E_TYPE_NUMBER_64) && (P_orig->m_type == E_TYPE_SIGNED_64)) {
-      P_dest->m_value.m_val_number_64 = (T_UnsignedInteger64)P_orig->m_value.m_val_signed_64 ;
-    } else {
     GEN_FATAL(E_GEN_FATAL_ERROR,
           "Type ["
           << L_type
@@ -5149,7 +5132,6 @@ void C_ProtocolTlv::set_body_value (T_pBodyValue P_dest, T_pValueData P_orig) {
           << "] not compatible for setting for ["
           << L_fieldVal->m_name
           << "]");
-    }
 
   }
   
