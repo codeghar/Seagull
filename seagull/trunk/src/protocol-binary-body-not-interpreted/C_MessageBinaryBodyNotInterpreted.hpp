@@ -36,8 +36,8 @@ public:
   virtual T_pValueData getSessionFromBody(int P_id);
 
 
-  virtual bool get_body_value (T_pValueData P_res, int P_id) ;
-  virtual bool set_body_value (int P_id, T_pValueData P_val) ;
+  virtual bool get_body_value (T_pValueData P_res, int P_id, int P_occurence) ;
+  virtual bool set_body_value (int P_id, int P_occurence, T_pValueData P_val) ;
   
 
 private:

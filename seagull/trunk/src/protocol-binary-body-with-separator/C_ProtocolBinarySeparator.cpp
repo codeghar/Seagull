@@ -251,7 +251,7 @@ C_MessageFrame* C_ProtocolBinarySeparator::create_new_message(void              
                     L_tmp_value.m_value = L_bodyVal.m_value ;
                     L_tmp_value.m_id = L_bodyVal.m_id ;
                     L_tmp_value.m_type = L_type;
-                    L_exist = L_msg->set_body_value(L_body_val_id,&L_tmp_value);
+                    L_exist = L_msg->set_body_value(L_body_val_id,1,&L_tmp_value);
                     if (L_exist == false) {
                       L_msg->set_body_value(&L_bodyVal);
                     }

@@ -81,7 +81,7 @@ T_exeCode    C_SetValueActionMethodExtern::execute(T_pCmd_scenario P_pCmd,
     
     if (L_ret != -1) {
       if (P_msg->set_field_value(&L_result,
-                                 m_id,
+                                 m_id, m_occurence,
                                  m_instance_id,
                                  m_sub_id) == false ) {
         

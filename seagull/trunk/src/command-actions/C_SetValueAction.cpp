@@ -23,6 +23,7 @@
 #include "C_ScenarioControl.hpp"
 
 
+
 C_SetValueAction::C_SetValueAction(T_CmdAction        P_cmdAction,
                                      T_pControllers P_controllers)
   : C_CommandAction (P_cmdAction, P_controllers) {
@@ -159,7 +160,7 @@ T_ValueData  C_SetValueAction::search_memory(T_pCallContext  P_callCtxt,
     }
     else if ((L_mem.m_type == E_TYPE_STRUCT) )  {
 
-    P_msg -> get_field_value(m_id,
+    P_msg -> get_field_value(m_id, m_occurence,
                              0,0,
                              &L_mem);
     switch (m_string_expr->m_nb_portion) {
@@ -256,9 +257,10 @@ T_exeCode    C_SetValueAction::execute(T_pCmd_scenario P_pCmd,
 
   L_mem = search_memory(P_callCtxt, P_msg, L_reset_value) ;
 
+
   
   if (P_msg->set_field_value(&L_mem, 
-                             m_id,
+                             m_id, m_occurence,
                              m_instance_id,
                              m_sub_id) == false ) {
     

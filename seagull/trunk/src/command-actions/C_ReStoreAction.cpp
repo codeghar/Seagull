@@ -62,7 +62,7 @@ T_exeCode    C_ReStoreAction::execute(T_pCmd_scenario P_pCmd,
     }
     
     // RETRIEVE the data 
-    if (P_msg -> get_field_value(m_id, 
+    if (P_msg -> get_field_value(m_id, m_occurence,
 				 m_instance_id,
 				 m_sub_id,
                                  &L_val) == true) {
@@ -80,7 +80,7 @@ T_exeCode    C_ReStoreAction::execute(T_pCmd_scenario P_pCmd,
                         *L_mem);
 
           if (P_msg -> set_field_value(&L_val, 
-                                       m_id,
+                                       m_id, m_occurence,
                                        m_instance_id,
                                        m_sub_id) == false ) {
 
@@ -109,7 +109,7 @@ T_exeCode    C_ReStoreAction::execute(T_pCmd_scenario P_pCmd,
       } else {
 
         if (P_msg -> set_field_value(L_mem, 
-                                     m_id,
+                                     m_id, m_occurence,
                                      m_instance_id,
                                      m_sub_id) == false ) {
 

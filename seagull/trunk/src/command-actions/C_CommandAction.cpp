@@ -26,6 +26,7 @@ C_CommandAction::C_CommandAction(T_CmdAction        P_ActionData,
   m_type = P_ActionData.m_type            ;
   m_args = P_ActionData.m_args            ;
   m_id = P_ActionData.m_id              ;
+  m_occurence = P_ActionData.m_occurence              ;
   m_mem_id = P_ActionData.m_mem_id          ;
   m_instance_id = P_ActionData.m_instance_id     ; 
   m_sub_id = P_ActionData.m_sub_id          ; 

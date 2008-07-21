@@ -60,7 +60,7 @@ T_exeCode    C_GetExternalDataAction::execute(T_pCmd_scenario P_pCmd,
         L_size = L_value->m_value.m_val_binary.m_size ;
       }
       
-      if (P_msg -> get_field_value(m_id, 
+      if (P_msg -> get_field_value(m_id, m_occurence,
                                    m_instance_id,
                                    m_sub_id,
                                    &L_val) == true) {
@@ -69,7 +69,7 @@ T_exeCode    C_GetExternalDataAction::execute(T_pCmd_scenario P_pCmd,
                       *L_value);
         
         if (P_msg -> set_field_value(&L_val, 
-                                     m_id,
+                                     m_id, m_occurence,
                                      m_instance_id,
                                      m_sub_id) == false ) {
           
@@ -97,7 +97,7 @@ T_exeCode    C_GetExternalDataAction::execute(T_pCmd_scenario P_pCmd,
       }
     } else {
       if (P_msg -> set_field_value(L_value, 
-                                   m_id,
+                                   m_id, m_occurence,
                                    m_instance_id,
                                    m_sub_id) == false) {
         

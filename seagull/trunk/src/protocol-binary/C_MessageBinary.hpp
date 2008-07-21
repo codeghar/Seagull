@@ -45,11 +45,11 @@ public:
   T_TypeType get_field_type  (int P_id,
 			      int P_sub_id);
 
-  bool       get_field_value(int P_id, 
+  bool       get_field_value(int P_id, int P_occurence,
                              C_RegExp *P_reg,
                              T_pValueData P_value) ;
 
-  bool       get_field_value (int P_id, 
+  bool       get_field_value (int P_id, int P_occurence, 
 			      int P_instance,
 			      int P_sub_id,
 			      T_pValueData P_value);
@@ -60,7 +60,7 @@ public:
 
 
   bool       set_field_value (T_pValueData P_value, 
-			      int P_id,
+			      int P_id, int P_occurence,
 			      int P_instance,
 			      int P_sub_id);
 
@@ -109,18 +109,18 @@ public:
 
   void get_header_value (T_pValueData P_res, int P_id);
 
-  T_pValueData   get_field_value (int P_id,
+  T_pValueData   get_field_value (int P_id,  int P_occurence,
                                   C_ContextFrame *P_ctxt,
                                   int P_instance,
                                   int P_sub_id) ;
 
   // virtual void get_body_value (T_pValueData P_res, int P_id);
-  virtual bool get_body_value (T_pValueData P_res, int P_id);
-  virtual bool get_body_value (int P_id,
+  virtual bool get_body_value (T_pValueData P_res, int P_id,  int P_occurence);
+  virtual int get_body_value (int P_id,  int P_occurence,
                                       T_pValueData P_val,
                                       C_ProtocolBinary::T_pBodyValue P_body_val) ;
-  virtual bool set_body_value (int P_id, T_pValueData P_val);
-  virtual bool set_body_value (int P_id, C_ProtocolBinary::T_pBodyValue P_body_val, T_pValueData P_val) ;
+  virtual bool set_body_value (int P_id,  int P_occurence, T_pValueData P_val);
+  virtual int set_body_value (int P_id,   int P_occurence, C_ProtocolBinary::T_pBodyValue P_body_val, T_pValueData P_val) ;
 
   C_MessageBinary& operator= (C_MessageBinary & P_val);
   friend iostream_output& operator<< (iostream_output&, C_MessageBinary &);
@@ -132,13 +132,15 @@ public:
 		       T_CheckBehaviour   P_behave) ;
 
   // WARNING: check only body field presence
-  bool          check_field_presence (int              P_id,
+  int          check_field_presence (int P_id,  int P_occurence,
+                                      C_ProtocolBinary::T_pBodyValue P_body_val) ;
+  bool          check_field_presence (int              P_id,  int P_occurence,
 				      T_CheckBehaviour P_behave,
 				      int              P_instance,
 				      int              P_sub_id) ;
 
   bool          check_field_value (C_MessageFrame  *P_ref,
-    				   int              P_id,
+    				   int              P_id,  int P_occurence,
    				   T_CheckBehaviour P_behave,
    				   int              P_instance,
    				   int              P_sub_id) ;

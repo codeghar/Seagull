@@ -47,7 +47,7 @@
 static const T_CmdAction no_cmd_action = {
   E_ACTION_SCEN_OPEN,
   NULL,
-  -1, -1, -1, -1, -1, -1,
+  -1, -1, -1, -1, -1, -1, -1,
   NULL,
   -1, -1,
   NULL,
@@ -1167,6 +1167,7 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 
   int                       L_len_format             = 0     ;
   bool                      L_external_method_exist  = false ;
+  char *L_occurence  = NULL;
 
 
   GEN_DEBUG(1, "C_ScenarioControl::add_actions() start");
@@ -1228,6 +1229,10 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 	    break ; 
 	  }
 
+          
+          L_actionData->m_occurence = ((L_occurence==NULL)?1:atoi(L_occurence));
+          if (L_actionData->m_occurence == -1)
+            L_actionData->m_occurence = 1;
 
 	  L_actionArg2 = L_action -> find_value((char*) "entity");
 	  if (L_actionArg2 == NULL) {
@@ -1467,6 +1472,11 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 	  } else {
             L_len_format = strlen(L_actionArg2) ;
           }
+
+          L_occurence  = L_action->find_value ((char*) "occurence") ;
+          L_actionData->m_occurence = ((L_occurence==NULL)?1:atoi(L_occurence));
+          if (L_actionData->m_occurence == -1)
+            L_actionData->m_occurence = 1;
 	  
 	  L_actionData->m_id 
 	    = P_protocol->find_field (L_actionArg) ;
@@ -1634,6 +1644,12 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 	    break ; 
 	  } 
 	  
+          L_occurence  = L_action->find_value ((char*) "occurence") ;
+          L_actionData->m_occurence = ((L_occurence==NULL)?1:atoi(L_occurence));
+          if (L_actionData->m_occurence == -1)
+            L_actionData->m_occurence = 1;
+
+
 	  L_actionData->m_id 
 	    = P_protocol->find_field (L_actionArg) ;
 	  if (L_actionData->m_id == -1) {
@@ -1725,6 +1741,13 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
                 add_memory (L_actionArg);
               L_nameFieldFound = true ;
 	    } else {    
+
+
+             L_occurence  = L_action->find_value ((char*) "occurence") ;
+             L_actionData->m_occurence = ((L_occurence==NULL)?1:atoi(L_occurence));
+             if (L_actionData->m_occurence == -1)
+                L_actionData->m_occurence = 1;
+
               L_actionArg2 = L_action -> find_value((char*) "entity");
               if (L_actionArg2 == NULL) {
                 GEN_ERROR(E_GEN_FATAL_ERROR, "entity value mandatory for action ["
@@ -1945,6 +1968,12 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 	    L_ret = -1 ;
 	    break ; 
 	  } 
+
+          char *L_occurence  = L_action->find_value ((char*) "occurence") ;
+          L_actionData->m_occurence = ((L_occurence==NULL)?1:atoi(L_occurence));
+          if (L_actionData->m_occurence == -1)
+            L_actionData->m_occurence = 1;
+
 
 	  L_actionArg2 = L_action -> find_value((char*) "behaviour");
 	  if (L_actionArg2 == NULL) {

@@ -48,7 +48,7 @@ T_exeCode    C_InsertInMapAction::execute(T_pCmd_scenario P_pCmd,
     
   L_val.m_type = E_TYPE_NUMBER ;
   
-  if (P_msg -> get_field_value(m_id, 
+  if (P_msg -> get_field_value(m_id, 1,
                                m_instance_id,
                                m_sub_id,
                                &L_val) == true) {

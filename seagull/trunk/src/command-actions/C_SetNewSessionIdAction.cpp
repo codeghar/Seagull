@@ -50,7 +50,7 @@ T_exeCode    C_SetNewSessionIdAction::execute(T_pCmd_scenario P_pCmd,
   
   L_mem = P_callCtxt->get_memory(m_mem_id);
 
-  if (P_msg -> get_field_value(m_id, 
+  if (P_msg -> get_field_value(m_id, m_occurence,
                                m_instance_id,
                                m_sub_id,
                                &L_val) == true) {

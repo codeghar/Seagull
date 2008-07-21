@@ -459,7 +459,7 @@ bool C_MessageText::check(C_MessageFrame    *P_ref,
 }
 
 
-bool C_MessageText::check_field_presence (int              P_id,
+bool C_MessageText::check_field_presence (int              P_id, int P_occurence,
                                           T_CheckBehaviour P_behave,
                                           int              P_instance,
                                           int              P_sub_id) {
@@ -487,7 +487,7 @@ bool C_MessageText::check_field_presence (int              P_id,
 } 
 
 bool C_MessageText::check_field_value (C_MessageFrame   *P_ref,
-                                       int               P_id,
+                                       int               P_id, int P_occurence,
                                        T_CheckBehaviour  P_behave,
                                        int               P_instance,
                                        int               P_sub_id) {
@@ -570,7 +570,7 @@ bool C_MessageText::check_field_order (int              P_id,
   return (L_ret);
 }
 
-bool C_MessageText::get_field_value(int P_id, 
+bool C_MessageText::get_field_value(int P_id, int P_occurence,
                                     C_RegExp *P_reg,
                                     T_pValueData P_value) {
 
@@ -603,7 +603,7 @@ bool C_MessageText::get_field_value(int P_id,
 }
 
 
-T_pValueData C_MessageText::get_field_value (int P_id, 
+T_pValueData C_MessageText::get_field_value (int P_id, int P_occurence,
                                              C_ContextFrame *P_ctxt,
                                              int P_instance,
                                              int P_sub_id) {
@@ -615,7 +615,7 @@ T_pValueData C_MessageText::get_field_value (int P_id,
       ALLOC_VAR(m_session_id,
                 T_pValueData,
                 sizeof(T_ValueData));
-      if (get_field_value(P_id, 
+      if (get_field_value(P_id,  P_occurence,
                           P_instance,
                           P_sub_id,
                           m_session_id) == false ) {
@@ -627,7 +627,7 @@ T_pValueData C_MessageText::get_field_value (int P_id,
 }
 
 
-bool C_MessageText::get_field_value(int P_id, 
+bool C_MessageText::get_field_value(int P_id, int P_occurence,
                                     int P_instance,
                                     int P_sub_id,
                                     T_pValueData P_value) {
@@ -662,7 +662,7 @@ bool C_MessageText::get_field_value(int P_id,
 
 
 bool C_MessageText::set_field_value(T_pValueData P_value, 
-                                    int P_id,
+                                    int P_id, int P_occurence,
                                     int P_instance,
                                     int P_sub_id) {
 

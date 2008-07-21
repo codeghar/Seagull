@@ -28,6 +28,7 @@
 #include "ReceiveMsgContext.h"
 #include "C_CallContext.hpp"
 
+
 C_MessageBinary::C_MessageBinary(C_ProtocolBinary *P_protocol) {
 
   unsigned long L_nbFields, L_i ;
@@ -437,7 +438,6 @@ void C_MessageBinary::set_header_id_value (int P_id) {
 void C_MessageBinary::set_body_value (C_ProtocolBinary::T_pBodyValue P_val) {
   
   GEN_DEBUG(1, "C_MessageBinary::set_body_value() start current nb: " << m_nb_body_values );
-//  GEN_DEBUG(1, "C_MessageBinary::set_body_value() P_val: " << P_val);
 
   if (m_nb_body_values == MAX_BODY_VALUES) {
     GEN_FATAL(E_GEN_FATAL_ERROR, 
@@ -479,62 +479,82 @@ void C_MessageBinary::get_header_value (T_pValueData P_res,
 
 
 bool C_MessageBinary::get_body_value (T_pValueData P_res,
-                                      int          P_id) {
+                                      int          P_id, int P_occurence) {
 
   int  L_i ;
   bool L_found = false ;
+  int L_occurence = P_occurence;
+
 
   // Search the body value in the array
-  for (L_i=0 ; L_i < m_nb_body_values ; L_i++)
-      if(( L_found = get_body_value(P_id, P_res, &m_body_val[L_i]))==true)
+  for (L_i=0 ; L_i < m_nb_body_values ; L_i++) {
+      L_occurence -= get_body_value(P_id, L_occurence, P_res, &m_body_val[L_i]);
+      if(L_found = (L_occurence == 0))
         break;
+  }
 
   return (L_found);
 }
 
 
-bool C_MessageBinary::get_body_value (int P_id,
+int C_MessageBinary::get_body_value (int P_id, int P_occurence,
                                       T_pValueData P_val,
                                       C_ProtocolBinary::T_pBodyValue P_body_val) {
-    if (P_body_val->m_id == P_id) {
+    int L_occurence = P_occurence;
+    if (P_body_val->m_id == P_id) 
+      L_occurence--;
+
+    if (L_occurence == 0) {
       m_protocol->get_body_value(P_val, P_body_val) ;
-      return (true);
     } else if (P_body_val->m_sub_val != NULL) { // grouped
       for (int L_i=0 ; L_i < (int)P_body_val->m_value.m_val_number ; L_i++) {
-           if (get_body_value(P_id, P_val, &P_body_val->m_sub_val[L_i]))
-               return (true);
+           L_occurence -= get_body_value(P_id, L_occurence, P_val, &P_body_val->m_sub_val[L_i]);
+           if (L_occurence == 0)
+               break;
       }
     }
-    return (false);
+    return (P_occurence-L_occurence);
 
 }
 
-bool C_MessageBinary::set_body_value (int P_id, T_pValueData P_val) {
+bool C_MessageBinary::set_body_value (int P_id, int P_occurence, T_pValueData P_val) {
+
 
   int  L_i ;
   bool L_found = false ;
+  int L_occurence = P_occurence;
 
-  for (L_i=0 ; L_i < m_nb_body_values ; L_i++)
-      if(( L_found = set_body_value(P_id, &m_body_val[L_i], P_val))==true)
+
+  for (L_i=0 ; L_i < m_nb_body_values ; L_i++) {
+      L_occurence -= set_body_value(P_id, L_occurence, &m_body_val[L_i], P_val);
+      if(L_found = (L_occurence == 0))
         break;
+  }
 
   return (L_found);
 
 }
 
-bool C_MessageBinary::set_body_value (int P_id,
+int C_MessageBinary::set_body_value (int P_id, int P_occurence,
                                       C_ProtocolBinary::T_pBodyValue P_body_val,
                                       T_pValueData P_val) {
-    if (P_body_val->m_id == P_id) {
+
+    int L_occurence = P_occurence;
+    if (P_body_val->m_id == P_id)
+      L_occurence--;
+
+
+    if (L_occurence == 0) {
       m_protocol->set_body_value(P_body_val, P_val) ;
-      return (true);
     } else if (P_body_val->m_sub_val != NULL) { // grouped
       for (int L_i=0 ; L_i < (int)P_body_val->m_value.m_val_number ; L_i++) {
-           if (set_body_value(P_id, &P_body_val->m_sub_val[L_i], P_val))
-               return (true);
+           L_occurence -= set_body_value(P_id, L_occurence, &P_body_val->m_sub_val[L_i], P_val);
+           if (L_occurence == 0)
+               break;
       }
     }
-    return (false);
+
+    return (P_occurence-L_occurence);
 
 }
 
@@ -730,33 +750,59 @@ bool C_MessageBinary::check(C_MessageFrame    *P_ref,
   return (L_ret) ;
 }
 
-bool C_MessageBinary::check_field_presence (int              P_id,
+
+int C_MessageBinary::check_field_presence (int P_id, int P_occurence,
+                                      C_ProtocolBinary::T_pBodyValue P_body_val) {
+    int L_occurence = P_occurence;
+    if (P_body_val->m_id == P_id)
+      L_occurence--;
+
+
+    if (L_occurence == 0) {
+      // do nothing;
+    } else if (P_body_val->m_sub_val != NULL) { // grouped
+      for (int L_i=0 ; L_i < (int)P_body_val->m_value.m_val_number ; L_i++) {
+           L_occurence -= check_field_presence(P_id , L_occurence,  &P_body_val->m_sub_val[L_i]);
+           if (L_occurence == 0)
+               break;
+      }
+    }
+
+    return (P_occurence-L_occurence);
+
+}
+
+
+bool C_MessageBinary::check_field_presence (int              P_id, int P_occurence,
 					    T_CheckBehaviour P_behave,
 					    int              P_instance,
 					    int              P_sub_id) {
   bool                                 L_ret   = true  ;
-  int                                  L_i ;
+  int                                  L_i , L_j ;
   bool                                 L_found = false ;
   C_ProtocolBinary::T_pHeaderBodyValue L_descr         ;
   C_ProtocolBinary::T_pHeaderValue     L_descrVal      ; 
   unsigned long                        L_max_nb_field_header ;
+  int L_occurence = P_occurence;
+
 
 
   L_max_nb_field_header = m_protocol->get_m_max_nb_field_header () ;
 
   if (P_id < (int)L_max_nb_field_header) { return (true) ; }
 
+  L_j = P_id - (int)L_max_nb_field_header;
+
   // check that the fields of the scenario are present
-  for (L_i = 0 ; L_i < m_nb_body_values; L_i++) {
-    if ((m_body_val[L_i].m_id + (int)L_max_nb_field_header) == P_id) {
-      L_found = true ;
-      break ;
-    }
+  for (L_i=0 ; L_i < m_nb_body_values ; L_i++) {
+      L_occurence -= check_field_presence(L_j, L_occurence, &m_body_val[L_i]);
+      if(L_found = (L_occurence == 0))
+        break;
   }
 
   if (L_found == false) {
     L_ret = false ;
-    L_descr = m_protocol->get_header_body_value_description(P_id - L_max_nb_field_header);
+    L_descr = m_protocol->get_header_body_value_description(L_j);
     if (L_descr != NULL) {
       L_descrVal = m_protocol->get_header_value_description(m_header_id);
       
@@ -787,7 +833,7 @@ bool C_MessageBinary::check_field_presence (int              P_id,
 }
 
 bool C_MessageBinary::check_field_value (C_MessageFrame   *P_ref,
-		                         int               P_id,
+		                         int               P_id, int P_occurence,
 					 T_CheckBehaviour  P_behave,
 					 int               P_instance,
 					 int               P_sub_id) {
@@ -814,7 +860,7 @@ bool C_MessageBinary::check_field_value (C_MessageFrame   *P_ref,
     // case body
     L_id -= L_max_nb_field_header ;
 
-    L_found =  L_ref->get_body_value (&L_value_ref, L_id);
+    L_found =  L_ref->get_body_value (&L_value_ref, L_id, P_occurence);
     if (L_found == false ) {
       L_descr = m_protocol->get_header_body_value_description(L_id);
       if (L_descr != NULL) {
@@ -829,7 +875,7 @@ bool C_MessageBinary::check_field_value (C_MessageFrame   *P_ref,
       }
       return (L_found);
     }
-    L_found = get_body_value (&L_value, L_id);
+    L_found = get_body_value (&L_value, L_id, P_occurence);
     if (L_found == false ) {
       L_descr = m_protocol->get_header_body_value_description(L_id);
       if (L_descr != NULL) {
@@ -915,7 +961,7 @@ bool C_MessageBinary::check_field_order (int              P_id,
 }
 // field management
 bool C_MessageBinary::set_field_value(T_pValueData P_value, 
-				      int P_id,
+				      int P_id, int P_occurence,
 				      int P_instance,
 				      int P_sub_id) {
 
@@ -929,14 +975,14 @@ bool C_MessageBinary::set_field_value(T_pValueData P_value,
     set_header_value(L_id, P_value);
     break ;
   case C_ProtocolBinary::E_MSG_ID_BODY:
-    set_body_value(L_id, P_value);
+    set_body_value(L_id, P_occurence, P_value);
     break ;
   }
 
   return (L_found) ;
 }
 
-T_pValueData C_MessageBinary::get_field_value (int P_id, 
+T_pValueData C_MessageBinary::get_field_value (int P_id, int P_occurence,
                                                C_ContextFrame *P_ctxt,
                                                int P_instance,
                                                int P_sub_id) {
@@ -949,7 +995,7 @@ T_pValueData C_MessageBinary::get_field_value (int P_id,
                 T_pValueData,
                 sizeof(T_ValueData));
       
-      if (get_field_value(P_id, 
+      if (get_field_value(P_id,  P_occurence,
                           P_instance,
                           P_sub_id,
                           m_session_id) == false ) {
@@ -960,7 +1006,7 @@ T_pValueData C_MessageBinary::get_field_value (int P_id,
   return (m_session_id);
 }
 
-bool C_MessageBinary::get_field_value(int P_id, 
+bool C_MessageBinary::get_field_value(int P_id,  int P_occurence,
 				      int P_instance,
 				      int P_sub_id,
 				      T_pValueData P_value) {
@@ -977,7 +1023,7 @@ bool C_MessageBinary::get_field_value(int P_id,
     get_header_value (P_value, L_id);
     break ;
   case C_ProtocolBinary::E_MSG_ID_BODY:
-    L_found = get_body_value (P_value, L_id);
+    L_found = get_body_value (P_value, L_id, P_occurence);
     break ;
   }
 
@@ -1008,7 +1054,7 @@ int C_MessageBinary::get_id_message(){
 
 
 
-bool C_MessageBinary::get_field_value(int P_id, 
+bool C_MessageBinary::get_field_value(int P_id,  int P_occurence,
                                     C_RegExp *P_reg,
                                     T_pValueData P_value) {
   return (true) ;

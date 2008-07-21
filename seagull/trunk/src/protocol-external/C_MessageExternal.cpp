@@ -285,7 +285,7 @@ bool C_MessageExternal::check (C_MessageFrame  *P_ref,
 }
 
 bool C_MessageExternal::check_field_presence 
-(int              P_id,
+(int              P_id, int P_occurence,
  T_CheckBehaviour P_behave,
  int              P_instance,
  int              P_sub_id) {
@@ -341,7 +341,7 @@ bool C_MessageExternal::check_field_presence
 
 bool C_MessageExternal::check_field_value
 (C_MessageFrame  *P_ref,
- int              P_id,
+ int              P_id, int P_occurence,
  T_CheckBehaviour P_behave,
  int              P_instance,
  int              P_sub_id) {
@@ -470,7 +470,7 @@ T_TypeType C_MessageExternal::get_field_type  (int P_id,
 
 // bool fct (source, dest);
 
-T_pValueData C_MessageExternal::get_field_value (int P_id, 
+T_pValueData C_MessageExternal::get_field_value (int P_id, int P_occurence,
                                                  C_ContextFrame *P_ctxt,
                                                  int P_instance,
                                                  int P_sub_id) {
@@ -479,8 +479,8 @@ T_pValueData C_MessageExternal::get_field_value (int P_id,
   if (m_correlation_session_id == NULL ) {
     ALLOC_VAR(m_correlation_session_id,
               T_pValueData,
-              sizeof(T_ValueData));
-    if (get_field_value(P_id, 
+              sizeof(T_ValueData)); 
+    if (get_field_value(P_id, P_occurence,
                         P_instance,
                         P_sub_id,
                         m_correlation_session_id) == false ) {
@@ -492,7 +492,7 @@ T_pValueData C_MessageExternal::get_field_value (int P_id,
 }
 
 
-bool         C_MessageExternal::get_field_value (int P_id,
+bool         C_MessageExternal::get_field_value (int P_id, int P_occurence,
 						 int P_instance,
 						 int P_sub_id,
 						 T_pValueData P_value) {
@@ -523,7 +523,7 @@ bool         C_MessageExternal::get_field_value (int P_id,
 }
 
 bool         C_MessageExternal::set_field_value (T_pValueData P_value, 
-						 int P_id,
+						 int P_id, int P_occurence,
 						 int P_instance,
 						 int P_sub_id) {
 
@@ -898,7 +898,7 @@ int C_MessageExternal::get_id_message(){
 }
 
 
-bool C_MessageExternal::get_field_value(int P_id, 
+bool C_MessageExternal::get_field_value(int P_id, int P_occurence,
                                         C_RegExp *P_reg,
                                         T_pValueData P_value) {
   return (true) ;

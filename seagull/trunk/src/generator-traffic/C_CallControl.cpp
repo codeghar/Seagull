@@ -430,9 +430,7 @@ void C_CallControl::messageReceivedControl () {
 	  // => message unexpected
 	  //	  GEN_ERROR(1,"No scenario found");
 
-	  GEN_ERROR(1,"Unexpexted message that doesn't match the scenario.[ " << (*L_msg) <<
-                        GEN_HEADER_LOG << GEN_HEADER_NO_LEVEL << "]" );
-
+	  GEN_ERROR(1,"Unexpexted message that doesn't match the scenario.");
 
 	  if (!(genTraceLevel & gen_mask_table[LOG_LEVEL_TRAFFIC_ERR])) {
 	    GEN_ERROR(1,"Activate 'T' log level");
@@ -1825,7 +1823,7 @@ T_pCallContext  C_CallControl::getSessionFromScen(T_ReceiveMsgContext P_rcvCtxt,
   L_retrieveIds = m_scenario_control->get_id_table_by_channel(P_rcvCtxt.m_channel);
   if (L_retrieveIds != NULL) {
     for (L_i = 0 ; L_i < L_retrieveIds->m_nb_ids ; L_i++) {
-      L_value_id = (P_rcvCtxt.m_msg)->get_field_value(L_retrieveIds->m_id_table[L_i],
+      L_value_id = (P_rcvCtxt.m_msg)->get_field_value(L_retrieveIds->m_id_table[L_i], 1,
                                                       &P_rcvCtxt,
                                                       -1,
                                                       -1) ;

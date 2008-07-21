@@ -43,7 +43,7 @@ T_exeCode    C_CheckPresenceAction::execute(T_pCmd_scenario P_pCmd,
 
   L_check_result 
     = P_msg->check_field_presence 
-    (m_id,
+    (m_id, m_occurence,
      m_check_behaviour,
      m_instance_id,
      m_sub_id);

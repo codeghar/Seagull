@@ -419,9 +419,7 @@ T_exeCode C_Scenario::execute_cmd (T_pCallContext P_callCtxt,
       } else {
 	// unexpected message during call
 	// TO-DO
-	GEN_ERROR(1,"Unexpexted message that doesn't match the scenario.[ " << (*L_msgReceived) <<
-                      GEN_HEADER_LOG << GEN_HEADER_NO_LEVEL << "]" );
-
+	GEN_ERROR(1,"Unexpexted message that doesn't match the scenario.");
 
 	if (!(genTraceLevel & gen_mask_table[LOG_LEVEL_TRAFFIC_ERR])) {
 	  GEN_ERROR(1,"Activate 'T' log level");

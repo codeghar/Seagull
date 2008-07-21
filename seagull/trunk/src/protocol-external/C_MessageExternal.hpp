@@ -47,14 +47,14 @@ public:
   bool         check (C_MessageFrame  *P_ref, 
 		      unsigned int     P_levelMask,
 		      T_CheckBehaviour P_behave) ;
-  bool         check_field_presence (int              P_id,
+  bool         check_field_presence (int              P_id, int P_occurence,
 				     T_CheckBehaviour P_behave,
 				     int              P_instance,
 				     int              P_sub_id) ;
 
 
   bool         check_field_value (C_MessageFrame  *P_ref,
-				  int              P_id,
+				  int              P_id, int P_occurence,
 				  T_CheckBehaviour P_behave,
 				  int              P_instance,
 				  int              P_sub_id) ;
@@ -70,7 +70,7 @@ public:
   friend class C_ProtocolExternal ;
 
 
-  bool       get_field_value(int P_id, 
+  bool       get_field_value(int P_id, int P_occurence,
                              C_RegExp *P_reg,
                              T_pValueData P_value) ;
 
@@ -79,18 +79,18 @@ public:
                           T_MessagePartType P_header_body_type) ;
 
 
-  T_pValueData get_field_value (int P_id, 
+  T_pValueData get_field_value (int P_id,  int P_occurence,
                                 C_ContextFrame *P_ctxt,
                                 int P_instance,
                                 int P_sub_id) ;
 
-  bool         get_field_value (int P_id, 
+  bool         get_field_value (int P_id,  int P_occurence,
 				int P_instance,
 				int P_sub_id,
 				T_pValueData P_value) ;
 
   bool         set_field_value (T_pValueData P_value, 
-				int P_id,
+				int P_id, int P_occurence,
 				int P_instance,
 				int P_sub_id) ;
 

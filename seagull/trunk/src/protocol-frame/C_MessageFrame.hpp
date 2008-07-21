@@ -48,13 +48,13 @@ public:
   virtual bool         check         (C_MessageFrame  *P_ref, 
 				      unsigned int     P_levelMask,
 				      T_CheckBehaviour P_behave) = 0 ;
-  virtual bool         check_field_presence (int              P_id,
+  virtual bool         check_field_presence (int              P_id, int P_occurence,
 					     T_CheckBehaviour P_behave,
                                              int P_instance,
 					     int P_sub_id) = 0 ;
   
   virtual bool         check_field_value (C_MessageFrame  *P_ref,
-					  int              P_id,
+					  int              P_id, int P_occurence,
 					  T_CheckBehaviour P_behave,
 					  int P_instance,
 					  int P_sub_id) = 0 ;
@@ -67,17 +67,17 @@ public:
   virtual T_TypeType   get_field_type  (int P_id,
 					int P_sub_id)           = 0 ;
 
-  virtual bool         get_field_value (int P_id, 
+  virtual bool         get_field_value (int P_id, int P_occurence,
 					C_RegExp * P_reg,
 					T_pValueData P_value) = 0 ;
 
 
-  virtual bool         get_field_value (int P_id, 
+  virtual bool         get_field_value (int P_id,  int P_occurence,
 					int P_instance,
 					int P_sub_id,
 					T_pValueData P_value) = 0 ;
 
-  virtual T_pValueData   get_field_value (int P_id, 
+  virtual T_pValueData   get_field_value (int P_id,  int P_occurence,
                                           C_ContextFrame *P_ctxt,
                                           int P_instance,
                                           int P_sub_id) = 0 ;
@@ -87,7 +87,7 @@ public:
                                   T_MessagePartType P_header_body_type) = 0 ;
 
   virtual bool         set_field_value (T_pValueData P_value, 
-					int P_id,
+					int P_id, int P_occurence,
 					int P_instance,
 					int P_sub_id) = 0 ;
   virtual void         dump(iostream_output&) = 0 ;

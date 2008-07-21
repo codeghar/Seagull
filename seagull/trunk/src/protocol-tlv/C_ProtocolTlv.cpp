@@ -4533,9 +4533,8 @@ void C_ProtocolTlv::set_header_value (int          P_id,
           << "] and ["
           << P_orig->m_type
           << "] not compatible for setting for ["
-          << L_body_fieldValues->m_name
+          << L_fieldVal->m_name
           << "]");
-
   }
 
 }
@@ -5124,15 +5123,14 @@ void C_ProtocolTlv::set_body_value (T_pBodyValue P_dest, T_pValueData P_orig) {
       break ;
     }
   } else {
-    GEN_FATAL(E_GEN_FATAL_ERROR,
-          "Type ["
-          << L_type
-          << "] and ["
-          << P_orig->m_type
-          << "] not compatible for setting for ["
-          << L_fieldVal->m_name
-          << "]");
-
+    GEN_FATAL(E_GEN_FATAL_ERROR, 
+	  "Type ["
+	  << L_type
+	  << "] and ["
+	  << P_orig->m_type
+	  << "] not compatible for setting for ["
+	  << L_body_fieldValues->m_name
+	  << "]");
   }
   
 }
@@ -5536,7 +5534,7 @@ C_MessageFrame* C_ProtocolTlv::create_new_message(void                *P_xml,
                     L_tmp_value.m_value = L_bodyVal.m_value ;
                     L_tmp_value.m_id = L_bodyVal.m_id ;
                     L_tmp_value.m_type = L_type;
-                    L_exist = L_msg->set_body_value(L_body_val_id,&L_tmp_value);
+                    L_exist = L_msg->set_body_value(L_body_val_id,1,&L_tmp_value);
                     if (L_exist == false) {
                       L_msg->set_body_value(&L_bodyVal);
                     }

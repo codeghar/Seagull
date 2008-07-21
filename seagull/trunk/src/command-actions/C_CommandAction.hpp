@@ -64,6 +64,7 @@ protected:
   T_action_type       m_type            ;
   char               *m_args            ;
   int                 m_id              ;
+  int                 m_occurence       ;
   int                 m_mem_id          ;
   int                 m_instance_id     ; // instance number 
   int                 m_sub_id          ; // id used when header body access

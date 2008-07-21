@@ -63,7 +63,7 @@ T_pValueData C_MessageBinaryBodyNotInterpreted::get_session_id (C_ContextFrame *
 }
 
 bool C_MessageBinaryBodyNotInterpreted::get_body_value (T_pValueData P_res, 
-                                                        int P_id) {
+                                                        int P_id, int P_occurence) {
 
   C_ProtocolBinaryBodyNotInterpreted::T_HeaderBodyPositionSize L_pos ;
 
@@ -100,7 +100,7 @@ bool C_MessageBinaryBodyNotInterpreted::get_body_value (T_pValueData P_res,
 }
 
 
-bool C_MessageBinaryBodyNotInterpreted::set_body_value (int P_id, T_pValueData P_val) {
+bool C_MessageBinaryBodyNotInterpreted::set_body_value (int P_id, int P_occurence, T_pValueData P_val) {
   C_ProtocolBinaryBodyNotInterpreted::T_HeaderBodyPositionSize L_pos ;
   // ctrl a ajouter
   if (P_id != 0) {
@@ -130,7 +130,7 @@ T_pValueData C_MessageBinaryBodyNotInterpreted::getSessionFromBody(int P_id) {
   
   if(m_protocol->check_present_session (m_header_id, P_id)) {
     m_protocol->reset_value_data(&m_id);
-    L_found = get_body_value(&m_id,P_id);
+    L_found = get_body_value(&m_id,P_id, 1);
     if (L_found == true) {
       L_ret = &m_id ;
     }
