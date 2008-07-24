@@ -1969,7 +1969,7 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 	    break ; 
 	  } 
 
-          char *L_occurence  = L_action->find_value ((char*) "occurence") ;
+          L_occurence  = L_action->find_value ((char*) "occurence") ;
           L_actionData->m_occurence = ((L_occurence==NULL)?1:atoi(L_occurence));
           if (L_actionData->m_occurence == -1)
             L_actionData->m_occurence = 1;
