@@ -79,22 +79,22 @@ tar -xvf seagull-x.y.z.tar</source>
         <br></br>
         <p class="pageBreakBefore">Once the installation is done, the following directories are available:</p>
         <ul>
-          <li>/usr/local/share/seagull/seagull/doc directory contains the documentation for all the protocols.</li>
-          <li>/usr/local/share/seagull/[protocol]/doc directory contains protocol documentation.</li>
-          <li>/usr/local/share/seagull/[protocol]/config directory contains the 
+          <li>/opt/seagull/seagull/doc directory contains the documentation for all the protocols.</li>
+          <li>/opt/seagull/[protocol]/doc directory contains protocol documentation.</li>
+          <li>/opt/seagull/[protocol]/config directory contains the 
             XML configuration files, as described in the 
             <a href="#config">"Configuration files" section</a>, and the dictionaries, 
 	    as described in the <a href="#config_dict">"Protocol dictionaries" section</a>.</li>
-          <li>/usr/local/share/seagull/[protocol]/logs directory is empty. It is meant 
+          <li>/opt/seagull/[protocol]/logs directory is empty. It is meant 
 	  to contain execution log files.</li>
-          <li>/usr/local/share/seagull/[protocol]/run directory contains examples of shell 
+          <li>/opt/seagull/[protocol]/run directory contains examples of shell 
             scripts to run the client and server to execute your <a href="#config_scenario">scenarios</a>.</li>
-          <li>/usr/local/share/seagull/[protocol]/scenario directory contains the example scenarios.</li>
+          <li>/opt/seagull/[protocol]/scenario directory contains the example scenarios.</li>
         </ul>
 
         <note> The files present in those directories are given as simple examples. 
 	It is highly recommended to not modify them, as <strong>they will be overwritten</strong> if you
-  upgrade Seagull. Instead, <strong>create your own environment</strong> by copying /usr/local/share/seagull/[protocol]/ 
+  upgrade Seagull. Instead, <strong>create your own environment</strong> by copying /opt/seagull/[protocol]/ 
 	directory tree to your home directory.</note>
 
         <p> The installation also creates the following files in the bin directory:</p>
@@ -372,7 +372,7 @@ DUMP</source>
           <section><title>Description</title>
             <p>Seagull can be remotely controlled through a remote connection using 
             the HTML protocol and a dictionary that is provided at run time (-ctrldicopath command line option),
-            the default being /usr/local/share/seagull/config/remote-ctrl.xml.<br/>
+            the default being /opt/seagull/config/remote-ctrl.xml.<br/>
             This feature is activated with a run time option : -ctrl address:port 
             ("address:port" : the address and the port on which seagull listens for remote control commands)</p>
             <p>Using HTTP makes it very easy to remotely control Seagull, either directly from
