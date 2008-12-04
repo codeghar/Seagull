@@ -24,7 +24,7 @@
         <figure src="images/sar-saa.png" alt="Example scenario" width="201"/>
         <note>The CER/CEA exchange will only be done once, at the time of connection
         establishment. This is described in the <a href="core.html#scen_init">init</a> section.</note>
-        <note>This scenario is included when you install Seagull. It is located in /usr/local/share/seagull/diameter/ directory.</note>
+        <note>This scenario is included when you install Seagull. It is located in /opt/seagull/diameter/ directory.</note>
         <p>Open two terminal sessions. Terminal 2 will be the server and Terminal 1 the client.
         Examples are located in the "run" directory. So the first thing you need
         to do is to go in this directory (in both terminal windows):</p>
