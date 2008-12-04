@@ -274,7 +274,7 @@ C_GeneratorConfig::C_GeneratorConfig (int P_argc, char** P_argv) {
      { E_CMDLINE_remote_dico_path, (char*)"ctrldicopath",
        C_GeneratorConfig::E_OT_OPTIONAL, 1,  one_value_string,
        (char*)"", 
-       (char*)"remote dictionary path (default remote-ctrl.xml in\n                   /usr/local/share/seagull/config)"}
+       (char*)"remote dictionary path (default remote-ctrl.xml in\n                   /opt/seagull/config)"}
 
   } ;
 
