@@ -35,7 +35,7 @@
     | Acct-Status-Type = 2          |
     |<------------------------------|]]></source>
         </p>
-        <note>This scenario is included when you install Seagull. It is located in /usr/local/share/seagull/radius/ directory.</note>        
+        <note>This scenario is included when you install Seagull. It is located in /opt/seagull/radius/ directory.</note>        
         <p>Open two terminal sessions. Terminal 2 will be the server and Terminal 1 the client.
           Examples are located in the "run" directory. So the first thing you need
           to do is to go in this directory (in both terminal windows):</p>
