@@ -27,11 +27,11 @@
 cp bin/* /usr/local/bin/
 
 # Create shared directories
-mkdir -p /usr/local/share/seagull
+mkdir -p /opt/seagull
 
 # Copy execution environments
-cp -R exe-env/* /usr/local/share/seagull/
+cp -R exe-env/* /opt/seagull/
 
 # Copy remote control dictionary
-mkdir -p /usr/local/share/seagull/config
-cp generator-control/remote-ctrl.xml /usr/local/share/seagull/config/
+mkdir -p /opt/seagull/config
+cp generator-control/remote-ctrl.xml /opt/seagull/config/
