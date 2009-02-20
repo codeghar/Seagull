@@ -1066,12 +1066,12 @@ C_MessageFrame* C_RemoteControl::analyze_command(C_MessageFrame *P_msg) {
   L_cmd_data.m_type = E_TYPE_NUMBER ;
   L_uri_data.m_type = E_TYPE_NUMBER ;
 
-  L_continue = P_msg->get_field_value(m_command_id,
+  L_continue = P_msg->get_field_value(m_command_id,1,
                                       0,0,&L_cmd_data); 
   if (L_continue) {
     L_cmd = create_string(L_cmd_data) ;
     resetMemory(L_cmd_data);
-    L_continue = P_msg->get_field_value(m_uri_id,
+    L_continue = P_msg->get_field_value(m_uri_id,1,
                                         0,0,&L_uri_data); 
   }
 
