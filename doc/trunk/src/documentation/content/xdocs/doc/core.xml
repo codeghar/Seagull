@@ -78,6 +78,7 @@ tar -xvf seagull-x.y.z.tar</source>
         </ul>
         <br></br>
         <p class="pageBreakBefore">Once the installation is done, the following directories are available:</p>
+		<note>For versions older than 1.8.0.1 , please replace "opt" by "/usr/local/share"</note>
         <ul>
           <li>/opt/seagull/seagull/doc directory contains the documentation for all the protocols.</li>
           <li>/opt/seagull/[protocol]/doc directory contains protocol documentation.</li>
@@ -372,7 +373,7 @@ DUMP</source>
           <section><title>Description</title>
             <p>Seagull can be remotely controlled through a remote connection using 
             the HTML protocol and a dictionary that is provided at run time (-ctrldicopath command line option),
-            the default being /opt/seagull/config/remote-ctrl.xml.<br/>
+            the default being /opt/seagull/config/remote-ctrl.xml.(/usr/local/share/seagull/config/remote-ctrl.xml for versions before 1.8.0.1) <br/>
             This feature is activated with a run time option : -ctrl address:port 
             ("address:port" : the address and the port on which seagull listens for remote control commands)</p>
             <p>Using HTTP makes it very easy to remotely control Seagull, either directly from
