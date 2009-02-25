@@ -976,8 +976,7 @@ Seagull will look at parameters indicated by
         <source><![CDATA[<store name="MYVAR" entity="via"></store>]]></source>
         and then:
         <source><![CDATA[<restore name="MYVAR" entity="via"></restore>]]></source>
-        <note>store and restore actions on Diameter Grouped AVPs are
-        currently not supported. Use <a href="http://gull.sourceforge.net/wiki/index.php/Tips#Reading_input_values_of_Grouped_AVPs_in_Diameter_messages">this workaround</a> instead.</note>
+        <note>store and restore actions on Diameter Grouped AVPs are supported by version 1.8.0 onwards</note>
         </li>
         <li><u>OCTCAP (API)</u>: to store and restore
         fields, you must identify which field you want to store and restore like this:
