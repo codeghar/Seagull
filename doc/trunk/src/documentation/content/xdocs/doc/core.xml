@@ -3335,7 +3335,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             <td>&nbsp;</td>
             <td>occurrence</td>
             <td>Optional (default is 1).Specifies the position of the field,in case of multiple occurrences (used with grouped AVPs in diameter).</td>
-            <td>instance="1"</td>
+            <td>occurrence="1"</td>
           </tr>
           <tr>
             <th>
@@ -3379,7 +3379,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             <td>&nbsp;</td>
             <td>occurrence</td>
             <td>Optional (default is 1).Specifies the position of the field,in case of multiple occurrences (used with grouped AVPs in diameter).</td>
-            <td>instance="1"</td>
+            <td>occurrence="1"</td>
           </tr>
           <tr>
             <th>
@@ -3469,7 +3469,7 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             <td>&nbsp;</td>
             <td>occurrence</td>
             <td>Optional (default is 1).Specifies the position of the field,in case of multiple occurrences (used with grouped AVPs in diameter).</td>
-            <td>instance="1"</td>
+            <td>occurrence="1"</td>
           </tr>
           <tr>
             <th>
