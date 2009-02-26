@@ -3331,6 +3331,12 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             <td>Instance identifier of the component to be checked.</td>
             <td>instance="InitialDP-data"</td>
           </tr>
+		  <tr>
+            <td>&nbsp;</td>
+            <td>occurrence</td>
+            <td>Optional (default is 1).Specifies the position of the field,in case of multiple occurrences (used with grouped AVPs in diameter).</td>
+            <td>instance="1"</td>
+          </tr>
           <tr>
             <th>
               <anchor id="check-value"/>
@@ -3368,6 +3374,12 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
             <td>sub-entity</td>
             <td>Identifier of parameter of the component to be checked.</td>
             <td>sub-entity="operation-code"</td>
+          </tr>
+		  <tr>
+            <td>&nbsp;</td>
+            <td>occurrence</td>
+            <td>Optional (default is 1).Specifies the position of the field,in case of multiple occurrences (used with grouped AVPs in diameter).</td>
+            <td>instance="1"</td>
           </tr>
           <tr>
             <th>
@@ -3452,6 +3464,12 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
 	    count for the positions start at zero, and the last piece of data 
 	    injected is at end position minus one.</td>
             <td>end="9"</td>
+          </tr>
+		  <tr>
+            <td>&nbsp;</td>
+            <td>occurrence</td>
+            <td>Optional (default is 1).Specifies the position of the field,in case of multiple occurrences (used with grouped AVPs in diameter).</td>
+            <td>instance="1"</td>
           </tr>
           <tr>
             <th>
