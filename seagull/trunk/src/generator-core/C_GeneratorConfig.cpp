@@ -1309,8 +1309,8 @@ int         C_GeneratorConfig::analyze_protocol_stat(char          *P_logProtoco
 
 	if (L_size > 0) {
 	  ALLOC_TABLE(L_string, char*, sizeof(char), L_size+1);
-	  snprintf(L_string, L_size, "%s", L_search_begin);
-	  L_string[L_size] = 0 ;
+	  snprintf(L_string, (L_size + 1), "%s", L_search_begin);
+	  L_string[L_size + 1] = 0 ;
 	  if (strcmp(L_string, (char*)"all") == 0) {
 	    (*P_all_found) = true ;	    
 	    break;
