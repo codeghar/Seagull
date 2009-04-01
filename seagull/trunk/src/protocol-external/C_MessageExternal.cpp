@@ -231,6 +231,8 @@ bool C_MessageExternal::check (C_MessageFrame  *P_ref,
     } // for L_i
    
     if (L_found == false) {
+	if(P_behave == E_CHECK_BEHAVIOUR_ABORT)
+      P_behave = E_CHECK_BEHAVIOUR_ERROR;
       if ((P_levelMask & _check_level_mask[E_CHECK_LEVEL_FIELD_PRESENCE]) || 
 	  (P_levelMask & _check_level_mask[E_CHECK_LEVEL_FIELD_ADDED])) {
 	GEN_LOG_EVENT        (_check_behaviour_mask[P_behave], 
@@ -247,6 +249,8 @@ bool C_MessageExternal::check (C_MessageFrame  *P_ref,
     }
    
     if (P_levelMask & _check_level_mask[E_CHECK_LEVEL_FIELD_ADDED]) {
+	if(P_behave == E_CHECK_BEHAVIOUR_ABORT)
+      P_behave = E_CHECK_BEHAVIOUR_ERROR;
       if (L_additional == true) { // additional values
 	if (L_min_nb_values < m_nb_values) {
 	  for (L_i = L_min_nb_values ; L_i < m_nb_values ; L_i++) {
@@ -307,6 +311,8 @@ bool C_MessageExternal::check_field_presence
   }
 
   if (L_found == false) {
+  if(P_behave == E_CHECK_BEHAVIOUR_ABORT)
+      P_behave = E_CHECK_BEHAVIOUR_ERROR;
     if (P_id <  m_nb_header_fields) {
       GEN_LOG_EVENT        (_check_behaviour_mask[P_behave], 
 			    "check failed in [" 
@@ -378,6 +384,8 @@ bool C_MessageExternal::check_field_value
   }
   
   if (L_check == false) {
+  if(P_behave == E_CHECK_BEHAVIOUR_ABORT)
+      P_behave = E_CHECK_BEHAVIOUR_ERROR;
     if (P_sub_id != -1) {
       GEN_LOG_EVENT        (_check_behaviour_mask[P_behave], 
 			    "check failed in [" 
@@ -439,6 +447,8 @@ bool C_MessageExternal::check_field_order
   }
 
   if (L_check == false) {
+  if(P_behave == E_CHECK_BEHAVIOUR_ABORT)
+      P_behave = E_CHECK_BEHAVIOUR_ERROR;
     GEN_LOG_EVENT  (_check_behaviour_mask[P_behave], 
   		    "check order failed in [" 
   		    <<  m_message_names[m_id] 
