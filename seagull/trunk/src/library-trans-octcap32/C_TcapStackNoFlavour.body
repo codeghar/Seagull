@@ -558,7 +558,7 @@ int C_TcapStackNoFlavour::post_select (int                  P_n,
 	  L_nb_event ++ ;
 	case E_CNX_OPEN:
 	  L_recv_ret = event_handler(&L_event);
-	  if (L_recv_ret > 0) {
+	  if (L_recv_ret > 0 || L_recv_ret == -2) {
 	    P_eventTable[L_nb_event] = L_event ;
 	    L_nb_event ++ ;
 	  }
@@ -609,6 +609,10 @@ int C_TcapStackNoFlavour::event_handler (C_TransportEvent *P_evt) {
 
 	delete_recv_data(&L_data);
 	L_ret = -1 ;
+      }
+	if(*m_stack_fct.m_errno == 5){
+       P_evt->m_type = C_TransportEvent::E_TRANS_CLOSED;
+       L_ret = -2;
       }
       break ;
     }
