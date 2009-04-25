@@ -127,8 +127,8 @@ T_ValueData  C_SetValueAction::search_memory(T_pCallContext  P_callCtxt,
         L_ptr += L_current_size ;
 		// Trying to remove '\r' inserted in between two concatenated values, if first value is integer. (useful in case of set-value with a format))
 		if((m_string_expr->m_nb_portion == 2) && (L_j == 0) && ((*(L_ptr -2) >= '0') && (*(L_ptr -2) <= '9') )){
--        *(L_ptr -1) = ' ';
--      }
+        *(L_ptr -1) = ' ';
+      }
       }
       break ;
       }
