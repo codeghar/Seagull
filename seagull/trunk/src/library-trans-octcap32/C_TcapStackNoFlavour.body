@@ -21,6 +21,9 @@
 #include "iostream_t.hpp"
 #include "Utils.hpp"
 
+#include <octtl_aux.h>
+#include <ttlCommon.h>
+
 #ifdef _ITU_STANDARD
 #include "C_TCAPMsgBuildContextITU.hpp"
 #else 
@@ -269,7 +272,7 @@ int C_TcapStackNoFlavour::init(T_logFunction P_logError,
 
   m_log_error = P_logError ;
   m_log_info = P_logInfo   ;
-
+  TTL_M_INIT("seagull_tcap");
   L_lib_handle = dlopen(m_library_name, RTLD_LAZY);
   if (L_lib_handle == NULL) {
     LOG_ERROR_P2("Unable to open library [%s] error [%s]",m_library_name, dlerror());
