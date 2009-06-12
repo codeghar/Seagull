@@ -82,7 +82,7 @@
   <define entity="config-param"  name="dest-address-pc" value="3"></define> 
   <define entity="config-param"  name="orig-address-ssn" value="10"></define> 
   <define entity="config-param"  name="dest-address-ssn" value="10"></define> 
-
+  <!--define entity="config-param"  name="discon-on-err" value="no"></define-->
 </configuration>
 
 

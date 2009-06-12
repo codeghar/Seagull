@@ -92,6 +92,7 @@ public:
 
   tc_address_type          m_o_routing_type          ;
   tc_address_type          m_d_routing_type          ;
+  char                    *m_discon                  ;
   char                    *m_o_gt                    ;
   char                    *m_d_gt                    ;
 

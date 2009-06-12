@@ -253,6 +253,8 @@ int C_TcapStackNoFlavour::analyze_config(T_ConfigValue& P_config) {
     L_ret = set_orig_gt_nature(P_config.m_value) ;
   } else if (strcmp(P_config.m_name, (char *)"dest-gt-nature") == 0) {
     L_ret = set_dest_gt_nature(P_config.m_value) ;
+  } else if (strcmp(P_config.m_name, (char *)"discon-on-err") == 0) {
+    m_discon = P_config.m_value;
   }
 #ifdef _ANSI_STANDARD
   else if (strcmp(P_config.m_name, (char *)"parameter-type-set") == 0) {
@@ -613,9 +615,11 @@ int C_TcapStackNoFlavour::event_handler (C_TransportEvent *P_evt) {
 	delete_recv_data(&L_data);
 	L_ret = -1 ;
       }
-	if(*m_stack_fct.m_errno == 5){
+	if(*m_stack_fct.m_errno == 5){	
+	if((strcmp(m_discon,"yes")==0))
+       exit(-1);
        P_evt->m_type = C_TransportEvent::E_TRANS_CLOSED;
-       L_ret = -2;
+       L_ret = -2;       
       }
       break ;
     }
