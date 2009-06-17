@@ -66,8 +66,7 @@ protected:
   int                 m_id              ;
    int                 m_occurence       ;
   int                 m_look_ahead      ;
-  int                 m_look_back       ;
-  int                 m_occurence       ;
+  int                 m_look_back       ; 
   int                 m_mem_id          ;
   int                 m_instance_id     ; // instance number 
   int                 m_sub_id          ; // id used when header body access
