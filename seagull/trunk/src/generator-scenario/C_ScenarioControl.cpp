@@ -47,8 +47,8 @@
 static const T_CmdAction no_cmd_action = {
   E_ACTION_SCEN_OPEN,
   NULL,
-  -1, -1, -1, -1, -1, -1, -1,
-  NULL,
+  -1, -1, -1, -1, -1, -1, -1, -1,-1,
+  NULL,NULL,
   -1, -1,
   NULL,
   E_CHECK_BEHAVIOUR_WARNING,
@@ -1142,7 +1142,7 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
   T_pXmlData_List           L_actionList                     ;  
   T_XmlData_List::iterator  L_actionListIt                   ;
   char                     *L_actionName                     ;
-  char                     *L_actionArg, *L_actionArg2= NULL ;
+  char                     *L_actionArg= NULL, *L_actionArg2= NULL ;
   C_XmlData                *L_action                         ;
   bool                      L_actionFound                    ;
   T_action_type             L_actionType  = E_NB_ACTION_SCEN ;
@@ -1168,7 +1168,9 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
   int                       L_len_format             = 0     ;
   bool                      L_external_method_exist  = false ;
   char *L_occurence  = NULL;
-
+  char *L_look_ahead  = NULL;
+  char *L_look_back  = NULL;
+  char *L_branch_on  = NULL;
 
   GEN_DEBUG(1, "C_ScenarioControl::add_actions() start");
 
@@ -1233,7 +1235,11 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
           L_actionData->m_occurence = ((L_occurence==NULL)?1:atoi(L_occurence));
           if (L_actionData->m_occurence == -1)
             L_actionData->m_occurence = 1;
+	  L_actionData->m_look_ahead = ((L_look_ahead==NULL)?-1:atoi(L_look_ahead));
+          L_actionData->m_look_back = ((L_look_back==NULL)?-1:atoi(L_look_back));
 
+          L_branch_on = L_action -> find_value((char*) "branch_on");
+          L_actionData->m_branch_on = L_branch_on;
 	  L_actionArg2 = L_action -> find_value((char*) "entity");
 	  if (L_actionArg2 == NULL) {
 	    GEN_ERROR(E_GEN_FATAL_ERROR, "entity value mandatory for action ["
@@ -1477,7 +1483,13 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
           L_actionData->m_occurence = ((L_occurence==NULL)?1:atoi(L_occurence));
           if (L_actionData->m_occurence == -1)
             L_actionData->m_occurence = 1;
-	  
+	  L_look_ahead  = L_action->find_value ((char*) "look_ahead") ;
+          L_look_back  = L_action->find_value ((char*) "look_back") ;
+          L_actionData->m_look_ahead = ((L_look_ahead==NULL)?-1:atoi(L_look_ahead));
+          L_actionData->m_look_back = ((L_look_back==NULL)?-1:atoi(L_look_back));
+
+          L_branch_on = L_action -> find_value((char*) "branch_on");
+          L_actionData->m_branch_on = L_branch_on;
 	  L_actionData->m_id 
 	    = P_protocol->find_field (L_actionArg) ;
 	  if (L_actionData->m_id == -1) {
@@ -1648,7 +1660,13 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
           L_actionData->m_occurence = ((L_occurence==NULL)?1:atoi(L_occurence));
           if (L_actionData->m_occurence == -1)
             L_actionData->m_occurence = 1;
+	  L_look_ahead  = L_action->find_value ((char*) "look_ahead") ;
+          L_look_back  = L_action->find_value ((char*) "look_back") ;
+          L_actionData->m_look_ahead = ((L_look_ahead==NULL)?-1:atoi(L_look_ahead));
+          L_actionData->m_look_back = ((L_look_back==NULL)?-1:atoi(L_look_back));
 
+          L_branch_on = L_action -> find_value((char*) "branch_on");
+          L_actionData->m_branch_on = L_branch_on;
 
 	  L_actionData->m_id 
 	    = P_protocol->find_field (L_actionArg) ;
@@ -1747,7 +1765,13 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
              L_actionData->m_occurence = ((L_occurence==NULL)?1:atoi(L_occurence));
              if (L_actionData->m_occurence == -1)
                 L_actionData->m_occurence = 1;
+	     L_look_ahead  = L_action->find_value ((char*) "look_ahead") ;
+          L_look_back  = L_action->find_value ((char*) "look_back") ;
+          L_actionData->m_look_ahead = ((L_look_ahead==NULL)?-1:atoi(L_look_ahead));
+          L_actionData->m_look_back = ((L_look_back==NULL)?-1:atoi(L_look_back));
 
+          L_branch_on = L_action -> find_value((char*) "branch_on");
+          L_actionData->m_branch_on = L_branch_on;
               L_actionArg2 = L_action -> find_value((char*) "entity");
               if (L_actionArg2 == NULL) {
                 GEN_ERROR(E_GEN_FATAL_ERROR, "entity value mandatory for action ["
@@ -1963,17 +1987,25 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 	case E_ACTION_SCEN_CHECK_VALUE:
 	  L_actionArg = L_action -> find_value((char*) "name");
 	  if (L_actionArg == NULL) {
-	    GEN_ERROR(E_GEN_FATAL_ERROR, "name value mandatory for action ["
+	/*    GEN_ERROR(E_GEN_FATAL_ERROR, "name value mandatory for action ["
 		      << L_actionName << "]");
 	    L_ret = -1 ;
-	    break ; 
+	    break ;*/ 
+	    GEN_WARNING("name value may be mandatory (apart from branching) for action["
+                          << L_actionName << "]");
 	  } 
 
           L_occurence  = L_action->find_value ((char*) "occurence") ;
           L_actionData->m_occurence = ((L_occurence==NULL)?1:atoi(L_occurence));
           if (L_actionData->m_occurence == -1)
             L_actionData->m_occurence = 1;
-
+	 L_look_ahead  = L_action->find_value ((char*) "look_ahead") ;
+          L_look_back  = L_action->find_value ((char*) "look_back") ;
+          L_actionData->m_look_ahead = ((L_look_ahead==NULL)?-1:atoi(L_look_ahead));
+          L_actionData->m_look_back = ((L_look_back==NULL)?-1:atoi(L_look_back));
+         
+          L_branch_on = L_action -> find_value((char*) "branch_on");
+          L_actionData->m_branch_on = L_branch_on;
 
 	  L_actionArg2 = L_action -> find_value((char*) "behaviour");
 	  if (L_actionArg2 == NULL) {
@@ -1983,7 +2015,7 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 	    L_ret = -1 ;
 	    break ; 
 	  } 
-	  
+	  if(L_actionArg!=NULL){
 	  L_actionData->m_id 
 	    = P_protocol->find_field (L_actionArg) ;
 	  if (L_actionData->m_id == -1) {
@@ -1992,6 +2024,7 @@ int C_ScenarioControl::add_actions (C_XmlData                *P_msgData,
 		      << L_actionArg << "]");
 	    L_ret = -1 ;
 	    break ;
+	  }
 	  }
 	  
 	  L_actionArg = L_action -> find_value((char*) "sub-entity");

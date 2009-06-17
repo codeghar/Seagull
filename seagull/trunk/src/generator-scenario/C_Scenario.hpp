@@ -107,11 +107,14 @@ typedef struct _xml_cmd_action {
   char               *m_args            ;
   int                 m_id              ;
   int                 m_occurence       ;
+  int                 m_look_ahead      ;
+  int                 m_look_back       ; 
   int                 m_mem_id          ;
   int                 m_instance_id     ; // instance number 
   int                 m_sub_id          ; // id used when header body access
   int                 m_begin           ; // start of storage
   int                 m_size            ; // size of storage
+  char               *m_branch_on       ;
   unsigned char      *m_pattern         ;
   int                 m_pattern_size    ;
   int                 m_position        ;
@@ -291,7 +294,7 @@ private:
 				     C_MessageFrame      *P_msg,
 				     int                  P_nbActions,
 				     C_CommandAction**    P_actions,
-				     C_MessageFrame      *P_ref);
+				     C_MessageFrame      *P_ref,bool boolUnexp);
 
 
   T_BehaviourScenario m_behaviour ;

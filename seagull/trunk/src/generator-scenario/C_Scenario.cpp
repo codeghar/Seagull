@@ -302,7 +302,7 @@ T_exeCode C_Scenario::execute_cmd (T_pCallContext P_callCtxt,
 				   L_sendMsg, 
 				   L_pCmd->m_pre_action,
 				   L_pCmd->m_pre_action_table,
-				   L_pCmd->m_message) ;
+				   L_pCmd->m_message,false) ;
       }
     } else {
       L_channel_id = L_pCmd -> m_channel_id ;
@@ -348,7 +348,7 @@ T_exeCode C_Scenario::execute_cmd (T_pCallContext P_callCtxt,
 				   L_sendMsg, 
 				   L_pCmd->m_post_action,
 				   L_pCmd->m_post_action_table,
-				   L_pCmd->m_message) ;
+				   L_pCmd->m_message,false) ;
       }
     }
 
@@ -374,62 +374,69 @@ T_exeCode C_Scenario::execute_cmd (T_pCallContext P_callCtxt,
     L_channel_id = L_pCmd -> m_channel_id ;
     if (L_channel_id != P_callCtxt->m_channel_received) {
       GEN_ERROR(E_GEN_FATAL_ERROR, "Channel error: expected channel ["
-		<< L_channel_id 
-                << "] received on [" 
+                << L_channel_id
+                << "] received on ["
                 << P_callCtxt->m_channel_received << "]");
       L_exeCode = E_EXE_ERROR_MSG ;
     } else {
-    
+
       L_msgReceived = P_callCtxt->get_msg_received() ;
 
       if (L_msgReceived -> update_fields(L_pCmd->m_message)) {
-        GEN_LOG_EVENT(LOG_LEVEL_MSG, 
+        GEN_LOG_EVENT(LOG_LEVEL_MSG,
                       "Received [" << *L_msgReceived << "]");
-      } 
+      }
 
       if (L_msgReceived -> compare_types (L_pCmd->m_message)) {
-	
-	if (P_resume == false) {
-	  if (L_pCmd->m_pre_action != 0) {
-	    L_exeCode = execute_action(L_pCmd, P_callCtxt, 
-				       L_msgReceived,
-				       L_pCmd->m_pre_action,
-				       L_pCmd->m_pre_action_table,
-				       L_pCmd->m_message) ;
-	  }
-	}
-	
-	if (L_exeCode == E_EXE_NOERROR) {
-	  
-	  if (L_pCmd->m_post_action != 0) {
-	    L_exeCode = execute_action(L_pCmd, P_callCtxt, 
-				       L_msgReceived, 
-				       L_pCmd->m_post_action,
-				       L_pCmd->m_post_action_table,
-				       L_pCmd->m_message) ;
-	  }
-	  
-	}
+        if (P_resume == false) {
+          if (L_pCmd->m_pre_action != 0) {
+            L_exeCode = execute_action(L_pCmd, P_callCtxt,
+                                       L_msgReceived,
+                                       L_pCmd->m_pre_action,
+                                       L_pCmd->m_pre_action_table,
+                                       L_pCmd->m_message, false) ;
+          }
+        }
+
+        if (L_exeCode == E_EXE_NOERROR) {
+
+          if (L_pCmd->m_post_action != 0) {
+            L_exeCode = execute_action(L_pCmd, P_callCtxt,
+                                       L_msgReceived,
+                                       L_pCmd->m_post_action,
+                                       L_pCmd->m_post_action_table,
+                                       L_pCmd->m_message,false) ;
+          }
+
+        }
         L_msgReceived -> update_message_stats();
-	
-	if (m_stats) {
-	  m_stats->updateStats(L_cmdIdx,C_ScenarioStats::E_MESSAGE,0);
-	}
 
-      } else {
-	// unexpected message during call
-	// TO-DO
-	GEN_ERROR(1,"Unexpexted message that doesn't match the scenario.");
+        if (m_stats) {
+          m_stats->updateStats(L_cmdIdx,C_ScenarioStats::E_MESSAGE,0);
+        }
 
-	if (!(genTraceLevel & gen_mask_table[LOG_LEVEL_TRAFFIC_ERR])) {
-	  GEN_ERROR(1,"Activate 'T' log level");
-	}
+      } else  {
+         if (L_pCmd->m_post_action != 0) {
+            L_exeCode = execute_action(L_pCmd, P_callCtxt,
+                                       L_msgReceived,
+                                       L_pCmd->m_post_action,
+                                       L_pCmd->m_post_action_table,
+                                       L_pCmd->m_message,true) ;
+                      }
+         if(L_pCmd->m_post_action == 0 || L_exeCode == E_EXE_ABORT_CHECK || L_exeCode == E_EXE_ERROR_CHECK){
+        // unexpected message during call
+// TO-DO
+        GEN_ERROR(1,"Unexpexted message that doesn't match the scenario.");
 
-	GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-		      "Unexpected message on call with session-id ["
-		      << P_callCtxt->m_id_table[L_channel_id] << "]");
+        if (!(genTraceLevel & gen_mask_table[LOG_LEVEL_TRAFFIC_ERR])) {
+          GEN_ERROR(1,"Activate 'T' log level");
+        }
 
-  	if ((L_msgReceived)->name() == NULL) {
+        GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR,
+                      "Unexpected message on call with session-id ["
+                      << P_callCtxt->m_id_table[L_channel_id] << "]");
+
+        if ((L_msgReceived)->name() == NULL) {
           GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR,
                         "Received [Unknown Message] when expecting ["
                         << (L_pCmd->m_message)->name()
@@ -441,20 +448,20 @@ T_exeCode C_Scenario::execute_cmd (T_pCallContext P_callCtxt,
                         << "] when expecting ["
                         << (L_pCmd->m_message)->name()
                         << "]");
-	}
-	GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR, 
-		      "Unexpected message received [ " << (*L_msgReceived) <<
-		      GEN_HEADER_LOG << GEN_HEADER_NO_LEVEL << "]" );
-        
-	// TO-DO
-	L_exeCode = E_EXE_ERROR_MSG ;
-        
-	if (m_stats) {
-	  m_stats->updateStats(L_cmdIdx,C_ScenarioStats::E_UNEXPECTED,0);
-	}
+        }
+        GEN_LOG_EVENT(LOG_LEVEL_TRAFFIC_ERR,
+                      "Unexpected message received [ " << (*L_msgReceived) <<
+                      GEN_HEADER_LOG << GEN_HEADER_NO_LEVEL << "]" );
+
+        // TO-DO
+        L_exeCode = E_EXE_ERROR_MSG ;
+
+        if (m_stats) {
+          m_stats->updateStats(L_cmdIdx,C_ScenarioStats::E_UNEXPECTED,0);
+        }
       }
     }
-
+   }
   }
     break ;
 
@@ -476,7 +483,13 @@ T_exeCode C_Scenario::execute_cmd (T_pCallContext P_callCtxt,
                   << " command execution");
     break ;
   }
-
+if(L_exeCode >19 || L_exeCode < 0){
+    if(L_exeCode >19)
+    P_callCtxt -> set_cmd(L_exeCode-1-20);//will increase with E_EXE_NOERROR
+    else
+    P_callCtxt -> set_cmd(L_exeCode -1); //will increase with E_EXE_NOERROR (by call to next_cmd())
+  L_exeCode = E_EXE_NOERROR;
+  }
   switch (L_exeCode) {
   case E_EXE_NOERROR:
 
@@ -505,7 +518,7 @@ T_exeCode C_Scenario::execute_cmd (T_pCallContext P_callCtxt,
 				   NULL,
 				   L_pCmd->m_pre_action,
 				   L_pCmd->m_pre_action_table,
-				   L_pCmd->m_message) ;
+				   L_pCmd->m_message,false) ;
       }
       if (L_exeCode == E_EXE_NOERROR) {
 	if (L_pCmd->m_post_action != 0) {
@@ -513,7 +526,7 @@ T_exeCode C_Scenario::execute_cmd (T_pCallContext P_callCtxt,
 				     NULL, 
 				     L_pCmd->m_post_action,
 				     L_pCmd->m_post_action_table,
-				     L_pCmd->m_message) ;
+				     L_pCmd->m_message,false) ;
 	}
       }
       if (L_exeCode == E_EXE_NOERROR) {
@@ -777,20 +790,28 @@ T_exeCode C_Scenario::execute_action(T_pCmd_scenario P_pCmd,
 				     C_MessageFrame *P_msg,
 				     int             P_nbActions,
 				     C_CommandAction** P_actions,
-				     C_MessageFrame *P_ref) {
+				     C_MessageFrame *P_ref,bool boolUnex) {
 
   T_exeCode           L_exeCode = E_EXE_NOERROR ;
+  T_exeCode           L_exeCodeBranch = E_EXE_NOERROR ;
   int                 L_i ;
 
   C_CommandAction*    L_current_action;
 
   bool                L_suspend = false  ;
-
+  bool                L_BRANCH = false  ;
 
   GEN_DEBUG(1, "C_Scenario::execute_action() start");
   GEN_DEBUG(1, "C_Scenario::execute_action() P_nbActions is " << 
 		  P_nbActions);
-
+  if(boolUnex){
+     for (L_i = 0; L_i < P_nbActions ; L_i++) {
+      if(P_actions[L_i]->get_type() == E_ACTION_SCEN_CHECK_VALUE)
+         break;
+    }
+   if(L_i == P_nbActions)
+       return E_EXE_ABORT_CHECK;
+  }
   for (L_i = 0; L_i < P_nbActions ; L_i++) {
 
     L_current_action = P_actions[L_i] ;
@@ -798,6 +819,10 @@ T_exeCode C_Scenario::execute_action(T_pCmd_scenario P_pCmd,
                                           P_callCtxt,
                                           P_msg,
                                           P_ref);
+    if(L_exeCode > 19 || L_exeCode < 0){
+        L_BRANCH = true;
+        L_exeCodeBranch = L_exeCode;
+    }
     switch (L_exeCode) {
     case E_EXE_ERROR       :
     case E_EXE_ERROR_CHECK :
@@ -815,7 +840,8 @@ T_exeCode C_Scenario::execute_action(T_pCmd_scenario P_pCmd,
   if ((L_exeCode == E_EXE_NOERROR) && (L_suspend == true)) {
     L_exeCode = E_EXE_SUSPEND ;
   } 
-
+  if(L_suspend != true && L_BRANCH == true)
+    L_exeCode = L_exeCodeBranch ;
   
   GEN_DEBUG(1, "C_Scenario::execute_action() end");
   return (L_exeCode);

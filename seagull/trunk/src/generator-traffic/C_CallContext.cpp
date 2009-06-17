@@ -49,6 +49,9 @@ C_CallContext::get_id(int P_channel_id) {
   return (&m_id_table[P_channel_id]);
 }   
 
+void C_CallContext::set_cmd(int p_iIndx) {
+  m_current_cmd_idx += p_iIndx;
+}
 void C_CallContext::next_cmd() {
   m_current_cmd_idx++;
 }

@@ -129,6 +129,7 @@ public:
 
   bool state_receive() ;
   void next_cmd () ;
+  void set_cmd(int p_iIndx);
   void switch_to_scenario (C_Scenario *P_scen);
 
 
