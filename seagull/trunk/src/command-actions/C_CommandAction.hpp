@@ -72,6 +72,7 @@ protected:
   int                 m_sub_id          ; // id used when header body access
   int                 m_begin           ; // start of storage
   int                 m_size            ; // size of storage
+  char               *m_branch_on       ;
   unsigned char      *m_pattern         ;
   int                 m_pattern_size    ;
   int                 m_position        ;
