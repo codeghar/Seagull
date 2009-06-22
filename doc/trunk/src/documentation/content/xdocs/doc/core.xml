@@ -1091,6 +1091,7 @@ Seagull will look at parameters indicated by
       </section>
       <section id="check_value">
         <title>Parameter value check</title>
+	<note>"branch_on" feature is only present for seagull version 1.8.1, onwards</note>
         <p>Seagull can also perform controls on the value of the fields (of the header or 
         the body) of a message.</p>
         <p>Those controls are defined in the scenarios.</p>
@@ -1125,6 +1126,27 @@ Seagull will look at parameters indicated by
             <p></p>
           </li>
         </ul>
+	<p> Examples for check-value usage for branching:</p>
+	<ul>
+
+          <li>For branching, only parameters required are branch_on, look_ahead or look_back; behaviour is also set as error,
+	  to maintain check-value's structure. "name" is not needed for branching,so not maintained as mandatory param for check-value.
+	  For a jump in the scenario,check-value has to be present as a post action, specifying that in case of an unexpected message received, what should the scenario do.
+	  In case the unexpected message matches the value for branch_on, it would either jump as many sections in scenario,ahead or backwards, as specified by look_ahead,
+	  or look_back params in the traffic section. Apart from handling unexpected messages, this feature can be used to handle optional messages.
+	  
+	  This feature has limitations however, intended to be fixed in later releases.
+	  One limitation being that, for the unexpected message received,no other actions apart from jump, will be executed.
+	  An example involving sip protocol is below:		  
+	  <p></p>
+            <source><![CDATA[<!-- SIP example-->
+<check-value behaviour="error" branch_on="100" look_ahead="2">
+</check-value>]]>
+	  </source>
+	  <p></p>
+          </li>
+	  </u1>
+	  <figure alt="An Example for scenario jump" src="images/branch.PNG" width="967"/>
       </section>
       <section id="check_order">
         <title>Message order check</title>
@@ -3377,9 +3399,21 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
           </tr>
 		  <tr>
             <td>&nbsp;</td>
-            <td>occurrence</td>
-            <td>Optional (default is 1).Specifies the position of the field,in case of multiple occurrences (used with grouped AVPs in diameter).</td>
-            <td>occurrence="1"</td>
+            <td>branch_on</td>
+            <td>Specifies the received message,on which the scenario execution is branched,to point either ahead,or back in the scenario.</td>
+            <td>branch_on="180"</td>
+          </tr>
+	  	  <tr>
+            <td>&nbsp;</td>
+            <td>look_ahead</td>
+            <td>(default 1)Specifies the number of jumps in traffic section of the scenario ahead.</td>
+            <td>look_ahead="2"</td>
+          </tr>
+	  	  <tr>
+            <td>&nbsp;</td>
+            <td>look_back</td>
+            <td>(default 0).Specifies the number of jumps in traffic section of the scenario backwards.</td>
+            <td>look_back="1"</td>
           </tr>
           <tr>
             <th>

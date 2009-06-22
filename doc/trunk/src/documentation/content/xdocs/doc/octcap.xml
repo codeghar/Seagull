@@ -1511,6 +1511,14 @@ End of scenario
   </define>]]></code>
             </td>
           </tr>
+	  <tr>
+            <td>discon-on-err</td>
+            <td>Disconnect on transport error. </td>
+            <td></td>
+            <td>
+              <code><![CDATA[<define entity="config-param"  name="discon-on-err" value="no"></define>]]></code>
+            </td>
+          </tr>
         </table>
        </section>
       </section>
