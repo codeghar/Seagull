@@ -49,7 +49,8 @@ if (m_branch_on != NULL){
        L_exeCode1 = (T_exeCode)(0-m_look_back);       
        return (T_exeCode)(0-m_look_back);
   }
-  }
+  } else 
+	return E_EXE_ERR_BRANCH_EXP;
   }
   L_check_result 
     = P_msg->check_field_value 

@@ -832,6 +832,10 @@ T_exeCode C_Scenario::execute_action(T_pCmd_scenario P_pCmd,
     case E_EXE_SUSPEND:
       L_suspend = true;
       break ;
+    case E_EXE_ERR_BRANCH_EXP:
+      if(boolUnex)
+      return E_EXE_ABORT_CHECK;
+      break;
     default:
       break;
     }

@@ -35,7 +35,8 @@ typedef enum _enum_exe_code {
   E_EXE_IGNORE,
   E_EXE_ABORT_CHECK,
   E_EXE_TIMEOUT,
-  E_EXE_ERROR
+  E_EXE_ERROR,
+  E_EXE_ERR_BRANCH_EXP
 } T_exeCode ;
 
 
