@@ -73,7 +73,14 @@
             for values)</p>
       </answer>
     </faq>
-    
+    <faq id="faq007">
+      <question>
+       For seagull octcap protocol, I am not able to send operation-data in TC_RESULT_L ?
+      </question>
+      <answer>
+          	<p>By default, operation-data is marked as not present in the dictionary definition for TC_RESULT_L.</p>
+      </answer>
+    </faq>
   </faqsection>
   <faqsection id="misc">
     <title>Miscenalleous questions</title>
