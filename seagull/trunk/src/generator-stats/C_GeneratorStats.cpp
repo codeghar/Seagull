@@ -1455,7 +1455,13 @@ void C_GeneratorStats::reset_cumul_counters () {
       m_mutexTable[L_i].unlock();
   }
 
-
+ m_mutexTable[CPT_PD_AverageResponseTime].lock() ;
+    m_counters [CPT_PD_AverageResponseTime] = ZERO_COUNTER_VALUE ;
+    m_mutexTable[CPT_PD_AverageResponseTime].unlock() ;
+ m_mutexTable[CPT_C_AverageResponseTime].lock() ;
+    m_counters [CPT_C_AverageResponseTime] = ZERO_COUNTER_VALUE ;
+    m_mutexTable[CPT_C_AverageResponseTime].unlock() ;
+    
   if(m_ResponseTimeRepartition != NULL) {
     for(L_i=0; L_i < m_SizeOfResponseTimeRepartition; L_i++) { 
       m_ResponseTimeRepartition[L_i].nbInThisBorder = 0;
