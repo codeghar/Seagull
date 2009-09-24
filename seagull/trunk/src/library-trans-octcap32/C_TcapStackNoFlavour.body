@@ -616,6 +616,7 @@ int C_TcapStackNoFlavour::event_handler (C_TransportEvent *P_evt) {
 	L_ret = -1 ;
       }
 	if(*m_stack_fct.m_errno == 5){	
+	if(m_discon != NULL)
 	if((strcmp(m_discon,"yes")==0))
        exit(-1);
        P_evt->m_type = C_TransportEvent::E_TRANS_CLOSED;
