@@ -58,7 +58,7 @@ public:
                              C_MessageFrame *P_ref) = 0 ;
 
   T_action_type     get_type();
-
+  char*             get_branching();
 protected:
 
   T_action_type       m_type            ;

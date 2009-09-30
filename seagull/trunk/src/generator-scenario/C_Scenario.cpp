@@ -807,6 +807,7 @@ T_exeCode C_Scenario::execute_action(T_pCmd_scenario P_pCmd,
   if(boolUnex){
      for (L_i = 0; L_i < P_nbActions ; L_i++) {
       if(P_actions[L_i]->get_type() == E_ACTION_SCEN_CHECK_VALUE)
+        if(P_actions[L_i]->get_branching() != NULL)
          break;
     }
    if(L_i == P_nbActions)

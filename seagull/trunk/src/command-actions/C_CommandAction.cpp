@@ -57,6 +57,10 @@ T_action_type C_CommandAction::get_type() {
   return(m_type);
 }
 
+char* C_CommandAction::get_branching() {
+  return(m_branch_on);
+}
+
 
 C_CommandAction::~C_CommandAction() {
   DELETE_VAR(m_regexp_data);
