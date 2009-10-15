@@ -26,6 +26,9 @@
 extern "C" int sys_time_secs (T_pValueData  P_msgPart,
                               T_pValueData  P_args,
                               T_pValueData  P_result);
+extern "C" int sys_time_unsig_sec (T_pValueData  P_msgPart,
+                              T_pValueData  P_args,
+                              T_pValueData  P_result); 
 
 
 #endif // _GENERIC_METHODS_HPP_

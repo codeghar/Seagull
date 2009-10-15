@@ -106,3 +106,22 @@ int sys_time_secs (T_pValueData  P_msgPart,
   return (L_ret);
 }
 
+int sys_time_unsig_sec (T_pValueData  P_msgPart,
+                   T_pValueData  P_args,
+                   T_pValueData  P_result) {
+
+  int             L_ret    = 0    ;
+
+
+
+   T_ArgsStr L_args;
+
+   int l_ret = 0;
+
+  l_ret = args_analysis (P_args, &L_args);
+  P_result->m_type = E_TYPE_NUMBER  ;
+  P_result->m_value.m_val_signed = time(NULL) + atol(L_args.m_startoffset);
+
+  return (L_ret);
+}
+
