@@ -87,7 +87,7 @@ private:
   T_pC_TransportEvent  m_events ;
 
   int                  m_nb_global_channel ;
-
+  int                  m_reconnect_time_lag ;
   T_SelectDef          m_call_select ;
   T_TrafficType        m_last_traffic_type ;
 

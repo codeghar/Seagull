@@ -744,10 +744,11 @@ bool C_TransIP::analyze_init_string(char *P_buf) {
 bool C_TransIP::analyze_open_string (char *P_buf, T_pIpAddr P_addr) {
 
   char            L_tmp  [255] ;
+   char            L_tmp_lag  [255] ;
   char           *L_buf, *L_ptr ;
 
   GEN_DEBUG(1, "C_TransIP::analyze_open_string (args=" << P_buf << ")");
-
+  strcpy(L_tmp_lag, "");
   L_buf = P_buf ;
   L_ptr = strstr(L_buf, "mode=");
   if (L_ptr != NULL) {
@@ -794,13 +795,13 @@ bool C_TransIP::analyze_open_string (char *P_buf, T_pIpAddr P_addr) {
     L_buf = P_buf ;
     L_ptr = strstr(L_buf, "standby=");
     if (L_ptr != NULL) {
-      sscanf(L_ptr+8, "%[^;]*s", L_tmp);
-      GEN_DEBUG(1, "C_TransIP::analyze_open_string() d [" << L_tmp << "]");
-      if (strlen(L_tmp)>0) {
+      sscanf(L_ptr+8, "%[^;]*s", L_tmp_lag);
+      GEN_DEBUG(1, "C_TransIP::analyze_open_string() d [" << L_tmp_lag << "]");
+      if (strlen(L_tmp_lag)>0) {
         ALLOC_TABLE(P_addr->m_open,
                     char*,sizeof(char),
-                    strlen(L_tmp)+1);
-        strcpy(P_addr->m_open, L_tmp);
+                    strlen(L_tmp_lag)+1);
+        strcpy(P_addr->m_open, L_tmp_lag);
 
       } else {
         // if standby is not provided, default is dest

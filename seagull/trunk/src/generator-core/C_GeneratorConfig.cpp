@@ -70,8 +70,8 @@ const char* config_opt_table[] = {
   "execute-check-action",
   "max-retrans",
   "retrans-enabled",
-  "model-traffic-select"
-
+  "model-traffic-select",
+  "reconnect-lag"
 };
 
 static const char _check_level_char [] = {
@@ -341,7 +341,8 @@ C_GeneratorConfig::C_GeneratorConfig (int P_argc, char** P_argv) {
 
   m_option_remote_cmd = DEF_OPTION_REMOTE_CMD ;
   m_option_remote_dico_path = DEF_REMOTE_DICO_PATH ;
-
+  m_reconnect_lag = DEF_RECONNECT_LAG ;
+  
   ALLOC_TABLE(m_conf_opt_set, bool*, sizeof(bool), E_CFG_OPT_Number);
   for(L_i=0; L_i < E_CFG_OPT_Number; L_i++) {
     m_conf_opt_set[L_i] = false ;
@@ -750,7 +751,13 @@ bool C_GeneratorConfig::set_value (T_GeneratorConfigOption P_opt,
 
       break ;
 
-
+ case E_CFG_OPT_RECONNECT_LAG :
+    m_reconnect_lag = strtoul_f(P_value, &L_end_str, 10) ;
+    if (L_end_str[0] != '\0') { // not a number
+      L_ret = false ;
+    }
+    break ;
+    
   default:
     L_ret = false ;
     break ;
@@ -849,7 +856,10 @@ bool C_GeneratorConfig::get_value (T_GeneratorConfigOption  P_opt,
   case E_CFG_OPT_MAX_RETRANS :
     *P_val = m_max_retrans ;
     break ;
-
+    
+  case E_CFG_OPT_RECONNECT_LAG:
+    *P_val = m_reconnect_lag ;
+    break ;
 
   default:
     L_ret = false ;

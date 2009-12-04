@@ -376,7 +376,7 @@ char* C_ChannelControl::get_channel_name (int P_id) {
   return (m_channel_table[P_id]->m_name);
 }
 
-int C_ChannelControl::check_global_channel () {
+int C_ChannelControl::check_global_channel (int P_timeLag) {
   int            L_ret = 0 ;
   T_OpenStatus   L_status  ;
   int            L_i       ;
@@ -388,7 +388,7 @@ int C_ChannelControl::check_global_channel () {
     if (L_data->m_type == E_CHANNEL_GLOBAL) {
       if (L_data->m_open_status == E_CHANNEL_CLOSED) {
 	if (L_data->m_reconnect == true) {
-
+           sleep(P_timeLag);
 	  // wait
 	  m_sem_reconnect->P();
 	  m_sem_reconnect->P();

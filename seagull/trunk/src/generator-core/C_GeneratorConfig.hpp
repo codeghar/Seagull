@@ -115,7 +115,8 @@ typedef enum {
   E_CFG_OPT_MAX_RETRANS,
   E_CFG_OPT_RETRANS_ENABLED,
   E_CFG_OPT_MODEL_TRAFFIC_SELECT,
-
+  E_CFG_OPT_RECONNECT_LAG,
+  
   E_CFG_OPT_Number
 } T_GeneratorConfigOption ;
 
@@ -247,6 +248,7 @@ private:
   bool           m_retrans_enabled       ;
 
   unsigned long  m_call_rate_scale           ;
+  unsigned long  m_reconnect_lag	;
 
   T_pConfigValueList         m_configValueList ;
 

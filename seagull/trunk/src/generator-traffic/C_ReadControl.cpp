@@ -107,6 +107,10 @@ T_GeneratorError C_ReadControl::InitProcedure() {
   m_select_timeout.tv_sec = L_config_value / 1000 ;
   m_select_timeout.tv_usec = (L_config_value % 1000) * 1000 ;
 
+  m_config->get_value(E_CFG_OPT_RECONNECT_LAG,
+                           &L_config_value);
+  m_reconnect_time_lag = L_config_value;
+  
   if (!m_config->get_value(E_CFG_OPT_MAX_SIMULTANEOUS_CALLS,
 			   &L_config_value)) {
     GEN_FATAL(E_GEN_FATAL_ERROR, "Internal max simultaneous call not specified");
@@ -277,7 +281,7 @@ T_GeneratorError C_ReadControl::receiveControl () {
     
   } // if L_n > 0
 
-  m_channel_ctrl->check_global_channel() ;
+  m_channel_ctrl->check_global_channel(m_reconnect_time_lag) ;
 
 
   GEN_DEBUG(1, "C_ReadControl::receiveControl() end");

@@ -63,6 +63,7 @@
 #define DEF_RETRANS_ENABLED                                  false
 #define DEF_MODEL_TRAFFIC_SELECT        E_MODEL_TRAFFIC_BESTEFFORT 
 #define DEF_OPTION_REMOTE_CMD                                 NULL
+#define DEF_RECONNECT_LAG                                        1
 #define DEF_REMOTE_DICO_PATH (char*)"/opt/seagull/config"
 
 

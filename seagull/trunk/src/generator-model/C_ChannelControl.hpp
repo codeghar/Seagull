@@ -83,7 +83,7 @@ public:
   T_pChannelData get_channel_data (int P_id);
 
   int            open_global_channel () ;
-  int            check_global_channel () ;
+  int            check_global_channel (int timelag) ;
   int            open_local_channel (int           P_id, 
                                      char         *P_args,
 				     int          *P_table, 
