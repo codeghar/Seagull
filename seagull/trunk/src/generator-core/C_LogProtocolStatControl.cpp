@@ -59,7 +59,7 @@ T_GeneratorError C_LogProtocolStatControl::TaskProcedure() {
   m_stat->make_log ();
 //    m_stat->executeStatAction(C_GeneratorStats::E_RESET_PL_COUNTERS);
   sched_yield () ;
-  m_sem -> P() ;
+//  m_sem -> P() ;
   GEN_DEBUG(0, "C_LogProtocolStatControl::doTask() end");
   return (E_GEN_NO_ERROR);
 }
