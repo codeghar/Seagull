@@ -38,7 +38,7 @@
   <fielddef name="msg-length" size="3" unit="octet"> </fielddef>
   <fielddef name="flags" size="1" unit="octet"> </fielddef>
   <fielddef name="cmd-code" size="3" unit="octet"> </fielddef>
-  <fielddef name="vendor-id" size="4" unit="octet"> </fielddef>
+  <fielddef name="application-id" size="4" unit="octet"> </fielddef>
   <fielddef name="HbH-id" size="4" unit="octet"> </fielddef>
   <fielddef name="EtE-id" size="4" unit="octet"> </fielddef>
 </header>
