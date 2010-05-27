@@ -29,6 +29,7 @@ C_SemaphoreTimed::C_SemaphoreTimed(long P_timeOut):C_Semaphore() {
 
   GEN_DEBUG(0, "C_SemaphoreTimed::C_SemaphoreTimed(" << P_timeOut << ") start");
   m_timeOut = P_timeOut ;
+  m_stopping = false;
   GEN_DEBUG(0, "C_SemaphoreTimed::C_SemaphoreTimed() end");
 }
 
@@ -53,7 +54,7 @@ T_CounterValue C_SemaphoreTimed::P() {
 
   pthread_mutex_lock (SemMutex) ;
   while (   (SemCounter <= COUNTER_COMP_VALUE) 
-  	 && (L_return != ETIMEDOUT)) {
+  	 && (L_return != ETIMEDOUT) && (!m_stopping)) {
 
     L_return = pthread_cond_timedwait (SemCond, SemMutex, &L_timeOut);
 
@@ -73,6 +74,10 @@ void C_SemaphoreTimed::change_display_period(long P_period) {
   m_timeOut = P_period;
 }
 
+void C_SemaphoreTimed::StoppingProcedure() {
+  m_stopping = true;
+  pthread_cond_signal (SemCond) ;
+}
 
 
 

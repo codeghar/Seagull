@@ -30,9 +30,11 @@ class C_SemaphoreTimed : public C_Semaphore {
   T_CounterValue P() ;
 
   void change_display_period(long P_period);
+  void StoppingProcedure();
 
  private:
   long m_timeOut ;
+  bool m_stopping;
 
 } ;
 
