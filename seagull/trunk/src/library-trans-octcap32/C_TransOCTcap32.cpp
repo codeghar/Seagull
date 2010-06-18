@@ -447,7 +447,7 @@ int C_TransOCTcap32::find_library(char *P_name, char *P_path, char *P_lib) {
   } else {
     L_ret = determine_lib(P_name);
     if (L_ret == -1) {
-      LOG_ERROR("library not found");
+      LOG_ERROR("library %s not found", P_name);
     }
   }
   return (L_ret);
