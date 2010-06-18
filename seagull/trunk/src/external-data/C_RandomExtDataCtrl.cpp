@@ -18,7 +18,15 @@
  */
 
 #include "C_RandomExtDataCtrl.hpp"
+#include <stdlib.h>
+#include <unistd.h>
 #include <cstdlib>
+
+C_RandomExtDataCtrl::C_RandomExtDataCtrl()
+:C_ExternalDataControl()
+{
+    srand(getpid());
+}
 
 size_t C_RandomExtDataCtrl::select_line () {
 

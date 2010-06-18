@@ -24,6 +24,7 @@
 
 class C_RandomExtDataCtrl : public C_ExternalDataControl {
 public:
+  C_RandomExtDataCtrl();
   size_t          select_line () ;
 protected:
 private:  
