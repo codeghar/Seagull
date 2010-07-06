@@ -59,7 +59,12 @@ C_ProtocolFrame::T_MsgError C_MessageText::EncodeWithContentLength (int P_index)
   GEN_DEBUG(1, "C_MessageText::EncodeWithContentLength() start");
 
   L_size_body = (m_body == NULL) ? 0 : m_body->m_value.m_val_binary.m_size ;
-  snprintf(L_size_char, 10, "%d", L_size_body);
+#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
+  snprintf(L_size_char, 10, "%zu", L_size_body);
+#else
+  snprintf(L_size_char, 10, "%lu", (unsigned long)L_size_body);
+#endif
+
   L_size = valueFromString(L_size_char, E_TYPE_STRING, L_result);
 
   if (L_result == -1) { 
