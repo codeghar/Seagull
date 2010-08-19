@@ -654,6 +654,7 @@ void C_SocketSCTPWithData::sctp_dispatch_msg (C_TransportEvent *P_event) {
   char cbuf[sizeof (*cmsg) + sizeof (*sri)];
   struct iovec iov[1];
   size_t cmsglen = sizeof (*cmsg) + sizeof (*sri);
+  struct timezone   L_tzp;
 
   m_data_recv = false ;
 
@@ -694,6 +695,7 @@ void C_SocketSCTPWithData::sctp_dispatch_msg (C_TransportEvent *P_event) {
 
       ALLOC_VAR(L_data, T_pDataRcv, sizeof(T_DataRcv));
       L_data->m_size = nr ;
+      gettimeofday(&L_data->m_time, &L_tzp);      
       ALLOC_TABLE(L_data->m_data, 
 		  unsigned char*, 
 		  sizeof(unsigned char*), 
