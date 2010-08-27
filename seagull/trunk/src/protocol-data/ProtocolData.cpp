@@ -723,7 +723,7 @@ void valueToString (T_ValueData& P_value, char *P_result, size_t& P_size) {
            (char*)P_value.m_value.m_val_binary.m_value,
            P_value.m_value.m_val_binary.m_size);
     P_result[P_value.m_value.m_val_binary.m_size] = 0 ;
-    P_size = strlen(P_result);
+    P_size = P_value.m_value.m_val_binary.m_size;
     break ;
     
   case E_TYPE_STRUCT:
