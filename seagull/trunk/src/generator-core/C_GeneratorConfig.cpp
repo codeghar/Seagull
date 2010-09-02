@@ -71,7 +71,8 @@ const char* config_opt_table[] = {
   "max-retrans",
   "retrans-enabled",
   "model-traffic-select",
-  "reconnect-lag"
+  "reconnect-lag",
+  "response-time-threshold"
 };
 
 static const char _check_level_char [] = {
@@ -201,6 +202,9 @@ bool C_GeneratorConfig::set_data
       m_option_remote_dico_path = L_currentValue ;
       return (true) ;
 
+    case E_CMDLINE_response_time_log:
+      m_option_rsp_time_log_file = L_currentValue;
+      return true;
 
     case E_CMDLINE_nbOptions:
       return (false) ;		// ???
@@ -274,7 +278,12 @@ C_GeneratorConfig::C_GeneratorConfig (int P_argc, char** P_argv) {
      { E_CMDLINE_remote_dico_path, (char*)"ctrldicopath",
        C_GeneratorConfig::E_OT_OPTIONAL, 1,  one_value_string,
        (char*)"", 
-       (char*)"remote dictionary path (default remote-ctrl.xml in\n                   /opt/seagull/config)"}
+       (char*)"remote dictionary path (default remote-ctrl.xml in\n                   /opt/seagull/config)"},
+
+
+     { E_CMDLINE_response_time_log, (char*)"rsptimelog",
+       C_GeneratorConfig::E_OT_OPTIONAL, 1,  one_value_string,
+       (char*)"<response logging file name>", (char*)""}
 
   } ;
 
@@ -342,6 +351,10 @@ C_GeneratorConfig::C_GeneratorConfig (int P_argc, char** P_argv) {
   m_option_remote_cmd = DEF_OPTION_REMOTE_CMD ;
   m_option_remote_dico_path = DEF_REMOTE_DICO_PATH ;
   m_reconnect_lag = DEF_RECONNECT_LAG ;
+
+  m_resp_time_threshold = DEF_RESP_TIME_THRESHOLD;
+  
+  m_option_rsp_time_log_file = NULL;    
   
   ALLOC_TABLE(m_conf_opt_set, bool*, sizeof(bool), E_CFG_OPT_Number);
   for(L_i=0; L_i < E_CFG_OPT_Number; L_i++) {
@@ -365,6 +378,8 @@ C_GeneratorConfig::~C_GeneratorConfig() {
   m_option_remote_cmd  = NULL ;
 
   m_option_remote_dico_path = NULL ;
+
+  m_option_rsp_time_log_file = NULL;    
 
   if (!m_option_dico_file_list->empty()) {
     m_option_dico_file_list->erase(m_option_dico_file_list->begin(),
@@ -407,6 +422,10 @@ char* C_GeneratorConfig::get_remote_cmd() {
 
 char* C_GeneratorConfig::get_remote_dico_path() {
   return(m_option_remote_dico_path) ;
+}
+
+char* C_GeneratorConfig::get_rsp_time_log_file() {
+  return(m_option_rsp_time_log_file) ;
 }
 
 char* C_GeneratorConfig::get_log_file() {
@@ -757,6 +776,13 @@ bool C_GeneratorConfig::set_value (T_GeneratorConfigOption P_opt,
       L_ret = false ;
     }
     break ;
+
+ case E_CFG_OPT_RESP_TIME_THRESHOLD :
+    m_resp_time_threshold = strtoul_f(P_value, &L_end_str, 10) ;
+    if (L_end_str[0] != '\0') { // not a number
+      L_ret = false ;
+    }
+    break;
     
   default:
     L_ret = false ;
@@ -861,6 +887,9 @@ bool C_GeneratorConfig::get_value (T_GeneratorConfigOption  P_opt,
     *P_val = m_reconnect_lag ;
     break ;
 
+  case E_CFG_OPT_RESP_TIME_THRESHOLD :
+    *P_val = m_resp_time_threshold;
+    break;
   default:
     L_ret = false ;
     break ;

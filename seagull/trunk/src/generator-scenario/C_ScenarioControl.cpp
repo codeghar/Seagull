@@ -76,6 +76,8 @@ C_ScenarioControl::C_ScenarioControl(C_ProtocolControl  *P_protocol_control,
   m_save_traffic_scen = NULL ;
   m_config = NULL ;
   m_log = NULL ;
+  m_rsp_time_log = NULL;
+  
   NEW_VAR(m_wait_values, T_waitValuesSet());
 
   m_retrans_enabled = false;
@@ -421,6 +423,7 @@ int C_ScenarioControl::add_scenario
   m_controllers.m_check_mask      = m_check_level ;
   m_controllers.m_check_behaviour      = m_check_behaviour ;
   m_controllers.m_channel_ctrl = m_channel_ctrl ;
+  m_controllers.m_rsp_time_log = m_rsp_time_log;
 
   C_CommandActionFactory    L_CommandActionFactory(&m_controllers) ;
 
@@ -4506,4 +4509,10 @@ void C_ScenarioControl::delete_correlation_map(T_pCommandActionMap *P_action_map
   } // for (L_it_map...)
 }
 
+void C_ScenarioControl::set_rsp_time_logger(C_ResponseTimeLog *P_rsptimelog) {
+
+  GEN_DEBUG(1, "C_ScenarioControl::set_rsp_time_logger() start");
+  m_rsp_time_log = P_rsptimelog ;
+  GEN_DEBUG(1, "C_ScenarioControl::set_rsp_time_loggers() end");
+}
 

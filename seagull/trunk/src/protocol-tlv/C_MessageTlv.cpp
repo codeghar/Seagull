@@ -1193,3 +1193,31 @@ T_pValueData C_MessageTlv::getSessionFromBody(int P_id) {
 
   return (L_ret) ;
 }
+
+int C_MessageTlv:: logMsgHeaderInfo(iostream_output *P_OutStream)
+{
+
+    C_ProtocolTlv::T_pHeaderField L_hdrField;
+    unsigned long i;
+    static bool hdrNamesTraced = false;
+    
+    if (!hdrNamesTraced)
+    {
+      for (i = 0; i < m_protocol->get_nb_field_header(); i++)
+      {
+          L_hdrField = m_protocol->get_header_field_description(i);
+         (*P_OutStream)<<L_hdrField->m_name <<",";
+      }    
+      (*P_OutStream)<<"Session-Id, Request Timestamp, Response Timestamp, Response Time(ms)"<<iostream_endl;  
+      hdrNamesTraced = true;
+    }
+    
+    
+    for (i = 0; i < m_protocol->get_nb_field_header(); i++)
+    {
+      (*P_OutStream)<<m_header_values[i].m_value.m_val_number<<",";
+    }
+    
+    return 0;
+}
+

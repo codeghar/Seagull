@@ -75,7 +75,7 @@ typedef enum {
   E_CMDLINE_check_msg,
   E_CMDLINE_remote_cmd,
   E_CMDLINE_remote_dico_path,
-
+  E_CMDLINE_response_time_log,
   E_CMDLINE_nbOptions
 } T_GeneratorCmdLineOption ;
 
@@ -116,6 +116,7 @@ typedef enum {
   E_CFG_OPT_RETRANS_ENABLED,
   E_CFG_OPT_MODEL_TRAFFIC_SELECT,
   E_CFG_OPT_RECONNECT_LAG,
+  E_CFG_OPT_RESP_TIME_THRESHOLD,     
   
   E_CFG_OPT_Number
 } T_GeneratorConfigOption ;
@@ -163,6 +164,7 @@ class C_GeneratorConfig:public C_CommandLine<T_GeneratorCmdLineOption> {
 
   char*        get_remote_dico_path() ;
 
+  char*        get_rsp_time_log_file() ;
 
   bool         get_display_protocol_stat () ;
   bool         get_display_scenario_stat () ;
@@ -197,6 +199,8 @@ private:
 
   char        *m_option_remote_cmd    ;
   char        *m_option_remote_dico_path    ;
+
+  char        *m_option_rsp_time_log_file ;
   
 
   bool            *m_conf_opt_set ; // config option setted
@@ -249,6 +253,8 @@ private:
 
   unsigned long  m_call_rate_scale           ;
   unsigned long  m_reconnect_lag	;
+
+  unsigned long  m_resp_time_threshold;
 
   T_pConfigValueList         m_configValueList ;
 

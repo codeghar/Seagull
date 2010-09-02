@@ -121,6 +121,8 @@ public:
   static int get_nb_header_fields () ;
   static int get_nb_body_values   () ;
   static int get_nb_body_fields   () ;
+
+  int  logMsgHeaderInfo(iostream_output *P_OutStream);
   
 protected:
 private:

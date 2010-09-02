@@ -922,3 +922,11 @@ int C_MessageExternal::get_buffer (T_pValueData P_dest,
                                    T_MessagePartType P_header_body_type) {
   return (0) ;
 }
+
+int C_MessageExternal:: logMsgHeaderInfo(iostream_output *P_OutStream)
+{
+    //TBD - Note: After implementing this function, set return value to 0 in case of success   
+    return 1;
+}
+
+

@@ -95,7 +95,7 @@ public:
 
   virtual int          get_id_message() = 0 ;
 
-
+  virtual int          logMsgHeaderInfo(iostream_output *P_OutStream) = 0;    
 
   friend iostream_output& operator<< 
   (iostream_output& P_stream, C_MessageFrame & P_msg) {P_msg.dump(P_stream); 

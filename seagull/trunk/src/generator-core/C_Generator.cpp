@@ -460,6 +460,9 @@ T_GeneratorError C_Generator::InitProcedure() {
   char                            *L_logProtocolStatName = NULL   ;
   list_t<char*>::iterator          L_it_elt                       ;
 
+  C_ResponseTimeLog               *L_rsp_time_log = NULL;
+  unsigned long                    L_rsp_time_threshold;
+  string_t                         L_rsp_time_log_file;
 
   GEN_DEBUG(1, "C_Generator::InitProcedure() start");
 
@@ -654,6 +657,53 @@ T_GeneratorError C_Generator::InitProcedure() {
     init_trace (L_logLevel, 
 		L_log_file, 
 		m_config->get_timestamp_log()) ;
+  }
+
+  // For response time log  
+
+  if(NULL != m_config->get_rsp_time_log_file())
+  {
+    string_t L_RspTimeLogFile;
+    L_RspTimeLogFile.append(m_config->get_rsp_time_log_file());
+     
+    if (L_RspTimeLogFile != "") {
+      
+      bool L_found = false ;
+      L_pos = L_RspTimeLogFile.find('.');
+      
+      while (L_pos < L_RspTimeLogFile.size()) {
+        if (L_pos+1 < L_RspTimeLogFile.size()) {
+          if (L_RspTimeLogFile[L_pos+1] != '.') {
+            L_found = true ;
+            if (L_files_no_timestamp == false) {
+              L_RspTimeLogFile.insert(L_pos,L_time_char);
+              L_RspTimeLogFile.insert(L_pos,".");
+            }
+	  break ;
+          } else {
+	  if (L_pos+2 < L_RspTimeLogFile.size()) {
+	    L_pos = L_RspTimeLogFile.find('.', L_pos+2);
+	  } else {
+	    break ;
+	  }
+          }
+        } else {
+          break ;
+        }
+      }
+      
+      if (L_found == false) {
+        if (L_files_no_timestamp == false) {
+          L_RspTimeLogFile += "." ;
+          L_RspTimeLogFile.append(L_time_char);
+        }
+      }
+      
+    }
+      
+    m_config->get_value(E_CFG_OPT_RESP_TIME_THRESHOLD, &L_rsp_time_threshold);        
+    NEW_VAR(L_rsp_time_log, C_ResponseTimeLog(&L_RspTimeLogFile, L_rsp_time_threshold));
+    m_scen_control->set_rsp_time_logger(L_rsp_time_log);
   }
 
   // scenario management 
@@ -1111,6 +1161,11 @@ T_GeneratorError C_Generator::InitProcedure() {
     } // if (L_data_mesure ..)
   }
 
+  if ((NULL != L_rsp_time_log) && (false == L_rsp_time_log->Init()))
+  {    
+      GEN_ERROR(E_GEN_FATAL_ERROR, "Failed to create response time Log file");
+      L_genError = E_GEN_FATAL_ERROR ;
+  }
 
   if (L_genError == E_GEN_NO_ERROR) {
 

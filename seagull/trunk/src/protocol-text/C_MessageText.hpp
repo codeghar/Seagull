@@ -173,6 +173,7 @@ public:
   T_pValueData getSessionFromField (C_ContextFrame *P_ctxt) ;
   T_pValueData getSessionFromOpenId (C_ContextFrame *P_ctxt) ;
 
+  int logMsgHeaderInfo(iostream_output *P_OutStream);
 
 protected:
 private:

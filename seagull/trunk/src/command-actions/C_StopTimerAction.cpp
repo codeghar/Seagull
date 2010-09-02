@@ -20,6 +20,8 @@
 #include "C_StopTimerAction.hpp"
 #include "GeneratorTrace.hpp"
 #include "GeneratorError.h"
+#include "C_ResponseTimeLog.hpp"
+#include "C_CallControl.hpp"
 
 
 C_StopTimerAction::C_StopTimerAction(T_CmdAction        P_cmdAction,
@@ -38,7 +40,8 @@ T_exeCode    C_StopTimerAction::execute(T_pCmd_scenario P_pCmd,
                                         C_MessageFrame *P_ref) {
   
   T_exeCode           L_exeCode    = E_EXE_NOERROR ;
-  long                L_time_ms                    ;
+
+  unsigned long       L_time_ms                    ;
 
   GEN_DEBUG(1, "C_Scenario::execute_action() E_ACTION_SCEN_STOP_TIMER " << 
             m_controllers.m_log);
@@ -51,7 +54,12 @@ T_exeCode    C_StopTimerAction::execute(T_pCmd_scenario P_pCmd,
     m_controllers.m_log->time_data(&P_callCtxt->m_start_time, 
                      &P_callCtxt->m_current_time);
   }
-  
+
+  if (m_controllers.m_rsp_time_log)
+  {
+    m_controllers.m_rsp_time_log->LogRspTimeInfo(P_callCtxt, P_msg, P_ref, L_time_ms);
+  }
+   
   return (L_exeCode);
 }
 

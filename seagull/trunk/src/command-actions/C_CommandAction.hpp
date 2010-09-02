@@ -28,6 +28,7 @@
 #include "C_CallContext.hpp"
 #include "C_ChannelControl.hpp"
 #include "C_Scenario.hpp"
+#include "C_ResponseTimeLog.hpp"
 
 class C_ScenarioControl ;
 
@@ -39,6 +40,7 @@ typedef struct _controllers_struct {
   unsigned int           m_check_mask      ;
   T_CheckBehaviour       m_check_behaviour ;
   C_ChannelControl      *m_channel_ctrl ;
+  C_ResponseTimeLog     *m_rsp_time_log;
 } T_Controllers, *T_pControllers ;
 
 class C_CommandAction { 

@@ -40,6 +40,8 @@
 #include "C_ExternalDataControl.hpp"
 #include "C_CommandActionFactory.hpp"
 
+#include "C_ResponseTimeLog.hpp"
+
 class C_CounterDef {
 public:
   C_CounterDef (int P_id, char * P_name, T_UnsignedInteger32 P_init) {
@@ -218,6 +220,7 @@ public:
   int                 get_max_nb_retrans () ;
   int                 get_max_nb_send () ;
   int                 get_max_nb_recv () ;
+  void                set_rsp_time_logger(C_ResponseTimeLog *P_rsptimelog);
 
 
 private:
@@ -281,6 +284,9 @@ private:
 
   // data log control
   C_DataLogControl  *m_log ;
+
+  // Response Time Log
+  C_ResponseTimeLog  *m_rsp_time_log;
 
   // external data management
   C_ExternalDataControl  *m_external_data ;

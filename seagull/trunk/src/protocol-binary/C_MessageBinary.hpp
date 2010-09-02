@@ -157,6 +157,8 @@ public:
 
   int get_id_message() ;
 
+  int logMsgHeaderInfo(iostream_output *P_OutStream);
+
 
 
 protected:

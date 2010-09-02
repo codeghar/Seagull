@@ -932,3 +932,9 @@ int  C_MessageText::get_buffer (T_pValueData P_dest ,
   }
   return (L_ret) ;
 }
+
+int C_MessageText:: logMsgHeaderInfo(iostream_output *P_OutStream)
+{
+    return 1;
+}
+
