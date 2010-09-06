@@ -19,10 +19,10 @@
 #ifndef _C_RESPONSE_TIME_LOG_H
 #define _C_RESPONSE_TIME_LOG_H
 
-#include "Iostream_t.hpp"
+#include "iostream_t.hpp"
 #include "C_CallContext.hpp"
 #include "C_MessageFrame.hpp"
-#include "String_t.hpp"
+#include "string_t.hpp"
 
 class C_ResponseTimeLog {
 public:
