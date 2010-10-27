@@ -1145,7 +1145,7 @@ Seagull will look at parameters indicated by
 	  </source>
 	  <p></p>
           </li>
-	  </u1>
+	  </ul>
 	  <figure alt="An Example for scenario jump" src="images/branch.PNG" width="967"/>
       </section>
       <section id="check_order">
@@ -2768,6 +2768,17 @@ Command line syntax of /usr/local/bin/plotstat.ksh - options
   </define>]]></code>
               </td>
             </tr>
+            <tr>
+              <td>response-time-threshold</td>
+              <td>Sets the response time threshold value in milli-seconds for response time logging feature.Transaction response time 
+                  is logged only if the response time is greater than response-time-threshold. This is valid only if the response 
+                  time log feature is enabled by specifying the response time log file using rsptimelog flag in the command line
+                  while starting seagull.</td>
+              <td>0</td>
+              <td>
+                <code><![CDATA[<define entity="traffic-param"  name="response-time-threshold" value="100"></define>]]></code>
+              </td>
+            </tr>            
           </table>
         </section>
       </section>
@@ -3646,7 +3657,8 @@ seagull Command syntax
 [ -help  ] display syntax command line
 [ -bg  ] background mode
 [ -notimelog  ] no time stamp on the log (default time stamp)
-[ -msgcheck  ] check the field of the messages received (default no check)]]></source>
+[ -msgcheck  ] check the field of the messages received (default no check)
+[ -rsptimelog <response time logging file name> ] ]]></source>
       </section>
       <section id="cli_return_code">
         <title>Seagull return code</title>
