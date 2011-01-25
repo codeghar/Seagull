@@ -857,6 +857,9 @@ bool C_MessageBinary::check_field_value (C_MessageFrame   *P_ref,
   L_ref                 = dynamic_cast<C_MessageBinary*>(P_ref)    ;
   L_max_nb_field_header = m_protocol->get_m_max_nb_field_header () ;
 
+  L_value_ref.m_type = E_UNSUPPORTED_TYPE;
+  L_value.m_type     = E_UNSUPPORTED_TYPE;
+
   if (L_id >= (int) L_max_nb_field_header) {
     // case body
     L_id -= L_max_nb_field_header ;
@@ -874,6 +877,11 @@ bool C_MessageBinary::check_field_value (C_MessageFrame   *P_ref,
                               << L_descr->m_name
                               << "] is not present in this in reference message");
       }
+
+      if (E_TYPE_STRING == L_value_ref.m_type) {
+        FREE_TABLE(L_value_ref.m_value.m_val_binary.m_value)
+      }      
+    
       return (L_found);
     }
     L_found = get_body_value (&L_value, L_id, P_occurence);
@@ -889,6 +897,15 @@ bool C_MessageBinary::check_field_value (C_MessageFrame   *P_ref,
                               << L_descr->m_name
                               << "] is not present in message received");
       }
+      
+      if (E_TYPE_STRING == L_value_ref.m_type) {
+        FREE_TABLE(L_value_ref.m_value.m_val_binary.m_value)
+      }     
+
+      if (E_TYPE_STRING == L_value.m_type) {
+        FREE_TABLE(L_value.m_value.m_val_binary.m_value)
+      }  
+      
       return (L_found);
     }
     
@@ -940,6 +957,14 @@ bool C_MessageBinary::check_field_value (C_MessageFrame   *P_ref,
       }
     }
   } // if (L_check == false)
+
+  if (E_TYPE_STRING == L_value_ref.m_type) {
+    FREE_TABLE(L_value_ref.m_value.m_val_binary.m_value)
+  }  
+  
+  if (E_TYPE_STRING == L_value.m_type) {
+    FREE_TABLE(L_value.m_value.m_val_binary.m_value)
+  }  
 
   GEN_DEBUG(1, "C_MessageBinary::check_field_value() end ret: " << L_check);
 
