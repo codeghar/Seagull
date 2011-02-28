@@ -26,6 +26,25 @@
 // For byte order resolution
 #include <sys/param.h>
 
+#if defined (__sun)
+#if defined (__i386) || defined (__amd64)
+
+#if defined (BIG_ENDIAN)
+#undef BIG_ENDIAN
+#endif
+#define BIG_ENDIAN 3
+
+#if defined (LITTLE_ENDIAN)
+#undef LITTLE_ENDIAN
+#endif
+#define LITTLE_ENDIAN 4
+
+#undef BYTE_ORDER
+#define BYTE_ORDER LITTLE_ENDIAN
+
+#endif   // __i386 || __amd64
+#endif   // __sun
+
 // Special HP-UX resolution
 #if defined (__hpux)
 #if defined (__hppa)
@@ -48,6 +67,12 @@
 #include <arpa/inet.h>
 #else
 #include <netinet/in.h>
+#endif
+
+
+// Fix for SunOS
+#if ! defined (LONG_LONG_MAX) && defined (LLONG_MAX)
+#define LONG_LONG_MAX LLONG_MAX
 #endif
 
 // Define the Integer 64 bits and Unsigned Integer 64 bits types 

@@ -384,7 +384,7 @@ if test -n "${DEBUG_MODE}"
 then
   echo "Debug Mode: on" >>${BUILD_PROJECT}
 else
-  echo "Debug Mode: on" >>${BUILD_PROJECT}
+  echo "Debug Mode: off" >>${BUILD_PROJECT}
 fi
 
 echo "" >>${BUILD_PROJECT}
@@ -401,7 +401,7 @@ if test -n "${DEBUG_MODE}"
 then
   echo "# Debug Mode     : on" >>${BUILD_COMPILER_FILE}
 else
-  echo "# Debug Mode     : on" >>${BUILD_COMPILER_FILE}
+  echo "# Debug Mode     : off" >>${BUILD_COMPILER_FILE}
 fi
 for L_gen_type in `echo ${BUILD_TYPES} | tr ' ' '\n' | sort -u`
 do
