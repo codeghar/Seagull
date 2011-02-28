@@ -57,15 +57,17 @@ class C_RampControl : public C_TaskControl {
   
   void  init (unsigned long P_duration,
               unsigned long P_current_rate,
-              unsigned long P_sub_rate,
+              unsigned long P_diff_rate,
               bool          P_increase);
 
 private :
   
   C_SemaphoreTimed *m_sem ;
   unsigned long m_duration ;
+  unsigned long m_total_duration ;
+  unsigned long m_init_rate ;
   unsigned long m_current_rate ;
-  unsigned long m_sub_rate ;
+  unsigned long m_diff_rate ;
   bool m_increase ;
   C_Generator *m_gen;
 
@@ -79,8 +81,10 @@ private :
 C_RampControl::C_RampControl(C_Generator *P_gen) {
   m_sem = NULL ;
   m_duration = 0;
+  m_total_duration = 0;
+  m_init_rate = 0;
   m_current_rate = 0;
-  m_sub_rate = 0;
+  m_diff_rate = 0;
   m_increase = false;
   m_gen = P_gen;
 }
@@ -93,11 +97,13 @@ C_RampControl::~C_RampControl() {
 
 void C_RampControl::init(unsigned long P_duration,
                          unsigned long P_current_rate,
-                         unsigned long P_sub_rate,
+                         unsigned long P_diff_rate,
                          bool          P_increase) {
+  m_total_duration = P_duration;
   m_duration = P_duration;
+  m_init_rate = P_current_rate;
   m_current_rate = P_current_rate;
-  m_sub_rate = P_sub_rate;
+  m_diff_rate = P_diff_rate;
   m_increase = P_increase;
   NEW_VAR(m_sem, C_SemaphoreTimed(1));
   m_sem -> P();
@@ -128,13 +134,14 @@ T_GeneratorError C_RampControl::InitProcedure() {
 
 T_GeneratorError C_RampControl::TaskProcedure() {
 
+  m_duration-- ;
+
   if (m_increase) {
-    m_current_rate += m_sub_rate ;
+    m_current_rate = m_init_rate + m_diff_rate - m_diff_rate * m_duration / m_total_duration;
   } else {
-    m_current_rate -= m_sub_rate ;
+    m_current_rate = m_init_rate - m_diff_rate + m_diff_rate * m_duration / m_total_duration ;
   }  
 
-  m_duration-- ;
   m_gen->change_call_rate(E_GEN_OP_SET_VALUE, m_current_rate);
 
   if (m_duration == 0) stop() ;
@@ -517,18 +524,18 @@ void C_RemoteControl::rate(unsigned long P_value) {
 
 void C_RemoteControl::createRampThread(unsigned long P_duration,
                                        unsigned long P_current_rate,
-                                       unsigned long P_sub_rate,
+                                       unsigned long P_diff_rate,
                                        bool          P_increase) {
   // create thread
   pthread_t              *L_rampThread = NULL;
   C_RampControl          *L_rampCtrl ;
 
   NEW_VAR(L_rampCtrl, C_RampControl(m_gen));
+
   L_rampCtrl->init(P_duration,
                    P_current_rate,
-                   P_sub_rate,
+                   P_diff_rate,
                    P_increase);
-  
   L_rampThread = start_thread_control(L_rampCtrl);
 }
 
@@ -577,7 +584,6 @@ void C_RemoteControl::ramp(unsigned long P_value, unsigned long P_duration) {
 
   unsigned long L_current_rate ;
   unsigned long L_diff_rate ;
-  unsigned long L_sub_rate ;
   bool          L_increase = true ;
 
   if (P_duration == 0) {
@@ -588,15 +594,13 @@ void C_RemoteControl::ramp(unsigned long P_value, unsigned long P_duration) {
     
     if (P_value > L_current_rate) {
       L_diff_rate = P_value - L_current_rate ;
-      L_sub_rate = L_diff_rate / P_duration ;
     } else {
       L_increase = false ;
       L_diff_rate = L_current_rate - P_value ;
-      L_sub_rate = L_diff_rate / P_duration ;
     }
 
     if (P_value != L_current_rate) {
-      createRampThread(P_duration,L_current_rate,L_sub_rate,L_increase);
+      createRampThread(P_duration,L_current_rate,L_diff_rate,L_increase);
     }
   }
 }
