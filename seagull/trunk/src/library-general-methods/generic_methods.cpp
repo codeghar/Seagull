@@ -121,7 +121,7 @@ int sys_time_unsig_sec (T_pValueData  P_msgPart,
   l_ret = args_analysis (P_args, &L_args);
   P_result->m_type = E_TYPE_NUMBER  ;
   P_result->m_value.m_val_signed = time(NULL) + atol(L_args.m_startoffset);
-
+  FREE_TABLE(L_args.m_startoffset);
   return (L_ret);
 }
 
