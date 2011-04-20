@@ -102,7 +102,7 @@ int sys_time_secs (T_pValueData  P_msgPart,
   l_ret = args_analysis (P_args, &L_args);
   P_result->m_type = E_TYPE_SIGNED ;
   P_result->m_value.m_val_signed = time(NULL) + atol(L_args.m_startoffset);
-
+  FREE_TABLE(L_args.m_startoffset);
   return (L_ret);
 }
 
