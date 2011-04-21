@@ -21,6 +21,7 @@
 #include "TextUtils.hpp"
 #include "GeneratorError.h"
 #include "GeneratorTrace.hpp"
+#include "Utils.hpp"
 #include "dlfcn_t.hpp"
 
 T_ExternalMethod create_external_method (char *P_args) {
@@ -37,6 +38,7 @@ T_ExternalMethod create_external_method (char *P_args) {
 	      "no name for the library for the filter (lib=...)");
   } else {
     L_library_handle = dlopen(L_lib_name, RTLD_LAZY);
+    FREE_TABLE(L_lib_name);
     if (L_library_handle == NULL) {
       GEN_ERROR(E_GEN_FATAL_ERROR, 
                 "Unable to open library file [" 
@@ -52,6 +54,7 @@ T_ExternalMethod create_external_method (char *P_args) {
   } else {
     if (L_library_handle) { 
       L_function = dlsym(L_library_handle, L_fun_name);
+      FREE_TABLE(L_fun_name);
       if (L_function == NULL) {
         GEN_ERROR(E_GEN_FATAL_ERROR, "Error [" << dlerror() << "]");
       } else {
