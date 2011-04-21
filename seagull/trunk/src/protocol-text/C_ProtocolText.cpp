@@ -195,6 +195,7 @@ int C_ProtocolText::set_filter_method (char *P_filter_method) {
     L_ret = -1;
   } else {
     L_library_handle = dlopen(L_lib_name, RTLD_LAZY);
+    FREE_TABLE(L_lib_name);
     if (L_library_handle == NULL) {
       GEN_ERROR(E_GEN_FATAL_ERROR, 
                 "Unable to open library file [" 
@@ -212,6 +213,7 @@ int C_ProtocolText::set_filter_method (char *P_filter_method) {
   } else {
     if (L_library_handle) { 
       L_function = dlsym(L_library_handle, L_fun_name);
+      FREE_TABLE(L_fun_name);
       if (L_function == NULL) {
         GEN_ERROR(E_GEN_FATAL_ERROR, "Error [" << dlerror() << "]");
         L_ret = -1 ;
@@ -243,6 +245,7 @@ int C_ProtocolText::analyze_body_method_param (int  P_index,
     L_ret = -1;
   } else {
     L_library_handle = dlopen(L_lib_name, RTLD_LAZY);
+    FREE_TABLE(L_lib_name);
     if (L_library_handle == NULL) {
       GEN_ERROR(E_GEN_FATAL_ERROR, 
                 "Unable to open library file [" 
@@ -260,6 +263,7 @@ int C_ProtocolText::analyze_body_method_param (int  P_index,
   } else {
     if (L_library_handle) { 
       L_function = dlsym(L_library_handle, L_fun_name);
+      FREE_TABLE(L_fun_name);
       if (L_function == NULL) {
         GEN_ERROR(E_GEN_FATAL_ERROR, "Error [" << dlerror() << "]");
         L_ret = -1 ;
