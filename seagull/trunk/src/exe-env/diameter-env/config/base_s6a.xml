@@ -1,0 +1,999 @@
+ <!--
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+  (c)Copyright 2006 Appium AB
+
+-->
+
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<protocol name="diameter-v1" type="binary" padding="4">
+
+  <types>
+    <!-- Types defined for the AVP   -->
+    <typedef name="Integer32" type="signed" size="4" unit="octet"></typedef>
+    <typedef name="Unsigned32" type="number" size="4" unit="octet"></typedef>
+    <typedef name="Integer64" type="signed64" size="8" unit="octet"></typedef>
+    <typedef name="Unsigned64" type="number64" size="8" unit="octet"></typedef>
+    <typedef name="OctetString" type="string" size="4" unit="octet"></typedef>
+    <typedef name="Grouped" type="grouped"></typedef>
+  </types>
+
+  <header name="command" length="msg-length" type="cmd-code">
+    <fielddef name="protocol-version" size="1" unit="octet"></fielddef>
+    <fielddef name="msg-length" size="3" unit="octet"></fielddef>
+    <fielddef name="flags" size="1" unit="octet"></fielddef>
+    <fielddef name="cmd-code" size="3" unit="octet"></fielddef>
+    <fielddef name="application-id" size="4" unit="octet"></fielddef>
+    <fielddef name="HbH-id" size="4" unit="octet"></fielddef>
+    <fielddef name="EtE-id" size="4" unit="octet"></fielddef>
+  </header>
+
+  <body>
+    <header name="avp" length="avp-length" type="avp-code">
+      <fielddef name="avp-code" size="4" unit="octet"></fielddef>
+      <fielddef name="flags" size="1" unit="octet"></fielddef>
+      <fielddef name="avp-length" size="3" unit="octet"></fielddef>
+      <optional>
+        <fielddef name="Vendor-ID" size="4" unit="octet"
+                  condition="mask" field="flags" mask="128">
+        </fielddef>
+      </optional>
+    </header>
+  </body>
+
+  <dictionary>
+    <!-- AVP definitions -->
+    <avp>
+      <!-- Diameter Base (RFC 3588) AVPs -->
+      <define name="Acct-Interim-Interval" type="Unsigned32">
+        <setfield name="avp-code" value="85"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Accounting-Realtime-Required" type="Unsigned32">
+        <setfield name="avp-code" value="483"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Acct-Multi-Session-Id" type="OctetString">
+        <setfield name="avp-code" value="50"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Accounting-Record-Number" type="Unsigned32">
+        <setfield name="avp-code" value="485"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Accounting-Record-Type" type="OctetString">
+        <setfield name="avp-code" value="480"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Accounting-Session-Id" type="OctetString">
+        <setfield name="avp-code" value="44"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Accounting-Sub-Session-Id" type="Unsigned64">
+        <setfield name="avp-code" value="287"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Acct-Application-Id" type="Unsigned32">
+        <setfield name="avp-code" value="259"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Auth-Application-Id" type="Unsigned32">
+        <setfield name="avp-code" value="258"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Auth-Request-Type" type="Unsigned32">
+        <setfield name="avp-code" value="274"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Authorization-Lifetime" type="Unsigned32">
+        <setfield name="avp-code" value="291"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Auth-Grace-Period" type="Unsigned32">
+        <setfield name="avp-code" value="276"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Auth-Session-State" type="Unsigned32">
+        <setfield name="avp-code" value="277"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Re-Auth-Request-Type" type="Unsigned32">
+        <setfield name="avp-code" value="285"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Class" type="OctetString">
+        <setfield name="avp-code" value="25"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Destination-Host" type="OctetString">
+        <setfield name="avp-code" value="293"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Destination-Realm" type="OctetString">
+        <setfield name="avp-code" value="283"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Disconnect-Cause" type="Unsigned32">
+        <setfield name="avp-code" value="273"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="E2E-Sequence" type="Grouped">
+        <setfield name="avp-code" value="300"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Error-Message" type="OctetString">
+        <setfield name="avp-code" value="281"></setfield>
+        <setfield name="flags" value="0"></setfield>
+      </define>
+      <define name="Error-Reporting-Host" type="OctetString">
+        <setfield name="avp-code" value="294"></setfield>
+        <setfield name="flags" value="0"></setfield>
+      </define>
+      <define name="Event-Timestamp" type="OctetString">
+        <setfield name="avp-code" value="55"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Experimental-Result" type="Grouped">
+        <setfield name="avp-code" value="297"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Experimental-Result-Code" type="Unsigned32">
+        <setfield name="avp-code" value="298"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Failed-AVP" type="Grouped">
+        <setfield name="avp-code" value="279"></setfield>
+        <setfield name="flags" value="0"></setfield>
+      </define>
+      <define name="Firmware-Revision" type="Unsigned32">
+        <setfield name="avp-code" value="267"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Host-IP-Address" type="OctetString">
+        <setfield name="avp-code" value="257"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Inband-Security-Id" type="Unsigned32">
+        <setfield name="avp-code" value="299"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Multi-Round-Time-Out" type="Unsigned32">
+        <setfield name="avp-code" value="272"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Origin-Host" type="OctetString">
+        <setfield name="avp-code" value="264"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Origin-Realm" type="OctetString">
+        <setfield name="avp-code" value="296"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Origin-State-Id" type="Unsigned32">
+        <setfield name="avp-code" value="278"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Product-Name" type="OctetString">
+        <setfield name="avp-code" value="269"></setfield>
+        <setfield name="flags" value="0"></setfield>
+      </define>
+      <define name="Proxy-Host" type="OctetString">
+        <setfield name="avp-code" value="280"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Proxy-Info" type="Grouped">
+        <setfield name="avp-code" value="284"></setfield>
+        <setfield name="flags" value="0"></setfield>
+      </define>
+      <define name="Proxy-State" type="OctetString">
+        <setfield name="avp-code" value="33"></setfield>
+        <setfield name="flags" value="0"></setfield>
+      </define>
+      <define name="Redirect-Host" type="OctetString">
+        <setfield name="avp-code" value="292"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Redirect-Host-Usage" type="Unsigned32">
+        <setfield name="avp-code" value="261"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Redirect-Max-Cache-Time" type="Unsigned32">
+        <setfield name="avp-code" value="262"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Result-Code" type="Unsigned32">
+        <setfield name="avp-code" value="268"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Route-Record" type="OctetString">
+        <setfield name="avp-code" value="282"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Session-Id" type="OctetString">
+        <setfield name="avp-code" value="263"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Session-Timeout" type="Unsigned32">
+        <setfield name="avp-code" value="27"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Session-Binding" type="Unsigned32">
+        <setfield name="avp-code" value="270"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Session-Server-Failover" type="Unsigned32">
+        <setfield name="avp-code" value="271"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Supported-Vendor-Id" type="Unsigned32">
+        <setfield name="avp-code" value="265"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Termination-Cause" type="Unsigned32">
+        <setfield name="avp-code" value="295"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="User-Name" type="OctetString">
+        <setfield name="avp-code" value="1"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Vendor-Id" type="Unsigned32">
+        <setfield name="avp-code" value="266"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Vendor-Specific-Application-Id" type="Grouped">
+        <setfield name="avp-code" value="260"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Filter-Id" type="OctetString">
+        <setfield name="avp-code" value="11"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+      <define name="Service-Information" type="Grouped">
+        <setfield name="avp-code" value="873"></setfield>
+        <setfield name="flags" value="64"></setfield>
+      </define>
+
+      <!-- 3GPP 29.272 Avps -->
+      <define name="Subscription-Data" type="Grouped">
+        <setfield name="avp-code" value="1400"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="Terminal-Information" type="Grouped">
+        <setfield name="avp-code" value="1401"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="IMEI" type="OctetString">
+        <setfield name="avp-code" value="1402"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="Software-Version" type="OctetString">
+        <setfield name="avp-code" value="1403"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="QoS-Subscribed" type="OctetString">
+        <setfield name="avp-code" value="1404"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+        <define name="ULR-Flags" type="Unsigned32">
+        <setfield name="avp-code" value="1405"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="ULA-Flags" type="Unsigned32">
+        <setfield name="avp-code" value="1406"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="Visited-PLMN-Id" type="OctetString">
+        <setfield name="avp-code" value="1407"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="Requested-EUTRAN-Authentication-Info" type="Grouped">
+        <setfield name="avp-code" value="1408"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="Requested-UTRAN- GERAN-Authentication-Info" type="Grouped">
+        <setfield name="avp-code" value="1409"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="Number-Of-Requested-Vectors" type="Unsigned32">
+        <setfield name="avp-code" value="1410"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="Re-Synchronization-Info" type="OctetString">
+        <setfield name="avp-code" value="1411"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="Immediate-Response-Preferred" type="Unsigned32">
+        <setfield name="avp-code" value="1412"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="Authentication-Info" type="Grouped">
+        <setfield name="avp-code" value="1413"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="E-UTRAN-Vector" type="Grouped">
+        <setfield name="avp-code" value="1414"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="UTRAN-Vector" type="Grouped">
+        <setfield name="avp-code" value="1415"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="GERAN-Vector" type="Grouped">
+        <setfield name="avp-code" value="1416"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="Network-Access-Mode" type="Unsigned32">
+        <setfield name="avp-code" value="1417"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="HPLMN-ODB" type="Unsigned32">
+        <setfield name="avp-code" value="1418"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="Item-Number" type="Unsigned32">
+        <setfield name="avp-code" value="1419"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="Cancellation-Type" type="Unsigned32">
+        <setfield name="avp-code" value="1420"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="DSR-Flags" type="Unsigned32">
+        <setfield name="avp-code" value="1421"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="DSA-Flags" type="Unsigned32">
+        <setfield name="avp-code" value="1422"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="Context-Identifier" type="Unsigned32">
+        <setfield name="avp-code" value="1423"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="Subscriber-Status" type="Unsigned32">
+        <setfield name="avp-code" value="1424"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="Operator-Determined-Barringn" type="Unsigned32">
+        <setfield name="avp-code" value="1425"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="Access-Restriction-Data" type="Unsigned32">
+        <setfield name="avp-code" value="1426"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="APN-OI-Replacement" type="OctetString">
+        <setfield name="avp-code" value="1427"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="All-APN-Configurations-Included-Indicator" type="Unsigned32">
+        <setfield name="avp-code" value="1428"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="APN-Configuration-Profile" type="Grouped">
+        <setfield name="avp-code" value="1429"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="APN-Configuration" type="Grouped">
+        <setfield name="avp-code" value="1430"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="EPS-Subscribed-QoS-Profile" type="Grouped">
+        <setfield name="avp-code" value="1431"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="VPLMN-Dynamic-Address-Allowed" type="Unsigned32">
+        <setfield name="avp-code" value="1432"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="STN-SR" type="OctetString">
+        <setfield name="avp-code" value="1433"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="Alert-Reason" type="Unsigned32">
+        <setfield name="avp-code" value="1434"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="AMBR" type="Grouped">
+        <setfield name="avp-code" value="1435"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="CSG-Subscription-Data" type="Grouped">
+        <setfield name="avp-code" value="1436"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="CSG-Id" type="Unsigned32">
+        <setfield name="avp-code" value="1437"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="PDN-GW-Allocation-Type" type="Unsigned32">
+        <setfield name="avp-code" value="1438"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="Expiration-Date" type="OctetString">
+        <setfield name="avp-code" value="1439"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="RAT-Frequency-Selection-Priority-ID " type="Unsigned32">
+        <setfield name="avp-code" value="1440"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="IDA-Flags" type="Unsigned32">
+        <setfield name="avp-code" value="1441"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="PUA-Flags" type="Unsigned32">
+        <setfield name="avp-code" value="1442"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="NOR-Flags" type="Unsigned32">
+        <setfield name="avp-code" value="1443"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="User-Id" type="OctetString">
+        <setfield name="avp-code" value="1444"></setfield>
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="Equipment-Status" type="Unsigned32">
+        <setfield name="avp-code" value="1445"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="Regional-Subscription-Zone-Code" type="OctetString">
+        <setfield name="avp-code" value="1446"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="RAND" type="OctetString">
+        <setfield name="avp-code" value="1447"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="XRES" type="OctetString">
+        <setfield name="avp-code" value="1448"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="AUTN" type="OctetString">
+        <setfield name="avp-code" value="1449"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="KASME" type="OctetString">
+        <setfield name="avp-code" value="1450"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="Trace-Collection-Entity" type="OctetString">
+        <setfield name="avp-code" value="1452"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="Kc" type="OctetString">
+        <setfield name="avp-code" value="1453"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="SRES" type="OctetString">
+        <setfield name="avp-code" value="1454"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="PDN-Type" type="Unsigned32">
+        <setfield name="avp-code" value="1456"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="Roaming-Restricted-Due-To-Unsupported-Feature" type="Unsigned32">
+        <setfield name="avp-code" value="1457"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="Trace-Data" type="Grouped">
+        <setfield name="avp-code" value="1458"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>      
+      <define name="Trace-Reference" type="OctetString">
+        <setfield name="avp-code" value="1459"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>              
+      <define name="Trace-Depth" type="Unsigned32">
+        <setfield name="avp-code" value="1462"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>              
+      <define name="Trace-NE-Type-List" type="OctetString">
+        <setfield name="avp-code" value="1463"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>              
+      <define name="Trace-Interface-List" type="OctetString">
+        <setfield name="avp-code" value="1464"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>    
+      <define name="Trace-Event-List" type="OctetString">
+        <setfield name="avp-code" value="1465"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>      
+      <define name="OMC-Id" type="OctetString">
+        <setfield name="avp-code" value="1466"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>      
+      <define name="GPRS-Subscription-Data" type="Grouped">
+        <setfield name="avp-code" value="1467"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>      
+      <define name="Complete-Data-List-Included-Indicator" type="Unsigned32">
+        <setfield name="avp-code" value="1468"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>    
+      <define name="PDP-Context" type="Grouped">
+        <setfield name="avp-code" value="1469"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>      
+      <define name="PDP-Type" type="OctetString">
+        <setfield name="avp-code" value="1470"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>            
+      <define name="3GPP2-MEID" type="OctetString">
+        <setfield name="avp-code" value="1471"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>      
+      <define name="Specific-APN-Info" type="Grouped">
+        <setfield name="avp-code" value="1472"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>    
+      <define name="LCS-Info" type="Grouped">
+        <setfield name="avp-code" value="1473"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>     
+      <define name="GMLC-Number" type="OctetString">
+        <setfield name="avp-code" value="1474"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>             
+      <define name="LCS-PrivacyException" type="Grouped">
+        <setfield name="avp-code" value="1475"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="SS-Code" type="OctetString">
+        <setfield name="avp-code" value="1476"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="SS-Status" type="Grouped">
+        <setfield name="avp-code" value="1477"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>   
+      <define name="Notification-To-UE-User" type="Unsigned32">
+        <setfield name="avp-code" value="1478"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="External-Client" type="Grouped">
+        <setfield name="avp-code" value="1479"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>                                                            
+      <define name="Client-Identity" type="OctetString">
+        <setfield name="avp-code" value="1480"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>                                                            
+      <define name="GMLC-Restriction" type="Unsigned32">
+        <setfield name="avp-code" value="1481"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="PLMN-Client" type="Unsigned32">
+        <setfield name="avp-code" value="1482"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>     
+      <define name="Service-Type" type="Grouped">
+        <setfield name="avp-code" value="1483"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>           
+      <define name="ServiceTypeIdentity" type="Unsigned32">
+        <setfield name="avp-code" value="1484"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>           
+      <define name="MO-LR" type="Grouped">
+        <setfield name="avp-code" value="1485"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>           
+      <define name="Teleservice-List" type="Grouped">
+        <setfield name="avp-code" value="1486"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="TS-Code" type="OctetString">
+        <setfield name="avp-code" value="1487"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>    
+      <define name="Call-Barring-Infor-List" type="Grouped">
+        <setfield name="avp-code" value="1488"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>   
+      <define name="SGSN-Number" type="OctetString">
+        <setfield name="avp-code" value="1489"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>    
+      <define name="IDR-Flags" type="Unsigned32">
+        <setfield name="avp-code" value="1490"></setfield>
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>         
+      <define name="ICS-Indicator" type="Unsigned32">
+        <setfield name="avp-code" value="1491"></setfield>
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>                
+      <define name="IMS-Voice-Over-PS-Sessions-Supported" type="Unsigned32">
+        <setfield name="avp-code" value="1492"></setfield>
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>       
+      <define name="Homogeneous-Support-of-IMS-Voice-Over-PS-Sessions" type="Unsigned32">
+        <setfield name="avp-code" value="1493"></setfield>
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>      
+      <define name="Last-UE-Activity-Time" type="OctetString">
+        <setfield name="avp-code" value="1494"></setfield>
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>    
+      <define name="EPS-User-State" type="Grouped">
+        <setfield name="avp-code" value="1495"></setfield>
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>    
+      <define name="EPS-Location-Information" type="Grouped">
+        <setfield name="avp-code" value="1496"></setfield>
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>                 
+      <define name="MME-User-State" type="Grouped">
+        <setfield name="avp-code" value="1497"></setfield>
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>       
+      <define name="SGSN-User-State" type="Grouped">
+        <setfield name="avp-code" value="1498"></setfield>
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>                                            
+      <define name="User-State" type="Unsigned32">
+        <setfield name="avp-code" value="1499"></setfield>
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>    
+      <define name="MME-Location Information" type="Grouped">
+        <setfield name="avp-code" value="1600"></setfield>
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>   
+      <define name="SGSN-Location-Information" type="Grouped">
+        <setfield name="avp-code" value="1601"></setfield>
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="E-UTRAN-Cell-Global-Identity" type="OctetString">
+        <setfield name="avp-code" value="1602"></setfield>
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>            
+      <define name="Tracking-Area-Identity" type="OctetString">
+        <setfield name="avp-code" value="1603"></setfield>
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>     
+      <define name="Cell-Global-Identity" type="OctetString">
+        <setfield name="avp-code" value="1604"></setfield>
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>      
+      <define name="Routing-Area-Identity" type="OctetString">
+        <setfield name="avp-code" value="1605"></setfield>
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>  
+      <define name="Location-Area-Identity" type="OctetString">
+        <setfield name="avp-code" value="1606"></setfield>
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>      
+      <define name="Service-Area-Identity" type="OctetString">
+        <setfield name="avp-code" value="1607"></setfield>
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>          
+      <define name="Geographical-Information" type="OctetString">
+        <setfield name="avp-code" value="1608"></setfield>
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>     
+      <define name="Geodetic-Information" type="OctetString">
+        <setfield name="avp-code" value="1609"></setfield>
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>
+      <define name="Current-Location-Retrieved" type="Unsigned32">
+        <setfield name="avp-code" value="1610"></setfield>
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>     
+      <define name="Age-Of-Location-Information" type="Unsigned32">
+        <setfield name="avp-code" value="1611"></setfield>
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define> 
+      <define name="Active-APN" type="Grouped">
+        <setfield name="avp-code" value="1612"></setfield>
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>     
+      <define name="SIPTO-Permission" type="Unsigned32">
+        <setfield name="avp-code" value="1613"></setfield>
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>  
+      <!-- 3GPP 29.212 Avps -->
+      <define name="RAT-Type" type="Unsigned32">
+        <setfield name="avp-code" value="1032"></setfield>
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="Vendor-ID" value="10415"></setfield>
+      </define>                                                                 
+    </avp>
+
+    <!-- COMMAND definitions -->
+    <command session-id="Session-Id" out-of-session-id="HbH-id">
+      <!-- Diameter Base (RFC 3588) commands -->
+      <define name="CER">
+        <!-- It's a request, R bit is set -->
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="cmd-code" value="257"></setfield>
+        <setfield name="protocol-version" value="1"></setfield>
+      </define>
+      <define name="CEA">
+        <!-- It's an answer, R bit is unset -->
+        <setfield name="flags" value="0"></setfield>
+        <setfield name="cmd-code" value="257"></setfield>
+        <setfield name="protocol-version" value="1"></setfield>
+      </define>
+
+      <define name="DWR">
+        <!-- It's a request, R bit is set -->
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="cmd-code" value="280"></setfield>
+        <setfield name="protocol-version" value="1"></setfield>
+      </define>
+      <define name="DWA">
+        <!-- It's an answer, R bit is unset -->
+        <setfield name="flags" value="0"></setfield>
+        <setfield name="cmd-code" value="280"></setfield>
+        <setfield name="protocol-version" value="1"></setfield>
+      </define>
+      <define name="DPR">
+        <!-- It's a request, R bit is set -->
+        <setfield name="flags" value="128"></setfield>
+        <setfield name="cmd-code" value="282"></setfield>
+        <setfield name="protocol-version" value="1"></setfield>
+      </define>
+      <define name="DPA">
+        <!-- It's an answer, R bit is unset -->
+        <setfield name="flags" value="0"></setfield>
+        <setfield name="cmd-code" value="282"></setfield>
+        <setfield name="protocol-version" value="1"></setfield>
+      </define>
+            
+      <!--  3GPP 29.272 commands -->
+      <define name="ULR">
+        <!-- It's a request, R bit is set -->
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="cmd-code" value="316"></setfield>
+        <setfield name="application-id" value="16777251"></setfield>
+        <setfield name="protocol-version" value="1"></setfield>
+      </define>
+      <define name="ULA">
+        <!-- It's an answer, R bit is unset -->
+        <setfield name="flags" value="64"></setfield>
+        <setfield name="cmd-code" value="316"></setfield>
+        <setfield name="application-id" value="16777251"></setfield>
+        <setfield name="protocol-version" value="1"></setfield>
+      </define>
+      <define name="CLR">
+        <!-- It's a request, R bit is set -->
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="cmd-code" value="317"></setfield>
+        <setfield name="application-id" value="16777251"></setfield>
+        <setfield name="protocol-version" value="1"></setfield>
+      </define>
+      <define name="CLA">
+        <!-- It's an answer, R bit is unset -->
+        <setfield name="flags" value="64"></setfield>
+        <setfield name="cmd-code" value="317"></setfield>
+        <setfield name="application-id" value="16777251"></setfield>
+        <setfield name="protocol-version" value="1"></setfield>
+      </define>      
+      <define name="AIR">
+        <!-- It's a request, R bit is set -->
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="cmd-code" value="318"></setfield>
+        <setfield name="application-id" value="16777251"></setfield>
+        <setfield name="protocol-version" value="1"></setfield>
+      </define>
+      <define name="AIA">
+        <!-- It's an answer, R bit is unset -->
+        <setfield name="flags" value="64"></setfield>
+        <setfield name="cmd-code" value="318"></setfield>
+        <setfield name="application-id" value="16777251"></setfield>
+        <setfield name="protocol-version" value="1"></setfield>
+      </define>
+      <define name="IDR">
+        <!-- It's a request, R bit is set -->
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="cmd-code" value="319"></setfield>
+        <setfield name="application-id" value="16777251"></setfield>
+        <setfield name="protocol-version" value="1"></setfield>
+      </define>
+      <define name="IDA">
+        <!-- It's an answer, R bit is unset -->
+        <setfield name="flags" value="64"></setfield>
+        <setfield name="cmd-code" value="319"></setfield>
+        <setfield name="application-id" value="16777251"></setfield>
+        <setfield name="protocol-version" value="1"></setfield>
+      </define>     
+      <define name="DSR">
+        <!-- It's a request, R bit is set -->
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="cmd-code" value="320"></setfield>
+        <setfield name="application-id" value="16777251"></setfield>
+        <setfield name="protocol-version" value="1"></setfield>
+      </define>
+      <define name="DSA">
+        <!-- It's an answer, R bit is unset -->
+        <setfield name="flags" value="64"></setfield>
+        <setfield name="cmd-code" value="320"></setfield>
+        <setfield name="application-id" value="16777251"></setfield>
+        <setfield name="protocol-version" value="1"></setfield>
+      </define>    
+      <define name="PUR">
+        <!-- It's a request, R bit is set -->
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="cmd-code" value="321"></setfield>
+        <setfield name="application-id" value="16777251"></setfield>
+        <setfield name="protocol-version" value="1"></setfield>
+      </define>
+      <define name="PUA">
+        <!-- It's an answer, R bit is unset -->
+        <setfield name="flags" value="64"></setfield>
+        <setfield name="cmd-code" value="321"></setfield>
+        <setfield name="application-id" value="16777251"></setfield>
+        <setfield name="protocol-version" value="1"></setfield>
+      </define>    
+      <define name="RSR">
+        <!-- It's a request, R bit is set -->
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="cmd-code" value="322"></setfield>
+        <setfield name="application-id" value="16777251"></setfield>
+        <setfield name="protocol-version" value="1"></setfield>
+      </define>
+      <define name="RSA">
+        <!-- It's an answer, R bit is unset -->
+        <setfield name="flags" value="64"></setfield>
+        <setfield name="cmd-code" value="322"></setfield>
+        <setfield name="application-id" value="16777251"></setfield>
+        <setfield name="protocol-version" value="1"></setfield>
+      </define>    
+      <define name="NOR">
+        <!-- It's a request, R bit is set -->
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="cmd-code" value="323"></setfield>
+        <setfield name="application-id" value="16777251"></setfield>
+        <setfield name="protocol-version" value="1"></setfield>
+      </define>
+      <define name="NOA">
+        <!-- It's an answer, R bit is unset -->
+        <setfield name="flags" value="64"></setfield>
+        <setfield name="cmd-code" value="323"></setfield>
+        <setfield name="application-id" value="16777251"></setfield>
+        <setfield name="protocol-version" value="1"></setfield>
+      </define>
+      <define name="ECR">
+        <!-- It's a request, R bit is set -->
+        <setfield name="flags" value="192"></setfield>
+        <setfield name="cmd-code" value="324"></setfield>
+        <setfield name="application-id" value="16777251"></setfield>
+        <setfield name="protocol-version" value="1"></setfield>
+      </define>
+      <define name="ECA">
+        <!-- It's an answer, R bit is unset -->
+        <setfield name="flags" value="64"></setfield>
+        <setfield name="cmd-code" value="324"></setfield>
+        <setfield name="application-id" value="16777251"></setfield>
+        <setfield name="protocol-version" value="1"></setfield>
+      </define>                                       
+    </command>
+  </dictionary>
+</protocol>
