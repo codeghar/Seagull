@@ -480,8 +480,9 @@ int C_TransOCTcap32::determine_lib(char *P_name) {
 
   static const char* L_Lib_Path[] = {"/opt/OC/lib/hpux64", 
 				     "/opt/OC/lib/hpux32",
-				     "/opt/OC/lib/"};
-  static const int   L_nb_path  = 3 ;
+				     "/opt/OC/lib/",
+ 				     "/opt/OC/lib64"};
+  static const int   L_nb_path  = 4 ;
 
   L_LibName_Aux[0] = '\0';
 
