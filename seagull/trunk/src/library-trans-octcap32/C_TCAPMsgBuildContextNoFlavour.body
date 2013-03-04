@@ -494,6 +494,13 @@ bool C_TCAPMsgBuildContextNoFlavour::get_component_problem_code(T_pValueData P_d
   P_data->m_type = E_TYPE_NUMBER ;
   return(true);
 }
+bool C_TCAPMsgBuildContextNoFlavour::get_component_linked_id(T_pValueData P_data) {
+#ifdef _ITU_STANDARD
+  P_data->m_value.m_val_number = m_component_current->linked_id;
+  P_data->m_type = E_TYPE_NUMBER ;
+#endif
+  return(true);
+}
 
 #ifdef _ANSI_STANDARD
 bool C_TCAPMsgBuildContextNoFlavour::get_component_correlation_id(T_pValueData P_data) {
@@ -822,6 +829,13 @@ bool C_TCAPMsgBuildContextNoFlavour::set_component_problem_code_identifier(T_pVa
 
 bool C_TCAPMsgBuildContextNoFlavour::set_component_problem_code(T_pValueData P_data) {
   m_component_current->problem_code.code = (tc_pb_code )P_data->m_value.m_val_number ;
+  return(true);
+}
+
+bool C_TCAPMsgBuildContextNoFlavour::set_component_linked_id(T_pValueData P_data) {
+#ifdef _ITU_STANDARD
+  m_component_current->linked_id = P_data->m_value.m_val_number;
+#endif
   return(true);
 }
 

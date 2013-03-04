@@ -105,6 +105,10 @@ C_TCAPMsgBuildContextFactoryNoFlavour
 			&C_TCAPMsgBuildContextNoFlavour::get_component_problem_code) ;
     add_build_function (&L_list, (char*)"set_component_problem_code", 
 			&C_TCAPMsgBuildContextNoFlavour::set_component_problem_code) ;
+    add_build_function (&L_list, (char*)"get_component_linked_id", 
+			&C_TCAPMsgBuildContextNoFlavour::get_component_linked_id) ;
+    add_build_function (&L_list, (char*)"set_component_linked_id", 
+			&C_TCAPMsgBuildContextNoFlavour::set_component_linked_id) ;	
 #ifdef _ANSI_STANDARD
     add_build_function (&L_list, (char*)"get_component_correlation_id", 
 			&C_TCAPMsgBuildContextNoFlavour::get_component_correlation_id) ;

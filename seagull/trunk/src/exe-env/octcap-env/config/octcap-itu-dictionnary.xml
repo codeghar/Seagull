@@ -314,7 +314,11 @@
               get-function="get_component_problem_code">
     </fielddef>
 
-
+    <fielddef name="linked-id" type="number"
+              set-function="set_component_linked_id" 
+              get-function="get_component_linked_id">
+    </fielddef>
+    
     <fielddef name="problem-code-identifier" type="number"
               to-string="component_pb_code_identifier_to_string"
               from-string="component_pb_code_identifier_from_string"

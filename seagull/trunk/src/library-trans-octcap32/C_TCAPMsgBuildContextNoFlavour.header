@@ -86,7 +86,8 @@ public:
   bool set_component_problem_code_identifier(T_pValueData P_data) ;
   bool get_component_problem_code(T_pValueData P_data) ;
   bool set_component_problem_code(T_pValueData P_data) ;
-
+  bool get_component_linked_id(T_pValueData P_data) ;
+  bool set_component_linked_id(T_pValueData P_data) ;
 #ifdef _ANSI_STANDARD
   bool get_component_correlation_id(T_pValueData P_data) ;
   bool set_component_correlation_id(T_pValueData P_data) ;
