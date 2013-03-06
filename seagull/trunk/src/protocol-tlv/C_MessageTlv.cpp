@@ -459,7 +459,7 @@ bool C_MessageTlv::get_body_value (T_pValueData P_res,
   // Search the body value in the array
   for (L_i=0 ; L_i < m_nb_body_values ; L_i++) {
       L_occurence -= get_body_value(P_id, L_occurence, P_res, &m_body_val[L_i]);
-      if(L_found = (L_occurence == 0))
+      if((L_found = (L_occurence == 0)))
         break;
   }
 
@@ -499,7 +499,7 @@ bool C_MessageTlv::set_body_value (int P_id, int P_occurence, T_pValueData P_val
 
   for (L_i=0 ; L_i < m_nb_body_values ; L_i++) {
       L_occurence -= set_body_value(P_id, L_occurence, &m_body_val[L_i], P_val);
-      if(L_found = (L_occurence == 0))
+      if((L_found = (L_occurence == 0)))
         break;
   }
 
@@ -770,7 +770,7 @@ bool C_MessageTlv::check_field_presence (int              P_id, int P_occurence,
   // check that the fields of the scenario are present
   for (L_i=0 ; L_i < m_nb_body_values ; L_i++) {
       L_occurence -= check_field_presence(L_j, L_occurence, &m_body_val[L_i]);
-      if(L_found = (L_occurence == 0))
+      if((L_found = (L_occurence == 0)))
         break;
   }
 

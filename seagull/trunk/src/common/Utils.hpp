@@ -29,6 +29,7 @@
 // New STL definition
 #include <cstdio>
 #include <cstdlib>
+#include <string.h>
 
 #include "iostream_t.hpp"
 
