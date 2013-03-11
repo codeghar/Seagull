@@ -316,7 +316,8 @@
 
     <fielddef name="linked-id" type="number"
               set-function="set_component_linked_id" 
-              get-function="get_component_linked_id">
+              get-function="get_component_linked_id"
+              default="-1">
     </fielddef>
     
     <fielddef name="problem-code-identifier" type="number"
