@@ -79,8 +79,8 @@ public:
   int set_orig_gt_numbering (char *P_data);
   int set_dest_gt_numbering (char *P_data);
   int set_orig_gt_nature (char *P_data);
-  int set_dest_gt_nature (char *P_data);
-
+  int set_dest_gt_nature (char *P_data);  
+  int set_sccp_class(char *P_data);
   
 #ifdef _ANSI_STANDARD
   int set_parameter_type (char *P_data);
@@ -106,6 +106,8 @@ public:
 
   tc_address_nature        m_o_gt_nature             ;
   tc_address_nature        m_d_gt_nature             ;
+  
+  tcx_sccp_class           m_sccp_class              ;
 
 #ifdef _ANSI_STANDARD
   tc_parm_type             m_parameter_type          ;

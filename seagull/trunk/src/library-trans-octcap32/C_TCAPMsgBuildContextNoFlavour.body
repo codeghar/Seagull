@@ -122,7 +122,7 @@ void C_TCAPMsgBuildContextNoFlavour::init_from_external() {
 void C_TCAPMsgBuildContextNoFlavour::init_to_external() {
   TC_P_SCE_QUALITY(m_primitive).use_default_values= TC_NO;
   TC_P_SCE_QUALITY(m_primitive).sccp_return_option= TC_YES;
-  TC_P_SCE_QUALITY(m_primitive).sccp_service_class= TCX_SCCP_CLASS1;
+  TC_P_SCE_QUALITY(m_primitive).sccp_service_class= m_stack->m_sccp_class;
 
   TC_P_O_ADDR(m_primitive).type     =   m_stack->m_o_routing_type;
 

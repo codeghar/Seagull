@@ -107,6 +107,16 @@ static const tc_address_nature _Tc_gt_nature_table[] = {
 
 static const int _Tc_gt_nature_supported = 3 ;
 
+static const char* _Tc_sccp_class_name_table[] = {
+   "tc_sccp_class_0",
+   "tc_sccp_class_1"};
+
+static const tcx_sccp_class _Tc_sccp_class_table[] = {
+   TCX_SCCP_CLASS0,
+   TCX_SCCP_CLASS1};
+
+static const int _Tc_sccp_class_supported = 2 ;
+
 #ifdef _ANSI_STANDARD
 static const char* _Tc_parameter_type_name_table[] = {
    "SET_TYPE",
@@ -255,6 +265,8 @@ int C_TcapStackNoFlavour::analyze_config(T_ConfigValue& P_config) {
     L_ret = set_dest_gt_nature(P_config.m_value) ;
   } else if (strcmp(P_config.m_name, (char *)"discon-on-err") == 0) {
     m_discon = P_config.m_value;
+  } else if (strcmp(P_config.m_name, (char *)"sccp-class") == 0) {
+    L_ret = set_sccp_class(P_config.m_value);
   }
 #ifdef _ANSI_STANDARD
   else if (strcmp(P_config.m_name, (char *)"parameter-type-set") == 0) {
@@ -1096,6 +1108,38 @@ int C_TcapStackNoFlavour::set_dest_gt_nature (char *P_data) {
    return (L_ret);
 }
 
+int C_TcapStackNoFlavour::set_sccp_class (char *P_data) {
+
+   char *L_value = NULL;
+   int   L_ret   = 0   ;
+   int   L_i       ;
+
+   L_value = P_data;
+
+   if (L_value == NULL) {
+     LOG_ERROR("Error in configuration-parameters: sccp-class is null");
+     L_ret = -1 ;
+     return (L_ret);
+   }
+
+
+   for (L_i=0; L_i < _Tc_sccp_class_supported; L_i++) {
+     if (strcmp(_Tc_sccp_class_name_table[L_i],
+		L_value) == 0) {
+       m_sccp_class = _Tc_sccp_class_table[L_i];
+       L_ret = 1 ;
+       break ;
+     }
+   }
+
+   L_ret = (L_ret == 1) ? 0 : -1 ;
+
+   if (L_ret == -1) {
+     LOG_ERROR("Error in configuration-parameters: sccp-class  is incorrect");
+   }
+
+   return (L_ret);
+}
 
 
 #ifdef _ANSI_STANDARD

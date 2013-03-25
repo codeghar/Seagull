@@ -118,7 +118,10 @@
    <paramdef name="dest-gt-nature"
              default="tc_subscriber_nb">
    </paramdef>
-
+   
+   <paramdef name="sccp-class"
+             default="sccp_class_1">
+   </paramdef>
 
 
 </configuration-parameters>

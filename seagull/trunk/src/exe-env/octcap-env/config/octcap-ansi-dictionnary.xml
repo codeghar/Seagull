@@ -124,6 +124,9 @@
              default="SEQUENCE_TYPE">
    </paramdef>
 
+   <paramdef name="sccp-class"
+             default="sccp_class_1">
+   </paramdef>
 
 </configuration-parameters>
 
