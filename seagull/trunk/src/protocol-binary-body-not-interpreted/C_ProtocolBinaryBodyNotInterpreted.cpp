@@ -1030,7 +1030,6 @@ C_ProtocolFrame::T_MsgError C_ProtocolBinaryBodyNotInterpreted::encode_body_with
                                                                                           size_t        *P_size) {
 
   unsigned char     *L_ptr = P_buf       ;
-  int                L_body_id           ;
   T_pBodyValue       L_body_val          ;
 
   unsigned long      L_valueSize         ;
@@ -1041,7 +1040,6 @@ C_ProtocolFrame::T_MsgError C_ProtocolBinaryBodyNotInterpreted::encode_body_with
   GEN_DEBUG(1, "C_ProtocolBinaryBodyNotInterpreted::encode_body_without_stat() start");
 
   L_body_val = &P_val[0] ;
-  L_body_id = L_body_val->m_id  ;
   
   L_valueSize = L_body_val -> m_value.m_val_binary.m_size ;
 

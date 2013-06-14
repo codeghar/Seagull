@@ -394,7 +394,6 @@ int C_ScenarioControl::add_scenario
 
   T_cmd_type                        L_cmd_type = E_NB_CMD_SCEN ;
   bool                              L_cmd_ok = false ;
-  size_t                            L_nb_cmd ;
   int                               L_i ; 
   int                               L_ret = 0 ;
 
@@ -587,7 +586,7 @@ int C_ScenarioControl::add_scenario
 
   if (L_ret != -1) {
     // add final scenario end
-    L_nb_cmd = L_current_scen->add_cmd(E_CMD_SCEN_END) ;
+    (void)L_current_scen->add_cmd(E_CMD_SCEN_END) ;
 
     switch (P_type) {
     case E_SCENARIO_TRAFFIC:
@@ -604,7 +603,7 @@ int C_ScenarioControl::add_scenario
                   C_CommandAction**, sizeof(C_CommandAction*),1);
       L_action_end_init_table[0] 
         = L_CommandActionFactory.create(L_action_end_init);
-      L_nb_cmd = L_current_scen
+      (void)L_current_scen
         ->define_post_actions(1, (C_CommandAction**)L_action_end_init_table);
       break ;
 

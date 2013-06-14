@@ -198,7 +198,6 @@ void  C_RemoteControl::init() {
 T_GeneratorError C_RemoteControl::InitProcedure() {
   T_GeneratorError L_error_code = E_GEN_NO_ERROR ;
   int              L_ret ;
-  int              L_open_id ;
   C_TransportControl::T_TransportContext  L_context ;
   T_SelectDef              L_select ;
 
@@ -278,9 +277,9 @@ T_GeneratorError C_RemoteControl::InitProcedure() {
       L_error_code = E_GEN_FATAL_ERROR ;
     }
 
-    L_open_id = m_transport->open(10,m_address,
-                                  &L_status,
-                                  m_protocol_frame) ;
+    (void) m_transport->open(10,m_address,
+                             &L_status,
+                             m_protocol_frame) ;
     if (L_status != E_OPEN_OK) {
       L_error_code = E_GEN_FATAL_ERROR ;
     }
@@ -348,7 +347,6 @@ T_GeneratorError C_RemoteControl::receiveControl () {
 
 
   T_pC_TransportEvent       L_event_occured        ;
-  int                       L_event_id             ;
 
   GEN_DEBUG(1, "C_RemoteControl::receiveControl() start");
   
@@ -419,7 +417,6 @@ T_GeneratorError C_RemoteControl::receiveControl () {
       
       for (L_i = 0 ; L_i < L_nb_event ; L_i++) {
         L_event_occured = &m_events [L_i];
-        L_event_id      = L_event_occured->m_id ;
         
         switch (L_event_occured->m_type) {
           
@@ -527,7 +524,6 @@ void C_RemoteControl::createRampThread(unsigned long P_duration,
                                        unsigned long P_diff_rate,
                                        bool          P_increase) {
   // create thread
-  pthread_t              *L_rampThread = NULL;
   C_RampControl          *L_rampCtrl ;
 
   NEW_VAR(L_rampCtrl, C_RampControl(m_gen));
@@ -536,7 +532,7 @@ void C_RemoteControl::createRampThread(unsigned long P_duration,
                    P_current_rate,
                    P_diff_rate,
                    P_increase);
-  L_rampThread = start_thread_control(L_rampCtrl);
+  (void)start_thread_control(L_rampCtrl);
 }
 
 void C_RemoteControl::quit() {

@@ -38,7 +38,6 @@ T_exeCode    C_CheckValueAction::execute(T_pCmd_scenario P_pCmd,
                                     C_MessageFrame *P_ref) {
 
   T_exeCode           L_exeCode    = E_EXE_NOERROR ;
-  T_exeCode           L_exeCode1    = E_EXE_NOERROR ;
   bool                L_check_result               ;
 if (m_branch_on != NULL){
   if(strcmp(P_msg->name(),m_branch_on)==0)
@@ -46,7 +45,6 @@ if (m_branch_on != NULL){
     if(m_look_ahead != -1)       
        return T_exeCode (20 + m_look_ahead);
     else if(m_look_back != -1){
-       L_exeCode1 = (T_exeCode)(0-m_look_back);       
        return (T_exeCode)(0-m_look_back);
   }
   } else 

@@ -4062,7 +4062,6 @@ C_ProtocolFrame::T_MsgError C_ProtocolTlv::encode_body (int            P_nbVal,
   int                L_valueIdx     ;
   size_t             L_total_size   = 0 ;
   size_t             L_current_size = 0 ;
-  T_pHeaderField     L_body_fieldDescr   ;
   T_pHeaderBodyValue L_body_fieldValues  ;
   T_pBodyValue       L_body_val ;
   unsigned long      L_body_fieldIdx, L_valueSize  ;
@@ -4173,7 +4172,6 @@ C_ProtocolFrame::T_MsgError C_ProtocolTlv::encode_body (int            P_nbVal,
 	  L_body_fieldIdx < m_max_nb_field_header_body; 
 	  L_body_fieldIdx++) {
 
-	L_body_fieldDescr = &m_header_body_field_table[L_body_fieldIdx];
 	if (L_body_fieldValues->m_value_setted[L_body_fieldIdx] == true) {
 
           L_current_size = L_body_fieldValues->m_size[L_body_fieldIdx] ;
@@ -6969,7 +6967,6 @@ C_ProtocolFrame::T_MsgError C_ProtocolTlv::encode_body_without_stat (int        
   int                L_valueIdx     ;
   size_t             L_total_size   = 0 ;
   size_t             L_current_size = 0 ;
-  T_pHeaderField     L_body_fieldDescr   ;
   T_pHeaderBodyValue L_body_fieldValues  ;
   T_pBodyValue       L_body_val ;
   unsigned long      L_body_fieldIdx, L_valueSize  ;
@@ -7074,7 +7071,6 @@ C_ProtocolFrame::T_MsgError C_ProtocolTlv::encode_body_without_stat (int        
 	  L_body_fieldIdx < m_max_nb_field_header_body; 
 	  L_body_fieldIdx++) {
 
-	L_body_fieldDescr = &m_header_body_field_table[L_body_fieldIdx];
 	if (L_body_fieldValues->m_value_setted[L_body_fieldIdx] == true) {
 
           L_current_size = L_body_fieldValues->m_size[L_body_fieldIdx] ;

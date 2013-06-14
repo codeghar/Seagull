@@ -22,6 +22,7 @@
 
 #include "list_t.hpp"
 #include "map_t.hpp"
+#include <stddef.h>
 
 class C_DataDecode {
 public:

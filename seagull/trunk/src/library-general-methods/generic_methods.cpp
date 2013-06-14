@@ -97,9 +97,8 @@ int sys_time_secs (T_pValueData  P_msgPart,
 
    T_ArgsStr L_args;
 
-   int l_ret = 0;
 
-  l_ret = args_analysis (P_args, &L_args);
+  (void)args_analysis (P_args, &L_args);
   P_result->m_type = E_TYPE_SIGNED ;
   P_result->m_value.m_val_signed = time(NULL) + atol(L_args.m_startoffset);
   FREE_TABLE(L_args.m_startoffset);
@@ -116,9 +115,8 @@ int sys_time_unsig_sec (T_pValueData  P_msgPart,
 
    T_ArgsStr L_args;
 
-   int l_ret = 0;
 
-  l_ret = args_analysis (P_args, &L_args);
+  (void)args_analysis (P_args, &L_args);
   P_result->m_type = E_TYPE_NUMBER  ;
   P_result->m_value.m_val_signed = time(NULL) + atol(L_args.m_startoffset);
   FREE_TABLE(L_args.m_startoffset);

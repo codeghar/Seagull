@@ -926,8 +926,6 @@ T_GeneratorError C_CallControl::InitProcedure() {
   int                       L_memory_used, L_channel_used, L_nb_retrans ;
   C_CallContext            *L_pCallContext                              ;
   unsigned long             L_config_value                              ;
-  T_pC_Scenario             L_scenario                                  ;
-  T_TrafficType             L_type                                      ;
   T_pWaitValuesSet          L_wait_values                               ;
   T_pRetransDelayValuesSet  L_retrans_delay_values                      ;
 
@@ -1044,9 +1042,6 @@ T_GeneratorError C_CallControl::InitProcedure() {
     m_call_ctxt_mlist->setElementPayload((long)L_i, L_pCallContext);
   }
 
-  // test if an init scenario is defined
-  L_scenario = m_scenario_control->init_scenario_defined(&L_type) ;
-
   if (m_retrans_enabled) {
     L_retrans_delay_values = m_scenario_control->get_retrans_delay_values() ;
     m_nb_retrans_delay_values = L_retrans_delay_values -> size() ;
@@ -1093,7 +1088,6 @@ T_GeneratorError C_CallControl::EndProcedure() {
   
   int                       L_i                ;
   int                       L_nbMessageSuspend ;
-  int                       L_event_id         ;
   T_pCallContext            L_pCallContext     ;
 
 
@@ -1110,7 +1104,6 @@ T_GeneratorError C_CallControl::EndProcedure() {
      L_pCallContext 
        = m_call_ctxt_table[m_call_ctxt_mlist->getFirst(E_CTXT_SUSPEND)];
      // treat the socket
-     L_event_id = L_pCallContext->m_suspend_id ;
      L_pCallContext->clean_suspended() ;
      m_channel_control->close_local_channel(L_pCallContext->m_channel_id,
                                             L_pCallContext->m_channel_table);

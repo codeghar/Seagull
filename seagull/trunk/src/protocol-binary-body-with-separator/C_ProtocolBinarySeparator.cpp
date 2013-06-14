@@ -319,7 +319,6 @@ C_ProtocolFrame::T_MsgError C_ProtocolBinarySeparator::encode_body (int         
   unsigned char     *L_ptr = P_buf ;
   int                L_i, L_body_id ;
   size_t             L_total_size   = 0 ;
-  size_t             L_current_size = 0 ;
   T_pHeaderBodyValue L_body_fieldValues  ;
   T_pBodyValue       L_body_val ;
   unsigned long      L_valueSize  ;
@@ -337,7 +336,6 @@ C_ProtocolFrame::T_MsgError C_ProtocolBinarySeparator::encode_body (int         
   GEN_DEBUG(1, "C_ProtocolBinarySeparator::encode_body() start");
 
   L_total_size = 0 ;
-  L_current_size = 0 ;
 
   for (L_i = 0; L_i < P_nbVal ; L_i ++) {
 
@@ -527,7 +525,6 @@ C_ProtocolFrame::T_MsgError C_ProtocolBinarySeparator::encode_body_without_stat 
   unsigned char     *L_ptr = P_buf ;
   int                L_i, L_body_id ;
   size_t             L_total_size   = 0 ;
-  size_t             L_current_size = 0 ;
   T_pHeaderBodyValue L_body_fieldValues  ;
   T_pBodyValue       L_body_val ;
   unsigned long      L_valueSize  ;
@@ -545,7 +542,6 @@ C_ProtocolFrame::T_MsgError C_ProtocolBinarySeparator::encode_body_without_stat 
   GEN_DEBUG(1, "C_ProtocolBinarySeparator::encode_body_without_stat() start");
 
   L_total_size = 0 ;
-  L_current_size = 0 ;
 
   for (L_i = 0; L_i < P_nbVal ; L_i ++) {
 
@@ -725,7 +721,7 @@ int C_ProtocolBinarySeparator::decode_body(unsigned char *P_buf,
 
   int                   L_max_values         = *P_nbValDec      ;
   int                   L_ret                =  0               ; 
-  unsigned long         L_total_size, L_data_size, L_data_type  ;
+  unsigned long         L_total_size, L_data_size               ;
   int                   L_i                                     ;
 
   unsigned char        *L_buf            = NULL                 ;
@@ -758,7 +754,6 @@ int C_ProtocolBinarySeparator::decode_body(unsigned char *P_buf,
   while (L_total_size < P_size) {
 
     L_data_size = 0  ;
-    L_data_type = 0  ;
 
     L_pos = strstr((char*)L_ptr, m_header_body_field_separator);
     if (L_pos != NULL) {

@@ -37,7 +37,6 @@ int C_TrafficDistribUniform::authorize_new_call()
   float         L_NB1;
 
   long          L_desiredAverageRate    ;
-  long          L_createdCallNb         ;
   long          L_nbCallCreatedInPeriod ;
   long          L_currentPeriodDuration ;
 
@@ -49,7 +48,6 @@ int C_TrafficDistribUniform::authorize_new_call()
   m_sem_desired->V();
 
   m_sem_created_call->P();
-  L_createdCallNb = m_createdCallNb ;
   L_currentPeriodDuration = m_currentPeriodDuration ;
 
   m_sem_created_call->V();
