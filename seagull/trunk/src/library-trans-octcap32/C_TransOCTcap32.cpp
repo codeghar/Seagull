@@ -180,7 +180,7 @@ int C_TransOCTcap32::open (int              P_channel_id,
     L_cnxInfo = create_CnxInfo() ;
     L_ret = (analyze_open_string(P_buf, L_cnxInfo) == true) ? 
       m_stack->open(P_channel_id, L_cnxInfo->m_class_value,
-		    L_cnxInfo->m_inst_id,L_cnxInfo->m_app_id,L_cnxInfo->m_ossn,
+		    L_cnxInfo->m_app_id,L_cnxInfo->m_inst_id,L_cnxInfo->m_ossn,
 		    L_protocol) : -1 ;
 
     if (L_ret != -1) {    
