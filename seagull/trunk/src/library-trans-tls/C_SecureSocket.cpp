@@ -61,14 +61,14 @@ C_SecureSocket::~C_SecureSocket(){
 
 
 static char* m_ssl_error_string[] = {
-  "SSL_ERROR_NONE",
-  "SSL_ERROR_SSL",
-  "SSL_ERROR_WANT_READ",
-  "SSL_ERROR_WANT_WRITE",
-  "SSL_ERROR_WANT_X509_LOOKUP",
-  "SSL_ERROR_SYSCALL",
-  "SSL_ERROR_ZERO_RETURN",
-  "SSL_ERROR_WANT_CONNECT"
+  (char *)"SSL_ERROR_NONE",
+  (char *)"SSL_ERROR_SSL",
+  (char *)"SSL_ERROR_WANT_READ",
+  (char *)"SSL_ERROR_WANT_WRITE",
+  (char *)"SSL_ERROR_WANT_X509_LOOKUP",
+  (char *)"SSL_ERROR_SYSCALL",
+  (char *)"SSL_ERROR_ZERO_RETURN",
+  (char *)"SSL_ERROR_WANT_CONNECT"
 } ;
 
 void C_SecureSocket::ssl_error(int P_returnCode) {

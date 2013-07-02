@@ -32,7 +32,7 @@
 #define GEN_ERROR(l,a) iostream_error << a << iostream_endl << iostream_flush ; 
 
 static C_TransIPTLS::T_supported_methods m_methods [] = {
-  { "SSLv23", SSLv23_method }
+  { (char *)"SSLv23", SSLv23_method }
 } ;
 static int m_nb_methods = 1 ;
 
