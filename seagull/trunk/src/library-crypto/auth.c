@@ -582,7 +582,7 @@ int createAuthHeaderAKAv1MD5(char * user, char * aka_OP,
     has_auts = 1;
     /* When re-synchronisation occurs an empty password has to be used */
     /* to compute MD5 response (Cf. rfc 3310 section 3.2) */
-    resuf=createAuthHeaderMD5(user,"",method,uri,msgbody,auth,algo,result);
+    resuf=createAuthHeaderMD5(user, (char *)"",method,uri,msgbody,auth,algo,result);
   }
   if (has_auts) {
     /* Format data for output in the SIP message */
