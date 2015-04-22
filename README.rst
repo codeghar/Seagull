@@ -10,6 +10,8 @@ Introduction
 
 That was a quote from the `Seagull <http://gull.sourceforge.net/>_ website.
 
+This repo was cloned from `Seagull's svn repo on SourceForge <https://svn.code.sf.net/p/gull/code/>`_ on 2015-04-22.
+
 Goal of this Repo
 --------------------------------------------------------
 
