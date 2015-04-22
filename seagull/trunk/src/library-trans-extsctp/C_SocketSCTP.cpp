@@ -426,14 +426,10 @@ void C_SocketSCTPWithData::set_properties() {
 void C_SocketSCTPWithData::sctp_event_handler (C_TransportEvent *P_event) {
 
   struct sctp_assoc_change *sac;
-  struct sctp_send_failed  *ssf;
   struct sctp_paddr_change *spc;
-  struct sctp_remote_error *sre;
   union  sctp_notification *snp;
   //  char   addrbuf[INET6_ADDRSTRLEN];
   //  const  char *ap;
-  struct sockaddr_in *sin;
-  struct sockaddr_in6 *sin6;
 
   snp = (union sctp_notification *)m_read_buf;
 
@@ -511,14 +507,6 @@ void C_SocketSCTPWithData::sctp_event_handler (C_TransportEvent *P_event) {
 
       break;
 
-  case SCTP_SEND_FAILED:
-    ssf = &snp->sn_send_failed;
-    SOCKET_DEBUG(0, "C_SocketSCTPWithData::sctp_event_handler() " << 
-		 "EVENT sendfailed: len="
-		 << ssf->ssf_length
-		 << " err=" << ssf->ssf_error);
-    break;
-
   case SCTP_PEER_ADDR_CHANGE:
     spc = &snp->sn_paddr_change;
 
@@ -553,20 +541,8 @@ void C_SocketSCTPWithData::sctp_event_handler (C_TransportEvent *P_event) {
       break ;
     } /* end switch */
     
-    if (spc->spc_aaddr.ss_family == AF_INET) {
-      sin = (struct sockaddr_in *)&spc->spc_aaddr;
-      //    ap = inet_ntop(AF_INET, &sin->sin_addr, addrbuf, INET6_ADDRSTRLEN);
-    } else {
-      sin6 = (struct sockaddr_in6 *)&spc->spc_aaddr;
-      //      ap = inet_ntop(AF_INET6, &sin6->sin6_addr, addrbuf, INET6_ADDRSTRLEN);
-    }
     //    printf("EVENT intf_change: %s state=%d, error=%d\n", ap, spc->spc_state, spc->spc_error);
     //    printf("EVENT intf_change: state=%d, error=%d\n", spc->spc_state, spc->spc_error);
-    break;
-
-  case SCTP_REMOTE_ERROR:
-    sre = &snp->sn_remote_error;
-    //    printf("EVENT: remote_error: err=%hu len=%hu\n", ntohs(sre->sre_error), ntohs(sre->sre_length));
     break;
 
   case SCTP_ADAPTATION_INDICATION:

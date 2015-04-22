@@ -38,7 +38,7 @@ public:
 
   virtual int         config (T_pConfigValueList P_config_param_list) ;
 
-  typedef SSL_METHOD* (*T_SSLMethodType)(void); 
+  typedef const SSL_METHOD* (*T_SSLMethodType)(void);
   typedef struct _T_supported_methods {
     char *m_name ;
     T_SSLMethodType m_method ;

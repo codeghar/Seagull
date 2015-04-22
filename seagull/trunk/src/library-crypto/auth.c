@@ -499,7 +499,7 @@ int createAuthHeaderAKAv1MD5(char * user, char * aka_OP,
                      	
   char tmp[MAX_HEADER_LEN] ; 
   char *start, *end;
-  int has_auts = 0, resuf = 1;
+  int has_auts = 0;
   char *nonce64, *nonce;
   int noncelen;
   RESHEX resp_hex;
@@ -572,7 +572,7 @@ int createAuthHeaderAKAv1MD5(char * user, char * aka_OP,
       resp_hex[2*i+1]=hexa[res[i]&0x0F];
     }
     resp_hex[RESLEN*2]=0;
-    resuf = createAuthHeaderMD5(user, resp_hex, method, uri, msgbody, auth, algo, result);   
+    createAuthHeaderMD5(user, resp_hex, method, uri, msgbody, auth, algo, result);
   } else {
     sqn_ms[5] = sqn_he[5] + 1;
     f5star(k, rnd, ak, op);
@@ -582,7 +582,7 @@ int createAuthHeaderAKAv1MD5(char * user, char * aka_OP,
     has_auts = 1;
     /* When re-synchronisation occurs an empty password has to be used */
     /* to compute MD5 response (Cf. rfc 3310 section 3.2) */
-    resuf=createAuthHeaderMD5(user, (char *)"",method,uri,msgbody,auth,algo,result);
+    createAuthHeaderMD5(user, (char *)"",method,uri,msgbody,auth,algo,result);
   }
   if (has_auts) {
     /* Format data for output in the SIP message */
