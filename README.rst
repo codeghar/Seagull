@@ -157,6 +157,7 @@ To run a client or server, `cd` to /opt/seagull/\*/run dirctory and execute any 
 
 ::
 
+    user@host:~$ sudo chown -R myusername:myusername /opt/seagull
     user@host:~$ cd /opt/seagull/diameter-env/run
     user@host:/opt/seagull/diameter-env/run$ ./start_server.ksh
 
