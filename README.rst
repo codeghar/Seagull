@@ -39,10 +39,103 @@ Directory Structure
 
 Two directories that came directly from the SVN to Git clone are doc and seagull. Everything else was added by me.
 
+Build Instructions with Ubuntu 15.04 Patches
+--------------------------------------------------------
+
+Since I have already done the work for you to build on Ubuntu 15.04 ;) you can simply clone this repo and follow these instructions.
+
+First Steps
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Install pre-requisites.
+
+::
+
+    user@host:~$ sudo aptitude install build-essential curl git git-svn libglib2.0-dev ksh bison flex subversion
+
+Find information about the latest revision.
+
+::
+
+    user@host:~$ svn info https://svn.code.sf.net/p/gull/code/
+
+Clone the Seagull svn repo into a git repo. This is a personal preference as I like to work with git and it allowed me to share this repo on GitHub.
+
+::
+
+    user@host:~$ git svn clone svn://svn.code.sf.net/p/gull/code/ ~/opt/src/seagull
+    user@host:~$ cd ~/opt/src/seagull
+    user@host:~/opt/src/seagull$ git branch build master
+    user@host:~/opt/src/seagull$ git checkout build
+
+Add SCTP Support
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Download the latest sctplib and socketapi tarballs from http://www.sctp.de/ to the external-lib-src directory. They were are version 1.0.15 and 2.2.8 respectively at the time of writing.
+
+::
+
+    user@host:~$ cd ~/opt/src/seagull/seagull/trunk/src
+    user@host:~/opt/src/seagull/seagull/trunk/src$ curl -o ~/opt/src/seagull/seagull/trunk/src/external-lib-src/sctplib-1.0.15.tar.gz http://www.sctp.de/download/sctplib-1.0.15.tar.gz
+    user@host:~/opt/src/seagull/seagull/trunk/src$ curl -o ~/opt/src/seagull/seagull/trunk/src/external-lib-src/socketapi-2.2.8.tar.gz http://www.sctp.de/download/socketapi-2.2.8.tar.gz
+
+Edit build-ext-lib.conf and update the versions of these two libraries ONLY if you downloaded and will use different versions.
+
+::
+
+    ...
+    EXTBUILD_1_FILE=sctplib-1.0.15.tar.gz
+    EXTBUILD_1_DIR=sctplib-1.0.15
+    ...
+    EXTBUILD_2_FILE=socketapi-2.2.8.tar.gz
+    EXTBUILD_2_DIR=socketapi-2.2.8
+    ...
+
+Add TLS Support
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Download the `latest OpenSSL tarball <https://www.openssl.org/source/>`_ to the external-lib-src directory. It was 1.0.2a at the time of writing.
+
+::
+
+    user@host:~$ cd ~/opt/src/seagull/seagull/trunk/src
+    user@host:~/opt/src/seagull/seagull/trunk/src$ curl -o ~/opt/src/seagull/seagull/trunk/src/external-lib-src/openssl-1.0.2a.tar.gz https://www.openssl.org/source/openssl-1.0.2a.tar.gz
+    
+Edit build-ext-lib.conf and update the version of this library ONLY if you downloaded a different version.
+
+::
+
+    ...
+    EXTBUILD_3_FILE=openssl-1.0.2a.tar.gz
+    EXTBUILD_3_DIR=openssl-1.0.2a
+    ...
+
+Build SCTP and TLS Support
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+Build libraries for SCTP and TLS.
+
+::
+
+    user@host:~/opt/src/seagull/seagull/trunk/src$ ksh build-ext-lib.ksh
+
+Build Seagull
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+First clean up previous build attempts and then build. Upon encountering errors (you shouldn't if you followed these instructions exactly but never say never) fix the error and run these two commands again.
+
+::
+
+    user@host:~/opt/src/seagull/seagull/trunk/src$ ksh build.ksh -target clean
+    user@host:~/opt/src/seagull/seagull/trunk/src$ ksh build.ksh -target all
+
+
 Build Instructions During Investigation
 --------------------------------------------------------
 
 This section recounts how I built Seagull on Ubuntu 15.04. You can follow the steps and hopefully be able to build successfully as well.
+
+CAUTION: Use these instructions if you're starting with a fresh Subversion to Git clone of Seagull. Otherwise, use the instructions from the section titled 'Build Instructions with Ubuntu 15.04 Patches'.
 
 First Steps
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -142,7 +235,6 @@ Build libraries for SCTP and TLS.
 
 ::
 
-    user@host:~/opt/src/seagull/seagull/trunk/src$ sudo aptitude install ksh bison flex
     user@host:~/opt/src/seagull/seagull/trunk/src$ ksh build-ext-lib.ksh
 
 
@@ -208,6 +300,9 @@ First clean up previous build attempts and then build. Upon encountering errors,
 
     user@host:~/opt/src/seagull/seagull/trunk/src$ ksh build.ksh -target clean
     user@host:~/opt/src/seagull/seagull/trunk/src$ ksh build.ksh -target all
+
+Errors During Build
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 First error.
 
@@ -382,15 +477,15 @@ Fix for the third error.
          /* Format data for output in the SIP message */
 
 Install Seagull
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+--------------------------------------------------------------
 
-Install Seagull binaries by copying files in ~/opt/src/seagull/seagull/trunk/src/bin to /usr/local/bin.
+I'm assuming Seagull built successfully. Install its binaries by copying files in ~/opt/src/seagull/seagull/trunk/src/bin to /usr/local/bin.
 
 ::
 
     user@host:~/opt/src/seagull/seagull/trunk/src$ sudo cp ~/opt/src/seagull/seagull/trunk/src/bin/* /usr/local/bin
 
-Following the lead of `rpm packages <http://sourceforge.net/projects/gull/files/>`_ provided by the official projects, install other files in the /opt hierarchy.
+Following the lead of `rpm packages <http://sourceforge.net/projects/gull/files/>`_ provided by the official projects, install other required files in the /opt hierarchy.
 
 ::
 
