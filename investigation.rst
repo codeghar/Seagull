@@ -3,7 +3,7 @@ Build Instructions During Investigation
 
 This page recounts how I built Seagull on Ubuntu 15.04. You can follow the steps and hopefully be able to build successfully as well.
 
-CAUTION: Use these instructions if you're starting with a fresh Subversion to Git clone of Seagull. Otherwise, use the instructions from the section titled 'Build Instructions with Ubuntu 15.04 Patches' in the README.rst file.
+CAUTION: Use these instructions if you're starting with a fresh Subversion to Git clone of Seagull. Otherwise, use the instructions from the section titled 'Build Instructions with Patches' in the README.rst file.
 
 First Steps
 --------------------------------------------------------

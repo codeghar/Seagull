@@ -22,7 +22,7 @@ Goal of this Repo
 
 I wanted to build and use Seagull on Ubuntu for Diameter protocol testing. I came across a lot of roadblocks that needed to be surmounted, primarily compiler errors when I tried to build it on anything modern, say CentOS 7 or Ubuntu 14.04.
 
-The primary goal with this repo is to provide patches to the Subversion revision 422 of Seagull to make it build and work on Ubuntu. To get it to work on CentOS 7 is a "nice to have".
+The primary goal with this repo is to provide patches to the Subversion revision 422 of Seagull to make it build and work on Ubuntu 15.04 and CentOS 7.1 (1503).
 
 Run `svn info https://svn.code.sf.net/p/gull/code/` and you'll see the following information that the code hasn't been updated in quite a while.
 
@@ -44,24 +44,32 @@ Directory Structure
 
 Two directories that came directly from the SVN to Git clone are doc and seagull. Everything else was added by me.
 
-Build Instructions with Ubuntu 15.04 Patches
+Build Instructions with Patches
 --------------------------------------------------------
 
-Since I have already done the work for you to build on Ubuntu 15.04 ;) you can simply clone this repo and follow these instructions.
+Since I have already done the work for you by adding patches to build on Ubuntu 15.04 and CentOS 7.1 (1503) ;) you can simply clone this repo and follow these instructions.
 
 First Steps
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-Install pre-requisites.
+Install pre-requisites on Ubuntu.
 
 ::
 
     user@host:~$ sudo aptitude install build-essential curl git git-svn libglib2.0-dev ksh bison flex subversion
 
+Install pre-requisites on CentOS.
+
+::
+
+    user@host:~$ sudo yum groupinstall "Development Tools"
+    user@host:~$ sudo yum install curl git git-svn glib2-devel ksh bison flex subversion
+
 Clone this repo and create a branch to build from.
 
 ::
 
+    user@host:~$ mkdir -p ~/opt/src
     user@host:~$ cd ~/opt/src
     user@host:~/opt/src$ git clone https://github.com/hamzasheikh/Seagull.git seagull
     user@host:~/opt/src$ cd ~/opt/src/seagull
@@ -76,8 +84,8 @@ Download the latest sctplib and socketapi tarballs from http://www.sctp.de/ to t
 ::
 
     user@host:~$ cd ~/opt/src/seagull/seagull/trunk/src
-    user@host:~/opt/src/seagull/seagull/trunk/src$ curl -o ~/opt/src/seagull/seagull/trunk/src/external-lib-src/sctplib-1.0.15.tar.gz http://www.sctp.de/download/sctplib-1.0.15.tar.gz
-    user@host:~/opt/src/seagull/seagull/trunk/src$ curl -o ~/opt/src/seagull/seagull/trunk/src/external-lib-src/socketapi-2.2.8.tar.gz http://www.sctp.de/download/socketapi-2.2.8.tar.gz
+    user@host:~/opt/src/seagull/seagull/trunk/src$ curl --create-dirs -o ~/opt/src/seagull/seagull/trunk/src/external-lib-src/sctplib-1.0.15.tar.gz http://www.sctp.de/download/sctplib-1.0.15.tar.gz
+    user@host:~/opt/src/seagull/seagull/trunk/src$ curl --create-dirs -o ~/opt/src/seagull/seagull/trunk/src/external-lib-src/socketapi-2.2.8.tar.gz http://www.sctp.de/download/socketapi-2.2.8.tar.gz
 
 Edit build-ext-lib.conf and update the versions of these two libraries ONLY if you downloaded and will use different versions.
 
@@ -99,7 +107,7 @@ Download the `latest OpenSSL tarball <https://www.openssl.org/source/>`_ to the 
 ::
 
     user@host:~$ cd ~/opt/src/seagull/seagull/trunk/src
-    user@host:~/opt/src/seagull/seagull/trunk/src$ curl -o ~/opt/src/seagull/seagull/trunk/src/external-lib-src/openssl-1.0.2a.tar.gz https://www.openssl.org/source/openssl-1.0.2a.tar.gz
+    user@host:~/opt/src/seagull/seagull/trunk/src$ curl --create-dirs -o ~/opt/src/seagull/seagull/trunk/src/external-lib-src/openssl-1.0.2a.tar.gz https://www.openssl.org/source/openssl-1.0.2a.tar.gz
     
 Edit build-ext-lib.conf and update the version of this library ONLY if you downloaded a different version.
 
