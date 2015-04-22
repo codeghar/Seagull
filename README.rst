@@ -53,17 +53,12 @@ Install pre-requisites.
 
     user@host:~$ sudo aptitude install build-essential curl git git-svn libglib2.0-dev ksh bison flex subversion
 
-Find information about the latest revision.
+Clone this repo and create a branch to build from.
 
 ::
 
-    user@host:~$ svn info https://svn.code.sf.net/p/gull/code/
-
-Clone the Seagull svn repo into a git repo. This is a personal preference as I like to work with git and it allowed me to share this repo on GitHub.
-
-::
-
-    user@host:~$ git svn clone svn://svn.code.sf.net/p/gull/code/ ~/opt/src/seagull
+    user@host:~$ cd ~/opt/src
+    user@host:~/opt/src$ git clone https://github.com/hamzasheikh/Seagull.git seagull
     user@host:~$ cd ~/opt/src/seagull
     user@host:~/opt/src/seagull$ git branch build master
     user@host:~/opt/src/seagull$ git checkout build
