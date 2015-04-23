@@ -49,6 +49,11 @@ Build Instructions with Patches
 
 Since I have already done the work for you by adding patches to build on Ubuntu 15.04 and CentOS 7.1 (1503) ;) you can simply clone this repo and follow these instructions.
 
+These instructions have been tested to work on:
+
+* CentOS - 7.1 (1503)
+* Ubuntu - 14.04.1, 15.04
+
 First Steps
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
