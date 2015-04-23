@@ -152,12 +152,13 @@ Following the lead of `rpm packages <http://sourceforge.net/projects/gull/files/
 
     user@host:~/opt/src/seagull/seagull/trunk/src$ sudo mkdir -p /opt/seagull
     user@host:~/opt/src/seagull/seagull/trunk/src$ sudo cp -r ~/opt/src/seagull/seagull/trunk/src/exe-env/* /opt/seagull
+    user@host:~/opt/src/seagull/seagull/trunk/src$ sudo chown -R myusername:myusername /opt/seagull
+    user@host:~/opt/src/seagull/seagull/trunk/src$ mkdir -p /opt/seagull/{diameter-env,h248-env,http-env,msrp-env,octcap-env,radius-env,sip-env,synchro-env,xcap-env}/logs
 
 To run a client or server, `cd` to /opt/seagull/\*/run dirctory and execute any start\*.ksh file. For example, to start a Diameter server
 
 ::
-
-    user@host:~$ sudo chown -R myusername:myusername /opt/seagull
+    
     user@host:~$ cd /opt/seagull/diameter-env/run
     user@host:/opt/seagull/diameter-env/run$ ./start_server.ksh
 
