@@ -52,6 +52,7 @@ Since I have already done the work for you by adding patches to build on Ubuntu 
 These instructions have been tested to work on:
 
 * CentOS - 7.1 (1503)
+* openSUSE - 13.2
 * Ubuntu - 14.04.1, 15.04
 
 First Steps
@@ -61,14 +62,21 @@ Install pre-requisites on Ubuntu.
 
 ::
 
-    user@host:~$ sudo aptitude install build-essential curl git git-svn libglib2.0-dev ksh bison flex subversion
+    user@host:~$ sudo aptitude install build-essential curl git libglib2.0-dev ksh bison flex
 
 Install pre-requisites on CentOS.
 
 ::
 
     user@host:~$ sudo yum groupinstall "Development Tools"
-    user@host:~$ sudo yum install curl git git-svn glib2-devel ksh bison flex subversion
+    user@host:~$ sudo yum install curl git glib2-devel ksh bison flex
+
+Install pre-requisites on openSUSE.
+
+::
+
+    user@host:~$ sudo zypper install -t pattern devel_basis
+    user@host:~$ sudo zypper install curl git glib2-devel ksh bison flex
 
 Clone this repo and create a branch to build from.
 
