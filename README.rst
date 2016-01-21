@@ -24,7 +24,7 @@ I wanted to build and use Seagull on Ubuntu for Diameter protocol testing. I cam
 
 The primary goal with this repo is to provide patches to the Subversion revision 422 of Seagull to make it build and work on Ubuntu 15.04 and CentOS 7.1 (1503).
 
-Run `svn info https://svn.code.sf.net/p/gull/code/` and you'll see the following information that the code hasn't been updated in quite a while.
+Run ``svn info https://svn.code.sf.net/p/gull/code/`` and you'll see the following information that the code hasn't been updated in quite a while.
 
 ::
 
@@ -168,7 +168,7 @@ Following the lead of `rpm packages <http://sourceforge.net/projects/gull/files/
     user@host:~/opt/src/seagull/seagull/trunk/src$ sudo chown -R myusername:myusername /opt/seagull
     user@host:~/opt/src/seagull/seagull/trunk/src$ mkdir -p /opt/seagull/{diameter-env,h248-env,http-env,msrp-env,octcap-env,radius-env,sip-env,synchro-env,xcap-env}/logs
 
-To run a client or server, `cd` to /opt/seagull/\*/run dirctory and execute any start\*.ksh file. For example, to start a Diameter server
+To run a client or server, ``cd`` to /opt/seagull/\*/run dirctory and execute any start\*.ksh file. For example, to start a Diameter server
 
 ::
 
