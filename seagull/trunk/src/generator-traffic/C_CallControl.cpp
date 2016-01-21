@@ -53,7 +53,7 @@ C_CallControl::C_CallControl(C_GeneratorConfig   *P_config,
   m_accept_new_call = true ;
 
   m_call_created = 0 ;
-  m_pause = false ;
+  m_pause = 0 ;
 
   // m_type = E_TRAFFIC_UNKNOWN ;
   m_type = E_TRAFFIC_SERVER ;
@@ -145,7 +145,7 @@ C_CallControl::~C_CallControl() {
   m_config = NULL ;
   m_max_send_loop = 0 ;
   m_max_receive_loop = 0 ;
-  m_pause = false ;
+  m_pause = 0 ;
 
   FREE_TABLE(m_wait_values);
   m_nb_wait_values = 0 ;
@@ -1513,14 +1513,14 @@ T_GeneratorError C_CallControlClient::StoppingProcedure() {
 void C_CallControl::pause_traffic() {
   GEN_DEBUG (1, "C_CallControl::pause_traffic() start");
   switch(m_pause) {
-  case true:
+  case 1:
     m_accept_new_call = true ;
-    m_pause = false ;
+    m_pause = 0 ;
     m_stat->info_msg((char*)"Incomming traffic (restarted)");
     break ;
-  case false:
+  case 0:
     m_accept_new_call = false ;
-    m_pause = true ;
+    m_pause = 1 ;
     m_stat->info_msg((char*)"Incomming traffic (paused)");
     break ;
   }
@@ -1536,12 +1536,12 @@ void C_CallControl::burst_traffic() {
 void C_CallControlClient::pause_traffic() {
   GEN_DEBUG (1, "C_CallControl::pause_traffic() start");
   switch(m_pause) {
-  case true :
-    m_pause = false ;
+  case 1 :
+    m_pause = 0 ;
     restart_traffic();
     break ;
-  case false :
-    m_pause = true ;
+  case 0 :
+    m_pause = 1 ;
     m_outgoing_traffic = false ;
     m_stat->info_msg((char*)"Outgoing traffic (paused)");
     break ;
@@ -1561,8 +1561,8 @@ void C_CallControlClient::restart_traffic() {
 void C_CallControlClient::burst_traffic() {
   GEN_DEBUG (1, "C_CallControl::burst_traffic() start");
   switch(m_pause) {
-  case true :
-    m_pause = false ;
+  case 1 :
+    m_pause = 0 ;
     m_outgoing_traffic = true ;
     m_stat->info_msg((char*)"Outgoing traffic (bursted)");
     break ;

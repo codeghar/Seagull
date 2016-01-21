@@ -6,11 +6,11 @@ Introduction
 
 ::
 
-    Seagull is a free, Open Source (GPL) multi-protocol traffic generator 
-    test tool. Primarily aimed at IMS (3GPP, TISPAN, CableLabs) protocols 
-    (and thus being the perfect complement to SIPp for IMS testing), 
-    Seagull is a powerful traffic generator for functional, load, 
-    endurance, stress and performance/benchmark tests for almost 
+    Seagull is a free, Open Source (GPL) multi-protocol traffic generator
+    test tool. Primarily aimed at IMS (3GPP, TISPAN, CableLabs) protocols
+    (and thus being the perfect complement to SIPp for IMS testing),
+    Seagull is a powerful traffic generator for functional, load,
+    endurance, stress and performance/benchmark tests for almost
     any kind of protocol.
 
 That was a quote from the `Seagull <http://gull.sourceforge.net/>`_ website.
@@ -51,9 +51,9 @@ Since I have already done the work for you by adding patches to build on Ubuntu 
 
 These instructions have been tested to work on:
 
-* CentOS - 7.1 (1503)
-* openSUSE - 13.2
-* Ubuntu - 14.04.1, 15.04
+* CentOS - 7.1 (1503) (64-bit version only)
+* openSUSE - 13.2 (tested up to commit 79137704f54, before merging patches for issue #1)
+* Ubuntu - 14.04.3, 15.04, 15.10 (64-bit versions only)
 
 First Steps
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -62,14 +62,14 @@ Install pre-requisites on Ubuntu.
 
 ::
 
-    user@host:~$ sudo aptitude install build-essential curl git libglib2.0-dev ksh bison flex
+    user@host:~$ sudo aptitude install build-essential curl git libglib2.0-dev ksh bison flex vim tmux
 
 Install pre-requisites on CentOS.
 
 ::
 
     user@host:~$ sudo yum groupinstall "Development Tools"
-    user@host:~$ sudo yum install curl git glib2-devel ksh bison flex
+    user@host:~$ sudo yum install curl git glib2-devel ksh bison flex flex-devel vim tmux
 
 Install pre-requisites on openSUSE.
 
@@ -82,7 +82,7 @@ Clone this repo and create a branch to build from.
 
 ::
 
-    user@host:~$ mkdir -p ~/opt/src
+    user@host:~$ sudo mkdir -p ~/opt/src
     user@host:~$ cd ~/opt/src
     user@host:~/opt/src$ git clone https://github.com/hamzasheikh/Seagull.git seagull
     user@host:~/opt/src$ cd ~/opt/src/seagull
@@ -115,20 +115,20 @@ Edit build-ext-lib.conf and update the versions of these two libraries ONLY if y
 Add TLS Support
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-Download the `latest OpenSSL tarball <https://www.openssl.org/source/>`_ to the external-lib-src directory. It was 1.0.2a at the time of writing.
+Download the `latest OpenSSL tarball <https://www.openssl.org/source/>`_ to the external-lib-src directory. It was 1.0.2e at the time of writing.
 
 ::
 
     user@host:~$ cd ~/opt/src/seagull/seagull/trunk/src
-    user@host:~/opt/src/seagull/seagull/trunk/src$ curl --create-dirs -o ~/opt/src/seagull/seagull/trunk/src/external-lib-src/openssl-1.0.2a.tar.gz https://www.openssl.org/source/openssl-1.0.2a.tar.gz
-    
+    user@host:~/opt/src/seagull/seagull/trunk/src$ curl --create-dirs -o ~/opt/src/seagull/seagull/trunk/src/external-lib-src/openssl-1.0.2e.tar.gz https://www.openssl.org/source/openssl-1.0.2e.tar.gz
+
 Edit build-ext-lib.conf and update the version of this library ONLY if you downloaded a different version.
 
 ::
 
     ...
-    EXTBUILD_3_FILE=openssl-1.0.2a.tar.gz
-    EXTBUILD_3_DIR=openssl-1.0.2a
+    EXTBUILD_3_FILE=openssl-1.0.2e.tar.gz
+    EXTBUILD_3_DIR=openssl-1.0.2e
     ...
 
 Build SCTP and TLS Support
@@ -171,7 +171,7 @@ Following the lead of `rpm packages <http://sourceforge.net/projects/gull/files/
 To run a client or server, `cd` to /opt/seagull/\*/run dirctory and execute any start\*.ksh file. For example, to start a Diameter server
 
 ::
-    
+
     user@host:~$ cd /opt/seagull/diameter-env/run
     user@host:/opt/seagull/diameter-env/run$ ./start_server.ksh
 

@@ -110,7 +110,7 @@ protected:
 
   unsigned long        m_call_created ;
   unsigned long        m_call_to_simulate ;
-  bool                 m_pause ;
+  int                  m_pause ;
   T_TrafficType        m_type ;
 
 
