@@ -180,3 +180,12 @@ Investigation
 --------------------------------------------------------------
 
 If you're interested in how I investigated the build issues read the investigation.rst file.
+
+
+Build Automation
+--------------------------------------------------------------
+
+Under the *build_automation* directory are Vagrantfiles for various OSes and
+an Ansible playbook. ``cd`` into the directory with the Vagrantfile and run
+``vagrant up``. At the end of provisioning you'll find built artifacts ready
+to install.

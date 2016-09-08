@@ -1,0 +1,71 @@
+---
+- hosts: all
+  remote_user: vagrant
+  become_user: root
+  become_method: sudo
+  #vars:
+  #  - ansible_python_interpreter: /usr/local/bin/python2.7
+  tasks:
+    - apt: name={{ item }} state=latest update_cache=yes
+      with_items:
+        - build-essential
+        - curl
+        - git
+        - libglib2.0-dev
+        - ksh
+        - bison
+        - flex
+        - vim
+        - tmux
+      when: ansible_distribution == 'Debian' or ansible_distribution == 'Ubuntu'
+      become: yes
+
+    - yum: name="@Development Tools" state=present update_cache=yes
+      when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+      become: yes
+
+    - yum: name={{ item }} state=latest update_cache=yes
+      with_items:
+        - curl
+        - git
+        - glib2-devel
+        - ksh
+        - bison
+        - flex
+        - flex-devel
+        - vim
+        - tmux
+      when: ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux'
+      become: yes
+
+    # - file: path=opt/src state=directory mode=0755
+
+    - git: repo=https://github.com/hamzasheikh/Seagull.git
+           dest=seagull
+           version=master
+
+    - file: path=seagull/seagull/trunk/src/external-lib-src/ state=directory mode=0755
+
+    - get_url:
+        url: http://www.sctp.de/download/sctplib-1.0.15.tar.gz
+        dest: seagull/seagull/trunk/src/external-lib-src
+
+    - get_url:
+        url: http://www.sctp.de/download/socketapi-2.2.8.tar.gz
+        dest: seagull/seagull/trunk/src/external-lib-src
+
+    - get_url:
+        url: https://www.openssl.org/source/openssl-1.0.2a.tar.gz
+        dest: seagull/seagull/trunk/src/external-lib-src
+
+    - shell: ksh build-ext-lib.ksh
+      args:
+          chdir: seagull/seagull/trunk/src
+
+    - shell: ksh build.ksh -target clean
+      args:
+          chdir: seagull/seagull/trunk/src
+
+    - shell: ksh build.ksh -target all
+      args:
+          chdir: seagull/seagull/trunk/src

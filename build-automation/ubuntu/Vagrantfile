@@ -1,0 +1,42 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure(2) do |config|
+
+  config.vm.provider 'virtualbox' do |v|
+    v.memory = 4096
+    v.cpus = 2
+  end
+
+  config.vm.define 'ubuntu1404' do |ubnt|
+
+    ubnt.vm.box = "ubuntu/trusty64"
+
+    ubnt.vm.box_check_update = true
+
+    # With the line commented in Vagrant v 1.8.1,
+    # ``vagrant up`` gives this error:
+    #
+    # No base MAC address was specified. This is required for the NAT networking
+    # to work properly (and hence port forwarding, SSH, etc.). Specifying this
+    # MAC address is typically up to the box and box maintainer. Please contact
+    # the relevant person to solve this issue.
+    #
+    # The error doesn't show when ``vagrant up`` is run a second time
+    # e.g. ``vagrant up; vagrant up``
+    ubnt.vm.base_mac = "000AAAAAAAAA"
+
+    # ubnt.vm.guest = :ubntos
+
+    ubnt.vm.hostname = "ubuntu1404seagull"
+
+    ubnt.vm.network "private_network", type: "dhcp"
+
+    ubnt.vm.synced_folder ".", "/vagrant_data", disabled: true
+
+    ubnt.vm.provision "ansible" do |ansible|
+      ansible.verbose = "v"
+      ansible.playbook = "../ansible/play.yml"
+    end
+  end
+end
