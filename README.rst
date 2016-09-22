@@ -82,7 +82,7 @@ Clone this repo and create a branch to build from.
 
 ::
 
-    user@host:~$ sudo mkdir -p ~/opt/src
+    user@host:~$ mkdir -p ~/opt/src
     user@host:~$ cd ~/opt/src
     user@host:~/opt/src$ git clone https://github.com/hamzasheikh/Seagull.git seagull
     user@host:~/opt/src$ cd ~/opt/src/seagull
