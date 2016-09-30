@@ -195,7 +195,6 @@ int C_ProtocolText::set_filter_method (char *P_filter_method) {
     L_ret = -1;
   } else {
     L_library_handle = dlopen(L_lib_name, RTLD_LAZY);
-    FREE_TABLE(L_lib_name);
     if (L_library_handle == NULL) {
       GEN_ERROR(E_GEN_FATAL_ERROR, 
                 "Unable to open library file [" 
@@ -203,6 +202,7 @@ int C_ProtocolText::set_filter_method (char *P_filter_method) {
                 << "] error [" << dlerror() << "]");
       L_ret = -1 ;
     }
+    FREE_TABLE(L_lib_name);
   }
 
   L_fun_name = find_text_value(P_filter_method,(char*)"function") ;
