@@ -1,15 +1,14 @@
 language: cpp
 
-before_install:
-  addons:
-    apt:
-      packages:
-        - build-essential
-        - curl
-        - libglib2.0-dev
-        - ksh
-        - bison
-        - flex
+addons:
+  apt:
+    packages:
+      - build-essential
+      - curl
+      - libglib2.0-dev
+      - ksh
+      - bison
+      - flex
 
 install:
   - curl --create-dirs -o seagull/trunk/src/external-lib-src/sctplib-1.0.15.tar.gz http://www.sctp.de/download/sctplib-1.0.15.tar.gz
