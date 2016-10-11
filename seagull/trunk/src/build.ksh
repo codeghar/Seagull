@@ -23,9 +23,7 @@
 # Creation: 2004/01/28
 # Version 1.0
 #
-set -v
 set -e
-set -x
 
 COMMAND_EXECUTED=$0
 

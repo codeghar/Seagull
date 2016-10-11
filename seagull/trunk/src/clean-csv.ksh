@@ -17,8 +17,6 @@
 # (c)Copyright 2006 Hewlett-Packard Development Company, LP.
 #
 #
-set -v
 set -e
-set -x
 
 find . -name \*.csv -print -exec /bin/rm \{\} \;
