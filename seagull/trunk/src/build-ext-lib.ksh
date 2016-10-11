@@ -16,9 +16,7 @@
 #
 # (c)Copyright 2006 Hewlett-Packard Development Company, LP.
 #
-set -v
 set -e
-set -x
 
 BUILD_UNCOMPRESS=""
 BUILD_VERSION_FILE=build.conf

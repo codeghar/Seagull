@@ -18,9 +18,7 @@
 #
 #
 ##################################################"
-set -v
 set -e
-set -x
 
 BUILD_PROJECT=$1
 BUILD_CONF_FILE=$2

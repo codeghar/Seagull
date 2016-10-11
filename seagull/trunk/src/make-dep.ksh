@@ -17,9 +17,7 @@
 # (c)Copyright 2006 Hewlett-Packard Development Company, LP.
 #
 #
-set -v
 set -e
-set -x
 
 
 # Internal functions definition
