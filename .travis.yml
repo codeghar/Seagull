@@ -19,4 +19,4 @@ script:
   - cd seagull/trunk/src
   - ksh build-ext-lib.ksh
   - ksh build.ksh -target clean
-  - ksh build.ksh -target all
+  - ksh build.ksh -target all -exec DEBUG
