@@ -347,6 +347,7 @@ T_GeneratorError C_RemoteControl::receiveControl () {
 
 
   T_pC_TransportEvent       L_event_occured        ;
+  int                       L_event_id             ;
 
   GEN_DEBUG(1, "C_RemoteControl::receiveControl() start");
   
@@ -417,7 +418,8 @@ T_GeneratorError C_RemoteControl::receiveControl () {
       
       for (L_i = 0 ; L_i < L_nb_event ; L_i++) {
         L_event_occured = &m_events [L_i];
-        
+        L_event_id      = L_event_occured->m_id ;
+
         switch (L_event_occured->m_type) {
           
         case C_TransportEvent::E_TRANS_RECEIVED: {
@@ -427,7 +429,7 @@ T_GeneratorError C_RemoteControl::receiveControl () {
                     "C_RemoteControl::receiveControl() E_TRANS_RECEIVED id ["
                     << L_event_id << "]");
           while ((m_transport
-                  ->get_message(L_event_occured->m_id, &L_currentRcvCtxt)) == true) {
+                  ->get_message(L_event_id, &L_currentRcvCtxt)) == true) {
             m_msg_remote_list -> push_back (L_currentRcvCtxt) ;
           }
           break ;
