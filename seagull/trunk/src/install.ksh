@@ -22,6 +22,9 @@
 #
 #
 # Command definitions
+set -v
+set -e
+set -x
 
 # Copy binaries
 cp bin/* /usr/local/bin/

@@ -17,10 +17,13 @@
 # (c)Copyright 2006 Hewlett-Packard Development Company, LP.
 #
 #
+set -v
+set -e
+set -x
 
 
 # Internal functions definition
-find_dep () 
+find_dep ()
 {
     file_name=$1
     if test -f ${file_name}
@@ -35,7 +38,7 @@ find_dep ()
 }
 
 # Internal functions definition
-find_dep_with_path () 
+find_dep_with_path ()
 {
     for file in `find_dep $1`
     do
@@ -44,7 +47,7 @@ find_dep_with_path ()
 }
 
 # Internal
-find_dep_not_verified () 
+find_dep_not_verified ()
 {
     file_name=$1
     cat ${file_name} | \
@@ -72,13 +75,13 @@ echo "[build: ${BUILD_FILE}, modules: ${MODULES_USED}]"
 
 
 # General variables definition
-# Extention for the files treated 
+# Extention for the files treated
 FILE_EXTENTION="C cpp c l y"
 # List of the files to be compiled
 
 ALL_CODE_FILES=`for EXTENSION in ${FILE_EXTENTION}
 do
-  find . -follow -type f -name \*.${EXTENSION} 2>/dev/null | sed -e 's/^\.\///' 
+  find . -follow -type f -name \*.${EXTENSION} 2>/dev/null | sed -e 's/^\.\///'
 done`
 
 CODE_FILES=`for module in ${MODULES_USED}
@@ -174,7 +177,7 @@ do
   file_obj=`basename ${file_obj}`
   file_ext=`basename ${file} | sed -e 's/[^\.]*\.//'`
 
-  case ${file_ext} in 
+  case ${file_ext} in
       l)
 	  lex_file=$file
           lex_basename_file=`basename ${file}`
@@ -190,7 +193,7 @@ do
           file="\$(WORK_DIR)/lex.yy.c"
 
 	  ;;
-      y) 
+      y)
 	  yacc_basename_file=`basename ${file}`
 	  yacc_file=${file}
 	  yacc_code=y.tab.c
@@ -205,7 +208,7 @@ do
 	  echo "	@\$(MV) ${yacc_code} \$(WORK_DIR)/${yacc_code}"
 	  echo "	@\$(MV) ${yacc_decl} \$(WORK_DIR)/${yacc_decl}"
 	  echo ""
-	  
+
 
 	  file_obj=y.tab.o
 	  file="\$(WORK_DIR)/${yacc_withtout_ext}.tab.c"
@@ -214,7 +217,7 @@ do
 	  lex_flags=
 	  ;;
   esac
-  
+
   echo "\$(WORK_DIR)/${file_obj}: ${file} "`find_dep_with_path ${file}`
   echo "	@echo \"[Compiling ${file}]\""
   echo "	@\$(CC_${BUILD_TYPE}) \$(MODULE_PATH) -I\$(WORK_DIR) \$("${lex_flags}"CC_FLAGS_${BUILD_TYPE}) \$(CC_INCLUDE_${BUILD_TYPE}) -c ${file} -o \$(WORK_DIR)/${file_obj}"

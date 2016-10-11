@@ -18,6 +18,9 @@
 #
 #
 ##################################################"
+set -v
+set -e
+set -x
 
 BUILD_PROJECT=$1
 BUILD_CONF_FILE=$2
@@ -50,8 +53,8 @@ determine_generation()
       if test -z "${L_name}"
 	  then
        if test ${L_max} -eq 0
-       then 
-	       L_end=1 
+       then
+	       L_end=1
        else
           if test ${L_i} -le ${L_max}
           then
@@ -80,7 +83,7 @@ determine_generation()
 
       fi
 	  L_i=`expr ${L_i} + 1`
-      
+
     done
 }
 

@@ -16,6 +16,9 @@
 #
 # (c)Copyright 2006 Hewlett-Packard Development Company, LP.
 #
+set -v
+set -e
+set -x
 
 BUILD_UNCOMPRESS=""
 BUILD_VERSION_FILE=build.conf
@@ -82,7 +85,7 @@ EXT_WORK_DIR="${CURRENT_DIR}/work-${BUILD_VERSION}"
 EXT_BUILD_DIR="${CURRENT_DIR}/build-${BUILD_VERSION}"
 
 if test -x /usr/bin/gzip
-then 
+then
   BUILD_UNCOMPRESS="/usr/bin/gzip -dv"
 fi
 
@@ -129,13 +132,13 @@ if test ! -d ${EXT_WORK_DIR}
 then
     echo "[Creating directory ${EXT_WORK_DIR}]"
     mkdir ${EXT_WORK_DIR}
-fi 
+fi
 
 if test ! -d ${EXT_BUILD_DIR}
 then
     echo "[Creating directory ${EXT_BUILD_DIR}]"
     mkdir ${EXT_BUILD_DIR}
-fi 
+fi
 
 
 for build in ${NB_BUILD}
@@ -174,8 +177,8 @@ do
 	     kerror "[Directory ${EXT_DIR} not created]"
          fi
       fi
-  else 
-      kerror "unable to find directory [${CURRENT_DIR}/${EXT_SRC_DIR}/${EXT_FILE}]"     
+  else
+      kerror "unable to find directory [${CURRENT_DIR}/${EXT_SRC_DIR}/${EXT_FILE}]"
   fi
 
   cd ${EXT_DIR}
@@ -192,7 +195,7 @@ do
       ${EXT_ENDSCRIPT}
   fi
 
-  cd ${CURRENT_DIR}  
+  cd ${CURRENT_DIR}
 
   echo "[go to directory ${CURRENT_DIR}]"
 done
