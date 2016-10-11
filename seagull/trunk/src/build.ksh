@@ -17,12 +17,15 @@
 # (c)Copyright 2006 Hewlett-Packard Development Company, LP.
 #
 #
-# 
-# Build script 
+#
+# Build script
 # Unix
 # Creation: 2004/01/28
 # Version 1.0
 #
+set -v
+set -e
+set -x
 
 COMMAND_EXECUTED=$0
 
@@ -38,10 +41,10 @@ BUILD_CODE_DIRECTORY=code
 BUILD_DIRECTORY=`pwd`
 typeset -u BUILD_ARCH=`uname -m | tr '-' '_' | tr '.' '_' | tr '/' '_' `
 BUILD_VERSION_FILE=build.conf
-BUILD_DIST_MODE=0 
+BUILD_DIST_MODE=0
 BUILD_FORCE_MODE=0
 
-function usage 
+function usage
 {
     echo "Command line syntax of $1 - options"
     echo "-exec <RELEASE|DEBUG>       : mode used for compilation (default ${BUILD_DEFAULT_EXEC})"
@@ -82,7 +85,7 @@ function get_arguments
 		  error "executable mode needed (RELEASE or DEBUG)"
 	      fi
 	      ;;
-	  
+
           -target)
 	      shift
 	      if [ $# -ne 0 ]
@@ -105,7 +108,7 @@ function get_arguments
 		  error "target needed (all, clean or sample)"
 	      fi
 	      ;;
-	  
+
           -help)
 	      usage ${COMMAND_EXECUTED}
 	      exit 0

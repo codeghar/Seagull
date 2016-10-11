@@ -22,6 +22,10 @@
 #
 #
 # Command definitions
+set -v
+set -e
+set -x
+
 RM="/bin/rm -f"
 FIND=/usr/bin/find
 

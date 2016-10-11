@@ -17,6 +17,9 @@
 # (c)Copyright 2006 Hewlett-Packard Development Company, LP.
 #
 #
+set -v
+set -e
+set -x
 
 find . -name \*.log -print -exec /bin/rm \{\} \;
 find . -name server.txt -print -exec /bin/rm \{\} \;
