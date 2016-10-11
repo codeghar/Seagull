@@ -1,0 +1,22 @@
+language: cpp
+
+addons:
+  apt:
+    packages:
+      - build-essential
+      - curl
+      - libglib2.0-dev
+      - ksh
+      - bison
+      - flex
+
+install:
+  - curl --create-dirs -o seagull/trunk/src/external-lib-src/sctplib-1.0.15.tar.gz http://www.sctp.de/download/sctplib-1.0.15.tar.gz
+  - curl --create-dirs -o seagull/trunk/src/external-lib-src/socketapi-2.2.8.tar.gz http://www.sctp.de/download/socketapi-2.2.8.tar.gz
+  - curl --create-dirs -o seagull/trunk/src/external-lib-src/openssl-1.0.2e.tar.gz https://www.openssl.org/source/openssl-1.0.2e.tar.gz
+
+script:
+  - cd seagull/trunk/src
+  - ksh build-ext-lib.ksh
+  - ksh build.ksh -target clean
+  - ksh build.ksh -target all
