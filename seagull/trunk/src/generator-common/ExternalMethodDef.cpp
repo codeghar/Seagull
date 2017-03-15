@@ -38,13 +38,13 @@ T_ExternalMethod create_external_method (char *P_args) {
 	      "no name for the library for the filter (lib=...)");
   } else {
     L_library_handle = dlopen(L_lib_name, RTLD_LAZY);
-    FREE_TABLE(L_lib_name);
     if (L_library_handle == NULL) {
       GEN_ERROR(E_GEN_FATAL_ERROR, 
                 "Unable to open library file [" 
                 << L_lib_name
                 << "] error [" << dlerror() << "]");
     }
+    FREE_TABLE(L_lib_name);
   }
 
   L_fun_name = find_text_value(P_args,(char*)"function") ;
