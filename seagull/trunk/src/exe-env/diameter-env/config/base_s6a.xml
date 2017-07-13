@@ -313,7 +313,7 @@
         <setfield name="flags" value="192"></setfield>
         <setfield name="Vendor-ID" value="10415"></setfield>
       </define>
-      <define name="Requested-UTRAN- GERAN-Authentication-Info" type="Grouped">
+      <define name="Requested-UTRAN-GERAN-Authentication-Info" type="Grouped">
         <setfield name="avp-code" value="1409"></setfield>
         <setfield name="flags" value="192"></setfield>
         <setfield name="Vendor-ID" value="10415"></setfield>
