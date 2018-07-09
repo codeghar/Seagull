@@ -663,10 +663,16 @@ int C_SocketClient::_open(T_pOpenStatus  P_status,
           L_rc = 0 ;
       }
     } else {
-      L_rc = call_bind(m_socket_id, 
+	    
+      /* UDP Does not need to bind first */
+      if(m_type != E_SOCKET_UDP_MODE) {
+        L_rc = call_bind(m_socket_id, 
                        (sockaddr *)(void *)&(m_remote_addr_info->m_addr_src),
                        SOCKADDR_IN_SIZE(&(m_remote_addr_info->m_addr_src)));
-     
+        } else {
+	  L_rc = 0;
+        }
+	    
        if (L_rc) {
         SOCKET_ERROR(1, "bind [" << strerror(errno) << "]");
        } else {
