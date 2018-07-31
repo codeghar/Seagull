@@ -91,7 +91,7 @@ Edit build-ext-lib.conf and update the versions of these two libraries ONLY if y
 
 ### Add TLS Support
 
-Download the [latest OpenSSL tarball](<https://www.openssl.org/source/) to the external-lib-src directory. It was 1.0.2e at the time of writing.
+Download the [latest OpenSSL tarball](https://www.openssl.org/source/) to the external-lib-src directory. It was 1.0.2e at the time of writing.
 
     user@host:~$ cd ~/opt/src/seagull/seagull/trunk/src
     user@host:~/opt/src/seagull/seagull/trunk/src$ curl --create-dirs -o ~/opt/src/seagull/seagull/trunk/src/external-lib-src/openssl-1.0.2e.tar.gz https://www.openssl.org/source/openssl-1.0.2e.tar.gz
@@ -122,7 +122,7 @@ I'm assuming Seagull built successfully. Install its binaries by copying files i
 
     user@host:~/opt/src/seagull/seagull/trunk/src$ sudo cp ~/opt/src/seagull/seagull/trunk/src/bin/* /usr/local/bin
 
-Following the lead of [rpm packages](<http://sourceforge.net/projects/gull/files/) provided by the official projects, install other required files in the /opt hierarchy.
+Following the lead of [rpm packages](http://sourceforge.net/projects/gull/files/) provided by the official projects, install other required files in the /opt hierarchy.
 
     user@host:~/opt/src/seagull/seagull/trunk/src$ sudo mkdir -p /opt/seagull
     user@host:~/opt/src/seagull/seagull/trunk/src$ sudo cp -r ~/opt/src/seagull/seagull/trunk/src/exe-env/* /opt/seagull
