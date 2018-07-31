@@ -51,9 +51,14 @@ Since I have already done the work for you by adding patches to build on Ubuntu 
 
 These instructions have been tested to work on:
 
-* CentOS - 7.1 (1503) (64-bit version only)
+* CentOS (64-bit version only) - 7
 * openSUSE - 13.2 (tested up to commit 79137704f54, before merging patches for issue #1)
-* Ubuntu - 14.04.3, 15.04, 15.10 (64-bit versions only)
+* Ubuntu (64-bit versions only) - 14.04, 16.04, 18.04
+
+Build in Docker
+--------------------------------------------------------
+
+Added support for building Seagull in Docker containers. The README in *docker* directory has more information.
 
 First Steps
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
