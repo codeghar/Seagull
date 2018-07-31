@@ -22,6 +22,7 @@
  */
 
 #include "randomc.h"
+#include "netinet/in.h"
 
 
 void TRandomMersenne::RandomInit(uint32 seed) {
@@ -31,13 +32,9 @@ void TRandomMersenne::RandomInit(uint32 seed) {
     mt[mti] = (1812433253UL * (mt[mti-1] ^ (mt[mti-1] >> 30)) + mti);}
 
   // detect computer architecture
-  union {double f; uint32 i[2];} convert;
-  convert.f = 1.0;
-  // Note: Old versions of the Gnu g++ compiler may make an error here,
-  // compile with the option  -fenum-int-equiv  to fix the problem
-  if (convert.i[1] == 0x3FF00000) Architecture = LITTLE_ENDIAN1;
-  else if (convert.i[0] == 0x3FF00000) Architecture = BIG_ENDIAN1;
-  else Architecture = NONIEEE;}
+  // https://stackoverflow.com/a/1001330
+  if ( htonl(47) == 47 ) Architecture = BIG_ENDIAN1;
+  else Architecture = LITTLE_ENDIAN1;}
 
 uint32 TRandomMersenne::BRandom() {
   // generate 32 random bits
@@ -100,4 +97,3 @@ double TRandomMersenne::Random() {
   // This somewhat slower method works for all architectures, including
   // non-IEEE floating point representation:
   return (double)r * (1./((double)(uint32)(-1L)+1.));}
-
