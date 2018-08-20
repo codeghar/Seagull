@@ -775,6 +775,8 @@ bool C_TransIP::analyze_open_string (char *P_buf, T_pIpAddr P_addr) {
 		  char*,sizeof(char),
 		  strlen(L_tmp)+1);
       strcpy(P_addr->m_open_src, L_tmp);
+	    
+      P_addr->m_hasSource = true;
     } 
   }
 
