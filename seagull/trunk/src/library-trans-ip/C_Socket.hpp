@@ -241,6 +241,9 @@ public:
                      size_t        P_buffer_size,
                      C_ProtocolBinaryFrame *P_protocol);
   int _read ();
+	
+protected:
+  bool m_hasSource;
 
 } ;
 
