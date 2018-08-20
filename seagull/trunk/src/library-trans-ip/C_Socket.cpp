@@ -603,6 +603,7 @@ int C_SocketServer::_open(size_t P_buffer_size,
 
 C_SocketClient::C_SocketClient(C_SocketClient& P_Socket) 
   : C_SocketWithData (P_Socket) {
+  m_hasSource = P_Socket. m_remote_addr_info->m_hasSource;
 }
 
 C_SocketClient::C_SocketClient(T_SocketType P_type, 
@@ -613,6 +614,8 @@ C_SocketClient::C_SocketClient(T_SocketType P_type,
   : C_SocketWithData(P_type, P_addr, P_channel_id, 
                      P_read_buf_size, P_segm_buf_size) {
   SOCKET_DEBUG(0, "C_SocketClient::C_SocketClient() id=" << m_socket_id);
+	  
+  m_hasSource = P_addr->m_hasSource;
 }
 
 C_SocketClient::~C_SocketClient() {
@@ -664,13 +667,17 @@ int C_SocketClient::_open(T_pOpenStatus  P_status,
       }
     } else {
 	    
-      /* UDP Does not need to bind first */
+      /* UDP Does not need to bind first unless source is declared */
       if(m_type != E_SOCKET_UDP_MODE) {
         L_rc = call_bind(m_socket_id, 
                        (sockaddr *)(void *)&(m_remote_addr_info->m_addr_src),
                        SOCKADDR_IN_SIZE(&(m_remote_addr_info->m_addr_src)));
-        } else {
-	  L_rc = 0;
+        } else if (m_type == E_SOCKET_UDP_MODE && m_hasSource == true) { 
+          L_rc = call_bind(m_socket_id, 
+                       (sockaddr *)(void *)&(m_remote_addr_info->m_addr_src),
+                       SOCKADDR_IN_SIZE(&(m_remote_addr_info->m_addr_src)));
+        } else { 
+          L_rc = 0;
         }
 	    
        if (L_rc) {
