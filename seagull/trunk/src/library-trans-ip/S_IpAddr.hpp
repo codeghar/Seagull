@@ -47,6 +47,8 @@ typedef struct _struct_ip_addr {
   long                    m_port_src    ;
   char                   *m_ip_src      ;
   T_SockAddrStorage       m_addr_src    ;
+  
+  bool                    m_hasSource   ;
 
 } T_IpAddr, *T_pIpAddr ;
 
