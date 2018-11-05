@@ -64,7 +64,6 @@ int C_TransSCTP::analyze_config(T_ConfigValue& P_config) {
 
 
 C_TransSCTP::C_TransSCTP() : C_TransIP()  {
-  sctp_initLibrary();
 }
 
 C_TransSCTP::~C_TransSCTP() {
@@ -72,7 +71,7 @@ C_TransSCTP::~C_TransSCTP() {
 
 T_SelectDef C_TransSCTP::select_definition() {
   GEN_DEBUG(0, "C_TransSCTP::select_definition () ");
-  return (&ext_select);
+  return (&select);
 }
 
 C_Socket* C_TransSCTP::open (int              P_channel_id, 

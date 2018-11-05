@@ -1,7 +1,7 @@
 FROM ubuntu:18.04 as builder
 
 RUN    apt update \
-    && apt install -y build-essential curl git libglib2.0-dev ksh bison flex vim
+    && apt install -y build-essential curl git libglib2.0-dev ksh bison flex vim libsctp-dev
 
 RUN    mkdir -p ~/opt/src \
     && cd ~/opt/src \
