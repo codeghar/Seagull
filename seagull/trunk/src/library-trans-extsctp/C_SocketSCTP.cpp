@@ -23,6 +23,10 @@
 #include "C_Socket.hpp"
 #include "C_SocketSCTP.hpp"
 
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 
 #define MSGFLAG      0
 #define MAX_OUTGOING 128
@@ -100,7 +104,6 @@ void C_SocketSCTPListen::set_properties() {
       SOCKET_ERROR(1, "Unable to set SCTP_EVENTS option");
     }
 
-  // SCTP END
   
   }
   // size of recv buf
@@ -182,10 +185,26 @@ int C_SocketSCTPListen::_open (size_t                 P_buffer_size,
      //     set_properties() ;
 
      /* bind the socket to the newly formed address */
-     L_rc = bind(m_socket_id, 
-		      (sockaddr *)(void *)&(m_source_addr_info->m_addr),
-		      SOCKADDR_IN_SIZE(&(m_source_addr_info->m_addr)));
-   /* check there was no error */
+
+     struct sockaddr_storage *bind_addr = NULL;
+     unsigned int cc = 0;
+     SOCKET_DEBUG(0, "bind1 start");
+     unsigned int bind_addr_count = m_source_addr_info->m_addrs_src.size();
+     for (unsigned int i = 0; i < bind_addr_count; i++) {
+         sockaddr_in *so = (sockaddr_in *)(m_source_addr_info->m_addrs_src[i]->ai_addr);
+         size_t addrlen = m_source_addr_info->m_addrs_src[i]->ai_addrlen;
+         SOCKET_DEBUG(0, "bind to " << inet_ntoa(so->sin_addr)
+                 << ":" << ntohs(so->sin_port));
+         bind_addr = (sockaddr_storage*)realloc(bind_addr, cc + addrlen);
+         memcpy((char*)bind_addr + cc, so, addrlen);
+         cc += addrlen;
+     }
+
+     SOCKET_DEBUG(0, "binding stop");
+     L_rc = sctp_bindx(m_socket_id,
+             (struct sockaddr*)bind_addr,
+             bind_addr_count, SCTP_BINDX_ADD_ADDR);
+     /* check there was no error */
      if (L_rc) {
        SOCKET_ERROR(1, "bind [" << strerror(errno) << "]");
      } else {
@@ -809,9 +828,22 @@ int C_SocketSCTPServer::_open_udp (size_t P_buffer_size,
      m_buffer_size = P_buffer_size ;
      
      /* bind the socket to the newly formed address */
-     L_rc = bind(m_socket_id, 
-		 (sockaddr *)(void *)&(m_source_udp_addr_info->m_addr),
-		 SOCKADDR_IN_SIZE(&(m_source_udp_addr_info->m_addr)));
+     struct sockaddr_storage *bind_addr = NULL;
+     unsigned int cc = 0;
+     unsigned int bind_addr_count = m_source_udp_addr_info->m_addrs_src.size();
+     for (unsigned int i = 0; i < bind_addr_count; i++) {
+         sockaddr_in *so = (sockaddr_in *)(m_source_udp_addr_info->m_addrs_src[i]->ai_addr);
+         size_t addrlen = m_source_udp_addr_info->m_addrs_src[i]->ai_addrlen;
+         SOCKET_DEBUG(0, "bind to " << inet_ntoa(so->sin_addr)
+                 << ":" << ntohs(so->sin_port));
+         bind_addr = (sockaddr_storage*)realloc(bind_addr, cc + addrlen);
+         memcpy((char*)bind_addr + cc, so, addrlen);
+         cc += addrlen;
+     }
+
+     L_rc = sctp_bindx(m_socket_id,
+             (struct sockaddr*)bind_addr,
+             bind_addr_count, SCTP_BINDX_ADD_ADDR);
    /* check there was no error */
      if (L_rc) {
        SOCKET_ERROR(1, "bind [" << strerror(errno) << "]");
@@ -894,13 +926,45 @@ int C_SocketSCTPClient::_open(T_pOpenStatus  P_status,
   if (L_rc == 0) {
 
     if (m_type == E_SOCKET_TCP_MODE) {
+      // SCTP MULTIHOMING CLIENT BINDING
+      struct sockaddr_storage *bind_addr = NULL;
+      unsigned int cc = 0;
+      unsigned int bind_addr_count = m_remote_addr_info->m_addrs_src.size();
+      for (unsigned int i = 0; i < bind_addr_count; i++) {
+          sockaddr_in *so = (sockaddr_in *)(m_remote_addr_info->m_addrs_src[i]->ai_addr);
+          size_t addrlen = m_remote_addr_info->m_addrs_src[i]->ai_addrlen;
+          SOCKET_DEBUG(0, "bind to " << inet_ntoa(so->sin_addr)
+                  << ":" << ntohs(so->sin_port));
+          bind_addr = (sockaddr_storage*)realloc(bind_addr, cc + addrlen);
+          memcpy((char*)bind_addr + cc, so, addrlen);
+          cc += addrlen;
+      }
 
-     
+      if(bind_addr_count > 0) {
+          if(sctp_bindx(m_socket_id,
+                      (struct sockaddr*)bind_addr,
+                      bind_addr_count, SCTP_BINDX_ADD_ADDR)) {
+              SOCKET_ERROR(1, "error bind client [" << strerror(errno) << "]");
+          }
+      }
 
-      L_rc = connect (m_socket_id, 
-                           (struct sockaddr*)(void*)&(m_remote_addr_info->m_addr),
-                           SOCKADDR_IN_SIZE(&(m_remote_addr_info->m_addr))) ;
-      
+
+      struct sockaddr_storage *connect_addr = NULL;
+      cc = 0;
+      unsigned int connect_addr_count = m_remote_addr_info->m_addrs_dst.size();
+      for (unsigned int i = 0; i < connect_addr_count; i++) {
+          sockaddr_in *so = (sockaddr_in *)(m_remote_addr_info->m_addrs_dst[i]->ai_addr);
+          size_t addrlen = m_remote_addr_info->m_addrs_dst[i]->ai_addrlen;
+          SOCKET_DEBUG(0, "connect to " << inet_ntoa(so->sin_addr)
+                  << ":" << ntohs(so->sin_port));
+          connect_addr = (sockaddr_storage*)realloc(connect_addr, cc + addrlen);
+          memcpy((char*)connect_addr + cc, so, addrlen);
+          cc += addrlen;
+      }
+
+      L_rc = sctp_connectx(m_socket_id,
+              (struct sockaddr*)connect_addr,
+              connect_addr_count, 0);
       if (L_rc) {
         if (errno != EINPROGRESS) {
           SOCKET_ERROR(1, "connect failed [" 
@@ -919,9 +983,23 @@ int C_SocketSCTPClient::_open(T_pOpenStatus  P_status,
         *P_status = E_OPEN_OK ;
       }
     } else {
-      L_rc = bind(m_socket_id, 
-                       (sockaddr *)(void *)&(m_remote_addr_info->m_addr_src),
-                       SOCKADDR_IN_SIZE(&(m_remote_addr_info->m_addr_src)));
+        struct sockaddr_storage *bind_addr = NULL;
+        unsigned int cc = 0;
+        SOCKET_DEBUG(0, "bind start");
+        unsigned int bind_addr_count = m_remote_addr_info->m_addrs_src.size();
+        for (unsigned int i = 0; i < bind_addr_count; i++) {
+            sockaddr_in *so = (sockaddr_in *)(m_remote_addr_info->m_addrs_src[i]->ai_addr);
+            size_t addrlen = m_remote_addr_info->m_addrs_src[i]->ai_addrlen;
+            SOCKET_DEBUG(0, "bind to " << inet_ntoa(so->sin_addr)
+                    << ":" << ntohs(so->sin_port));
+            bind_addr = (sockaddr_storage*)realloc(bind_addr, cc + addrlen);
+            memcpy((char*)bind_addr + cc, so, addrlen);
+            cc += addrlen;
+        }
+
+        L_rc = sctp_bindx(m_socket_id,
+            (struct sockaddr*)bind_addr,
+            bind_addr_count, SCTP_BINDX_ADD_ADDR);
      
        if (L_rc) {
         SOCKET_ERROR(1, "bind [" << strerror(errno) << "]");

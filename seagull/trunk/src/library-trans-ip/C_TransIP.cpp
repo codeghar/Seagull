@@ -21,7 +21,11 @@
 #include "Utils.hpp"
 
 #include <cerrno>
+#include <string>
 #include <unistd.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 
 #include <regex.h>
 
@@ -743,7 +747,7 @@ bool C_TransIP::analyze_init_string(char *P_buf) {
 
 bool C_TransIP::analyze_open_string (char *P_buf, T_pIpAddr P_addr) {
 
-  char            L_tmp  [255] ;
+  char            L_tmp  [255], L_tmp_port[255];
    char            L_tmp_lag  [255] ;
   char           *L_buf, *L_ptr ;
 
@@ -775,10 +779,46 @@ bool C_TransIP::analyze_open_string (char *P_buf, T_pIpAddr P_addr) {
 		  char*,sizeof(char),
 		  strlen(L_tmp)+1);
       strcpy(P_addr->m_open_src, L_tmp);
-    } 
+
+      L_ptr = L_buf;
+      while(1) {
+          L_ptr = strstr(L_ptr, "source=");
+          if (L_ptr != NULL) {
+              struct addrinfo *addr;
+              struct addrinfo L_hints;
+              memset((char*)&L_hints, 0, sizeof(L_hints));
+              L_hints.ai_flags  = AI_PASSIVE;
+              L_hints.ai_family = PF_UNSPEC;
+
+              sscanf(L_ptr+7, "%[^;]*s", L_tmp);
+
+              L_tmp_port[0] = '\0';
+              char* delem = strstr(L_tmp, ":");
+              if(delem != NULL) {
+                  strncpy(L_tmp_port, delem + 1, 254);
+                  (*delem) = '\0';
+              }
+
+              GEN_DEBUG(1, "source [" << L_tmp << ":" << L_tmp_port << "]");
+              if (getaddrinfo(L_tmp,
+                          L_tmp_port,
+                          &L_hints,
+                          &addr) != 0) {
+                  GEN_DEBUG(1, "Unknown host: [" << L_tmp << "]");
+              } else {
+                  GEN_DEBUG(1, "add src to m_addrs_dst");
+                  P_addr->m_addrs_src.push_back(addr);
+              }
+              L_ptr = L_ptr + 7;
+          } else {
+              break;
+          }
+      }
+    }
   }
 
   if (m_active) {
+    GEN_DEBUG(1, "C_TransIP::m_active: true");
     L_buf = P_buf ;
     L_ptr = strstr(L_buf, "dest=");
     if (L_ptr != NULL) {
@@ -790,8 +830,43 @@ bool C_TransIP::analyze_open_string (char *P_buf, T_pIpAddr P_addr) {
                   strlen(L_tmp)+1);
         strcpy(P_addr->m_open, L_tmp);
       }
+
+      L_ptr = L_buf;
+      while(1) {
+          L_ptr = strstr(L_ptr, "dest=");
+          if (L_ptr != NULL) {
+              struct addrinfo *addr;
+              struct addrinfo L_hints;
+              memset((char*)&L_hints, 0, sizeof(L_hints));
+              L_hints.ai_flags  = AI_PASSIVE;
+              L_hints.ai_family = PF_UNSPEC;
+
+              sscanf(L_ptr + 5, "%[^;]*s", L_tmp);
+
+              L_tmp_port[0] = '\0';
+              char* delem = strstr(L_tmp, ":");
+              if(delem != NULL) {
+                  strncpy(L_tmp_port, delem + 1, 254);
+                  (*delem) = '\0';
+              }
+              GEN_DEBUG(1, "dst a[" << L_tmp << ":" << L_tmp_port << "]");
+              if (getaddrinfo(L_tmp,
+                          L_tmp_port,
+                          &L_hints,
+                          &addr) != 0) {
+                  GEN_DEBUG(1, "Unknown host: [" << L_tmp << "]");
+              } else {
+                  GEN_DEBUG(1, "add dst to m_addrs_dst");
+                  P_addr->m_addrs_dst.push_back(addr);
+              }
+              L_ptr = L_ptr + 5;
+          } else {
+              break;
+          }
+      }
     }
   } else {
+    GEN_DEBUG(1, "C_TransIP::m_active: false");
     L_buf = P_buf ;
     L_ptr = strstr(L_buf, "standby=");
     if (L_ptr != NULL) {
@@ -804,6 +879,7 @@ bool C_TransIP::analyze_open_string (char *P_buf, T_pIpAddr P_addr) {
         strcpy(P_addr->m_open, L_tmp_lag);
 
       } else {
+          GEN_DEBUG(1, "C_TransIP::without standby");
         // if standby is not provided, default is dest
         L_buf = P_buf ;
         L_ptr = strstr(L_buf, "dest=");
@@ -816,8 +892,41 @@ bool C_TransIP::analyze_open_string (char *P_buf, T_pIpAddr P_addr) {
                         strlen(L_tmp)+1);
             strcpy(P_addr->m_open, L_tmp);
           }
-        }
+          L_ptr = L_buf;
+          while(1) {
+              L_ptr = strstr(L_ptr, "dest=");
+              if (L_ptr != NULL) {
+                  struct addrinfo *addr;
+                  struct addrinfo L_hints;
+                  memset((char*)&L_hints, 0, sizeof(L_hints));
+                  L_hints.ai_flags  = AI_PASSIVE;
+                  L_hints.ai_family = PF_UNSPEC;
 
+                  sscanf(L_ptr + 5, "%[^;]*s", L_tmp);
+
+                  L_tmp_port[0] = '\0';
+                  char* delem = strstr(L_tmp, ":");
+                  if(delem != NULL) {
+                      strncpy(L_tmp_port, delem + 1, 254);
+                      (*delem) = '\0';
+                  }
+
+                  GEN_DEBUG(1, "dst b[" << L_tmp << ":" << L_tmp_port<< "]");
+                  if (getaddrinfo(L_tmp,
+                              L_tmp_port,
+                              &L_hints,
+                              &addr) != 0) {
+                      GEN_DEBUG(1, "Unknown host: [" << L_tmp << "]");
+                  } else {
+                      GEN_DEBUG(1, "add dst to m_addrs_dst");
+                      P_addr->m_addrs_dst.push_back(addr);
+                  }
+                  L_ptr = L_ptr + 5;
+              } else {
+                  break;
+              }
+          }
+        }
       }
     }
   }

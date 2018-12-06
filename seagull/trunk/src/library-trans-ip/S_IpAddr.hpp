@@ -22,6 +22,7 @@
 
 #include "socket_t.hpp"
 #include "list_t.hpp"
+#include "vector_t.hpp"
 
 #include "map_t.hpp"
 
@@ -47,7 +48,8 @@ typedef struct _struct_ip_addr {
   long                    m_port_src    ;
   char                   *m_ip_src      ;
   T_SockAddrStorage       m_addr_src    ;
-
+  vector_t<struct addrinfo *>m_addrs_src;
+  vector_t<struct addrinfo *>m_addrs_dst;
 } T_IpAddr, *T_pIpAddr ;
 
 void      clear_IpAddr(T_pIpAddr P_IpAddr) ;

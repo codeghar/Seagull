@@ -24,7 +24,7 @@ RUN    tar czf /root/bin.tgz ~/opt/src/seagull/seagull/trunk/src/bin/* \
 
 FROM ubuntu:18.04 as distro
 RUN    apt update \
-    && apt install -y ksh locales \
+    && apt install -y ksh locales libsctp1 \
     && apt upgrade -y \
     && locale-gen en_US.UTF-8 \
     && dpkg-reconfigure --frontend noninteractive locales \
