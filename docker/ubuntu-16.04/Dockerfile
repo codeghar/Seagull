@@ -1,7 +1,7 @@
 FROM ubuntu:16.04 as builder
 
 RUN    apt update \
-    && apt install -y build-essential curl git libglib2.0-dev ksh bison flex vim
+    && apt install -y build-essential curl git libglib2.0-dev ksh bison flex vim libsctp-dev
 
 RUN    mkdir -p ~/opt/src \
     && cd ~/opt/src \
@@ -24,7 +24,7 @@ RUN    tar czf /root/bin.tgz ~/opt/src/seagull/seagull/trunk/src/bin/* \
 
 FROM ubuntu:16.04 as distro
 RUN    apt update \
-    && apt install -y ksh locales \
+    && apt install -y ksh locales libsctp1 \
     && apt upgrade -y \
     && locale-gen en_US.UTF-8 \
     && dpkg-reconfigure --frontend noninteractive locales \

@@ -31,9 +31,9 @@
 
 
 
-#define SOCKET_ERROR(l,m) iostream_error << m << iostream_endl << iostream_flush
+#define SOCKET_ERROR(l,m) iostream_error << m << iostream_flush << iostream_endl
 #ifdef DEBUG_MODE
-#define SOCKET_DEBUG(l,m) iostream_error << m << iostream_endl << iostream_flush
+#define SOCKET_DEBUG(l,m) iostream_error << m << iostream_flush << iostream_endl
 #else
 #define SOCKET_DEBUG(l,m)
 #endif

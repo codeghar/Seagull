@@ -38,7 +38,7 @@
 
 
 int C_TransSCTP::config (T_pConfigValueList P_config_param_list) {
-  GEN_DEBUG(1, "C_TransIP::config  ()");
+  GEN_DEBUG(1, "C_TransSCTP::config  ()");
   m_logInfo = NULL ;
   m_logError = NULL ;
 
@@ -64,7 +64,6 @@ int C_TransSCTP::analyze_config(T_ConfigValue& P_config) {
 
 
 C_TransSCTP::C_TransSCTP() : C_TransIP()  {
-  sctp_initLibrary();
 }
 
 C_TransSCTP::~C_TransSCTP() {
@@ -72,7 +71,7 @@ C_TransSCTP::~C_TransSCTP() {
 
 T_SelectDef C_TransSCTP::select_definition() {
   GEN_DEBUG(0, "C_TransSCTP::select_definition () ");
-  return (&ext_select);
+  return (&select);
 }
 
 C_Socket* C_TransSCTP::open (int              P_channel_id, 
@@ -86,7 +85,7 @@ C_Socket* C_TransSCTP::open (int              P_channel_id,
 
  
     
-    GEN_DEBUG(1, "C_TransIPTLS::open ()");
+    GEN_DEBUG(1, "C_TransSCTP::open ()");
     
     switch (P_Addr->m_umode) {
     case E_IP_USAGE_MODE_SERVER: {
