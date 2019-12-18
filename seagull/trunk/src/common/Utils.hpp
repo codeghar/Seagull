@@ -59,6 +59,11 @@ typedef unsigned char boolean ;
 #endif /* false */
 #endif /* LOCAL_BOOLEAN */
 
+// Standard error/log message length limit
+#ifndef MAX_LOG_LENGTH
+#define MAX_LOG_LENGTH 1200
+#endif
+
 //
 // Memory allocation general macros
 

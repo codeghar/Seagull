@@ -37,39 +37,39 @@
 #define GEN_ERROR(l,a) iostream_error << a << iostream_endl << iostream_flush ; 
 
 #define LOG_ERROR(m) { \
- char L_err [100] ; \
- snprintf(L_err, 100, (char*)(m)) ; \
+ char L_err [MAX_LOG_LENGTH] ; \
+ snprintf(L_err, MAX_LOG_LENGTH, (char*)(m)) ; \
 (*m_logError)(L_err); \
 }
 
 #define LOG_ERROR_P1(m,P1) { \
- char L_err [100] ; \
- snprintf(L_err, 100, (char*)(m), (P1)) ; \
+ char L_err [MAX_LOG_LENGTH] ; \
+ snprintf(L_err, MAX_LOG_LENGTH, (char*)(m), (P1)) ; \
 (*m_logError)(L_err); \
 }
 
 #define LOG_ERROR_P2(m,P1,P2) { \
- char L_err [100] ; \
- snprintf(L_err, 100, (char*)(m), (P1),(P2)) ; \
+ char L_err [MAX_LOG_LENGTH] ; \
+ snprintf(L_err, MAX_LOG_LENGTH, (char*)(m), (P1),(P2)) ; \
 (*m_logError)(L_err); \
 }
 
 
 #define LOG_ALL(m) { \
- char L_msg [100] ; \
- snprintf(L_msg, 100, (char*)(m)) ; \
+ char L_msg [MAX_LOG_LENGTH] ; \
+ snprintf(L_msg, MAX_LOG_LENGTH, (char*)(m)) ; \
 (*m_logInfo)(L_msg); \
 }
 
 #define LOG_ALL_P1(m,P1) { \
- char L_msg [100] ; \
- snprintf(L_msg, 100, (char*)(m), (P1)) ; \
+ char L_msg [MAX_LOG_LENGTH] ; \
+ snprintf(L_msg, MAX_LOG_LENGTH, (char*)(m), (P1)) ; \
 (*m_logInfo)(L_msg); \
 }
 
 #define LOG_ALL_P2(m,P1,P2) { \
- char L_msg [100] ; \
- snprintf(L_msg, 100, (char*)(m), (P1),(P2)) ; \
+ char L_msg [MAX_LOG_LENGTH] ; \
+ snprintf(L_msg, MAX_LOG_LENGTH, (char*)(m), (P1),(P2)) ; \
 (*m_logInfo)(L_msg); \
 }
 

@@ -32,39 +32,39 @@
 
 
 #define LOG_ERROR(m) { \
- char L_err [100] ; \
- snprintf(L_err, 100, (m)) ; \
+ char L_err [MAX_LOG_LENGTH] ; \
+ snprintf(L_err, MAX_LOG_LENGTH, (m)) ; \
 (*m_log_error)(L_err); \
 }
 
 #define LOG_ERROR_P1(m,P1) { \
- char L_err [100] ; \
- snprintf(L_err, 100, (m), (P1)) ; \
+ char L_err [MAX_LOG_LENGTH] ; \
+ snprintf(L_err, MAX_LOG_LENGTH, (m), (P1)) ; \
 (*m_log_error)(L_err); \
 }
 
 #define LOG_ERROR_P2(m,P1,P2) { \
- char L_err [100] ; \
- snprintf(L_err, 100, (m), (P1),(P2)) ; \
+ char L_err [MAX_LOG_LENGTH] ; \
+ snprintf(L_err, MAX_LOG_LENGTH, (m), (P1),(P2)) ; \
 (*m_log_error)(L_err); \
 }
 
 
 #define LOG_ALL(m) { \
- char L_msg [100] ; \
- snprintf(L_msg, 100, (m)) ; \
+ char L_msg [MAX_LOG_LENGTH] ; \
+ snprintf(L_msg, MAX_LOG_LENGTH, (m)) ; \
 (*m_log_info)(L_msg); \
 }
 
 #define LOG_ALL_P1(m,P1) { \
- char L_msg [100] ; \
- snprintf(L_msg, 100, (m), (P1)) ; \
+ char L_msg [MAX_LOG_LENGTH] ; \
+ snprintf(L_msg, MAX_LOG_LENGTH, (m), (P1)) ; \
 (*m_log_info)(L_msg); \
 }
 
 #define LOG_ALL_P2(m,P1,P2) { \
- char L_msg [100] ; \
- snprintf(L_msg, 100, (m), (P1),(P2)) ; \
+ char L_msg [MAX_LOG_LENGTH] ; \
+ snprintf(L_msg, MAX_LOG_LENGTH, (m), (P1),(P2)) ; \
 (*m_log_info)(L_msg); \
 }
 
