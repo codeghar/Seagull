@@ -1,0 +1,116 @@
+<!--
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+  Authors: Arindam Gupta <gupta.arindam@gmail>
+
+-->
+
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<scenario>
+
+  <counter>
+    <counterdef name="HbH-counter" init="1000"></counterdef>
+    <counterdef name="EtE-counter" init="2000"></counterdef>
+    <counterdef name="session-counter" init="0"></counterdef>
+  </counter>
+
+  <init>
+    <send channel="channel-1">
+      <command name="CER">
+     
+           <!--<avp name="Origin-Host" value="seagull.epc.mnc999.mcc310.3gppnetwork.org"></avp>-->
+<avp name="Origin-Host" value="0001-diamproxy.IDP-conn01.epc.mnc999.mcc310.3gppnetwork.org"></avp>        
+<avp name="Origin-Realm" value="epc.mnc999.mcc310.3gppnetwork.org"></avp>
+<avp name="Destination-Host" value="204.16.70.187"></avp>        
+<avp name="Destination-Realm" value="epc.mnc016.mcc901.3gppnetwork.org"> </avp>
+
+        <avp name="Host-IP-Address" value="0x00010AC644CD"></avp>
+        
+        <avp name="Vendor-Id" value="11"></avp>
+        <avp name="Product-Name" value="Sh Interface"></avp>
+        <avp name="Origin-State-Id" value="1094807040"></avp>
+        <avp name="Supported-Vendor-Id" value="10415"></avp>
+        <avp name="Vendor-Specific-Application-Id">
+          <avp name="Vendor-Id" value="0"></avp>
+          <avp name="Auth-Application-Id" value="16777251"></avp>
+        </avp>
+        <avp name="Firmware-Revision" value="1"></avp>
+      </command>
+    </send>
+
+    <receive channel="channel-1">
+      <command name="CEA">
+      </command>
+    </receive>
+  </init>
+
+  <!-- Traffic -->
+  <traffic>
+
+    <!-- User-Data-Request -->
+    <send channel="channel-1">
+      <action>
+        <!-- For each request, increment the session-ID counter -->
+        <inc-counter name="HbH-counter"></inc-counter>
+        <inc-counter name="EtE-counter"></inc-counter>
+        <inc-counter name="session-counter"></inc-counter>
+        <set-value name="HbH-id" format="$(HbH-counter)"></set-value>
+        <set-value name="EtE-id" format="$(EtE-counter)"></set-value>
+        <set-value name="Session-Id" format="seagull;1096298391;$(session-counter)"></set-value>
+      </action>
+      <command name="AIR">
+        <avp name="Session-Id" value="0001-diamproxy.Sjclabcbrs32.epc.mnc999.mcc310.3gppnetwork.org;20013;8449;5d5d9aa4-102"></avp>
+        <avp name="Vendor-Specific-Application-Id">
+          <avp name="Vendor-Id" value="0"></avp>
+          <avp name="Auth-Application-Id" value="16777251"></avp>
+        </avp>        
+        <avp name="Auth-Session-State" value="1"></avp>
+        <avp name="Origin-Host" value="seagull.epc.mnc999.mcc310.3gppnetwork.org"></avp>
+        <avp name="Origin-Realm" value="epc.mnc999.mcc310.3gppnetwork.org"></avp>
+        <!-- <avp name="Origin-Realm" value="epc.mnc999.mcc334.3gppnetwork.org"></avp>-->
+        <!--<avp name="Destination-Host" value="204.16.70.187"></avp>-->
+        <!--<avp name="Destination-Realm" value="epc.mnc170.mcc310.3gppnetwork.org"></avpa-->
+        <avp name="Destination-Realm" value="epc.mnc999.mcc310.3gppnetwork.org"></avp>
+        <avp name="User-Name" value="310999000000091"></avp>
+        <avp name="Requested-EUTRAN-Authentication-Info">
+          <avp name="Number-Of-Requested-Vectors" value="1"></avp>
+          <avp name="Immediate-Response-Preferred" value="1"></avp>
+        </avp>        
+        <!--<avp name="User-Name" value="310170230002723"></avp>-->
+        <!--<avp name="DSR-ApplicationInvoked" value="4"></avp>
+        <avp name="RAT-Type" value="0"></avp>
+        <avp name="ULR-Flags" value="1"></avp>
+        <avp name="Visited-PLMN-Id" value="139099"></avp>
+-->
+        <avp name="Visited-PLMN-Id" value="344"></avp>
+      </command>
+      <action>
+        <start-timer></start-timer>
+      </action>
+    </send>
+
+    <receive channel="channel-1">
+      <action>
+        <stop-timer></stop-timer>
+      </action>
+      <command name="AIA">
+      </command>
+    </receive>
+
+  </traffic>
+
+</scenario>
+
