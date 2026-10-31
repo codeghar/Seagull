@@ -601,8 +601,13 @@ bool C_SocketSCTPWithData::sctp_recv_msg (struct msghdr *msg,
     nnr = ::recvmsg(m_socket_id, msg, 0);
 
     if (nnr <= 0) {
-      /* EOF or error */
-      *nrp = nr;
+      /* EOF, error o sin datos (socket no bloqueante) */
+      if ((nnr == 0) ||
+          ((errno != EAGAIN) && (errno != EWOULDBLOCK) && (errno != EINTR))) {
+        *nrp = -1;   /* EOF o error real: el peer cerro la asociacion */
+      } else {
+        *nrp = nr;   /* EAGAIN/EINTR: no hay mas datos por ahora */
+      }
       return (false);
     }
     
@@ -689,7 +694,8 @@ void C_SocketSCTPWithData::sctp_dispatch_msg (C_TransportEvent *P_event) {
   
   }
 
-  if (nr < 0) {
+  // cierre del peer; si hubo datos en esta vuelta se entregan primero
+  if ((nr < 0) && (m_data_recv == false)) {
     SOCKET_DEBUG(0, "C_SocketSCTPWithData::sctp_dispatch_msg() CLOSED");
     P_event->m_type = C_TransportEvent::E_TRANS_CLOSED ;
     P_event->m_channel_id = m_channel_id ;
