@@ -158,7 +158,9 @@ The README in *docker* directory has more information on how to build Seagull in
 
 ## Investigation
 
-If you're interested in how I investigated the build issues read the investigation.rst file.
+`investigation.rst` is a historical record by Hamza Sheikh (@aikchar) of how Seagull
+was first built from the SVN sources on Ubuntu 15.04 (before CMake). It does not apply
+to the `modernizacion` branch; see *Build Instructions (CMake)* above.
 
 ## Diameter Gx
 
