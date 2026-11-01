@@ -108,6 +108,18 @@ The SCTP plugin uses the native Linux kernel SCTP (no `sctplib` / `socketapi`); 
     sudo modprobe sctp
     checksctp            # must print "SCTP supported"
 
+Use the default socket buffer (65535) or larger. With small buffers (for example
+`buffer=4096` in `open-args`), the kernel SCTP window (~4 KB), delayed SACK and
+`rto_min` (1 s) limit throughput to about 25 messages/s, and queued messages time out.
+
+### Write flow control
+
+When the peer stops reading and the socket send buffer is full (`EAGAIN`), messages
+are queued per socket (up to 4 MB) and sent in order once the socket becomes writable.
+Previously they were silently dropped. If the limit is reached, the new message is
+discarded and `write queue full` is printed on stderr. Queued data of a channel that
+is being closed is discarded.
+
 ### Tests
 
 A portable test harness (TCP, TLS 1.3, SCTP, load, sanitizers) is in

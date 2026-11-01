@@ -151,6 +151,9 @@ sed -e 's|libtrans_ip.so|libtrans_extsctp.so|' -e 's|create_cipio_instance|creat
 - Para ver si el servidor escucha: `cat /proc/net/sctp/eps`
   (`ss -S` necesita el modulo `sctp_diag`).
 - Si el puerto no es 3868, en Wireshark/tshark: `-d sctp.port==<puerto>,diameter`.
+- Usar el tamano de buffer por defecto (65535) o mayor. Con `buffer=4096` en `open-args`,
+  SCTP queda limitado por el kernel (ventana de ~4 KB, SACK diferido, `rto_min` 1 s;
+  unos 25 mensajes/s) y no sostiene 50 llamadas/s.
 
 ## Limitaciones conocidas
 
@@ -158,3 +161,6 @@ sed -e 's|libtrans_ip.so|libtrans_extsctp.so|' -e 's|create_cipio_instance|creat
 - No hay CCR-U ni RAR/RAA.
 - El temporizador del cliente mide solo CCR-I/CCA-I (latencia de establecimiento).
 - TLS: sin `crl_file` en `init-args`, Seagull cifra pero no verifica el certificado del peer (SSL_VERIFY_NONE). Con `crl_file` exige certificado y lo valida contra `cert_chain_file`.
+- Un servidor Seagull atiende un solo cliente por ejecucion: el bloque `<init>` (CER/CEA)
+  se ejecuta una vez por proceso, y el CER de un segundo cliente se trata como inesperado.
+  Hay que reiniciar el servidor para cada cliente (aplica a TCP, TLS y SCTP).

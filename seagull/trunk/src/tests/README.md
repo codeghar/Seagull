@@ -104,6 +104,10 @@ no está cargado, esa etapa queda como AVISO). Logs en
   están en `lsan.supp`. Cualquier otro leak se sigue reportando.
 - **Certificados**: no se versionan (`*.pem` y `*.key` están en `.gitignore`).
   Se regeneran con `tests/gen-certs.sh` cuando caducan.
+- **Buffers de SCTP**: con `buffer=` pequeño (por ejemplo 4096), el SCTP del kernel no
+  sostiene la carga y las llamadas vencen. Usar el valor por defecto.
+- **Un cliente por servidor**: el `<init>` del escenario servidor se ejecuta una vez por
+  proceso; para lanzar otro cliente hay que reiniciar el servidor.
 
 ## Solución de problemas
 
