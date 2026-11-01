@@ -151,10 +151,10 @@ For example, to start a Diameter server:
 
 ## Build in Docker
 
-> The Dockerfiles in *docker* still use the legacy build (`build.ksh`) and have not been
-> updated for CMake yet.
-
-The README in *docker* directory has more information on how to build Seagull in Docker.
+`docker/almalinux-10` builds a container image (AlmaLinux 10.2, CMake, system OpenSSL,
+native SCTP) from the current commit with Podman or Docker. See
+[`docker/README.md`](docker/README.md). The original Dockerfiles are kept in
+`docker/legacy` for reference.
 
 ## Investigation
 
