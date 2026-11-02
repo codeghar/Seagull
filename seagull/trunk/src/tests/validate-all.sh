@@ -68,7 +68,7 @@ san "$D/out-tcp-asan" "TCP+ASan"
 
 stage "4. Diameter TLS con ASan"
 PROBE=1 "$HERE/run-diameter-tls.sh" "$SRC/build-asan/bin" "$D/out-tls-asan" > "$D/tls-asan.log" 2>&1
-grep -E 'Protocol|Cipher|SAR enviados|IGUAL|DIFERENTE|termino|NO termino' "$D/tls-asan.log"
+grep -E 'Protocol|Cipher|SAR enviados|IGUAL|DIFERENTE|termin' "$D/tls-asan.log"
 if grep -q 'Protocol: TLSv' "$D/tls-asan.log" && grep -q 'client: IGUAL' "$D/tls-asan.log" && grep -q 'server: IGUAL' "$D/tls-asan.log"; then
   ok "TLS negocia y los contadores coinciden"; else fail "TLS (ver $D/tls-asan.log)"; fi
 san "$D/out-tls-asan" "TLS+ASan"

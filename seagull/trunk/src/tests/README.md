@@ -19,7 +19,10 @@ Antes de cada sesión: `export LC_ALL=C` (los scripts buscan `warning:` en ingl�
 
 | Archivo | Función |
 |---|---|
-| `lib.sh` | Rutas comunes, `prepare_env` y `prepare_sctp_conf` |
+| `lib.sh` | Rutas comunes, `prepare_env` (sufijo opcional, p. ej. `-tls`) y `prepare_sctp_conf` |
+| `run-diameter-any.sh` | Corrida Diameter SAR/SAA por transporte (tcp, tls o sctp): `<modo> <dir-binarios> <dir-salida> [clave] [passwd]`; en TLS, `PROBE=1` sondea con `s_client` |
+| `run-diameter.sh`, `run-diameter-tls.sh`, `run-diameter-sctp.sh` | Envoltorios de `run-diameter-any.sh` (tcp, tls y sctp); conservan la interfaz que usan `verify.sh` y `validate-all.sh` |
+| `run-diameter-load.sh` | Prueba de carga TCP o TLS (`MODE`, `RATE`, `CALLS`) |
 | `resumen.sh` | Extrae los contadores finales de un CSV de protocolo |
 | `expected/` | Referencia gnu++98 en texto (cliente y servidor) |
 | `unit/` | Pruebas unitarias de crypto (Radius, Digest RFC 2617) |
