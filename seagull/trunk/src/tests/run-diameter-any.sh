@@ -1,5 +1,5 @@
 #!/bin/bash
-# uso: run-diameter-any.sh <tcp|tls|sctp> <dir-binarios> <dir-salida> [clave] [passwd]   (TLS: PROBE=1 prueba s_client)  (vars opcionales: DICO=base_cx.xml SCEN=sar-saa)
+# uso: run-diameter-any.sh <tcp|tls|sctp> <dir-binarios> <dir-salida> [clave] [passwd]   (TLS: PROBE=1 prueba s_client)  (vars opcionales: DICO=base_cx.xml SCEN=sar-saa MAX_ERR=0)
 . "$(dirname "${0}")/lib.sh"
 MODE=${1}; BIN=$(realpath "${2}" 2>/dev/null); OUT=$(realpath -m "${3}" 2>/dev/null)
 KEY=${4:-key.pem}; PASS=${5:-seagull123}
@@ -90,4 +90,13 @@ if [ "$MODE" = tls ]; then
   done
   else echo "--- comparación con referencia Cx omitida (SCEN=$SCEN)"; fi
 fi
-pgrep -x seagull >/dev/null && echo "AVISO: queda algún seagull vivo" || echo "limpio"
+VIVO=0; pgrep -x seagull >/dev/null && VIVO=1
+NERR=$(cat "$OUT"/env/logs/*.log 2>/dev/null | grep -c -F '|E|')
+MAX_ERR=${MAX_ERR:-0}
+echo "--- errores E en los logs: $NERR (maximo permitido: $MAX_ERR)"
+if [ "$NERR" -gt "$MAX_ERR" ]; then
+  grep -h -F '|E|' "$OUT"/env/logs/*.log | cut -d'|' -f3 | sort | uniq -c | sort -rn | head -5
+fi
+if [ "$VIVO" -eq 1 ]; then echo "AVISO: queda algún seagull vivo"; else echo "limpio"; fi
+if [ "$NERR" -gt "$MAX_ERR" ] || [ "$VIVO" -eq 1 ]; then echo "RESULTADO: FALLO"; exit 2; fi
+echo "RESULTADO: OK"
