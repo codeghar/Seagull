@@ -141,12 +141,11 @@ MaxProtocol = TLSv1.2
 - Compilar con `-DSEAGULL_BUILD_SCTP=ON` (genera `libtrans_extsctp.so`; usa el
   SCTP del kernel, sin depender de lksctp-tools en ejecucion).
 - Cargar el modulo en ambas maquinas: `sudo modprobe sctp`.
-- Generar los `conf` SCTP a partir de los de TCP:
-
-```
-sed -e 's|libtrans_ip.so|libtrans_extsctp.so|' -e 's|create_cipio_instance|create_cipsctpio_instance|' -e 's|delete_cipio_instance|delete_cipsctpio_instance|' conf.server.xml > conf.server-sctp.xml
-```
-
+- Usar `config/conf.server-sctp.xml` y `config/conf.client-sctp.xml`: son iguales a los
+  de TCP salvo el plugin (`libtrans_extsctp.so`, `create_cipsctpio_instance` /
+  `delete_cipsctpio_instance`).
+- No hay scripts `start_*_sctp.ksh`: tomar como referencia `run/start_server_gx.ksh` y
+  `run/start_client_gx.ksh` y cambiar `-conf` por el archivo `-sctp.xml`.
 - Abrir el puerto como SCTP: `sudo firewall-cmd --add-port=<puerto>/sctp`.
 - Para ver si el servidor escucha: `cat /proc/net/sctp/eps`
   (`ss -S` necesita el modulo `sctp_diag`).
