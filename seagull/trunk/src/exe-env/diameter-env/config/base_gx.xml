@@ -836,28 +836,28 @@
     </define> 
     <define name="CCR">
        <!-- It's a request, R bit is set -->
-       <setfield name="flags" value="128"> </setfield>
+       <setfield name="flags" value="192"> </setfield>
        <setfield name="cmd-code" value="272"></setfield>
        <setfield name="application-id" value="16777238"></setfield>
        <setfield name="protocol-version" value="1"></setfield>
     </define> 
     <define name="CCA">
        <!-- It's an answer, R bit is unset -->
-       <setfield name="flags" value="0"> </setfield>
+       <setfield name="flags" value="64"> </setfield>
        <setfield name="cmd-code" value="272"></setfield>
        <setfield name="application-id" value="16777238"></setfield>
        <setfield name="protocol-version" value="1"></setfield>
     </define> 
     <define name="RAR">
        <!-- It's a request, R bit is set -->
-       <setfield name="flags" value="128"> </setfield>
+       <setfield name="flags" value="192"> </setfield>
        <setfield name="cmd-code" value="258"></setfield>
        <setfield name="application-id" value="16777238"></setfield>
        <setfield name="protocol-version" value="1"></setfield>
     </define> 
     <define name="RAA">
        <!-- It's an answer, R bit is unset -->
-       <setfield name="flags" value="0"> </setfield>
+       <setfield name="flags" value="64"> </setfield>
        <setfield name="cmd-code" value="258"></setfield>
        <setfield name="application-id" value="16777238"></setfield>
        <setfield name="protocol-version" value="1"></setfield>
