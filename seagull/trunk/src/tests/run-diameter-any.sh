@@ -1,8 +1,9 @@
 #!/bin/bash
-# uso: run-diameter-any.sh <tcp|tls|sctp> <dir-binarios> <dir-salida> [clave] [passwd]   (TLS: PROBE=1 prueba s_client)
+# uso: run-diameter-any.sh <tcp|tls|sctp> <dir-binarios> <dir-salida> [clave] [passwd]   (TLS: PROBE=1 prueba s_client)  (vars opcionales: DICO=base_cx.xml SCEN=sar-saa)
 . "$(dirname "${0}")/lib.sh"
 MODE=${1}; BIN=$(realpath "${2}" 2>/dev/null); OUT=$(realpath -m "${3}" 2>/dev/null)
 KEY=${4:-key.pem}; PASS=${5:-seagull123}
+DICO=${DICO:-base_cx.xml}; SCEN=${SCEN:-sar-saa}
 uso() { echo "uso: $(basename "${0}") <tcp|tls|sctp> <dir-binarios> <dir-salida> [clave] [passwd]"; exit 1; }
 case "$MODE" in
   tcp)  SUF="";      LOGSUF="" ;;
@@ -38,12 +39,15 @@ case "$MODE" in
     done ;;
 esac
 cd "$OUT/env/run" || exit 1
+for f in ../config/$DICO ../scenario/$SCEN.server.xml ../scenario/$SCEN.client.xml; do
+  [ -f "$f" ] || { echo "falta $f en $OUT/env"; exit 1; }
+done
 export LD_LIBRARY_PATH="$BIN"
-COMMON="-dico ../config/base_cx.xml -bg -llevel ET"
+COMMON="-dico ../config/$DICO -bg -llevel ET"
 getpid() { grep -oE 'PID [[][0-9]+[]]' "${1}" | grep -oE '[0-9]+'; }
 
 SECONDS=0
-"$BIN/seagull" -conf ../config/conf.server$SUF.xml -scen ../scenario/sar-saa.server.xml -log ../logs/sar-saa.server$LOGSUF.log $COMMON < /dev/null > ../logs/server.out 2>&1
+"$BIN/seagull" -conf ../config/conf.server$SUF.xml -scen ../scenario/$SCEN.server.xml -log ../logs/$SCEN.server$LOGSUF.log $COMMON < /dev/null > ../logs/server.out 2>&1
 SPID=$(getpid ../logs/server.out)
 kill -0 "$SPID" 2>/dev/null || { echo "No se pudo obtener el PID del servidor"; cat ../logs/server.out; exit 1; }
 echo "servidor PID $SPID"
@@ -57,7 +61,7 @@ if [ "$MODE" = tls ] && [ -n "$PROBE" ]; then
 fi
 
 START=$SECONDS
-"$BIN/seagull" -conf ../config/conf.client$SUF.xml -scen ../scenario/sar-saa.client.xml -log ../logs/sar-saa.client$LOGSUF.log $COMMON < /dev/null > ../logs/client.out 2>&1
+"$BIN/seagull" -conf ../config/conf.client$SUF.xml -scen ../scenario/$SCEN.client.xml -log ../logs/$SCEN.client$LOGSUF.log $COMMON < /dev/null > ../logs/client.out 2>&1
 CPID=$(getpid ../logs/client.out)
 kill -0 "$CPID" 2>/dev/null || { echo "No se pudo obtener el PID del cliente"; kill "$SPID"; exit 1; }
 echo "cliente PID $CPID"
@@ -75,6 +79,7 @@ kill -9 "$SPID" 2>/dev/null
 if [ "$MODE" = tls ]; then
   echo "--- logs generados:"; ls "$OUT/env/logs"
   echo "--- errores en los logs (E/T):"; grep -hE '[|](E|T)[|]' "$OUT"/env/logs/*.log
+  if [ "$SCEN" = sar-saa ]; then
   echo "--- SAR enviados por el cliente (esperado 100): $("$HERE/resumen.sh" "$OUT" client | cut -d';' -f10)"
   for lado in client server; do
     if diff -q "$EXPECTED/$lado.txt" <("$HERE/resumen.sh" "$OUT" $lado) >/dev/null 2>&1; then
@@ -83,5 +88,6 @@ if [ "$MODE" = tls ]; then
       echo "  $lado: DIFERENTE (o falta el CSV)"
     fi
   done
+  else echo "--- comparación con referencia Cx omitida (SCEN=$SCEN)"; fi
 fi
 pgrep -x seagull >/dev/null && echo "AVISO: queda algún seagull vivo" || echo "limpio"
