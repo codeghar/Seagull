@@ -391,12 +391,12 @@
       <setfield name="Vendor-ID" value="10415"></setfield>
     </define>
     <define name="Max-Requested-Bandwidth-DL" type="Unsigned32">
-      <setfield name="avp-code" value="516"></setfield>
+      <setfield name="avp-code" value="515"></setfield>
       <setfield name="flags" value="192"></setfield>
       <setfield name="Vendor-ID" value="10415"></setfield>
     </define>
     <define name="Max-Requested-Bandwidth-UL" type="Unsigned32">
-      <setfield name="avp-code" value="515"></setfield>
+      <setfield name="avp-code" value="516"></setfield>
       <setfield name="flags" value="192"></setfield>
       <setfield name="Vendor-ID" value="10415"></setfield>
     </define>
