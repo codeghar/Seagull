@@ -1,0 +1,251 @@
+<!--
+
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+ (c)Copyright 2006 Hewlett-Packard Development Company, LP.
+
+-->
+
+<!--
+  Diameter Gx (3GPP TS 29.212) - lado cliente (PCEF simulado), sesion completa.
+  Flujo: CER/CEA -> CCR-I/CCA-I -> RAR/RAA -> CCR-U/CCA-U -> CCR-T/CCA-T. DWR/DWA en <default>.
+  El RAR lo inicia el PCRF por la misma conexion; Seagull lo asocia a la llamada por Session-Id.
+  CCR-U y CCR-T se dirigen al PCRF que respondio el CCA-I (Destination-Host = Origin-Host recibido).
+  Entre VMs: ajustar Host-IP-Address / AN-GW-Address y "dest" en conf.client.xml.
+-->
+
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<scenario>
+
+<counter>
+  <counterdef name="HbH-counter" init="2000"> </counterdef>
+  <counterdef name="EtE-counter" init="3000"> </counterdef>
+  <counterdef name="session-counter" init="0"> </counterdef>
+</counter>
+
+<init>
+  <send channel="channel-1">
+    <command name="CER">
+      <avp name="Origin-Host" value="client.gx.example.com"> </avp>
+      <avp name="Origin-Realm" value="client.gx.example.com"> </avp>
+      <avp name="Host-IP-Address" value="0x00017f000001"> </avp> <!-- 127.0.0.1 -->
+      <avp name="Vendor-Id" value="10415"> </avp>
+      <avp name="Product-Name" value="Seagull-Gx-Client"> </avp>
+      <avp name="Origin-State-Id" value="1"> </avp>
+      <avp name="Supported-Vendor-Id" value="10415"> </avp>
+      <avp name="Auth-Application-Id" value="16777238"> </avp>
+      <avp name="Vendor-Specific-Application-Id">
+        <avp name="Vendor-Id" value="10415"> </avp>
+        <avp name="Auth-Application-Id" value="16777238"> </avp>
+      </avp>
+      <avp name="Firmware-Revision" value="1"> </avp>
+    </command>
+  </send>
+  <receive channel="channel-1">
+    <command name="CEA"> </command>
+  </receive>
+</init>
+
+<traffic>
+  <!-- 1. CCR-Initial -->
+  <send channel="channel-1">
+    <action>
+      <inc-counter name="HbH-counter"> </inc-counter>
+      <inc-counter name="EtE-counter"> </inc-counter>
+      <inc-counter name="session-counter"> </inc-counter>
+      <set-value name="HbH-id" format="$(HbH-counter)"> </set-value>
+      <set-value name="EtE-id" format="$(EtE-counter)"> </set-value>
+      <set-value name="Session-Id" format="client.gx.example.com;1;$(session-counter)"> </set-value>
+    </action>
+    <command name="CCR">
+      <avp name="Session-Id" value="value_is_replaced"> </avp>
+      <avp name="Auth-Application-Id" value="16777238"> </avp>
+      <avp name="Origin-Host" value="client.gx.example.com"> </avp>
+      <avp name="Origin-Realm" value="client.gx.example.com"> </avp>
+      <avp name="Destination-Realm" value="example.com"> </avp>
+      <avp name="CC-Request-Type" value="1"> </avp>
+      <avp name="CC-Request-Number" value="0"> </avp>
+      <avp name="Bearer-Operation" value="1"> </avp>
+      <avp name="Framed-IP-Address" value="0x0a000005"> </avp>
+      <avp name="Subscription-Id">
+        <avp name="Subscription-Id-Type" value="0"> </avp>          <!-- E164 (MSISDN) -->
+        <avp name="Subscription-Id-Data" value="5500000001"> </avp>
+      </avp>
+      <avp name="Subscription-Id">
+        <avp name="Subscription-Id-Type" value="1"> </avp>          <!-- IMSI -->
+        <avp name="Subscription-Id-Data" value="001010000000001"> </avp>
+      </avp>
+      <avp name="IP-CAN-Type" value="5"> </avp>                      <!-- 3GPP-EPS -->
+      <avp name="RAT-Type" value="1004"> </avp>                      <!-- EUTRAN -->
+      <avp name="QoS-Information">
+        <avp name="APN-Aggregate-Max-Bitrate-UL" value="100000000"> </avp>
+        <avp name="APN-Aggregate-Max-Bitrate-DL" value="100000000"> </avp>
+      </avp>
+      <avp name="Default-EPS-Bearer-QoS">
+        <avp name="QoS-Class-Identifier" value="9"> </avp>
+        <avp name="Allocation-Retention-Priority">
+          <avp name="Priority-Level" value="10"> </avp>
+          <avp name="Pre-emption-Capability" value="1"> </avp>
+          <avp name="Pre-emption-Vulnerability" value="1"> </avp>
+        </avp>
+      </avp>
+      <avp name="Called-Station-Id" value="internet.test"> </avp>
+      <avp name="AN-GW-Address" value="0x00017f000001"> </avp>     <!-- 127.0.0.1 -->
+      <avp name="Supported-Features">
+        <avp name="Vendor-Id" value="10415"> </avp>
+        <avp name="Feature-List-ID" value="1"> </avp>
+        <avp name="Feature-List" value="2"> </avp>
+      </avp>
+      <avp name="3GPP-SGSN-MCC-MNC" value="00101"> </avp>
+    </command>
+    <action>
+      <start-timer> </start-timer>
+    </action>
+  </send>
+
+  <!-- 2. CCA-Initial: guardar Session-Id y el PCRF que respondio -->
+  <receive channel="channel-1">
+    <action>
+      <stop-timer> </stop-timer>
+      <store name="sid" entity="Session-Id"> </store>
+      <store name="pcrf" entity="Origin-Host"> </store>
+      <check-value name="Result-Code" behaviour="error"> </check-value>
+    </action>
+    <command name="CCA">
+      <avp name="Result-Code" value="2001"> </avp>
+    </command>
+  </receive>
+
+  <!-- 3. RAR (PCRF -> PCEF): guardar HbH/EtE para el RAA y validar AVP 285 -->
+  <receive channel="channel-1">
+    <action>
+      <store name="rarHbH" entity="HbH-id"> </store>
+      <store name="rarE2E" entity="EtE-id"> </store>
+      <check-value name="Re-Auth-Request-Type" behaviour="error"> </check-value>
+    </action>
+    <command name="RAR">
+      <avp name="Re-Auth-Request-Type" value="0"> </avp>           <!-- AUTHORIZE_ONLY -->
+    </command>
+  </receive>
+
+  <!-- 4. RAA: mismos HbH/EtE del RAR -->
+  <send channel="channel-1">
+    <action>
+      <restore name="rarHbH" entity="HbH-id"> </restore>
+      <restore name="rarE2E" entity="EtE-id"> </restore>
+      <restore name="sid" entity="Session-Id"> </restore>
+    </action>
+    <command name="RAA">
+      <avp name="Session-Id" value="value_is_replaced"> </avp>
+      <avp name="Origin-Host" value="client.gx.example.com"> </avp>
+      <avp name="Origin-Realm" value="client.gx.example.com"> </avp>
+      <avp name="Result-Code" value="2001"> </avp>
+    </command>
+  </send>
+
+  <!-- 5. CCR-Update: reporta QOS_CHANGE (suscrito por el PCRF en el CCA-I) -->
+  <send channel="channel-1">
+    <action>
+      <inc-counter name="HbH-counter"> </inc-counter>
+      <inc-counter name="EtE-counter"> </inc-counter>
+      <set-value name="HbH-id" format="$(HbH-counter)"> </set-value>
+      <set-value name="EtE-id" format="$(EtE-counter)"> </set-value>
+      <restore name="sid" entity="Session-Id"> </restore>
+      <restore name="pcrf" entity="Destination-Host"> </restore>
+    </action>
+    <command name="CCR">
+      <avp name="Session-Id" value="value_is_replaced"> </avp>
+      <avp name="Auth-Application-Id" value="16777238"> </avp>
+      <avp name="Origin-Host" value="client.gx.example.com"> </avp>
+      <avp name="Origin-Realm" value="client.gx.example.com"> </avp>
+      <avp name="Destination-Realm" value="example.com"> </avp>
+      <avp name="Destination-Host" value="value_is_replaced"> </avp>
+      <avp name="CC-Request-Type" value="2"> </avp>
+      <avp name="CC-Request-Number" value="1"> </avp>
+      <avp name="Event-Trigger" value="1"> </avp>                  <!-- QOS_CHANGE -->
+      <avp name="QoS-Information">
+        <avp name="APN-Aggregate-Max-Bitrate-UL" value="80000000"> </avp>
+        <avp name="APN-Aggregate-Max-Bitrate-DL" value="150000000"> </avp>
+      </avp>
+    </command>
+  </send>
+
+  <!-- 6. CCA-Update -->
+  <receive channel="channel-1">
+    <action>
+      <check-value name="Result-Code" behaviour="error"> </check-value>
+    </action>
+    <command name="CCA">
+      <avp name="Result-Code" value="2001"> </avp>
+    </command>
+  </receive>
+
+  <!-- 7. CCR-Termination -->
+  <send channel="channel-1">
+    <action>
+      <inc-counter name="HbH-counter"> </inc-counter>
+      <inc-counter name="EtE-counter"> </inc-counter>
+      <set-value name="HbH-id" format="$(HbH-counter)"> </set-value>
+      <set-value name="EtE-id" format="$(EtE-counter)"> </set-value>
+      <restore name="sid" entity="Session-Id"> </restore>
+      <restore name="pcrf" entity="Destination-Host"> </restore>
+    </action>
+    <command name="CCR">
+      <avp name="Session-Id" value="value_is_replaced"> </avp>
+      <avp name="Auth-Application-Id" value="16777238"> </avp>
+      <avp name="Origin-Host" value="client.gx.example.com"> </avp>
+      <avp name="Origin-Realm" value="client.gx.example.com"> </avp>
+      <avp name="Destination-Realm" value="example.com"> </avp>
+      <avp name="Destination-Host" value="value_is_replaced"> </avp>
+      <avp name="CC-Request-Type" value="3"> </avp>
+      <avp name="CC-Request-Number" value="2"> </avp>
+      <avp name="Termination-Cause" value="1"> </avp>              <!-- DIAMETER_LOGOUT -->
+    </command>
+  </send>
+
+  <!-- 8. CCA-Termination -->
+  <receive channel="channel-1">
+    <action>
+      <check-value name="Result-Code" behaviour="error"> </check-value>
+    </action>
+    <command name="CCA">
+      <avp name="Result-Code" value="2001"> </avp>
+    </command>
+  </receive>
+</traffic>
+
+<!-- Device-Watchdog: responder DWR del peer (p. ej. CPS) -->
+<default>
+  <receive channel="channel-1">
+    <command name="DWR"> </command>
+    <action>
+      <store name="HbH" entity="HbH-id"> </store>
+      <store name="E2E" entity="EtE-id"> </store>
+    </action>
+  </receive>
+  <send channel="channel-1">
+    <action>
+      <restore name="HbH" entity="HbH-id"> </restore>
+      <restore name="E2E" entity="EtE-id"> </restore>
+    </action>
+    <command name="DWA">
+      <avp name="Result-Code" value="2001"> </avp>
+      <avp name="Origin-Host" value="client.gx.example.com"> </avp>
+      <avp name="Origin-Realm" value="client.gx.example.com"> </avp>
+    </command>
+  </send>
+</default>
+
+</scenario>
