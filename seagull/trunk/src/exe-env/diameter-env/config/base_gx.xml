@@ -627,15 +627,13 @@
       <setfield name="flags" value="64"></setfield>
       <setfield name="Vendor-ID" value="21274"></setfield>
     </define> -->
-    <define name="CC-Input-Octets" type="Unsigned32">
+    <define name="CC-Input-Octets" type="Unsigned64">
       <setfield name="avp-code" value="412"></setfield>
-      <setfield name="flags" value="192"></setfield>
-      <setfield name="Vendor-ID" value="10415"></setfield>
+      <setfield name="flags" value="64"></setfield>
     </define>
-    <define name="CC-Output-Octets" type="Unsigned32">
+    <define name="CC-Output-Octets" type="Unsigned64">
       <setfield name="avp-code" value="414"></setfield>
-      <setfield name="flags" value="192"></setfield>
-      <setfield name="Vendor-ID" value="10415"></setfield>
+      <setfield name="flags" value="64"></setfield>
     </define>
    <define name="Priority-Level" type="Unsigned32">
       <setfield name="avp-code" value="1046"></setfield>
