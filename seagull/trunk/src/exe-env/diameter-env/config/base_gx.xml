@@ -248,6 +248,10 @@
       <setfield name="avp-code" value="295"></setfield>
       <setfield name="flags" value="64"></setfield>
     </define>
+    <define name="Re-Auth-Request-Type" type="Unsigned32">
+      <setfield name="avp-code" value="285"></setfield>
+      <setfield name="flags" value="64"></setfield>
+    </define>
     <define name="CC-Request-Type" type="Unsigned32">
       <setfield name="avp-code" value="416"></setfield>
       <setfield name="flags" value="64"></setfield>
