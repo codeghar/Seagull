@@ -69,7 +69,7 @@
       <setfield name="flags" value="64"></setfield>
     </define>
 
-        <define name="Auth-Application-Id" type="Unsigned32">
+    <define name="Auth-Application-Id" type="Unsigned32">
       <setfield name="avp-code" value="258"></setfield>
       <setfield name="flags" value="64"></setfield>
     </define>
