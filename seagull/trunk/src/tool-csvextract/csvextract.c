@@ -55,7 +55,7 @@ void convert_date (long P_sec, char *L_buf) {
 
 T_StateFile next_state(T_StateFile P_state) {
 
-  T_StateFile L_ret ;
+  T_StateFile L_ret = E_END ;
 
   switch (P_state) {
   case E_INIT:

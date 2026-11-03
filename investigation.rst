@@ -1,6 +1,16 @@
 Build Instructions During Investigation
 ========================================================
 
+.. note::
+
+   Historical document by Hamza Sheikh (@aikchar), kept for reference. It
+   records how Seagull was first built from the SVN sources on Ubuntu 15.04
+   (sctplib/socketapi, OpenSSL 1.0.2a, ``build.ksh``). It does not apply to
+   the ``modernizacion`` branch, which uses CMake, OpenSSL 3, native Linux
+   SCTP and C++23, and already includes the fixes described below. For
+   current build instructions see *Build Instructions (CMake)* in
+   ``README.md``.
+
 This page recounts how I built Seagull on Ubuntu 15.04. You can follow the steps and hopefully be able to build successfully as well.
 
 CAUTION: Use these instructions if you're starting with a fresh Subversion to Git clone of Seagull. Otherwise, use the instructions from the section titled 'Build Instructions with Patches' in the README.rst file.

@@ -33,6 +33,8 @@
 #include "C_ProtocolBinaryFrame.hpp"
 
 #include "ReceiveMsgContext.h"
+#include <deque>
+#include <vector>
 
 typedef enum _enum_socket_mode {
   E_SOCKET_TCP_MODE,
@@ -132,6 +134,12 @@ public:
   virtual size_t send_buffer(unsigned char     *P_data, 
                              size_t             P_size) ;
   virtual int _read () = 0 ;
+  virtual void set_fd_set (fd_set *P_rSet, fd_set *P_wSet) ;
+  bool         has_pending_write () ;
+  bool         append_pending (unsigned char *P_data, size_t P_size) ;
+  int          flush_pending () ;
+  void         clear_pending () ;
+  void         process_pending_write (fd_set *P_rSet, fd_set *P_wSet) ;
   virtual C_pDataDecode          get_decode () ;
   virtual T_pRcvMsgCtxtList      get_list() ;
   
@@ -147,9 +155,11 @@ protected:
   size_t                  m_read_buf_size ;
   char                   *m_read_buf      ;
 
-  size_t                  m_write_buf_size ;
-  unsigned char           *m_write_buf      ;
-  unsigned char           *m_write_buf_start      ;
+  // cola de escritura (control de flujo): mensajes pendientes; m_pend_off
+  // es lo ya enviado del primero y m_pend_bytes el total pendiente
+  std::deque< std::vector<unsigned char> > m_pend ;
+  size_t                                   m_pend_off ;
+  size_t                                   m_pend_bytes ;
 
 
   T_SockAddrStorage       m_remote_sockaddr     ; 
@@ -182,6 +192,7 @@ public:
                              size_t             P_size);
   virtual int _call_listen (int P_max) ;
 
+  using C_Socket::_open;
   virtual int        _open (size_t P_buffer_size, C_ProtocolBinaryFrame *P_protocol) ;
   size_t             received_buffer  (unsigned char  *P_data, 
 				       size_t          P_size_buf,
@@ -214,6 +225,7 @@ public:
   C_SocketServer (C_SocketServer& P_Socket);
   virtual ~C_SocketServer();
 
+  using C_Socket::_open;
   virtual int _open (size_t P_buffer_size, C_ProtocolBinaryFrame *P_protocol) ;
   virtual int _read ();
 
@@ -237,6 +249,7 @@ public:
   C_SocketClient(C_SocketClient &P_Socket);
   virtual ~C_SocketClient() ;
 
+  using C_Socket::_open;
   virtual int _open (T_pOpenStatus P_status,
                      size_t        P_buffer_size,
                      C_ProtocolBinaryFrame *P_protocol);

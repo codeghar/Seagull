@@ -18,7 +18,7 @@
 #
 #
 
-export LD_LIBRARY_PATH=/usr/local/bin
+export LD_LIBRARY_PATH=${SEAGULL_LIB_DIR:-/usr/local/bin}${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
 seagull -conf ../config/conf.server.xml -dico ../config/base_cc.xml -scen ../scenario/ccr-cca.server.xml -log ../logs/ccr-cca.server.log -llevel ET 
 
 

@@ -21,7 +21,7 @@
 #define _CRYPT_EXTERNAL_METHODS_H
 
 #include "ProtocolDataType.hpp"
-#include <openssl/md5.h>
+#include <openssl/evp.h>
 
 
 extern "C" int crypto_method (T_pValueData  P_msgPart,

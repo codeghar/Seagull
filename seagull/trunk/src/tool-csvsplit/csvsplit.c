@@ -32,7 +32,7 @@ typedef enum _enum_state {
 
 T_StateFile next_state(T_StateFile P_state) {
 
-  T_StateFile L_ret ;
+  T_StateFile L_ret = E_END ;
 
   switch (P_state) {
   case E_INIT:

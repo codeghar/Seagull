@@ -80,91 +80,119 @@ size_t C_SocketListen::send_buffer(unsigned char     *P_data,
   return (0);
 }
 
-size_t C_SocketWithData::send_buffer(unsigned char     *P_data, 
-                                     size_t             P_size){
-  //                                     T_SockAddrStorage *P_remote_sockaddr,
-  //                                     tool_socklen_t    *P_len_remote_sockaddr) {
+// ---------------------------------------------------------------------------
+// Control de flujo en escritura
+//
+// Si el socket no admite mas datos (EAGAIN), el mensaje (o lo que falte de el)
+// se guarda en una cola por socket y se envia en orden cuando el socket vuelve
+// a ser escribible. Antes se descartaba ("Flow control not implemented").
+//
+// La cola guarda mensajes completos, no bytes concatenados: en SCTP cada
+// send() es un mensaje y hay que conservar los limites.
+//
+// TLS: tras SSL_ERROR_WANT_WRITE, OpenSSL exige reintentar con los mismos
+// bytes; el reintento parte del mismo mensaje y del mismo desplazamiento
+// (SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER en C_TransIPTLS).
+// ---------------------------------------------------------------------------
+static const size_t C_MAX_PENDING_WRITE = 4 * 1024 * 1024 ;
 
-  size_t L_size = 0 ;
-  int    L_rc       ;
+static bool write_would_block() {
+  return ((errno == EAGAIN) || (errno == EWOULDBLOCK) || (errno == EINTR));
+}
 
-  if (m_write_buf_size != 0) { 
+bool C_SocketWithData::has_pending_write() {
+  return (!m_pend.empty());
+}
 
-    // Try to send pending data 
-    if (m_type == E_SOCKET_TCP_MODE) {
-      L_rc = _call_write(m_write_buf, m_write_buf_size) ;
-    } else {
-      L_rc = _write(m_write_buf, m_write_buf_size) ;
-    }
+void C_SocketWithData::clear_pending() {
+  m_pend.clear();
+  m_pend_off = 0 ;
+  m_pend_bytes = 0 ;
+}
 
+bool C_SocketWithData::append_pending(unsigned char *P_data, size_t P_size) {
+  if (m_pend_bytes + P_size > C_MAX_PENDING_WRITE) {
+    SOCKET_ERROR(0, "socket [" << m_socket_id << "] write queue full ["
+                 << m_pend_bytes << " bytes]: message of [" << P_size
+                 << "] bytes discarded");
+    return (false);
+  }
+  m_pend.push_back(std::vector<unsigned char>(P_data, P_data + P_size));
+  m_pend_bytes += P_size ;
+  return (true);
+}
+
+int C_SocketWithData::flush_pending() {
+  int L_rc ;
+  while (!m_pend.empty()) {
+    std::vector<unsigned char> &L_msg = m_pend.front();
+    L_rc = _call_write(L_msg.data() + m_pend_off, L_msg.size() - m_pend_off) ;
     if (L_rc < 0) {
-      SOCKET_ERROR(0,
-                   "send failed [" << L_rc << "] [" << strerror(errno) << "]");
-      switch (errno) {
-      case EAGAIN:
-        SOCKET_ERROR(0, "Flow control not implemented");
-        break ;
-      case ECONNRESET:
-        break ;
-      default:
-        SOCKET_ERROR(0, "process error [" << errno << "] not implemented");
-        break ;
-      }
-      return(0);
-    } else {
-      m_write_buf_size -= (size_t)L_rc;
-      if ( m_write_buf_size == 0 )  {
-        free(m_write_buf_start);
-      } else {
-        m_write_buf      += L_rc;
-        return(0);
-      }
+      if (write_would_block()) return (0);
+      SOCKET_ERROR(0, "send failed [" << L_rc << "] [" << strerror(errno)
+                   << "]: [" << m_pend_bytes << "] queued bytes discarded");
+      clear_pending();
+      return (-1);
     }
-
+    if (L_rc == 0) return (0);
+    m_pend_off   += (size_t)L_rc ;
+    m_pend_bytes -= (size_t)L_rc ;
+    if (m_pend_off >= L_msg.size()) {
+      m_pend.pop_front();
+      m_pend_off = 0 ;
+    }
   }
+  return (0);
+}
 
+void C_SocketWithData::process_pending_write(fd_set *P_rSet, fd_set *P_wSet) {
+  if (!has_pending_write()) return ;
+  if (((P_wSet != NULL) && FD_ISSET(m_socket_id, P_wSet)) ||
+      ((P_rSet != NULL) && FD_ISSET(m_socket_id, P_rSet))) {
+    (void) flush_pending();
+  }
+}
 
-  SOCKET_DEBUG(0, "C_Socket::send_buffer(" 
-	    << m_socket_id << "," << P_data << "," << P_size << ")");
-  
-  SOCKET_DEBUG(0, "C_TransIP::send_buffer() id OK");
-  
-  L_size = 0 ;
+void C_SocketWithData::set_fd_set(fd_set *P_rSet, fd_set *P_wSet) {
+  C_Socket::set_fd_set(P_rSet, P_wSet);
+  if ((m_state == E_SOCKET_STATE_READY) && has_pending_write()) {
+    FD_SET(m_socket_id, P_wSet);
+  }
+}
 
-  if (m_type == E_SOCKET_TCP_MODE) {
-    L_rc = _call_write(P_data, P_size) ;
-  } else {
+size_t C_SocketWithData::send_buffer(unsigned char     *P_data,
+                                     size_t             P_size) {
+  int L_rc ;
+
+  if (m_type != E_SOCKET_TCP_MODE) {
+    // UDP: datagramas independientes, sin cola
     L_rc = _write(P_data, P_size) ;
+    if (L_rc < 0) {
+      SOCKET_ERROR(0, "send failed [" << L_rc << "] [" << strerror(errno) << "]");
+      return (0);
+    }
+    return (P_size);
   }
 
+  if (has_pending_write()) {
+    // conservar el orden: el mensaje va detras de los pendientes
+    if (!append_pending(P_data, P_size)) return (0);
+    (void) flush_pending();
+    return (P_size);
+  }
+
+  L_rc = _call_write(P_data, P_size) ;
   if (L_rc < 0) {
-    SOCKET_ERROR(0, 
-                 "send failed [" << L_rc << "] [" << strerror(errno) << "]");
-    switch (errno) {
-    case EAGAIN:
-      SOCKET_ERROR(0, "Flow control not implemented");
-      break ;
-    case ECONNRESET:
-      break ;
-    default:
-      SOCKET_ERROR(0, "process error [" << errno << "] not implemented");
-      break ;
+    if (!write_would_block()) {
+      SOCKET_ERROR(0, "send failed [" << L_rc << "] [" << strerror(errno) << "]");
+      return (0);
     }
-  } else {
-    L_size = P_size ;
-    if(L_size != (size_t)L_rc){
-       SOCKET_ERROR(0, "Sent message is incomplete");
-       m_write_buf_size = P_size - L_rc;
-       m_write_buf = (unsigned char *) malloc(m_write_buf_size);
-       m_write_buf_start = m_write_buf; 
-       memcpy(m_write_buf, P_data + L_rc, m_write_buf_size);
-    }
-
+    L_rc = 0 ;
   }
-    
-  SOCKET_DEBUG(0, "C_TransIP::send_buffer() return " << L_size);
-  return (L_size);
-
+  if ((size_t)L_rc < P_size) {
+    if (!append_pending(P_data + L_rc, P_size - (size_t)L_rc)) return (0);
+  }
+  return (P_size);
 }
 
 C_Socket::C_Socket(C_Socket &P_Socket) {
@@ -710,6 +738,8 @@ C_SocketWithData::C_SocketWithData(C_SocketWithData &P_Socket)
   P_Socket.m_decode = NULL ;
   m_recv_msg_list = P_Socket.m_recv_msg_list ;
   P_Socket.m_recv_msg_list = NULL ;
+  m_pend_off = 0 ;
+  m_pend_bytes = 0 ;
   
 }
 
@@ -727,7 +757,8 @@ C_SocketWithData::C_SocketWithData(int P_channel_id,
   m_read_buf_size = P_read_buf_size ;
   ALLOC_TABLE(m_read_buf, char*, sizeof(char), m_read_buf_size);
 
-  m_write_buf_size = 0;
+  m_pend_off = 0;
+  m_pend_bytes = 0;
 
 }
 
@@ -748,7 +779,8 @@ C_SocketWithData::C_SocketWithData(T_SocketType P_type,
   m_read_buf_size = P_read_buf_size ;
   ALLOC_TABLE(m_read_buf, char*, sizeof(char), m_read_buf_size);
 
-  m_write_buf_size = 0;
+  m_pend_off = 0;
+  m_pend_bytes = 0;
 
   m_remote_sockaddr_ptr     = NULL ;
   m_len_remote_sockaddr_ptr = NULL ;
@@ -780,7 +812,7 @@ C_SocketWithData::~C_SocketWithData() {
 
   m_read_buf_size = 0 ;
   FREE_TABLE(m_read_buf);
-  m_write_buf_size = 0 ;
+  clear_pending() ;
 }
 
 int C_SocketWithData::_call_read() { 
@@ -796,6 +828,9 @@ C_Socket* C_SocketWithData::process_fd_ready(fd_set *P_rSet,
   T_pDataRcv      L_data ;
   struct timezone L_timeZone ;             
 
+  // control de flujo: vaciar la cola de escritura si el socket lo permite
+  process_pending_write(P_rSet, P_wSet);
+
   if (FD_ISSET(m_socket_id, P_rSet)) {
     if (m_type == E_SOCKET_TCP_MODE) {
       L_rc = _call_read(); 
@@ -803,7 +838,11 @@ C_Socket* C_SocketWithData::process_fd_ready(fd_set *P_rSet,
       L_rc = _read();
     }
     
-    if (L_rc <= 0) {
+    if ((L_rc < 0) && ((errno == EAGAIN) || (errno == EWOULDBLOCK) || (errno == EINTR))) {
+      // sin datos de aplicacion todavia (p.ej. NewSessionTicket de TLS 1.3): seguir esperando
+      SOCKET_DEBUG(0, "C_SocketWithData::process_fd_set() NO DATA YET");
+      P_event->m_type = C_TransportEvent::E_TRANS_NO_EVENT ;
+    } else if (L_rc <= 0) {
       SOCKET_DEBUG(0, "C_SocketWithData::process_fd_set() CLOSED");
       P_event->m_type = C_TransportEvent::E_TRANS_CLOSED ;
       P_event->m_channel_id = m_channel_id ;

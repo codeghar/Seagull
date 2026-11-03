@@ -18,7 +18,7 @@
 #
 #
 
-export LD_LIBRARY_PATH=/usr/local/bin
+export LD_LIBRARY_PATH=${SEAGULL_LIB_DIR:-/usr/local/bin}${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
 seagull -conf ../config/conf.server-ansi.xml -dico ../config/octcap-ansi-dictionnary.xml -scen ../scenario/server-ansi.xml -log ../logs/server-ansi.log -llevel ET 
 
 

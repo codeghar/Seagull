@@ -185,7 +185,7 @@ int C_ProtocolText::set_filter_method (char *P_filter_method) {
   int                         L_ret          = 0             ;
   char                       *L_lib_name     = NULL          ;
   char                       *L_fun_name     = NULL          ;
-  void                       *L_library_handle               ; 
+  void                       *L_library_handle = NULL               ; 
   void                       *L_function                     ;
 
   L_lib_name = find_text_value(P_filter_method,(char*)"lib")  ;
@@ -234,7 +234,7 @@ int C_ProtocolText::analyze_body_method_param (int  P_index,
   char                       *L_lib_name     = NULL          ;
   char                       *L_fun_name     = NULL          ;
 
-  void                       *L_library_handle               ; 
+  void                       *L_library_handle = NULL               ; 
   void                       *L_function                     ;
 
 
@@ -1115,7 +1115,7 @@ C_ProtocolText::check_field(T_pFieldDef P_field_def, bool P_header) {
   size_t                        L_size = 0 ;
 
   T_ExpStrLst::iterator         L_list_it ;
-  T_pRegExpStr                  L_reg_str ;
+  T_pRegExpStr                  L_reg_str = NULL ;
   int                           L_error_comp = 0 ;
   char                         *L_value = NULL ;
   int                           L_start = -1 ;

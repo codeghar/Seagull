@@ -18,7 +18,7 @@
 #
 #
 
-export LD_LIBRARY_PATH=/usr/local/bin
+export LD_LIBRARY_PATH=${SEAGULL_LIB_DIR:-/usr/local/bin}${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
 seagull -conf ../config/conf.server-itu.xml -dico ../config/octcap-itu-dictionnary.xml -scen ../scenario/server-itu.xml -log ../logs/server-itu.log -llevel ET 
 
 

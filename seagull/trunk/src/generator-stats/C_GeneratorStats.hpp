@@ -20,7 +20,7 @@
 #ifndef _C_GENERATOR_STATS_H
 #define _C_GENERATOR_STATS_H
 
-#define TIME_LENGTH 32
+#define TIME_LENGTH 128
 #define DEFAULT_FILE_NAME (char*)"dumpFile"
 #define DEFAULT_EXTENSION (char*)".csv"
 

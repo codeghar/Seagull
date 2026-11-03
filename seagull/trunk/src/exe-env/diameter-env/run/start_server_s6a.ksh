@@ -19,7 +19,7 @@
 # Authors: Perrin Morrow <perrin@opencloud.com>
 #
 
-export LD_LIBRARY_PATH=/usr/local/bin
+export LD_LIBRARY_PATH=${SEAGULL_LIB_DIR:-/usr/local/bin}${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
 ../../../bin/seagull -conf ../config/conf.server.xml -dico ../config/base_s6a.xml -scen ../scenario/ulr-ula.server.xml -log ../logs/ulr-ula.server.log -llevel A
 
 

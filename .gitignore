@@ -29,3 +29,7 @@
 
 
 tmp/
+build/
+build-*/
+*.log
+*.bak.*

@@ -18,7 +18,7 @@
 #
 #
 
-export LD_LIBRARY_PATH=/usr/local/bin
+export LD_LIBRARY_PATH=${SEAGULL_LIB_DIR:-/usr/local/bin}${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
 
 seagull -conf ../config/conf.client.corr.xml -dico ../config/sip-dictionnary.xml -scen ../scenario/client_corr.xml -log ../logs/client_corr.log -llevel ET
 

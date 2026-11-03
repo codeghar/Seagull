@@ -709,7 +709,7 @@ char* C_RemoteControl::find_value (char *P_buf, char *P_dir) {
   L_string += P_dir ;
   L_string += "[^[:blank:]=]*[[:blank:]]*=[[:blank:]]*)([^&]*)";
   
-  if ((P_buf[0] == '?') && (P_buf+1)) { 
+  if ((P_buf[0] == '?') && (P_buf[1] != '\0')) { 
     P_buf++;
     
     L_status = regcomp (&L_reg_expr, 

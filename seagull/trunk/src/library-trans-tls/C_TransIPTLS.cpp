@@ -282,6 +282,8 @@ int C_TransIPTLS::init (char *P_buf,
                                              (void *)m_passwd);
       SSL_CTX_set_default_passwd_cb(m_ssl_ctx,
                                     passwd_call_back);
+      // control de flujo: permitir reintentar SSL_write desde la cola
+      SSL_CTX_set_mode(m_ssl_ctx, SSL_MODE_ACCEPT_MOVING_WRITE_BUFFER | SSL_MODE_ENABLE_PARTIAL_WRITE);
       
       if (SSL_CTX_use_certificate_chain_file(m_ssl_ctx,
                                              m_cert_chain_file) != 1) {

@@ -54,6 +54,7 @@ extern C_XmlParser* XmlParserClass ;
 %}
 
 %option yylineno
+%option nounput
 %o      600
 %x STRING_MODE           SPECIAL_SECTION 
 %x START_COMMENT_SECTION

@@ -88,7 +88,7 @@ int           C_DataDecode::set_buffer (unsigned char* P_buf,
 					 size_t         P_size) {
   int L_ret = 0 ;
   SOCKET_DEBUG(0, "C_DataDecode::set_buffer (" 
-	    << &P_buf[0] << "," << P_size << ")");
+	    << static_cast<const void*>(P_buf) << "," << P_size << ")");
 
   if (P_size <= m_buf_size) {
     memmove(m_buffer, P_buf, P_size);

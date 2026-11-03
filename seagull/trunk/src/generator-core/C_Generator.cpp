@@ -129,6 +129,9 @@ C_Generator::C_Generator(cmd_line_pt P_cmd_line) : C_TaskControl() {
   m_display_rtime = NULL ;
   m_display_help = NULL ;
 
+  m_remote_control = NULL ;
+  m_do_remote_control = false ;
+
   m_display_period = 0 ;
 }
 

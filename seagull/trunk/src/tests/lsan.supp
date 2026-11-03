@@ -1,0 +1,7 @@
+# Leaks de arranque conocidos (deuda tecnica, no crecen con el trafico).
+# Se liberan al terminar el proceso. Ver tests/README.md.
+leak:C_XmlParser::
+leak:C_XmlData::
+leak:C_ProtocolBinary::get_header_body_values_from_xml
+leak:create_cmd_line
+leak:C_DisplayControl::add_screen
