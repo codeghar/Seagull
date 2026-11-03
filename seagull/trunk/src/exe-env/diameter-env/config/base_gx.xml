@@ -560,7 +560,7 @@
         <define name="3GPP-RAT-Type" type="OctetString">
       <setfield name="avp-code" value="21"></setfield>
       <setfield name="flags" value="192"></setfield>
-      <setfield name="Vendor-ID" value="21274"></setfield>
+      <setfield name="Vendor-ID" value="10415"></setfield>
     </define>
         <!-- DUP: <define name="User-Equipment-Type" type="Unsigned32">
       <setfield name="avp-code" value="459"></setfield>
@@ -575,7 +575,7 @@
         <define name="RAI" type="OctetString">
       <setfield name="avp-code" value="909"></setfield>
       <setfield name="flags" value="192"></setfield>
-      <setfield name="Vendor-ID" value="21274"></setfield>
+      <setfield name="Vendor-ID" value="10415"></setfield>
     </define>
 
         <!-- DUP: <define name="3GPP-User-Location-Info" type="OctetString">
@@ -592,13 +592,12 @@
     
     <define name="Inband-Security-Id" type="Unsigned32">
       <setfield name="avp-code" value="299"></setfield>
-      <setfield name="flags" value="192"></setfield>
-      <setfield name="Vendor-ID" value="21274"></setfield>
+      <setfield name="flags" value="64"></setfield>
     </define>
     <define name="Flow-Status" type="Unsigned32">
       <setfield name="avp-code" value="511"></setfield>
       <setfield name="flags" value="192"></setfield>
-      <setfield name="Vendor-ID" value="21274"></setfield>
+      <setfield name="Vendor-ID" value="10415"></setfield>
     </define>
 <!-- Vimplecom AVPs                                          -->
                 <define name="DPI-Flow-Identity" type="OctetString">
