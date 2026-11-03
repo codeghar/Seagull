@@ -1,4 +1,4 @@
-# Pruebas de transporte Diameter (SAR/SAA)
+# Pruebas de transporte Diameter (SAR/SAA y Gx)
 
 Arnés portable: todas las rutas se calculan desde la ubicación de los scripts
 (`lib.sh`). Las salidas y los certificados quedan **fuera del repositorio**, en
@@ -20,7 +20,7 @@ Antes de cada sesión: `export LC_ALL=C` (los scripts buscan `warning:` en ingl�
 | Archivo | Función |
 |---|---|
 | `lib.sh` | Rutas comunes, `prepare_env` (sufijo opcional, p. ej. `-tls`) y `prepare_sctp_conf` |
-| `run-diameter-any.sh` | Corrida Diameter SAR/SAA por transporte (tcp, tls o sctp): `<modo> <dir-binarios> <dir-salida> [clave] [passwd]`; en TLS, `PROBE=1` sondea con `s_client` |
+| `run-diameter-any.sh` | Corrida Diameter por transporte (tcp, tls o sctp): `<modo> <dir-binarios> <dir-salida> [clave] [passwd]`. Por defecto SAR/SAA (Cx); con `DICO` y `SCEN`, otros escenarios (ver la sección Gx). Termina con código 2 si hay errores E en los logs o queda un seagull vivo. En TLS, `PROBE=1` sondea con `s_client` |
 | `run-diameter.sh`, `run-diameter-tls.sh`, `run-diameter-sctp.sh` | Envoltorios de `run-diameter-any.sh` (tcp, tls y sctp); conservan la interfaz que usan `verify.sh` y `validate-all.sh` |
 | `run-diameter-load.sh` | Prueba de carga TCP o TLS (`MODE`, `RATE`, `CALLS`) |
 | `resumen.sh` | Extrae los contadores finales de un CSV de protocolo |
@@ -74,6 +74,39 @@ porque `ss -lnS` no muestra sockets SCTP si `sctp_diag` no está cargado.
 
 En RHEL/AlmaLinux el módulo está en blacklist por defecto. La habilitación
 permanente en producción debe acordarse con el equipo de seguridad.
+
+### Gx y variables de `run-diameter-any.sh`
+
+| Variable | Por defecto | Uso |
+|---|---|---|
+| `DICO` | `base_cx.xml` | Diccionario en `exe-env/diameter-env/config/` |
+| `SCEN` | `sar-saa` | Prefijo del escenario: `<SCEN>.server.xml` y `<SCEN>.client.xml` |
+| `MAX_ERR` | `0` | Máximo de líneas de error (E) permitidas en los logs |
+| `PROBE` | vacío | En TLS, sondea el puerto con `openssl s_client` |
+| `WAIT_PORT`, `SETTLE`, `CLIENT_MAX`, `DRAIN` | 60, 5, 180, 12 | Tiempos de espera en segundos |
+
+- La comparación contra `expected/` solo se aplica con `SCEN=sar-saa`.
+- Al terminar, el script cuenta las líneas `|E|` de todos los logs, muestra los 5 mensajes
+  más frecuentes si las hay e imprime `RESULTADO: OK` (código 0) o `RESULTADO: FALLO`
+  (código 2). Un seagull vivo al final también cuenta como fallo. `verify.sh` lo detecta
+  con `PIPESTATUS`.
+- El entorno se copia del árbol de trabajo: los cambios sin commit en
+  `exe-env/diameter-env` también se prueban.
+
+Regresión Gx (`gx-ccr-cca` y `gx-session` en los tres transportes):
+
+```bash
+BIN_DIR=<ruta-absoluta>/build-release/bin
+mkdir -p ~/seagull-test/out
+for s in gx-ccr-cca gx-session; do
+  for t in tcp tls sctp; do
+    DICO=base_gx.xml SCEN=$s tests/run-diameter-any.sh "$t" "$BIN_DIR" ~/seagull-test/out/$s-$t > ~/seagull-test/out/$s-$t.out 2>&1
+    echo "$s $t rc=$? $(tail -n 1 ~/seagull-test/out/$s-$t.out)"
+  done
+done
+```
+
+Esperado: 6 líneas `rc=0 RESULTADO: OK`. Detalles de Gx en `exe-env/diameter-env/README-gx.md`.
 
 ### Carga
 
