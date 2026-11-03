@@ -122,9 +122,15 @@
       <store name="sid" entity="Session-Id"> </store>
       <store name="pcrf" entity="Origin-Host"> </store>
       <check-value name="Result-Code" behaviour="error"> </check-value>
+      <check-value name="Event-Trigger" behaviour="error"> </check-value>
+      <check-value name="Charging-Rule-Name" behaviour="error"> </check-value>
     </action>
     <command name="CCA">
       <avp name="Result-Code" value="2001"> </avp>
+      <avp name="Event-Trigger" value="1"> </avp>
+      <avp name="Charging-Rule-Install">
+        <avp name="Charging-Rule-Name" value="rule_default_test"> </avp>
+      </avp>
     </command>
   </receive>
 
@@ -134,9 +140,16 @@
       <store name="rarHbH" entity="HbH-id"> </store>
       <store name="rarE2E" entity="EtE-id"> </store>
       <check-value name="Re-Auth-Request-Type" behaviour="error"> </check-value>
+      <check-value name="Charging-Rule-Name" behaviour="error"> </check-value>
     </action>
     <command name="RAR">
       <avp name="Re-Auth-Request-Type" value="0"> </avp>           <!-- AUTHORIZE_ONLY -->
+      <avp name="Charging-Rule-Remove">
+        <avp name="Charging-Rule-Name" value="rule_default_test"> </avp>
+      </avp>
+      <avp name="Charging-Rule-Install">
+        <avp name="Charging-Rule-Name" value="rule_rar_test"> </avp>
+      </avp>
     </command>
   </receive>
 

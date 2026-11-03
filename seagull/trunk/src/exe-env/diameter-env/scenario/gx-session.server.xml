@@ -61,6 +61,7 @@
     <command name="CCR">
       <avp name="Session-Id" value="dont_care"> </avp>
       <avp name="CC-Request-Type" value="1"> </avp>
+      <avp name="CC-Request-Number" value="0"> </avp>
     </command>
     <action>
       <store name="HbH" entity="HbH-id"> </store>
@@ -69,6 +70,7 @@
       <store name="pcef" entity="Origin-Host"> </store>
       <store name="pcefRealm" entity="Origin-Realm"> </store>
       <check-value name="CC-Request-Type" behaviour="error"> </check-value>
+      <check-value name="CC-Request-Number" behaviour="error"> </check-value>
     </action>
   </receive>
 
@@ -154,11 +156,15 @@
     <command name="CCR">
       <avp name="Session-Id" value="dont_care"> </avp>
       <avp name="CC-Request-Type" value="2"> </avp>
+      <avp name="CC-Request-Number" value="1"> </avp>
+      <avp name="Event-Trigger" value="1"> </avp>
     </command>
     <action>
       <store name="HbH" entity="HbH-id"> </store>
       <store name="E2E" entity="EtE-id"> </store>
       <check-value name="CC-Request-Type" behaviour="error"> </check-value>
+      <check-value name="CC-Request-Number" behaviour="error"> </check-value>
+      <check-value name="Event-Trigger" behaviour="error"> </check-value>
     </action>
   </receive>
 
@@ -185,11 +191,15 @@
     <command name="CCR">
       <avp name="Session-Id" value="dont_care"> </avp>
       <avp name="CC-Request-Type" value="3"> </avp>
+      <avp name="CC-Request-Number" value="2"> </avp>
+      <avp name="Termination-Cause" value="1"> </avp>
     </command>
     <action>
       <store name="HbH" entity="HbH-id"> </store>
       <store name="E2E" entity="EtE-id"> </store>
       <check-value name="CC-Request-Type" behaviour="error"> </check-value>
+      <check-value name="CC-Request-Number" behaviour="error"> </check-value>
+      <check-value name="Termination-Cause" behaviour="error"> </check-value>
     </action>
   </receive>
 

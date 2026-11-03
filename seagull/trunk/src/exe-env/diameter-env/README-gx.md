@@ -214,6 +214,9 @@ Reglas observadas durante las pruebas; tenerlas en cuenta al editar diccionarios
 - Un entero recibido admite hasta 8 bytes. `Current Size: N is greater than expecting one: 8`
   indica que un AVP Grouped u OctetString se decodifico con una definicion entera.
 - 0 lineas `|E|` no garantiza valores correctos: validar los AVPs clave con `check-value`.
+- `check-value` compara solo la primera aparicion del AVP en el mensaje, aunque este dentro de un
+  Grouped y sin importar el padre. En gx-session, el RAR valida el `Charging-Rule-Name` de Remove
+  y el de Install se valida en el CCA-I, donde es la unica aparicion.
 
 ## Mantenimiento de base_gx.xml
 
