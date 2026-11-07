@@ -44,6 +44,7 @@ C_XmlParser::C_XmlParser() {
 
 C_XmlParser::~C_XmlParser() {
   GEN_DEBUG(1, "C_XmlParser::~C_XmlParser() start") ;
+  FREE_VAR(m_lex_string_value);
   GEN_DEBUG(1, "C_XmlParser::~C_XmlParser() end") ;
 }
 
@@ -142,6 +143,7 @@ void C_XmlParser::init () {
   // m_lex_string_value = (char*) malloc (1024) ;
   // m_lex_max_string_size = 1024 ;
 
+  FREE_VAR(m_lex_string_value);
   ALLOC_VAR(m_lex_string_value,char*,2048);
   m_lex_max_string_size = 2048 ;
   NEW_VAR(m_pXmldata, C_XmlData((char*)""));

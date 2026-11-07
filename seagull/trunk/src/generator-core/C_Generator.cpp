@@ -177,7 +177,7 @@ C_Generator::~C_Generator() {
   // Close the Stat object
   C_GeneratorStats::instance() ->close();
 
-  // DELETE_VAR (m_xml_data);
+  DELETE_VAR (m_xml_data);
   m_xml_data = NULL ;
   m_cmd_line_size = 0 ;
   m_cmd_line_values = NULL ;
