@@ -50,6 +50,10 @@ C_XmlParser::~C_XmlParser() {
 int C_XmlParser::lex_string_value_update (char P_char) {
   int L_result = 0 ;
 
+  if (m_lex_string_index >= m_lex_max_string_size) {
+    m_lex_max_string_size *= 2 ;
+    REALLOC_VAR(m_lex_string_value, char*, m_lex_max_string_size);
+  }
   if (m_lex_string_index > m_lex_max_string_size) {
     printf("error, max reached\n");
     L_result = 1 ;
