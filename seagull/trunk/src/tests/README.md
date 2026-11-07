@@ -135,7 +135,7 @@ no está cargado, esa etapa queda como AVISO). Logs en
   SAA comparten el código de comando 301 y las respuestas se cuentan como
   `SAR received`. Para validar el cliente usar `TrafficSuccessfulCall(C)` y
   `FailedCall(C)` de `client-stat.csv`.
-- **Leaks de arranque**: el parser XML, la línea de comandos y las pantallas de
+- **Leaks de arranque**: el diccionario binario (`C_ProtocolBinary`), la línea de comandos y las pantallas de
   display reservan memoria que no se libera hasta salir. No crecen con el tráfico;
   están en `lsan.supp`. Cualquier otro leak se sigue reportando.
 - **Certificados**: no se versionan (`*.pem` y `*.key` están en `.gitignore`).
