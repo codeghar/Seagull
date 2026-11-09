@@ -129,12 +129,18 @@ int yywrap(void) {
   FILE *L_nextFile ;
   int   L_ret ;
 
+  // cerrar el archivo que acaba de llegar a EOF
+  if (yyin != NULL && yyin != stdin) {
+    fclose(yyin) ;
+  }
+  yyin = NULL ;
+
   L_nextFile = XmlParserClass->next_file() ;
   if (L_nextFile == NULL) {
     L_ret = 1 ;
   } else {
     yyin = L_nextFile ;
-    yylineno = 0 ;
+    yylineno = 1 ;
     L_ret = 0 ;
   }
   

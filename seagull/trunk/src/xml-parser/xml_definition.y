@@ -33,6 +33,8 @@
   // Generic parser data
   extern char  yytext[] ;
   extern FILE *yyin    ;
+  extern void  yyrestart (FILE *) ;
+  extern int   yylex_destroy (void) ;
   extern int  yylineno ;
 
 #if defined(__linux__) || defined(__CYGWIN__) || defined (__sun) || defined (__sun__)
@@ -158,17 +160,26 @@ int parser_start (FILE *P_fd, C_XmlParser *P_parser) {
   int   L_parse_result ;
 
   XmlParserClass = P_parser ;
-  yyin = P_fd ;
+  yyrestart (P_fd) ;      // asigna yyin y reinicia el buffer de flex
+  yylineno = 1 ;
 
   L_parse_result = yyparse () ;
 
   if (L_parse_result != 0) {
-    GEN_ERROR(E_GEN_FATAL_ERROR, "Syntax error on file [" 
-	  << XmlParserClass->get_current_file_name()
-	  << "] near line [" << yylineno << "]");
-    return (-1) ;
-  } 
-  return (0) ;
+    // reportar ANTES de yylex_destroy (que reinicia yylineno)
+    GEN_ERROR(E_GEN_FATAL_ERROR, "Syntax error on file ["
+          << XmlParserClass->get_current_file_name()
+          << "] near line [" << yylineno << "]");
+  }
+
+  // ruta de error: yyparse aborto a mitad de archivo y yywrap no corrio
+  if (yyin != NULL && yyin != stdin) {
+    fclose (yyin) ;
+  }
+  yyin = NULL ;
+  yylex_destroy () ;      // libera YY_BUFFER_STATE y reinicia globals de flex
+
+  return ((L_parse_result != 0) ? -1 : 0) ;
 }
 
 
