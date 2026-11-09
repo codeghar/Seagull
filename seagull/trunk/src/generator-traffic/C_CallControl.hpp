@@ -211,6 +211,7 @@ protected:
                               // => function also defined for the client
 
   void clean_mlist (long P_id) ;
+  void purge_msg_rcv_ctxt_list () ;  // vacia la cola liberando los C_MessageFrame
 
   virtual void increase_incoming_call() ;
 

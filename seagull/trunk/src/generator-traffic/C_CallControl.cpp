@@ -1093,10 +1093,7 @@ T_GeneratorError C_CallControl::EndProcedure() {
 
   GEN_DEBUG (1, "C_CallControl::EndProcedure() start");
 
-  if (!m_msg_rcv_ctxt_list->empty()) {
-    m_msg_rcv_ctxt_list->erase(m_msg_rcv_ctxt_list->begin(),
-			       m_msg_rcv_ctxt_list->end());
-  }
+  purge_msg_rcv_ctxt_list() ;
 
 
   L_nbMessageSuspend = m_call_ctxt_mlist -> getNbElements (E_CTXT_SUSPEND) ;
@@ -1693,6 +1690,19 @@ T_GeneratorError C_CallControlServer::InitProcedure() {
 }
 
 
+void C_CallControl::purge_msg_rcv_ctxt_list () {
+  // Los contextos encolados por messageReceived() son duenos de m_msg.
+  // Solo messageReceivedControl() los liberaba; vaciar la lista con
+  // erase() perdia los mensajes pendientes (respuestas tardias al
+  // terminar, o mensajes en cola al perder el canal).
+  T_ReceiveMsgContext L_rcvCtxt ;
+  while (!m_msg_rcv_ctxt_list->empty()) {
+    L_rcvCtxt = *(m_msg_rcv_ctxt_list->begin()) ;
+    m_msg_rcv_ctxt_list->erase(m_msg_rcv_ctxt_list->begin()) ;
+    DELETE_VAR(L_rcvCtxt.m_msg) ;
+  }
+}
+
 void C_CallControl::clean_mlist (long P_id) {
   T_pCallContext L_pCallContext ;
   int L_nbElem = m_call_ctxt_mlist -> getNbElements (P_id) ;
@@ -1712,10 +1722,7 @@ void C_CallControl::clean_traffic() {
 
   m_accept_new_call = false ;
 
-  if (!m_msg_rcv_ctxt_list->empty()) {
-    m_msg_rcv_ctxt_list->erase(m_msg_rcv_ctxt_list->begin(),
-			       m_msg_rcv_ctxt_list->end());
-  }
+  purge_msg_rcv_ctxt_list() ;
   if (!m_event_list->empty()) {
     m_event_list->erase(m_event_list->begin(),
 			m_event_list->end());
