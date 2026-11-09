@@ -1,5 +1,5 @@
 #!/bin/bash
-# uso: run-diameter-any.sh <tcp|tls|sctp> <dir-binarios> <dir-salida> [clave] [passwd]   (TLS: PROBE=1 prueba s_client)  (vars opcionales: DICO=base_cx.xml SCEN=sar-saa MAX_ERR=0)
+# uso: run-diameter-any.sh <tcp|tls|sctp> <dir-binarios> <dir-salida> [clave] [passwd]   (TLS: PROBE=1 prueba s_client)  (vars opcionales: DICO=base_cx.xml SCEN=sar-saa MAX_ERR=0 NCALLS=n RATE=r)
 . "$(dirname "${0}")/lib.sh"
 HERE=$(dirname "$(realpath "${0}")")
 : "${LSAN_OPTIONS:=suppressions=$HERE/lsan.supp:print_suppressions=1}"
@@ -36,11 +36,22 @@ case "$MODE" in
   tls)
     prepare_env "$OUT" -tls
     c=$OUT/env/config
-    sed -i '/name="number-calls" value="5"/d' "$c/conf.client-tls.xml"
     for f in "$c/conf.server-tls.xml" "$c/conf.client-tls.xml"; do
       sed -i -e "s|cert_chain_file=xxx;|cert_chain_file=$CERTS/cert.pem;|" -e "s|private_key_file=yyy;|private_key_file=$CERTS/$KEY;|" -e 's|passwd=zzz"|passwd='"$PASS"'"|' "$f"
     done ;;
 esac
+# overrides opcionales de trafico (solo si se definen NCALLS y/o RATE)
+if [ -n "${NCALLS:-}" ] || [ -n "${RATE:-}" ]; then
+  for f in "$OUT"/env/config/conf.client*.xml; do
+    if [ -n "${NCALLS:-}" ]; then
+      sed -i '/name="number-calls"/d' "$f"
+      sed -i '/name="call-rate"/a <define entity="traffic-param" name="number-calls" value="'"$NCALLS"'"></define>' "$f"
+    fi
+    if [ -n "${RATE:-}" ]; then
+      sed -i 's|name="call-rate" value="[0-9]*"|name="call-rate" value="'"$RATE"'"|' "$f"
+    fi
+  done
+fi
 cd "$OUT/env/run" || exit 1
 for f in ../config/$DICO ../scenario/$SCEN.server.xml ../scenario/$SCEN.client.xml; do
   [ -f "$f" ] || { echo "falta $f en $OUT/env"; exit 1; }
