@@ -1,6 +1,9 @@
 #!/bin/bash
 # uso: run-diameter-any.sh <tcp|tls|sctp> <dir-binarios> <dir-salida> [clave] [passwd]   (TLS: PROBE=1 prueba s_client)  (vars opcionales: DICO=base_cx.xml SCEN=sar-saa MAX_ERR=0)
 . "$(dirname "${0}")/lib.sh"
+HERE=$(dirname "$(realpath "${0}")")
+: "${LSAN_OPTIONS:=suppressions=$HERE/lsan.supp:print_suppressions=1}"
+export LSAN_OPTIONS
 MODE=${1}; BIN=$(realpath "${2}" 2>/dev/null); OUT=$(realpath -m "${3}" 2>/dev/null)
 KEY=${4:-key.pem}; PASS=${5:-seagull123}
 DICO=${DICO:-base_cx.xml}; SCEN=${SCEN:-sar-saa}
@@ -92,8 +95,11 @@ if [ "$MODE" = tls ]; then
 fi
 VIVO=0; pgrep -x seagull >/dev/null && VIVO=1
 NERR=$(cat "$OUT"/env/logs/*.log 2>/dev/null | grep -c -F '|E|')
+NSAN=$(cat "$OUT"/env/logs/*.out 2>/dev/null | grep -c -E 'ERROR: (Leak|Address)Sanitizer')
+echo "--- reportes de sanitizer en .out: $NSAN"
+NERR=$((NERR + NSAN))
 MAX_ERR=${MAX_ERR:-0}
-echo "--- errores E en los logs: $NERR (maximo permitido: $MAX_ERR)"
+echo "--- errores totales (|E| + sanitizer): $NERR (maximo permitido: $MAX_ERR)"
 if [ "$NERR" -gt "$MAX_ERR" ]; then
   grep -h -F '|E|' "$OUT"/env/logs/*.log | cut -d'|' -f3 | sort | uniq -c | sort -rn | head -5
 fi
