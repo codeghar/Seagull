@@ -26,12 +26,20 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include <openssl/md5.h>
+#include <openssl/evp.h>
 #include "milenage.h"
 
-#include "Utils.hpp"
+/* ALLOC_VAR: copiado localmente de common/Utils.hpp para mantener este
+ * archivo como C puro (portado de sipp), sin depender de headers C++. */
+#define ALLOC_VAR(v,t,s) \
+(v) = (t) malloc (s); \
+if ((v) == NULL) { \
+  fprintf(stderr, "ALLOC_VAR (" #v ", " #t ", size: %lu) failure\n", (unsigned long)(s)); \
+  exit(-1) ; \
+}
 
-#define MAX_HEADER_LEN  2049
+
+#define MAX_HEADER_LEN  2049  /* = tamano de L_result[] en CryptExternalMethods.cpp */
 #define MD5_HASH_SIZE 16
 #define HASH_HEX_SIZE 2*MD5_HASH_SIZE
 
@@ -135,6 +143,23 @@ char *stristr (const char *s1, const char *s2) {
   return 0;
 }
 
+/* Copia [start,end) en dst (capacidad cap): trunca y siempre termina en NUL. */
+static void copy_field(char *dst, size_t cap, const char *start, const char *end) {
+  size_t n = (size_t)(end - start);
+  if (n >= cap) n = cap - 1;
+  memcpy(dst, start, n);
+  dst[n] = '\0';
+}
+
+/* Anade 'piece' a result (capacidad MAX_HEADER_LEN). Devuelve 0 si no cabe. */
+static int append_field(char *result, const char *piece) {
+  size_t used = strlen(result);
+  size_t len  = strlen(piece);
+  if (used + len >= MAX_HEADER_LEN) return 0;
+  memcpy(result + used, piece, len + 1);
+  return 1;
+}
+
 int createAuthHeader(char * user, char * password, char * method,
                      char * uri, char * msgbody, char * auth, 
                      char * aka_OP,
@@ -154,8 +179,7 @@ int createAuthHeader(char * user, char * password, char * method,
     start = start + strlen("algorithm=");
     if (*start == '"') { start++; }
     end = start + strcspn(start, " ,\"\r\n");
-    strncpy(algo, start, end - start);
-    algo[end - start] ='\0';
+    copy_field(algo, sizeof(algo), start, end);
     
   }
   
@@ -185,7 +209,13 @@ int createAuthHeaderMD5(char * user, char * password, char * method,
   char *start, *end;
   static unsigned int mync = 1;
   int has_opaque = 0;
-  MD5_CTX Md5Ctx;
+  EVP_MD_CTX *Md5Ctx = EVP_MD_CTX_new();
+  char L_result_buf[MAX_HEADER_LEN + 128];
+
+  if (Md5Ctx == NULL) {
+    sprintf(result, "createAuthHeaderMD5: EVP_MD_CTX_new failed");
+    return 0;
+  }
   
   // Extract the Auth Type - If not present, using 'none' 
   cnonce[0] = '\0';
@@ -194,8 +224,7 @@ int createAuthHeaderMD5(char * user, char * password, char * method,
     start = start + strlen("qop=");
     if (*start == '"') { start++; }
     end = start + strcspn(start, " ,\"\r\n");
-    strncpy(authtype, start, end - start);
-    authtype[end - start] ='\0';
+    copy_field(authtype, sizeof(authtype), start, end);
     sprintf(cnonce, "%x", rand());
     sprintf(nc, "%08x", mync);
   }
@@ -206,98 +235,109 @@ int createAuthHeaderMD5(char * user, char * password, char * method,
     start = start + strlen("opaque=");
     if (*start == '"') { start++; }
     end = start + strcspn(start, " ,\"\r\n");
-    strncpy(opaque, start, end - start);
-    opaque[end - start] ='\0';
+    copy_field(opaque, sizeof(opaque), start, end);
     has_opaque = 1;
   }
   
   // Extract the Realm 
   if ((start = stristr(auth, "realm=")) == NULL) {
-    sprintf(result, "createAuthHeaderMD5: couldn't parse realm in '%s'", auth);
+    snprintf(result, MAX_HEADER_LEN, "createAuthHeaderMD5: couldn't parse realm in '%s'", auth);
+    EVP_MD_CTX_free(Md5Ctx);
     return 0;
   }
   start = start + strlen("realm=");
   if (*start == '"') { start++; }       
   end = start + strcspn(start, ",\"\r\n");
-  strncpy(tmp, start, end - start);
-  tmp[end - start] ='\0';
+  copy_field(tmp, sizeof(tmp), start, end);
   
   // Load in A1 
-  MD5_Init(&Md5Ctx);
-  MD5_Update(&Md5Ctx, user, strlen(user));
-  MD5_Update(&Md5Ctx, ":", 1);
-  MD5_Update(&Md5Ctx, tmp, strlen(tmp));
-  MD5_Update(&Md5Ctx, ":", 1);
-  MD5_Update(&Md5Ctx, password, strlen(password));
-  MD5_Final(ha1, &Md5Ctx);
+  EVP_DigestInit_ex(Md5Ctx, EVP_md5(), NULL);
+  EVP_DigestUpdate(Md5Ctx, user, strlen(user));
+  EVP_DigestUpdate(Md5Ctx, ":", 1);
+  EVP_DigestUpdate(Md5Ctx, tmp, strlen(tmp));
+  EVP_DigestUpdate(Md5Ctx, ":", 1);
+  EVP_DigestUpdate(Md5Ctx, password, strlen(password));
+  EVP_DigestFinal_ex(Md5Ctx, ha1, NULL);
   hashToHex(&ha1[0], &ha1_hex[0]);
   
-  sprintf(result, "Digest username=\"%s\",realm=\"%s\"",user,tmp);
+  if (snprintf(result, MAX_HEADER_LEN, "Digest username=\"%s\",realm=\"%s\"",user,tmp) >= MAX_HEADER_LEN) {
+    goto too_long;
+  }
   if (cnonce[0] != '\0') {
-    sprintf(result, "%s,cnonce=\"%s\",nc=%s,qop=%s",result,cnonce,nc,authtype);
+    snprintf(L_result_buf, sizeof(L_result_buf), ",cnonce=\"%s\",nc=%s,qop=%s",cnonce,nc,authtype);
+    if (!append_field(result, L_result_buf)) goto too_long;
   }
   
   // Construct the URI 
 
-  sprintf(tmp, "%s", uri);
+  snprintf(tmp, sizeof(tmp), "%s", uri);
   
   // If using Auth-Int make a hash of the body - which is NULL for REG 
   if (stristr(authtype, "auth-int") != NULL) {
-    MD5_Init(&Md5Ctx);
-    MD5_Update(&Md5Ctx, msgbody, strlen(msgbody));
-    MD5_Final(body, &Md5Ctx);
+    EVP_DigestInit_ex(Md5Ctx, EVP_md5(), NULL);
+    EVP_DigestUpdate(Md5Ctx, msgbody, strlen(msgbody));
+    EVP_DigestFinal_ex(Md5Ctx, body, NULL);
     hashToHex(&body[0], &body_hex[0]);
   }
   
   // Load in A2 
-  MD5_Init(&Md5Ctx);
-  MD5_Update(&Md5Ctx, method, strlen(method));
-  MD5_Update(&Md5Ctx, ":", 1);
-  MD5_Update(&Md5Ctx, tmp, strlen(tmp));
+  EVP_DigestInit_ex(Md5Ctx, EVP_md5(), NULL);
+  EVP_DigestUpdate(Md5Ctx, method, strlen(method));
+  EVP_DigestUpdate(Md5Ctx, ":", 1);
+  EVP_DigestUpdate(Md5Ctx, tmp, strlen(tmp));
   if (stristr(authtype, "auth-int") != NULL) {
-    MD5_Update(&Md5Ctx, ":", 1);
-    MD5_Update(&Md5Ctx, &body_hex, HASH_HEX_SIZE);
+    EVP_DigestUpdate(Md5Ctx, ":", 1);
+    EVP_DigestUpdate(Md5Ctx, &body_hex, HASH_HEX_SIZE);
   }
-  MD5_Final(ha2, &Md5Ctx);
+  EVP_DigestFinal_ex(Md5Ctx, ha2, NULL);
   hashToHex(&ha2[0], &ha2_hex[0]);
   
-  sprintf(result, "%s,uri=\"%s\"",result,tmp);
+  snprintf(L_result_buf, sizeof(L_result_buf), ",uri=\"%s\"", tmp);
+  if (!append_field(result, L_result_buf)) goto too_long;
   
   // Extract the Nonce 
   if ((start = stristr(auth, "nonce=")) == NULL) {
     sprintf(result, "createAuthHeader: couldn't parse nonce");
+    EVP_MD_CTX_free(Md5Ctx);
     return 0;
   }
   start = start + strlen("nonce=");
   if (*start == '"') { start++; }
   end = start + strcspn(start, " ,\"\r\n");
-  strncpy(tmp, start, end - start);
-  tmp[end - start] ='\0';
+  copy_field(tmp, sizeof(tmp), start, end);
   
-  MD5_Init(&Md5Ctx);
-  MD5_Update(&Md5Ctx, &ha1_hex, HASH_HEX_SIZE);
-  MD5_Update(&Md5Ctx, ":", 1);
-  MD5_Update(&Md5Ctx, tmp, strlen(tmp));
+  EVP_DigestInit_ex(Md5Ctx, EVP_md5(), NULL);
+  EVP_DigestUpdate(Md5Ctx, &ha1_hex, HASH_HEX_SIZE);
+  EVP_DigestUpdate(Md5Ctx, ":", 1);
+  EVP_DigestUpdate(Md5Ctx, tmp, strlen(tmp));
   if (cnonce[0] != '\0') {
-    MD5_Update(&Md5Ctx, ":", 1);
-    MD5_Update(&Md5Ctx, nc, strlen(nc));
-    MD5_Update(&Md5Ctx, ":", 1);
-    MD5_Update(&Md5Ctx, cnonce, strlen(cnonce));
-    MD5_Update(&Md5Ctx, ":", 1);
-    MD5_Update(&Md5Ctx, authtype, strlen(authtype));
+    EVP_DigestUpdate(Md5Ctx, ":", 1);
+    EVP_DigestUpdate(Md5Ctx, nc, strlen(nc));
+    EVP_DigestUpdate(Md5Ctx, ":", 1);
+    EVP_DigestUpdate(Md5Ctx, cnonce, strlen(cnonce));
+    EVP_DigestUpdate(Md5Ctx, ":", 1);
+    EVP_DigestUpdate(Md5Ctx, authtype, strlen(authtype));
   }
-  MD5_Update(&Md5Ctx, ":", 1);
-  MD5_Update(&Md5Ctx, &ha2_hex, HASH_HEX_SIZE);
-  MD5_Final(resp, &Md5Ctx);
+  EVP_DigestUpdate(Md5Ctx, ":", 1);
+  EVP_DigestUpdate(Md5Ctx, &ha2_hex, HASH_HEX_SIZE);
+  EVP_DigestFinal_ex(Md5Ctx, resp, NULL);
   hashToHex(&resp[0], &resp_hex[0]);
   
-  sprintf(result, "%s,nonce=\"%s\",response=\"%s\",algorithm=%s",result,tmp,resp_hex,algo);
+  snprintf(L_result_buf, sizeof(L_result_buf), ",nonce=\"%s\",response=\"%s\",algorithm=%s", tmp, resp_hex, algo);
+  if (!append_field(result, L_result_buf)) goto too_long;
   
   if (has_opaque) {
-    sprintf(result, "%s,opaque=\"%s\"",result,opaque);
+    snprintf(L_result_buf, sizeof(L_result_buf), ",opaque=\"%s\"",opaque);
+    if (!append_field(result, L_result_buf)) goto too_long;
   }
   
+  EVP_MD_CTX_free(Md5Ctx);
   return 1;
+
+too_long:
+  snprintf(result, MAX_HEADER_LEN, "createAuthHeaderMD5: header too long");
+  EVP_MD_CTX_free(Md5Ctx);
+  return 0;
 }
 
 
@@ -516,6 +556,7 @@ int createAuthHeaderAKAv1MD5(char * user, char * aka_OP,
   IK ik;
   AK ak;
   int i;
+  char L_result_buf[MAX_HEADER_LEN + 128];
 
   // Extract the Nonce 
   if ((start = stristr(auth, "nonce=")) == NULL) {
@@ -525,13 +566,12 @@ int createAuthHeaderAKAv1MD5(char * user, char * aka_OP,
   start = start + strlen("nonce=");
   if (*start == '"') { start++; }
   end = start + strcspn(start, " ,\"\r\n");
-  strncpy(tmp, start, end - start);
-  tmp[end - start] ='\0';
+  copy_field(tmp, sizeof(tmp), start, end);
 
   /* Compute the AKA RES */
   resp_hex[0]=0;
   nonce64 = tmp;
-  nonce = base64_decode_string(nonce64,end-start,&noncelen);
+  nonce = base64_decode_string(nonce64,(unsigned int)strlen(tmp),&noncelen);
   if (noncelen<RANDLEN+AUTNLEN) {
     sprintf(result,"createAuthHeaderAKAv1MD5 : Nonce is too short %d < %d expected \n",
     noncelen,RANDLEN+AUTNLEN);
@@ -592,7 +632,11 @@ int createAuthHeaderAKAv1MD5(char * user, char * aka_OP,
     }
     auts_hex[AUTS64LEN-1]=0;
     
-    sprintf(result, "%s,auts=\"%s\"",result,auts_hex);
+    snprintf(L_result_buf, sizeof(L_result_buf), ",auts=\"%s\"",auts_hex);
+    if (!append_field(result, L_result_buf)) {
+      snprintf(result, MAX_HEADER_LEN, "createAuthHeaderAKAv1MD5: auts too long");
+      return 0;
+    }
   }
   
   return 1;

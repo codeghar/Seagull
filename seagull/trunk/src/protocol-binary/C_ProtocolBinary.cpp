@@ -2089,7 +2089,7 @@ int C_ProtocolBinary::get_header_body_values_from_xml (C_XmlData *P_def) {
 
   int                       L_ret = 0 ;
   C_XmlData                *L_data    ;
-  char                     *L_value, *L_name, *L_type, *L_endstr ;
+  char                     *L_value = NULL, *L_name = NULL, *L_type = NULL, *L_endstr = NULL ;
   char                     *L_fieldName, *L_fieldValue ;
   T_XmlData_List::iterator  L_listIt, L_listFieldIt  ;
   T_pXmlData_List           L_subListDefine, L_subListSetField ;

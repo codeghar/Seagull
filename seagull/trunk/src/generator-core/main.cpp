@@ -170,6 +170,11 @@ int main_tool(int P_argc, char**P_argv) {
     GEN_FATAL(1,"SIGUSR1 handler error");
   }
 
+  // SIGTERM (kill, podman stop, systemctl stop): salida ordenada, igual que SIGUSR1
+  if (sigaction(SIGTERM, &L_sig_usr1, NULL)) {
+    GEN_FATAL(1,"SIGTERM handler error");
+  }
+
   memset(&L_sig_pipe, 0, sizeof(struct sigaction));
   L_sig_pipe.sa_handler = SIG_IGN;
   if (sigaction(SIGPIPE, &L_sig_pipe, NULL)) {

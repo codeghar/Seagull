@@ -18,7 +18,7 @@
 #
 #
 
-export LD_LIBRARY_PATH=/usr/local/bin
+export LD_LIBRARY_PATH=${SEAGULL_LIB_DIR:-/usr/local/bin}${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}
 seagull -conf ../config/conf.server-tls-no-secure.xml -dico ../config/base_cx.xml -scen ../scenario/sar-saa.server-tls-no-secure.xml -log ../logs/sar-saa.server-tls.log -llevel ET 
 
 

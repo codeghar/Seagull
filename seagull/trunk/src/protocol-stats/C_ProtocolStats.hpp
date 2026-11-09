@@ -30,7 +30,7 @@
 #include "fstream_t.hpp"
 #include "TimeUtils.hpp"
 
-#define TIME_LENGTH 32
+#define TIME_LENGTH 128
 
 class C_ProtocolStats : public C_DisplayObject, 
 			public C_ProtocolStatsFrame {

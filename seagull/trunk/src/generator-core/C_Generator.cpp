@@ -129,6 +129,9 @@ C_Generator::C_Generator(cmd_line_pt P_cmd_line) : C_TaskControl() {
   m_display_rtime = NULL ;
   m_display_help = NULL ;
 
+  m_remote_control = NULL ;
+  m_do_remote_control = false ;
+
   m_display_period = 0 ;
 }
 
@@ -174,7 +177,7 @@ C_Generator::~C_Generator() {
   // Close the Stat object
   C_GeneratorStats::instance() ->close();
 
-  // DELETE_VAR (m_xml_data);
+  DELETE_VAR (m_xml_data);
   m_xml_data = NULL ;
   m_cmd_line_size = 0 ;
   m_cmd_line_values = NULL ;

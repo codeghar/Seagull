@@ -272,7 +272,7 @@ void C_GeneratorStats::setFileName(char * P_name)
 
 void C_GeneratorStats::setRepartitionCallLength(char * P_listeStr)
 {
-  unsigned int * listeInteger;
+  unsigned int * listeInteger = NULL;
   int sizeOfListe;
 
   if(createIntegerTable(P_listeStr, &listeInteger, &sizeOfListe) == 1)
@@ -287,7 +287,7 @@ void C_GeneratorStats::setRepartitionCallLength(char * P_listeStr)
 
 void C_GeneratorStats::setRepartitionResponseTime (char * P_listeStr)
 {
-  unsigned int * listeInteger;
+  unsigned int * listeInteger = NULL;
   int sizeOfListe;
 
   if(createIntegerTable(P_listeStr, &listeInteger, &sizeOfListe) == 1)

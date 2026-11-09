@@ -17,6 +17,7 @@
  *
  */
 
+#include <cerrno>
 #include "Utils.hpp"
 #include "C_SecureSocket.hpp"
 
@@ -76,7 +77,7 @@ void C_SecureSocket::ssl_error(int P_returnCode) {
   int L_ret ;
   L_ret = SSL_get_error(m_ssl, P_returnCode) ;
 
-  if (P_returnCode <= SSL_ERROR_WANT_CONNECT) {
+  if ((L_ret >= 0) && (L_ret <= SSL_ERROR_WANT_CONNECT)) {
     SOCKET_ERROR(0, m_ssl_error_string[L_ret]);
   } else {
      SOCKET_ERROR(0, "SSL error " << L_ret);
@@ -143,9 +144,46 @@ C_SecureSocketServer::~C_SecureSocketServer() {
 
 int C_SecureSocketServer::_call_read() { 
   int L_result = 0 ;
-    L_result = SSL_read(m_ssl, m_read_buf, m_read_buf_size);
-    if (L_result < 0) ssl_error(L_result) ;
+  L_result = SSL_read(m_ssl, m_read_buf, m_read_buf_size);
+  if (L_result <= 0) {
+    int L_err = SSL_get_error(m_ssl, L_result);
+    if ((L_err == SSL_ERROR_WANT_READ) || (L_err == SSL_ERROR_WANT_WRITE)) {
+      errno = EAGAIN ;       // TLS 1.3: datos de control, no es un error
+      return (-1) ;
+    }
+    if (L_result < 0) {
+      ssl_error(L_result) ;
+      errno = ECONNRESET ;   // error real: el llamador debe cerrar el canal
+    }
+  }
   return (L_result) ;
+}
+
+// Handshake TLS no bloqueante: WANT_READ y WANT_WRITE significan "reintentar",
+// no error. Con connect() en EINPROGRESS, SSL_connect() devuelve WANT_WRITE.
+static inline bool ssl_want_io(SSL *P_ssl, int P_result) {
+  int L_err = SSL_get_error(P_ssl, P_result);
+  return ((L_err == SSL_ERROR_WANT_READ) || (L_err == SSL_ERROR_WANT_WRITE));
+}
+
+// Continuar el handshake si el socket es legible, o escribible cuando
+// OpenSSL lo haya pedido (evita llamadas inutiles mientras espera lectura).
+static inline bool ssl_fd_ready(SSL *P_ssl, int P_fd, fd_set *P_rSet, fd_set *P_wSet) {
+  if (FD_ISSET(P_fd, P_rSet)) return (true);
+  return ((P_wSet != NULL) && FD_ISSET(P_fd, P_wSet) && SSL_want_write(P_ssl));
+}
+
+// SSL_write no bloqueante: WANT_READ/WANT_WRITE se devuelven como EAGAIN para
+// que C_SocketWithData encole los datos y reintente. Cualquier otro resultado
+// (incluido 0) es un error de la conexion.
+static int ssl_write_status(C_SecureSocket *P_sock, SSL *P_ssl, int P_result) {
+  if (ssl_want_io(P_ssl, P_result)) {
+    errno = EAGAIN ;
+    return (-1) ;
+  }
+  P_sock->ssl_error(P_result) ;
+  errno = ECONNRESET ;
+  return (-1) ;
 }
 
 int C_SecureSocketServer::_secure_mode () {
@@ -163,8 +201,8 @@ int C_SecureSocketServer::_secure_mode () {
   
   L_result = SSL_accept(m_ssl) ;
 
-  if (L_result < 0 ) {
-    if (SSL_get_error(m_ssl, L_result) == SSL_ERROR_WANT_READ) {
+  if (L_result <= 0 ) {
+    if (ssl_want_io(m_ssl, L_result)) {
       m_state = E_SOCKET_STATE_INPROGESS ;
       L_ret = 0 ;
     } else {
@@ -194,7 +232,7 @@ int C_SecureSocketServer::_call_write(unsigned char* P_data,
   
   int L_result = 0 ;
   L_result = SSL_write(m_ssl,P_data,P_size);
-  if (L_result < 0) ssl_error(L_result) ;
+  if (L_result <= 0) return (ssl_write_status(this, m_ssl, L_result)) ;
   return (L_result) ;
 
 }
@@ -224,7 +262,17 @@ int C_SecureSocketClient::_call_read() {
   int L_result = 0 ;
 
   L_result = SSL_read(m_ssl, m_read_buf, m_read_buf_size);
-  if (L_result < 0) ssl_error(L_result) ;
+  if (L_result <= 0) {
+    int L_err = SSL_get_error(m_ssl, L_result);
+    if ((L_err == SSL_ERROR_WANT_READ) || (L_err == SSL_ERROR_WANT_WRITE)) {
+      errno = EAGAIN ;       // TLS 1.3: datos de control, no es un error
+      return (-1) ;
+    }
+    if (L_result < 0) {
+      ssl_error(L_result) ;
+      errno = ECONNRESET ;   // error real: el llamador debe cerrar el canal
+    }
+  }
 
   return (L_result) ;
 }
@@ -233,7 +281,7 @@ int C_SecureSocketClient::_call_write(unsigned char* P_data,
 				      size_t P_size) {
   int L_result = 0 ;
   L_result = SSL_write(m_ssl,P_data,P_size);
-  if (L_result < 0) ssl_error(L_result) ;
+  if (L_result <= 0) return (ssl_write_status(this, m_ssl, L_result)) ;
   
   return (L_result) ;
 }
@@ -252,8 +300,8 @@ int C_SecureSocketClient::_secure_mode() {
   SSL_set_bio(m_ssl,m_bio,m_bio);
   
   L_result = SSL_connect(m_ssl) ;
-  if ( L_result < 0 ) {
-    if (SSL_get_error(m_ssl, L_result) == SSL_ERROR_WANT_READ) {
+  if ( L_result <= 0 ) {
+    if (ssl_want_io(m_ssl, L_result)) {
       m_state = E_SOCKET_STATE_INPROGESS ;
       L_ret = 0 ;
     } else {
@@ -287,17 +335,16 @@ C_Socket* C_SecureSocketClient::process_fd_in_progess (fd_set* P_rSet,
   C_Socket* L_socket = NULL ;
   int       L_result        ;
 
-  if (FD_ISSET(m_socket_id, P_rSet)) {
+  if (ssl_fd_ready(m_ssl, m_socket_id, P_rSet, P_wSet)) {
     L_result = SSL_connect(m_ssl) ;
-    if ( L_result < 0 ) {
-      if (SSL_get_error(m_ssl, L_result) == SSL_ERROR_WANT_READ) {
+    if ( L_result <= 0 ) {
+      if (ssl_want_io(m_ssl, L_result)) {
         P_event->m_type = C_TransportEvent::E_TRANS_NO_EVENT ;
       } else {
         P_event->m_type = C_TransportEvent::E_TRANS_OPEN_FAILED ;
       }
     } else {
       m_state = E_SOCKET_STATE_READY ;
-      m_ssl->rwstate = SSL_NOTHING ;
       P_event->m_type = C_TransportEvent::E_TRANS_OPEN ;
     }
     P_event->m_channel_id = m_channel_id ;
@@ -312,10 +359,10 @@ C_Socket* C_SecureSocketServer::process_fd_in_progess (fd_set* P_rSet,
   C_Socket* L_socket = NULL ;
   int       L_result        ;
 
-  if (FD_ISSET(m_socket_id, P_rSet)) {
+  if (ssl_fd_ready(m_ssl, m_socket_id, P_rSet, P_wSet)) {
     L_result = SSL_accept(m_ssl) ;
-    if ( L_result < 0 ) {
-      if (SSL_get_error(m_ssl, L_result) == SSL_ERROR_WANT_READ) {
+    if ( L_result <= 0 ) {
+      if (ssl_want_io(m_ssl, L_result)) {
         P_event->m_type = C_TransportEvent::E_TRANS_NO_EVENT ;
       } else {
         P_event->m_type = C_TransportEvent::E_TRANS_OPEN_FAILED ;

@@ -27,7 +27,7 @@ C_LogValue::C_LogValue(char *P_string) {
 	       char*,
 	       sizeof(char),
 	       100);
-  strncpy(m_string, P_string, 100);
+  snprintf(m_string, 100, "%s", P_string);
 }
 C_LogValue::C_LogValue(double P_time, double P_data) {
   m_type = E_TYPE_DATA ;
@@ -43,7 +43,7 @@ C_LogValue::~C_LogValue() {
 }
 void C_LogValue::set_string (char *P_string) {
   m_type = E_TYPE_STRING ;
-  strncpy(m_string, P_string, 100);
+  snprintf(m_string, 100, "%s", P_string);
 }
 void C_LogValue::set_data (double P_time, double P_data) {
   m_type = E_TYPE_DATA ;
@@ -53,7 +53,7 @@ void C_LogValue::set_data (double P_time, double P_data) {
 void C_LogValue::get_value (char *P_buf) {
   switch (m_type) {
   case E_TYPE_STRING:
-    strncpy(P_buf, m_string, 100);
+    snprintf(P_buf, 100, "%s", m_string);
     break ;
   case E_TYPE_DATA:
     snprintf(P_buf, 100, (char*)"%f;%f;", m_data.m_x, 

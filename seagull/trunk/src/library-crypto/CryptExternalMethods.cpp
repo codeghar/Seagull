@@ -326,19 +326,32 @@ int create_algo_MD5_radius(char          *  P_msg,
                            unsigned char *  P_result) {
   int        L_ret         = 0 ;
   int        L_size_shared = 0 ;
-  
-  MD5_CTX    L_Md5Ctx ;
+
+  EVP_MD_CTX *L_Md5Ctx = EVP_MD_CTX_new();
+
+  if (L_Md5Ctx == NULL) {
+    return (-1);
+  }
 
   if (P_shared_secret != NULL) {
     L_size_shared = strlen(P_shared_secret);
   }
 
-  MD5_Init(&L_Md5Ctx);
-  if (L_size_shared > 0) {
-    MD5_Update(&L_Md5Ctx, P_shared_secret, L_size_shared);
+  if (EVP_DigestInit_ex(L_Md5Ctx, EVP_md5(), NULL) != 1) {
+    L_ret = -1;
   }
-  MD5_Update(&L_Md5Ctx, P_msg, P_msg_size);
-  MD5_Final(P_result, &L_Md5Ctx);
+  if (L_ret == 0 && L_size_shared > 0 &&
+      EVP_DigestUpdate(L_Md5Ctx, P_shared_secret, L_size_shared) != 1) {
+    L_ret = -1;
+  }
+  if (L_ret == 0 && EVP_DigestUpdate(L_Md5Ctx, P_msg, P_msg_size) != 1) {
+    L_ret = -1;
+  }
+  if (L_ret == 0 && EVP_DigestFinal_ex(L_Md5Ctx, P_result, NULL) != 1) {
+    L_ret = -1;
+  }
+
+  EVP_MD_CTX_free(L_Md5Ctx);
 
   return (L_ret);
 }

@@ -809,7 +809,7 @@ unsigned long C_MessageText::decode(unsigned char               *P_buf,
 
   char              *L_message_type = NULL  ;
   size_t             L_remaining    = P_siz ;
-  char               L_char                 ;
+  char               L_char = 0                 ;
   int                L_index        = 0     ;
   
   unsigned char     *L_wbuf         = NULL  ;

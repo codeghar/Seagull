@@ -72,7 +72,7 @@ void C_SocketSCTPListen::set_properties() {
     // max wait time after a close
     L_linger.l_onoff = 1;
     L_linger.l_linger = 0;
-    if (ext_setsockopt (m_socket_id, SOL_SOCKET, SO_LINGER,
+    if (::setsockopt (m_socket_id, SOL_SOCKET, SO_LINGER,
 		    &L_linger, sizeof (L_linger)) < 0) {
       SOCKET_ERROR(1, "Unable to set SO_LINGER option");
     }
@@ -87,7 +87,7 @@ void C_SocketSCTPListen::set_properties() {
     init.sinit_max_instreams  = MAX_INCOMING;
     init.sinit_max_attempts   = 3;
     init.sinit_max_init_timeo = 60;
-    if(ext_setsockopt(m_socket_id, IPPROTO_SCTP, 
+    if(::setsockopt(m_socket_id, IPPROTO_SCTP, 
 		       SCTP_INITMSG, (void*)&init, sizeof(init)) < 0) {
       SOCKET_ERROR(1, "Unable to set SCTP_INITMSG option");
     }
@@ -100,7 +100,7 @@ void C_SocketSCTPListen::set_properties() {
     events.sctp_partial_delivery_event = 1;
     events.sctp_adaptation_layer_event = 1;
 
-    if(ext_setsockopt(m_socket_id, IPPROTO_SCTP,
+    if(::setsockopt(m_socket_id, IPPROTO_SCTP,
 		       SCTP_EVENTS,&events,sizeof(events)) < 0) {
       SOCKET_ERROR(1, "Unable to set SCTP_EVENTS option");
     }
@@ -110,22 +110,22 @@ void C_SocketSCTPListen::set_properties() {
   }
   // size of recv buf
   L_max_buf_size = m_buffer_size ;
-  if(ext_setsockopt(m_socket_id, SOL_SOCKET, SO_SNDBUF,
+  if(::setsockopt(m_socket_id, SOL_SOCKET, SO_SNDBUF,
 		    &L_max_buf_size, sizeof(L_max_buf_size))) {
     SOCKET_ERROR(1,"Unable to set socket sndbuf");
   }
 
   // size of send buff
   L_max_buf_size = m_buffer_size ;
-  if(ext_setsockopt(m_socket_id, SOL_SOCKET, SO_RCVBUF,
+  if(::setsockopt(m_socket_id, SOL_SOCKET, SO_RCVBUF,
 		    &L_max_buf_size, sizeof(L_max_buf_size))) {
     SOCKET_ERROR(1, "Unable to set socket rcvbuf");
   }
 
   // non blocking mode
-  L_flags = ext_fcntl(m_socket_id, F_GETFL , NULL);
+  L_flags = ::fcntl(m_socket_id, F_GETFL , NULL);
   L_flags |= O_NONBLOCK;
-  ext_fcntl(m_socket_id, F_SETFL , L_flags);
+  ::fcntl(m_socket_id, F_SETFL , L_flags);
 
   
 }
@@ -157,7 +157,7 @@ int C_SocketSCTPListen::_open_init(int                    P_socket_domain,
   
   /* allocate a free socket                 */
   /* Internet address family, Stream socket */
-  m_socket_id = ext_socket(L_socket_domain, L_socketSCTP_type, IPPROTO_SCTP);
+  m_socket_id = ::socket(L_socket_domain, L_socketSCTP_type, IPPROTO_SCTP);
   
   SOCKET_DEBUG(1, "m_socket_id [" << m_socket_id << "]");
   if (m_socket_id < 0) {
@@ -187,7 +187,7 @@ int C_SocketSCTPListen::_open (size_t                 P_buffer_size,
      //     set_properties() ;
 
      /* bind the socket to the newly formed address */
-     L_rc = ext_bind(m_socket_id, 
+     L_rc = ::bind(m_socket_id, 
 		      (sockaddr *)(void *)&(m_source_addr_info->m_addr),
 		      SOCKADDR_IN_SIZE(&(m_source_addr_info->m_addr)));
    /* check there was no error */
@@ -201,7 +201,7 @@ int C_SocketSCTPListen::_open (size_t                 P_buffer_size,
 	 /* 5 pending connection requests will be queued by the	*/
 	 /* system, if we are not directly awaiting them using	*/
 	 /* the accept() system call, when they arrive.		*/
-	 L_rc = ext_listen(m_socket_id, 5);
+	 L_rc = ::listen(m_socket_id, 5);
 	 
 	 /* check there was no error */
 	 if (L_rc) {
@@ -250,8 +250,8 @@ C_Socket* C_SocketSCTPListen::process_fd_set (fd_set           *P_rSet,
 
 void C_SocketSCTPListen::_close () {
   SOCKET_DEBUG(1, "C_Socket::_close ()");
-  ext_shutdown(m_socket_id, SHUT_RDWR);
-  if (ext_close(m_socket_id) != 0) {
+  ::shutdown(m_socket_id, SHUT_RDWR);
+  if (::close(m_socket_id) != 0) {
     SOCKET_ERROR(0, 
 		 "close socket ["
 		 << m_socket_id
@@ -320,7 +320,7 @@ int C_SocketSCTPWithData::_open(int                    P_socket_domain,
   
   /* allocate a free socket                 */
   /* Internet address family, Stream socket */
-  m_socket_id = ext_socket(L_socket_domain, L_socketSCTP_type, IPPROTO_SCTP);
+  m_socket_id = ::socket(L_socket_domain, L_socketSCTP_type, IPPROTO_SCTP);
   
   SOCKET_DEBUG(1, "m_socket_id [" << m_socket_id << "]");
   if (m_socket_id < 0) {
@@ -336,8 +336,8 @@ int C_SocketSCTPWithData::_open(int                    P_socket_domain,
 
 void C_SocketSCTPWithData::_close () {
   SOCKET_DEBUG(1, "C_Socket::_close ()");
-  ext_shutdown(m_socket_id, SHUT_RDWR);
-  if (ext_close(m_socket_id) != 0) {
+  ::shutdown(m_socket_id, SHUT_RDWR);
+  if (::close(m_socket_id) != 0) {
     SOCKET_ERROR(0, 
 		 "close socket ["
 		 << m_socket_id
@@ -362,7 +362,7 @@ void C_SocketSCTPWithData::set_properties() {
     // max wait time after a close
     L_linger.l_onoff = 1;
     L_linger.l_linger = 0;
-    if (ext_setsockopt (m_socket_id, SOL_SOCKET, SO_LINGER,
+    if (::setsockopt (m_socket_id, SOL_SOCKET, SO_LINGER,
 		    &L_linger, sizeof (L_linger)) < 0) {
       SOCKET_ERROR(1, "Unable to set SO_LINGER option");
     }
@@ -379,7 +379,7 @@ void C_SocketSCTPWithData::set_properties() {
     init.sinit_max_instreams  = MAX_INCOMING;
     init.sinit_max_attempts   = 3;
     init.sinit_max_init_timeo = 30;
-    if(ext_setsockopt(m_socket_id, IPPROTO_SCTP, 
+    if(::setsockopt(m_socket_id, IPPROTO_SCTP, 
 		       SCTP_INITMSG, (void*)&init, sizeof(init)) < 0) {
       SOCKET_ERROR(1, "Unable to set SCTP_INITMSG option");
     }
@@ -393,7 +393,7 @@ void C_SocketSCTPWithData::set_properties() {
     events.sctp_partial_delivery_event = 1;
     events.sctp_adaptation_layer_event = 1;
 
-    if(ext_setsockopt(m_socket_id, IPPROTO_SCTP,
+    if(::setsockopt(m_socket_id, IPPROTO_SCTP,
 		       SCTP_EVENTS,&events,sizeof(events)) < 0) {
       SOCKET_ERROR(1, "Unable to set SCTP_EVENTS option");
     }
@@ -404,22 +404,22 @@ void C_SocketSCTPWithData::set_properties() {
 
   // size of recv buf
   L_max_buf_size = m_buffer_size ;
-  if(ext_setsockopt(m_socket_id, SOL_SOCKET, SO_SNDBUF,
+  if(::setsockopt(m_socket_id, SOL_SOCKET, SO_SNDBUF,
 		    &L_max_buf_size, sizeof(L_max_buf_size))) {
     SOCKET_ERROR(1,"Unable to set socket sndbuf (sctp)");
   }
 
   // size of send buff
   L_max_buf_size = m_buffer_size ;
-  if(ext_setsockopt(m_socket_id, SOL_SOCKET, SO_RCVBUF,
+  if(::setsockopt(m_socket_id, SOL_SOCKET, SO_RCVBUF,
 		    &L_max_buf_size, sizeof(L_max_buf_size))) {
     SOCKET_ERROR(1, "Unable to set socket rcvbuf (sctp)");
   }
 
   // non blocking mode
-  L_flags = ext_fcntl(m_socket_id, F_GETFL , NULL);
+  L_flags = ::fcntl(m_socket_id, F_GETFL , NULL);
   L_flags |= O_NONBLOCK;
-  ext_fcntl(m_socket_id, F_SETFL , L_flags);
+  ::fcntl(m_socket_id, F_SETFL , L_flags);
 
 }
 
@@ -511,7 +511,7 @@ void C_SocketSCTPWithData::sctp_event_handler (C_TransportEvent *P_event) {
     spc = &snp->sn_paddr_change;
 
     switch(spc->spc_state) {
-    case SCTP_ADDR_REACHABLE:
+    case SCTP_ADDR_AVAILABLE:
       SOCKET_DEBUG(0, "C_SocketSCTPWithData::sctp_event_handler() " << 
 		   "ASSOC PEER: ADDRESS REACHABLE");
       break;
@@ -535,6 +535,12 @@ void C_SocketSCTPWithData::sctp_event_handler (C_TransportEvent *P_event) {
       SOCKET_DEBUG(0, "C_SocketSCTPWithData::sctp_event_handler() " <<
 		   "ASSOC PEER: ADDRESS CONFIRMED");
       break;
+#ifdef SCTP_ADDR_PF
+    case SCTP_ADDR_PF:
+      SOCKET_DEBUG(0, "C_SocketSCTPWithData::sctp_event_handler() " <<
+                   "ASSOC PEER: ADDRESS POTENTIALLY FAILED");
+      break;
+#endif
     default:
       SOCKET_DEBUG(0, "C_SocketSCTPWithData::sctp_event_handler() " <<
 		   "ASSOC PEER: UNKNOWN");
@@ -592,11 +598,16 @@ bool C_SocketSCTPWithData::sctp_recv_msg (struct msghdr *msg,
     msg->msg_flags = MSGFLAG ; 
     msg->msg_controllen = cmsglen;
     
-    nnr = ext_recvmsg(m_socket_id, msg, 0);
+    nnr = ::recvmsg(m_socket_id, msg, 0);
 
     if (nnr <= 0) {
-      /* EOF or error */
-      *nrp = nr;
+      /* EOF, error o sin datos (socket no bloqueante) */
+      if ((nnr == 0) ||
+          ((errno != EAGAIN) && (errno != EWOULDBLOCK) && (errno != EINTR))) {
+        *nrp = -1;   /* EOF o error real: el peer cerro la asociacion */
+      } else {
+        *nrp = nr;   /* EAGAIN/EINTR: no hay mas datos por ahora */
+      }
       return (false);
     }
     
@@ -683,7 +694,8 @@ void C_SocketSCTPWithData::sctp_dispatch_msg (C_TransportEvent *P_event) {
   
   }
 
-  if (nr < 0) {
+  // cierre del peer; si hubo datos en esta vuelta se entregan primero
+  if ((nr < 0) && (m_data_recv == false)) {
     SOCKET_DEBUG(0, "C_SocketSCTPWithData::sctp_dispatch_msg() CLOSED");
     P_event->m_type = C_TransportEvent::E_TRANS_CLOSED ;
     P_event->m_channel_id = m_channel_id ;
@@ -697,6 +709,8 @@ C_SocketSCTPWithData* C_SocketSCTPWithData::process_fd_set (fd_set           *P_
                                                             C_TransportEvent *P_event) {
 
   SOCKET_DEBUG(0, "C_SocketSCTPWithData::process_fd_set() id=" << m_socket_id);
+  // control de flujo: vaciar la cola de escritura (ver C_SocketWithData)
+  if (m_state == E_SOCKET_STATE_READY) process_pending_write(P_rSet, P_wSet);
 
   switch (m_state) {
 
@@ -718,7 +732,7 @@ C_SocketSCTPWithData* C_SocketSCTPWithData::process_fd_set (fd_set           *P_
 
 int C_SocketSCTPWithData::_write(unsigned char* P_data,
 			     size_t         P_size) {
-  return (ext_sendto(m_socket_id, P_data, P_size, 
+  return (::sendto(m_socket_id, P_data, P_size, 
 		      0,
 		      (struct sockaddr*)(void*)m_remote_sockaddr_ptr, 
 		      (tool_socklen_t)*m_len_remote_sockaddr_ptr)) ;
@@ -727,7 +741,7 @@ int C_SocketSCTPWithData::_write(unsigned char* P_data,
 
 int C_SocketSCTPWithData::_call_write(unsigned char* P_data,
 				  size_t P_size) {
-  return (ext_send(m_socket_id, P_data, P_size, 0));
+  return (::send(m_socket_id, P_data, P_size, 0));
 }
 
 
@@ -761,7 +775,7 @@ size_t C_SocketSCTPWithData::received_buffer(unsigned char *P_data,
 }
 
 int C_SocketSCTPWithData::_call_read() { 
-  return (ext_read(m_socket_id, m_read_buf, m_read_buf_size)) ;
+  return (::read(m_socket_id, m_read_buf, m_read_buf_size)) ;
 }
 
 C_SocketSCTPServer::C_SocketSCTPServer (C_SocketSCTPServer& P_Socket) 
@@ -814,7 +828,7 @@ int C_SocketSCTPServer::_open_udp (size_t P_buffer_size,
      m_buffer_size = P_buffer_size ;
      
      /* bind the socket to the newly formed address */
-     L_rc = ext_bind(m_socket_id, 
+     L_rc = ::bind(m_socket_id, 
 		 (sockaddr *)(void *)&(m_source_udp_addr_info->m_addr),
 		 SOCKADDR_IN_SIZE(&(m_source_udp_addr_info->m_addr)));
    /* check there was no error */
@@ -845,7 +859,7 @@ int C_SocketSCTPServer::_open(size_t P_buffer_size,
   L_size = SOCKADDR_IN_SIZE(m_listen_sock->get_source_address());
   memset(&m_accepted_addr, 0, L_size);
   
-  m_socket_id = ext_accept (m_listen_sock->get_id(), 
+  m_socket_id = ::accept (m_listen_sock->get_id(), 
                              (sockaddr *)(void *)&m_accepted_addr,
                              &L_size);
   
@@ -902,7 +916,7 @@ int C_SocketSCTPClient::_open(T_pOpenStatus  P_status,
 
      
 
-      L_rc = ext_connect (m_socket_id, 
+      L_rc = ::connect (m_socket_id, 
                            (struct sockaddr*)(void*)&(m_remote_addr_info->m_addr),
                            SOCKADDR_IN_SIZE(&(m_remote_addr_info->m_addr))) ;
       
@@ -924,7 +938,7 @@ int C_SocketSCTPClient::_open(T_pOpenStatus  P_status,
         *P_status = E_OPEN_OK ;
       }
     } else {
-      L_rc = ext_bind(m_socket_id, 
+      L_rc = ::bind(m_socket_id, 
                        (sockaddr *)(void *)&(m_remote_addr_info->m_addr_src),
                        SOCKADDR_IN_SIZE(&(m_remote_addr_info->m_addr_src)));
      
@@ -944,7 +958,7 @@ int C_SocketSCTPClient::_open(T_pOpenStatus  P_status,
   return (L_rc);
 }
 int C_SocketSCTPServer::_read () {
-  return (ext_recvfrom(m_socket_id, 
+  return (::recvfrom(m_socket_id, 
                         m_read_buf, 
                         m_read_buf_size,
                         0,
@@ -953,7 +967,7 @@ int C_SocketSCTPServer::_read () {
 }
 
 int C_SocketSCTPClient::_read () {
-  return (ext_recvfrom(m_socket_id, 
+  return (::recvfrom(m_socket_id, 
                         m_read_buf, 
                         m_read_buf_size,
                         0,

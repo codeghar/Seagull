@@ -725,7 +725,7 @@ int C_ProtocolBinarySeparator::decode_body(unsigned char *P_buf,
   int                   L_i                                     ;
 
   unsigned char        *L_buf            = NULL                 ;
-  char                  L_char                                  ;
+  char                  L_char = 0                                  ;
 
   unsigned char        *L_ptr            = NULL                 ; 
   char                 *L_pos                                   ;

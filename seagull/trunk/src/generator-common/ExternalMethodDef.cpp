@@ -29,7 +29,7 @@ T_ExternalMethod create_external_method (char *P_args) {
   T_ExternalMethod            L_ret          = NULL          ;
   char                       *L_lib_name     = NULL          ;
   char                       *L_fun_name     = NULL          ;
-  void                       *L_library_handle               ; 
+  void                       *L_library_handle = NULL               ; 
   void                       *L_function                     ;
 
   L_lib_name = find_text_value(P_args,(char*)"lib")  ;

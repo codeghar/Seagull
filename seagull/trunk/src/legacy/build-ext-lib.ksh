@@ -19,7 +19,7 @@
 
 BUILD_UNCOMPRESS=""
 BUILD_VERSION_FILE=build.conf
-CURRENT_DIR=`pwd`
+CURRENT_DIR=$(pwd)
 EXT_SRC_DIR="external-lib-src"
 EXTBUILD_CONF_FILE=build-ext-lib.conf
 
@@ -63,7 +63,7 @@ else
 fi
 
 # determine number of library to be generated
-NB_BUILD=`cat ${EXTBUILD_CONF_FILE} | sed -n -e 's/^EXTBUILD_\([^_]*\)_FILE=.*$/\1/p' | sort -u`
+NB_BUILD=$(cat ${EXTBUILD_CONF_FILE} | sed -n -e 's/^EXTBUILD_\([^_]*\)_FILE=.*$/\1/p' | sort -u)
 
 echo -n "[External build "
 for build in ${NB_BUILD}
@@ -141,16 +141,16 @@ fi
 for build in ${NB_BUILD}
 do
 
-  EXT_FILE=`symbol_value EXTBUILD_${build}_FILE`
+  EXT_FILE=$(symbol_value EXTBUILD_${build}_FILE)
   echo "[File: ${EXT_FILE}]"
-  EXT_DIR=`symbol_value EXTBUILD_${build}_DIR`
+  EXT_DIR=$(symbol_value EXTBUILD_${build}_DIR)
   echo "[Directory: ${EXT_DIR}]"
-  EXT_BEGINSCRIPT=`symbol_value EXTBUILD_${build}_BEGINSCRIPT`
+  EXT_BEGINSCRIPT=$(symbol_value EXTBUILD_${build}_BEGINSCRIPT)
   echo "[Begin script: ${EXT_BEGINSCRIPT}]"
 
-  EXT_GENSCRIPT=`symbol_value EXTBUILD_${build}_GENSCRIPT`
+  EXT_GENSCRIPT=$(symbol_value EXTBUILD_${build}_GENSCRIPT)
   echo "[Gen script: ${EXT_GENSCRIPT}]"
-  EXT_ENDSCRIPT=`symbol_value EXTBUILD_${build}_ENDSCRIPT`
+  EXT_ENDSCRIPT=$(symbol_value EXTBUILD_${build}_ENDSCRIPT)
   echo "[End script: ${EXT_ENDSCRIPT}]"
 
   echo "[go to directory ${EXT_WORK_DIR}]"
@@ -168,7 +168,7 @@ do
          fi
 	 echo "[Executing ${BUILD_UNCOMPRESS} ${EXT_FILE}]"
          ${BUILD_UNCOMPRESS} ${EXT_FILE}
-         tar -xvf `echo ${EXT_FILE} | sed -e 's/\.tgz$/\.tar/' | sed -e 's/\.tar.gz$/\.tar/'`
+         tar -xvf $(echo ${EXT_FILE} | sed -e 's/\.tgz$/\.tar/' | sed -e 's/\.tar.gz$/\.tar/')
 	 if test ! -d ${EXT_DIR}
          then
 	     kerror "[Directory ${EXT_DIR} not created]"
@@ -202,17 +202,17 @@ done
 
 for file in ${EXT_SRC_LIST}
 do
-   local_file=`basename ${file}`
-   local_dir=`echo ${local_file} | sed -e 's/\.tgz$//' | sed -e 's/\.tar.gz$//'`
-   echo "[`basename ${local_file}`]"
+   local_file=$(basename ${file})
+   local_dir=$(echo ${local_file} | sed -e 's/\.tgz$//' | sed -e 's/\.tar.gz$//')
+   echo "[$(basename ${local_file})]"
    if test -d ${local_dir}
    then
      echo "[directory ${local_dir} already exists]"
    else
      echo cp ../${EXT_SRC_DIR}/${local_file} .
      echo ${BUILD_UNCOMPRESS} ${local_file}
-     echo tar -xvf `echo ${local_file} | sed -e 's/\.tgz$/\.tar/' | sed -e 's/\.tar.gz$/\.tar/'`
-     echo rm `echo ${local_file} | sed -e 's/\.tgz$/\.tar/' | sed -e 's/\.tar.gz$/\.tar/`
+     echo tar -xvf $(echo ${local_file} | sed -e 's/\.tgz$/\.tar/' | sed -e 's/\.tar.gz$/\.tar/')
+     echo rm $(echo ${local_file} | sed -e 's/\.tgz$/\.tar/' | sed -e 's/\.tar.gz$/\.tar/')
    fi
    echo cd ${local_dir}
    echo ./configure

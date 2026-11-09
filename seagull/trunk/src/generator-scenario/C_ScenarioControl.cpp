@@ -146,6 +146,7 @@ C_ScenarioControl::~C_ScenarioControl() {
     for(L_i=0; L_i < m_nb_default; L_i++) {
       if (m_default_scen[L_i]) {
 	m_default_scen[L_i]->delete_stats() ;
+	DELETE_VAR(m_default_scen[L_i]);
       }
     }
   }
