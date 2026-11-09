@@ -87,8 +87,13 @@ else
 fi
 echo "esperando ${DRAIN}s para la última fila de estadísticas"; sleep "$DRAIN"
 kill "$SPID" 2>/dev/null
-for i in $(seq 20); do kill -0 "$SPID" 2>/dev/null || break; sleep 0.5; done
-kill -9 "$SPID" 2>/dev/null
+STOP_WAIT=${STOP_WAIT:-30}
+for i in $(seq $((STOP_WAIT * 2))); do kill -0 "$SPID" 2>/dev/null || break; sleep 0.5; done
+FORZADO=0
+if kill -0 "$SPID" 2>/dev/null; then
+  echo "El servidor NO terminó en ${STOP_WAIT}s tras SIGTERM; SIGKILL (sin reporte LSan ni stats finales)"
+  kill -9 "$SPID" 2>/dev/null; FORZADO=1
+fi
 
 if [ "$MODE" = tls ]; then
   echo "--- logs generados:"; ls "$OUT/env/logs"
@@ -109,6 +114,7 @@ NERR=$(cat "$OUT"/env/logs/*.log 2>/dev/null | grep -c -F '|E|')
 NSAN=$(cat "$OUT"/env/logs/*.out 2>/dev/null | grep -c -E 'ERROR: (Leak|Address)Sanitizer')
 echo "--- reportes de sanitizer en .out: $NSAN"
 NERR=$((NERR + NSAN))
+NERR=$((NERR + FORZADO))
 MAX_ERR=${MAX_ERR:-0}
 echo "--- errores totales (|E| + sanitizer): $NERR (maximo permitido: $MAX_ERR)"
 if [ "$NERR" -gt "$MAX_ERR" ]; then
