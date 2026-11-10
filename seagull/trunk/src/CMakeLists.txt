@@ -34,8 +34,12 @@ set(CMAKE_CXX_FLAGS_BASELINE "")
 
 # ---- Flags comunes (de build.conf, sección LINUX) ----
 add_compile_definitions(VERSION="${PROJECT_VERSION}" _GNU_SOURCE _REENTRANT)
-add_compile_definitions($<$<CONFIG:Debug>:DEBUG_MODE>
-                        $<$<CONFIG:Debug>:LOG_DEBUG_NEW>)
+# DEBUG_MODE solo activa trazas (GEN_DEBUG y volcados hex); LOG_DEBUG_NEW no se usa (heredado de build.conf)
+option(SEAGULL_DEBUG_TRACES "Trazas GEN_DEBUG en builds Debug (OFF para ASan con carga)" ON)
+if(SEAGULL_DEBUG_TRACES)
+  add_compile_definitions($<$<CONFIG:Debug>:DEBUG_MODE>
+                          $<$<CONFIG:Debug>:LOG_DEBUG_NEW>)
+endif()
 add_compile_options(-Wall)
 if(SEAGULL_WERROR)
   add_compile_options(-Werror)
