@@ -1734,15 +1734,22 @@ void C_CallControl::clean_traffic() {
 
   clean_mlist(E_CTXT_SEND);
   {
+    // Antes: bucle sin decremento y sin sacar el contexto de E_CTXT_SUSPEND
+    // (clean_suspended() solo libera m_suspend_msg) => cuelgue al perder el
+    // canal con llamadas suspendidas. Mismo patron que messageOpenTimeoutControl().
     int L_nbElem = m_call_ctxt_mlist -> getNbElements (E_CTXT_SUSPEND) ;
     T_pCallContext L_pCallContext ;
     while (L_nbElem) {
-      L_pCallContext 
-	= m_call_ctxt_table[m_call_ctxt_mlist->getFirst(E_CTXT_SUSPEND)];
+      L_pCallContext
+        = m_call_ctxt_table[m_call_ctxt_mlist->getFirst(E_CTXT_SUSPEND)];
       L_pCallContext->clean_suspended() ;
+      m_channel_control->close_local_channel(L_pCallContext->m_channel_id,
+                                             L_pCallContext->m_channel_table);
+      makeCallContextAvailable(&L_pCallContext);   // pasa a E_CTXT_AVAILABLE
+      m_stat->executeStatAction(C_GeneratorStats::E_CALL_FAILED);
+      L_nbElem-- ;
     }
   }
-  clean_mlist(E_CTXT_SUSPEND);
   clean_mlist(E_CTXT_RECEIVE);
   for (L_i=0; L_i < (int)m_nb_wait_values; L_i++) {
     clean_mlist(E_CTXT_WAIT + L_i);
