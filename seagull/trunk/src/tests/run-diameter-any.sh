@@ -121,7 +121,7 @@ if [ "$MODE" = tls ]; then
 fi
 VIVO=0; pgrep -x seagull >/dev/null && VIVO=1
 NERR=$(cat "$OUT"/env/logs/*.log 2>/dev/null | grep -c -F '|E|')
-NSAN=$(cat "$OUT"/env/logs/*.out 2>/dev/null | grep -c -E 'ERROR: (Leak|Address)Sanitizer')
+NSAN=$(cat "$OUT"/env/logs/*.out 2>/dev/null | grep -c -E 'ERROR: (Leak|Address)Sanitizer|runtime error')
 echo "--- reportes de sanitizer en .out: $NSAN"
 NERR=$((NERR + NSAN))
 NERR=$((NERR + FORZADO))
