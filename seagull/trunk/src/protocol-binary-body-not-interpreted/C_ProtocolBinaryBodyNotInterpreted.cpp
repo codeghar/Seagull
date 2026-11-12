@@ -1267,8 +1267,8 @@ iostream_output& C_ProtocolBinaryBodyNotInterpreted::print_body  (iostream_outpu
         P_stream << P_val[L_i].m_value.m_val_signed ;
 	break;
       case E_TYPE_STRING: {
-        static char L_hexa_buf [50] ;
-        static char L_ascii_buf [50] ;
+        char L_hexa_buf [50] ;
+        char L_ascii_buf [50] ;
         const size_t L_cNum = 16 ;
         size_t L_i2, L_nb, L_buffer_size ;
         unsigned char*L_cur ;

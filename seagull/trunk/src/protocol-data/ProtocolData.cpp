@@ -79,7 +79,7 @@ iostream_output& operator<< (iostream_output&         P_ostream,
 
 
     if (P_valueData.m_value.m_val_binary.m_value != NULL) {
-      static char L_hexa_buf [50] ;
+      char L_hexa_buf [50] ;
       const  size_t L_cNum = 16 ;
       size_t L_i, L_nb ;
       unsigned char*L_cur ;

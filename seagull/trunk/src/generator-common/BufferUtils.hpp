@@ -44,11 +44,32 @@ T_Integer32 convert_bin_network_to_l(unsigned char*P_buf,
 T_UnsignedInteger32 convert_char_to_ul (char * P_data) ;
 
 
-void pretty_binary_buffer (unsigned char*P_buf, size_t P_size, char* P_res);
+// Versiones con limite: escriben como maximo P_*_size bytes (incluido el 0 final).
+size_t pretty_binary_buffer_n (const unsigned char* P_buf, size_t P_size,
+                               char* P_res, size_t P_res_size) ;
+size_t pretty_binary_printable_buffer_n (const unsigned char* P_buf, size_t P_size,
+                                         char* P_res, size_t P_res_size,
+                                         char* P_print, size_t P_print_size) ;
+size_t pretty_ascii_printable_buffer_n (const unsigned char* P_buf, size_t P_size,
+                                        char* P_print, size_t P_print_size) ;
 
-void pretty_binary_printable_buffer (unsigned char*P_buf, size_t P_size, char* P_res, char *P_print) ;
-
-void pretty_ascii_printable_buffer (unsigned char*P_buf, size_t P_size, char *P_print) ;
+// Envoltorios que deducen el tamano del array destino. No existe version con
+// char* suelto: pasar un puntero sin tamano no compila.
+template <size_t N>
+inline void pretty_binary_buffer (const unsigned char* P_buf, size_t P_size,
+                                  char (&P_res)[N]) {
+  (void)pretty_binary_buffer_n(P_buf, P_size, P_res, N) ;
+}
+template <size_t N, size_t M>
+inline void pretty_binary_printable_buffer (const unsigned char* P_buf, size_t P_size,
+                                            char (&P_res)[N], char (&P_print)[M]) {
+  (void)pretty_binary_printable_buffer_n(P_buf, P_size, P_res, N, P_print, M) ;
+}
+template <size_t M>
+inline void pretty_ascii_printable_buffer (const unsigned char* P_buf, size_t P_size,
+                                           char (&P_print)[M]) {
+  (void)pretty_ascii_printable_buffer_n(P_buf, P_size, P_print, M) ;
+}
 
 T_UnsignedInteger64 convert_bin_network_to_ull(unsigned char*P_buf, 
                                                size_t P_size);

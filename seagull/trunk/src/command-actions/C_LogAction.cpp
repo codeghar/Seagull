@@ -88,8 +88,8 @@ T_ValueData    C_LogAction::retrieve_memory(T_pCallContext  P_callCtxt) {
 
 void C_LogAction::print_data(T_pValueData  P_data) {
   
-  static char L_ascii_buf [50] ;
-  static char L_line_buf [100] ;
+  char L_ascii_buf [50] ;
+  char L_line_buf [100] ;
   const  size_t L_cNum = 48 ; 
   size_t L_j, L_nb ;
   unsigned char*L_cur ;

@@ -43,7 +43,7 @@ void convert_ul_to_bin_network(unsigned char      *P_buf,
 	<< ")");
   
 #ifdef DEBUG_MODE
-  static char   L_hexa_buf [50] ;
+  char   L_hexa_buf [50] ;
   unsigned char*L_cur ;
 
   L_cur = (unsigned char*)&P_val;
@@ -90,7 +90,7 @@ void convert_l_to_bin_network(unsigned char   *P_buf,
 	<< ")");
   
 #ifdef DEBUG_MODE
-  static char   L_hexa_buf [50] ;
+  char   L_hexa_buf [50] ;
   unsigned char*L_cur ;
 
   L_cur = (unsigned char*)&P_val;
@@ -134,7 +134,7 @@ T_UnsignedInteger32 convert_bin_network_to_ul(unsigned char*P_buf, size_t P_size
 	<< ")");
 
 #ifdef DEBUG_MODE
-  static char   L_hexa_buf [50] ;
+  char   L_hexa_buf [50] ;
   unsigned char*L_cur ;
 
   L_cur = P_buf;
@@ -183,7 +183,7 @@ T_Integer32 convert_bin_network_to_l(unsigned char*P_buf, size_t P_size) {
 	<< ")");
 
 #ifdef DEBUG_MODE
-  static char   L_hexa_buf [50] ;
+  char   L_hexa_buf [50] ;
   unsigned char*L_cur ;
 
   L_cur = P_buf;
@@ -274,42 +274,53 @@ unsigned char *convert_hexa_char_to_bin(char* P_data, size_t *P_bufSize) {
   return (L_buf) ;
 }
 
-void pretty_binary_buffer (unsigned char*P_buf, size_t P_size, char* P_res) {
-  
-  unsigned long  L_i ;
-  char          *L_res = P_res ;
+static constexpr char C_HEX_DIGITS[] = "0123456789abcdef" ;
 
-  for(L_i = 0; L_i < P_size; L_i++) {
-    (void)sprintf(L_res,"%02x ", (int)P_buf[L_i]);
-    L_res += 3 ;
-  }
-
+static inline char printable_char (unsigned char P_c) {
+  return (((P_c >= 32) && (P_c <= 126)) ? static_cast<char>(P_c) : '.') ;
 }
 
-void pretty_binary_printable_buffer (unsigned char*P_buf, size_t P_size, char* P_res, char *P_print) {
-  
-  unsigned long  L_i ;
-  char          *L_res = P_res ;
-  char          *L_print = P_print ;
+// Escribe "xx " por byte y siempre termina en 0. Si no cabe, trunca y
+// marca con "...". Devuelve el numero de bytes de P_buf representados.
+size_t pretty_binary_buffer_n (const unsigned char* P_buf, size_t P_size,
+                               char* P_res, size_t P_res_size) {
+  if ((P_res == nullptr) || (P_res_size == 0)) { return (0) ; }
+  if (P_buf == nullptr) { P_size = 0 ; }
 
-  for(L_i = 0; L_i < P_size; L_i++) {
-    (void)sprintf(L_res,"%02x ", (int)P_buf[L_i]);
-    (void)sprintf(L_print,"%c", ((((int)P_buf[L_i] >= 32) && ((int)P_buf[L_i] <= 126)) ? P_buf[L_i] : '.'));
-    L_res += 3 ;
-    L_print += 1 ;
+  size_t L_n     = P_size ;
+  bool   L_trunc = (P_size > ((P_res_size - 1) / 3)) ;
+  if (L_trunc) { L_n = (P_res_size >= 4) ? ((P_res_size - 4) / 3) : 0 ; }
+
+  char*  L_out = P_res ;
+  for (size_t L_i = 0 ; L_i < L_n ; L_i++) {
+    *L_out++ = C_HEX_DIGITS[P_buf[L_i] >> 4] ;
+    *L_out++ = C_HEX_DIGITS[P_buf[L_i] & 0x0f] ;
+    *L_out++ = ' ' ;
   }
-
+  if (L_trunc && (P_res_size >= 4)) { memcpy(L_out, "...", 3) ; L_out += 3 ; }
+  *L_out = 0 ;
+  return (L_n) ;
 }
 
-void pretty_ascii_printable_buffer (unsigned char*P_buf, size_t P_size, char *P_print) {
+size_t pretty_ascii_printable_buffer_n (const unsigned char* P_buf, size_t P_size,
+                                        char* P_print, size_t P_print_size) {
+  if ((P_print == nullptr) || (P_print_size == 0)) { return (0) ; }
+  if (P_buf == nullptr) { P_size = 0 ; }
 
-  unsigned long  L_i = 0 ;
-  char          *L_print = P_print ;
-
-  for(L_i = 0; L_i < P_size; L_i++) {
-    (void)sprintf(L_print,"%c", ((((int)P_buf[L_i] >= 32) && ((int)P_buf[L_i] <= 126)) ? P_buf[L_i] : '.'));
-    L_print += 1 ;
+  size_t L_n = (P_size < P_print_size) ? P_size : (P_print_size - 1) ;
+  for (size_t L_i = 0 ; L_i < L_n ; L_i++) {
+    P_print[L_i] = printable_char(P_buf[L_i]) ;
   }
+  P_print[L_n] = 0 ;
+  return (L_n) ;
+}
+
+size_t pretty_binary_printable_buffer_n (const unsigned char* P_buf, size_t P_size,
+                                         char* P_res, size_t P_res_size,
+                                         char* P_print, size_t P_print_size) {
+  size_t L_h = pretty_binary_buffer_n(P_buf, P_size, P_res, P_res_size) ;
+  size_t L_a = pretty_ascii_printable_buffer_n(P_buf, P_size, P_print, P_print_size) ;
+  return ((L_h < L_a) ? L_h : L_a) ;
 }
 
 
@@ -324,7 +335,7 @@ T_UnsignedInteger64 convert_bin_network_to_ull(unsigned char*P_buf,
 	<< ")");
 
 #ifdef DEBUG_MODE
-  static char   L_hexa_buf [50] ;
+  char   L_hexa_buf [50] ;
   unsigned char*L_cur ;
 
   L_cur = P_buf;
@@ -369,7 +380,7 @@ T_Integer64 convert_bin_network_to_ll(unsigned char*P_buf, size_t P_size) {
 	<< ")");
   
 #ifdef DEBUG_MODE
-  static char   L_hexa_buf [50] ;
+  char   L_hexa_buf [50] ;
   unsigned char*L_cur ;
 
   L_cur = P_buf;
@@ -417,7 +428,7 @@ void convert_ull_to_bin_network(unsigned char      *P_buf,
 	<< ")");
   
 #ifdef DEBUG_MODE
-  static char   L_hexa_buf [50] ;
+  char   L_hexa_buf [50] ;
   unsigned char*L_cur ;
 
   L_cur = (unsigned char *)&P_val;
@@ -464,7 +475,7 @@ void convert_ll_to_bin_network(unsigned char   *P_buf,
 	<< ")");
 
 #ifdef DEBUG_MODE
-  static char   L_hexa_buf [50] ;
+  char   L_hexa_buf [50] ;
   unsigned char*L_cur ;
 
   L_cur = (unsigned char*)&P_val;

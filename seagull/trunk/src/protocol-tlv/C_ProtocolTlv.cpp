@@ -4761,7 +4761,7 @@ iostream_output& C_ProtocolTlv::print_header(iostream_output& P_stream,
 	break;
       case E_TYPE_STRING: {
 
-        static char L_hexa_buf [50] ;
+        char L_hexa_buf [50] ;
         const  size_t L_cNum = 16 ; 
 	size_t L_j, L_nb ;
 	unsigned char*L_cur ;
@@ -4915,7 +4915,7 @@ iostream_output& C_ProtocolTlv::print_body  (iostream_output&  P_stream,
         P_stream << P_val[L_i].m_value.m_val_signed ;
 	break;
       case E_TYPE_STRING: {
-        static char L_hexa_buf [50] ;
+        char L_hexa_buf [50] ;
         const size_t L_cNum = 16 ;
         size_t L_i2, L_nb, L_buffer_size ;
         unsigned char*L_cur ;
@@ -5594,7 +5594,7 @@ void C_ProtocolTlv::log_buffer(char* P_header,
                                   unsigned char *P_buffer, 
                                   size_t P_buffer_size) {
   if (genTraceLevel & gen_mask_table[LOG_LEVEL_BUF]) {
-    static char L_hexa_buf [50] ;
+    char L_hexa_buf [50] ;
     const  size_t L_cNum = 16 ;
     size_t L_i, L_nb ;
     unsigned char*L_cur ;

@@ -569,7 +569,7 @@ void C_ProtocolText::log_buffer(char* P_header,
                                 size_t P_buffer_size) {
 
   if (genTraceLevel & gen_mask_table[LOG_LEVEL_BUF]) {
-    static char L_hexa_buf [50] ;
+    char L_hexa_buf [50] ;
     const  size_t L_cNum = 16 ;
     size_t L_i, L_nb ;
     unsigned char*L_cur ;
@@ -1736,9 +1736,9 @@ iostream_output& C_ProtocolText::print_data_msg(iostream_output& P_stream,
                                             T_pValueData     P_data) {
 
  
-  static char L_hexa_buf [50] ;
-  static char L_ascii_buf [50] ;
-  static char L_line_buf [100] ;
+  char L_hexa_buf [50] ;
+  char L_ascii_buf [50] ;
+  char L_line_buf [100] ;
   const  size_t L_cNum = 16 ; 
   size_t L_j, L_nb ;
   unsigned char*L_cur ;
