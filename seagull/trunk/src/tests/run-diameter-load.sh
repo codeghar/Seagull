@@ -1,6 +1,9 @@
 #!/bin/bash
 # uso: MODE=tcp|tls RATE=500 CALLS=20000 run-diameter-load.sh <dir-binarios> <dir-salida>
 . "$(dirname "${0}")/lib.sh"
+HERE=$(dirname "$(realpath "${0}")")
+: "${LSAN_OPTIONS:=suppressions=$HERE/lsan.supp:print_suppressions=1}"
+export LSAN_OPTIONS
 BIN=$(realpath "$1"); OUT=$(realpath -m "$2")
 MODE=${MODE:-tls}; RATE=${RATE:-500}; CALLS=${CALLS:-20000}
 T=$CERTS; KEY=${KEY:-key.pem}; PASS=${PASS:-seagull123}
@@ -56,7 +59,13 @@ DUR=$SECONDS
 if kill -0 "$CPID" 2>/dev/null; then echo "El cliente NO termino solo en ${CLIENT_MAX}s"; kill "$CPID"; sleep 1; kill -9 "$CPID" 2>/dev/null; DONE=no; else DONE=si; fi
 sleep "$DRAIN"
 kill -0 "$SPID" 2>/dev/null && SALIVE=si || SALIVE=NO
-kill "$SPID" 2>/dev/null; for i in $(seq 20); do kill -0 "$SPID" 2>/dev/null || break; sleep 0.5; done; kill -9 "$SPID" 2>/dev/null
+STOP_WAIT=${STOP_WAIT:-30}; FORZADO=0
+kill "$SPID" 2>/dev/null
+for i in $(seq $((STOP_WAIT * 2))); do kill -0 "$SPID" 2>/dev/null || break; sleep 0.5; done
+if kill -0 "$SPID" 2>/dev/null; then
+  echo "El servidor NO termino en ${STOP_WAIT}s tras SIGTERM; SIGKILL (sin reporte LSan)"
+  kill -9 "$SPID" 2>/dev/null; FORZADO=1
+fi
 
 csvval() { awk -F';' -v n="$2" 'NR==1{for(i=1;i<=NF;i++)if($i==n)c=i} {l=$0} END{split(l,a,";");print a[c]}' "$1"; }
 CS=$OUT/env/logs/client-protocol-stat.diameter-v1.csv; SS=$OUT/env/logs/server-protocol-stat.diameter-v1.csv
@@ -71,6 +80,11 @@ awk -F';' 'NR==1{for(i=1;i<=NF;i++){if($i=="Rate(P)")p=i; if($i=="ElapsedTime(C)
 echo "--- errores E/T distintos del cierre normal:"
 grep -hE '\|(E|T)\|' "$OUT"/env/logs/*.log | grep -v 'closed'
 echo "--- informes de sanitizers:"
-grep -l -E 'AddressSanitizer|LeakSanitizer|runtime error' "$OUT"/env/logs/*.out "$OUT"/env/logs/*.log 2>/dev/null || echo "ninguno"
-if [ "$A" = "$CALLS" ] && [ "$B" = "$CALLS" ] && [ "$F" = "0" ] && [ "$C" = "$CALLS" ] && [ "$D" = "$CALLS" ]; then echo "RESULTADO: OK"; else echo "RESULTADO: FALLO (contadores distintos de $CALLS)"; fi
+NSAN=$(cat "$OUT"/env/logs/*.out 2>/dev/null | grep -c -E 'ERROR: (Leak|Address)Sanitizer|runtime error')
+grep -l -E 'ERROR: (Leak|Address)Sanitizer|runtime error' "$OUT"/env/logs/*.out 2>/dev/null || echo "ninguno"
+if [ "$A" = "$CALLS" ] && [ "$B" = "$CALLS" ] && [ "$F" = "0" ] && [ "$C" = "$CALLS" ] && [ "$D" = "$CALLS" ] && [ "$NSAN" = 0 ] && [ "$FORZADO" = 0 ]; then
+  echo "RESULTADO: OK"
+else
+  echo "RESULTADO: FALLO (esperado $CALLS: A=$A B=$B C=$C D=$D F=$F; sanitizer=$NSAN; forzado=$FORZADO)"
+fi
 pgrep -x seagull >/dev/null && echo "AVISO: queda algun seagull vivo" || echo "limpio"
