@@ -37,6 +37,9 @@
 
 #include "string_t.hpp"
 #include "iostream_t.hpp"
+#include <format>
+#include <string>
+#include <unistd.h>
 
 #include <cstdlib>
 
@@ -1189,11 +1192,14 @@ T_GeneratorError C_Generator::InitProcedure() {
           // child process - poursuing the execution
 	  // background mode ok
           break;
-        default:
-          // parent process - killing the parent - the child get the parent pid
-          iostream_error << "Background mode - PID [" 
-			 << L_pid << "]" << iostream_endl ;
-          exit(0);
+        default: {
+          // parent process: report the child PID with a single write() so it
+          // cannot interleave with the child's GEN_DEBUG traces; _exit() avoids
+          // running destructors/atexit/LSan in the parent and flushing duplicated stdio buffers
+          const std::string L_msg = std::format("Background mode - PID [{}]\n", L_pid);
+          (void)!::write(STDERR_FILENO, L_msg.data(), L_msg.size());
+          _exit(0);
+        }
         }
       
     } else {

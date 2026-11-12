@@ -32,7 +32,17 @@ grep -h 'call-rate\|number-calls\|max-send' conf.client$SUF.xml
 cd "$OUT/env/run" || exit 1
 export LD_LIBRARY_PATH="$BIN"
 COMMON="-dico ../config/base_cx.xml -bg -llevel ET"
-getpid() { sed -n 's/.*PID \[\([0-9]*\)\].*/\1/p' "$1"; }
+getpid() {
+  local f=$1 c exe
+  exe=$(readlink -f "$BIN/seagull")
+  for _ in $(seq 40); do
+    for c in $(tr -d '\n' < "$f" | grep -oE 'PID [[][^]]*[]]' | head -1 | grep -oE '[0-9]+'); do
+      [ "$(readlink /proc/$c/exe 2>/dev/null)" = "$exe" ] && { echo "$c"; return 0; }
+    done
+    sleep 0.25
+  done
+  return 1
+}
 "$BIN/seagull" -conf ../config/conf.server$SUF.xml -scen ../scenario/sar-saa.server.xml \
   -log ../logs/sar-saa.server.log $COMMON < /dev/null > ../logs/server.out 2>&1
 SPID=$(getpid ../logs/server.out); kill -0 "$SPID" 2>/dev/null || { echo "servidor no arranco"; cat ../logs/server.out; exit 1; }

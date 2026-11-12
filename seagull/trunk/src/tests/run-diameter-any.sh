@@ -58,7 +58,17 @@ for f in ../config/$DICO ../scenario/$SCEN.server.xml ../scenario/$SCEN.client.x
 done
 export LD_LIBRARY_PATH="$BIN"
 COMMON="-dico ../config/$DICO -bg -llevel ET"
-getpid() { grep -oE 'PID [[][0-9]+[]]' "${1}" | grep -oE '[0-9]+'; }
+getpid() {
+  local f=$1 c exe
+  exe=$(readlink -f "$BIN/seagull")
+  for _ in $(seq 40); do
+    for c in $(tr -d '\n' < "$f" | grep -oE 'PID [[][^]]*[]]' | head -1 | grep -oE '[0-9]+'); do
+      [ "$(readlink /proc/$c/exe 2>/dev/null)" = "$exe" ] && { echo "$c"; return 0; }
+    done
+    sleep 0.25
+  done
+  return 1
+}
 
 SECONDS=0
 "$BIN/seagull" -conf ../config/conf.server$SUF.xml -scen ../scenario/$SCEN.server.xml -log ../logs/$SCEN.server$LOGSUF.log $COMMON < /dev/null > ../logs/server.out 2>&1
