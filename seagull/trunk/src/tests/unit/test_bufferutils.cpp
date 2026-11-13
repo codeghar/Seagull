@@ -43,6 +43,22 @@ int main () {
     CHECK(pretty_binary_buffer_n(L_in, 5, nullptr, 10) == 0) ; }
 #endif
 
+#ifndef PBB_OLD_API
+  { unsigned char t [] = { 0xde, 0xad, 0x01 } ; char b [7] ;
+    CHECK(convert_bin_to_hexa_char_n(t, 3, b, sizeof(b)) == 3) ; CHECK(std::strcmp(b, "dead01") == 0) ; }
+  { unsigned char t [] = { 0xde, 0xad, 0x01 } ; char b [6] ;
+    CHECK(convert_bin_to_hexa_char_n(t, 3, b, sizeof(b)) == 2) ; CHECK(std::strcmp(b, "dead") == 0) ; }
+  { char b [4] ; std::memset(b, 'X', sizeof(b)) ;
+    CHECK(convert_bin_to_hexa_char_n(L_in, 0, b, sizeof(b)) == 0) ; CHECK(b[0] == 0) ; }
+  { char b [1] ; CHECK(convert_bin_to_hexa_char_n(L_in, 8, b, sizeof(b)) == 0) ; CHECK(b[0] == 0) ; }
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+  { unsigned char t [] = { 0x00, 0x7f, 0xff } ; char b [7] ;
+    convert_bin_to_hexa_char(t, 3, b) ; CHECK(std::strcmp(b, "007fff") == 0) ; }
+  { char b [4] ; std::memset(b, 'X', sizeof(b)) ;
+    convert_bin_to_hexa_char(L_in, 0, b) ; CHECK(b[0] == 0) ; }
+#pragma GCC diagnostic pop
+#endif
   if (g_fail == 0) { std::puts("test_bufferutils: OK") ; }
   else             { std::printf("test_bufferutils: %d fallos", g_fail) ; std::puts("") ; }
   return ((g_fail == 0) ? 0 : 1) ;

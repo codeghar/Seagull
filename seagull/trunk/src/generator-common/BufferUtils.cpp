@@ -233,16 +233,33 @@ T_Integer32 convert_bin_network_to_l(unsigned char*P_buf, size_t P_size) {
 }
 
 
-void convert_bin_to_hexa_char(unsigned char*P_buf, size_t P_size, char* P_res) {
-  
-  unsigned long  L_i ;
-  char          *L_res = P_res ;
+// Version con limite: escribe "xx" por byte (minusculas, sin separador) y
+// siempre termina en 0. Si no cabe, trunca a bytes completos, sin marca, para
+// que la salida siga siendo valida para convert_hexa_char_to_bin.
+// Devuelve el numero de bytes de P_buf convertidos.
+size_t convert_bin_to_hexa_char_n (const unsigned char* P_buf, size_t P_size,
+                                   char* P_res, size_t P_res_size) {
+  static constexpr char L_hex[] = "0123456789abcdef" ;
+  if ((P_res == nullptr) || (P_res_size == 0)) { return (0) ; }
+  if (P_buf == nullptr) { P_size = 0 ; }
 
-  for(L_i = 0; L_i < P_size; L_i++) {
-    (void)sprintf(L_res,"%02x", (int)P_buf[L_i]);
-    L_res += 2 ;
+  size_t L_max = (P_res_size - 1) / 2 ;
+  size_t L_n   = (P_size < L_max) ? P_size : L_max ;
+  char*  L_out = P_res ;
+  for (size_t L_i = 0 ; L_i < L_n ; L_i++) {
+    *L_out++ = L_hex[P_buf[L_i] >> 4] ;
+    *L_out++ = L_hex[P_buf[L_i] & 0x0f] ;
   }
+  *L_out = 0 ;
+  return (L_n) ;
+}
 
+// API original (HP, 2006), sin callers en el arbol. Se conserva por
+// compatibilidad: seagull se enlaza con ENABLE_EXPORTS y bibliotecas externas
+// cargadas con dlopen pueden usarla. Contrato: P_res de 2*P_size+1 bytes.
+void convert_bin_to_hexa_char(unsigned char*P_buf, size_t P_size, char* P_res) {
+  if (P_res == nullptr) { return ; }
+  (void)convert_bin_to_hexa_char_n(P_buf, P_size, P_res, (2 * P_size) + 1) ;
 }
 
 

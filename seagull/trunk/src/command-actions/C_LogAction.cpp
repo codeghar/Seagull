@@ -100,7 +100,7 @@ void C_LogAction::print_data(T_pValueData  P_data) {
   if (L_cur != NULL) {
     for (L_j = 0 ; L_j < L_nb; L_j++) {
       pretty_ascii_printable_buffer(L_cur, L_cNum, L_ascii_buf);
-      sprintf(L_line_buf, "[%-48.48s] ", L_ascii_buf);
+      snprintf(L_line_buf, sizeof(L_line_buf), "[%-48.48s] ", L_ascii_buf);
       GEN_LOG_EVENT (LOG_LEVEL_USER,
 		     L_line_buf);
       L_cur += L_cNum ;
@@ -109,7 +109,7 @@ void C_LogAction::print_data(T_pValueData  P_data) {
     L_nb = L_buffer_size % L_cNum ;
     if (L_nb != 0) {
       pretty_ascii_printable_buffer(L_cur, L_nb, L_ascii_buf);
-      sprintf(L_line_buf, "[%-48.48s] ",  L_ascii_buf);
+      snprintf(L_line_buf, sizeof(L_line_buf), "[%-48.48s] ",  L_ascii_buf);
       GEN_LOG_EVENT (LOG_LEVEL_USER,
 		     L_line_buf);
     }

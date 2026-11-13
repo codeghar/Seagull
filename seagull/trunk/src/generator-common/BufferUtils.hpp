@@ -24,6 +24,10 @@
 
 #include "integer_t.hpp" // for strtoll 
 
+size_t convert_bin_to_hexa_char_n (const unsigned char* P_buf, size_t P_size,
+                                   char* P_res, size_t P_res_size) ;
+// API original: P_res debe tener 2*P_size+1 bytes. Se mantiene por compatibilidad.
+[[deprecated("usar convert_bin_to_hexa_char_n")]]
 void convert_bin_to_hexa_char(unsigned char*P_buf, size_t P_size, char* P_res);
 
 unsigned char *convert_hexa_char_to_bin(char* P_data, size_t *P_bufSize);
