@@ -263,30 +263,40 @@ void convert_bin_to_hexa_char(unsigned char*P_buf, size_t P_size, char* P_res) {
 }
 
 
+// Valor de un digito hexadecimal, o -1 si P_c no lo es.
+static inline int hex_nibble (unsigned char P_c) {
+  if ((P_c >= '0') && (P_c <= '9')) { return (P_c - '0') ; }
+  if ((P_c >= 'a') && (P_c <= 'f')) { return (P_c - 'a' + 10) ; }
+  if ((P_c >= 'A') && (P_c <= 'F')) { return (P_c - 'A' + 10) ; }
+  return (-1) ;
+}
+
+// Convierte una cadena hexadecimal ("00017f000001", sin prefijo 0x) en bytes.
+// Estricta: longitud par y solo [0-9a-fA-F] (sin blancos, signos ni basura).
+// Error: devuelve NULL con *P_bufSize = 0, igual que antes con longitud impar,
+// asi que los callers que ya comprueban NULL no cambian. Valida antes de
+// reservar memoria. El buffer se reserva con ALLOC_TABLE (malloc): liberar con
+// FREE_TABLE. Cadena vacia: tamano 0 y buffer reservado, como antes.
 unsigned char *convert_hexa_char_to_bin(char* P_data, size_t *P_bufSize) {
 
-  char           L_value[3]        ;
-  unsigned char *L_buf      = NULL ;
-  int            L_i, L_k          ;
-  unsigned int   L_binValue        ;
-  
-  *P_bufSize = (size_t) 0 ;
+  unsigned char *L_buf = NULL ;
 
-  if ((strlen(P_data) % 2) == 0) {
-    *P_bufSize = (size_t) strlen(P_data) / 2 ;
-    ALLOC_TABLE(L_buf, unsigned char*, 
-                sizeof(unsigned char), (*P_bufSize));
-    L_k = 0 ;
-    L_value[2] = '\0' ;
-    for (L_i=0 ; L_i < (int)(*P_bufSize); L_i++) {
-      L_value[0]=P_data[L_k] ;
-      L_value[1]=P_data[L_k+1] ;
-      sscanf(L_value, "%x", &L_binValue);
-      L_buf[L_i] = (unsigned char) L_binValue ;
-      L_k += 2 ;
-    }
-    
-  } 
+  *P_bufSize = (size_t) 0 ;
+  if (P_data == NULL) { return (NULL) ; }
+
+  size_t L_len = strlen(P_data) ;
+  if ((L_len % 2) != 0) { return (NULL) ; }
+  for (size_t L_i = 0 ; L_i < L_len ; L_i++) {
+    if (hex_nibble((unsigned char)P_data[L_i]) < 0) { return (NULL) ; }
+  }
+
+  *P_bufSize = L_len / 2 ;
+  ALLOC_TABLE(L_buf, unsigned char*,
+              sizeof(unsigned char), (*P_bufSize));
+  for (size_t L_i = 0 ; L_i < *P_bufSize ; L_i++) {
+    L_buf[L_i] = (unsigned char)((hex_nibble((unsigned char)P_data[2 * L_i]) << 4)
+                                 | hex_nibble((unsigned char)P_data[(2 * L_i) + 1])) ;
+  }
 
   return (L_buf) ;
 }

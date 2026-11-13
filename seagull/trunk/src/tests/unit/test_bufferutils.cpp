@@ -3,11 +3,52 @@
 #include "BufferUtils.hpp"
 #include <cstdio>
 #include <cstring>
+#include <cstdlib>
 
 static int g_fail = 0 ;
 #define CHECK(c) do { if (!(c)) { std::printf("FALLO linea %d: %s", __LINE__, #c) ; std::puts("") ; g_fail++ ; } } while (0)
 
+#define HEX_BAD(lit) { char s_ [] = lit ; size_t n_ = 99 ; \
+  unsigned char* r_ = convert_hexa_char_to_bin(s_, &n_) ; \
+  CHECK(r_ == nullptr) ; CHECK(n_ == 0) ; std::free(r_) ; }
+
+// Cadenas hexadecimales de escenarios (convert_hexa_char_to_bin, modo estricto).
+static void test_hexa_to_bin () {
+  { char s [] = "00017f000001" ; size_t n = 99 ;
+    unsigned char* r = convert_hexa_char_to_bin(s, &n) ;
+    CHECK(r != nullptr) ; CHECK(n == 6) ;
+    if ((r != nullptr) && (n == 6)) {
+      CHECK((r[0] == 0x00) && (r[1] == 0x01) && (r[2] == 0x7f)
+            && (r[3] == 0x00) && (r[4] == 0x00) && (r[5] == 0x01)) ; }
+    std::free(r) ; }
+  { char s [] = "DEADbeef" ; size_t n = 99 ;
+    unsigned char* r = convert_hexa_char_to_bin(s, &n) ;
+    CHECK(n == 4) ;
+    if ((r != nullptr) && (n == 4)) {
+      CHECK((r[0] == 0xde) && (r[1] == 0xad) && (r[2] == 0xbe) && (r[3] == 0xef)) ; }
+    std::free(r) ; }
+  { char s [] = "" ; size_t n = 99 ;
+    unsigned char* r = convert_hexa_char_to_bin(s, &n) ;
+    CHECK(n == 0) ; std::free(r) ; }
+  HEX_BAD("zz")
+  HEX_BAD("1g")
+  HEX_BAD(" 1")
+  HEX_BAD("-1")
+  HEX_BAD("+1")
+  HEX_BAD("abc")
+#ifndef PBB_HEAD_RUN
+  { size_t n = 99 ; unsigned char* r = convert_hexa_char_to_bin(nullptr, &n) ;
+    CHECK(r == nullptr) ; CHECK(n == 0) ; }
+#endif
+}
+#undef HEX_BAD
+
 int main () {
+  test_hexa_to_bin() ;
+#ifdef PBB_HEAD_RUN
+  std::printf("hexa-only: %d fallos", g_fail) ; std::puts("") ;
+  return ((g_fail == 0) ? 0 : 1) ;
+#endif
   unsigned char L_in [128] ;
   for (int L_i = 0 ; L_i < 128 ; L_i++) { L_in[L_i] = (unsigned char)L_i ; }
 
