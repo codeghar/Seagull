@@ -988,6 +988,8 @@ C_GeneratorStats::C_GeneratorStats ()
   m_SizeOfResponseTimeRepartition = 0;
   m_SizeOfCallLengthRepartition   = 0;
   m_initDone = false ;
+  m_outputStream              = NULL ;
+  m_current_repartition_table = NULL ;
 
   m_max_msg_size = 50 ;
   ALLOC_TABLE(m_info_msg, char*, sizeof(char), m_max_msg_size+1);
