@@ -46,7 +46,7 @@ if [ "$n" = 0 ]; then ok "arbol de git limpio"; else warn "$n archivos sin confi
 stage "1. Compilacion desde cero"
 build build-werror     -DCMAKE_BUILD_TYPE=Debug -DSEAGULL_WERROR=ON
 build build-werror-ssl -DCMAKE_BUILD_TYPE=Debug -DSEAGULL_WERROR=ON -DSEAGULL_BUILD_CRYPTO=ON -DSEAGULL_BUILD_TLS=ON -DSEAGULL_BUILD_SCTP=ON
-build build-asan       -DCMAKE_BUILD_TYPE=Debug -DSEAGULL_SANITIZE=ON -DSEAGULL_BUILD_CRYPTO=ON -DSEAGULL_BUILD_TLS=ON
+build build-asan       -DCMAKE_BUILD_TYPE=Debug -DSEAGULL_SANITIZE=ON -DSEAGULL_DEBUG_TRACES=OFF -DSEAGULL_BUILD_CRYPTO=ON -DSEAGULL_BUILD_TLS=ON
 build build-release    -DCMAKE_BUILD_TYPE=Release -DSEAGULL_BUILD_CRYPTO=ON -DSEAGULL_BUILD_TLS=ON -DSEAGULL_BUILD_SCTP=ON
 if [ -n "$STD_LOOP" ]; then
   for s in 98 11 14 17 20 23; do
