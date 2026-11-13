@@ -36,7 +36,7 @@ build() { # nombre, opciones de cmake...
 stage "0. Preflight"
 pkill seagull 2>/dev/null; sleep 1
 if ss -ltn | grep -q ':3868 '; then fail "puerto 3868 ocupado"; else ok "puerto 3868 libre"; fi
-for f in "$HERE/unit/test_auth.c" "$HERE/unit/test_radius.cpp" "$CERTS/cert.pem" "$CERTS/key.pem" "$HERE/run-diameter.sh" "$HERE/run-diameter-tls.sh" "$HERE/run-diameter-sctp.sh" "$HERE/run-diameter-load.sh" "$HERE/verify.sh" "$HERE/resumen.sh" "$HERE/validate-crypto.sh" "$EXPECTED/client.txt" "$EXPECTED/server.txt"; do
+for f in "$HERE/unit/test_auth.c" "$HERE/unit/test_radius.cpp" "$HERE/unit/test_bufferutils.cpp" "$HERE/unit/build-test-bufferutils.sh" "$CERTS/cert.pem" "$CERTS/key.pem" "$HERE/run-diameter.sh" "$HERE/run-diameter-tls.sh" "$HERE/run-diameter-sctp.sh" "$HERE/run-diameter-load.sh" "$HERE/verify.sh" "$HERE/resumen.sh" "$HERE/validate-crypto.sh" "$EXPECTED/client.txt" "$EXPECTED/server.txt"; do
   if [ -f "$f" ]; then ok "existe $(basename "$f")"; else fail "falta $f"; fi
 done
 echo "  git HEAD: $(git log --oneline -n 1)"
@@ -59,6 +59,8 @@ stage "2. Crypto: Radius y Digest contra openssl md5, -Werror, plugins"
 "$HERE/validate-crypto.sh" > "$D/crypto.log" 2>&1
 grep -E 'OK|FAIL' "$D/crypto.log"
 if grep -q 'TODO OK' "$D/crypto.log"; then ok "validate-crypto.sh"; else fail "validate-crypto.sh (ver $D/crypto.log)"; fi
+"$HERE/unit/build-test-bufferutils.sh" > "$D/bufferutils.log" 2>&1
+if grep -q 'test_bufferutils: OK' "$D/bufferutils.log"; then ok "unit/test_bufferutils (ASan/UBSan)"; else fail "unit/test_bufferutils (ver $D/bufferutils.log)"; fi
 
 stage "3. Diameter TCP con ASan, comparado con la referencia gnu++98"
 "$HERE/verify.sh" "$SRC/build-asan/bin" "$D/out-tcp-asan" > "$D/tcp-asan.log" 2>&1

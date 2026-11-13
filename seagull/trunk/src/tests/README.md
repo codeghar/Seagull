@@ -25,7 +25,7 @@ Antes de cada sesi√≥n: `export LC_ALL=C` (los scripts buscan `warning:` en ingl√
 | `run-diameter-load.sh` | Prueba de carga TCP o TLS (`MODE`, `RATE`, `CALLS`) |
 | `resumen.sh` | Extrae los contadores finales de un CSV de protocolo |
 | `expected/` | Referencia gnu++98 en texto (cliente y servidor) |
-| `unit/` | Pruebas unitarias de crypto (Radius, Digest RFC 2617) |
+| `unit/` | Pruebas unitarias de crypto (Radius, Digest RFC 2617) y de BufferUtils (build-test-bufferutils.sh, ASan/UBSan) |
 | `lsan.supp` | Supresiones de LeakSanitizer (solo leaks de arranque conocidos) |
 
 El entorno de cada corrida se genera copiando `exe-env/diameter-env` (que **no se
