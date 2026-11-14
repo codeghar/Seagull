@@ -5386,15 +5386,25 @@ C_MessageFrame* C_ProtocolTlv::create_new_message(void                *P_xml,
     // unsigned long L_ret_decode ;
     L_currentName = L_Xml->find_value((char*)"value");
     
-    L_buf = convert_hexa_char_to_bin(L_currentName, &L_size);
-    (void) L_msg -> decode(L_buf, L_size, &L_decode_result);
-    
-    //    if (L_decode_result != C_ProtocolBinaryFrame::E_MSG_OK) 
-    if (L_decode_result != C_ProtocolFrame::E_MSG_OK) {
-      GEN_ERROR(E_GEN_FATAL_ERROR, 
-		"Error while decoding direct data buffer ["
-		<< L_currentName << "]");
+    if (L_currentName == NULL) {
+      GEN_ERROR(E_GEN_FATAL_ERROR, "value is mandatory for [CDATA]");
       L_msgOk = false ;
+    } else {
+      L_buf = convert_hexa_char_to_bin(L_currentName, &L_size);
+      if (L_buf == NULL) {
+        GEN_ERROR(E_GEN_FATAL_ERROR,
+                  "Bad hexadecimal buffer [" << L_currentName << "]");
+        L_msgOk = false ;
+      } else {
+        (void) L_msg -> decode(L_buf, L_size, &L_decode_result);
+        FREE_TABLE(L_buf);
+        if (L_decode_result != C_ProtocolFrame::E_MSG_OK) {
+          GEN_ERROR(E_GEN_FATAL_ERROR,
+                    "Error while decoding direct data buffer ["
+                    << L_currentName << "]");
+          L_msgOk = false ;
+        }
+      }
     }
 	
   } else if (strcmp(L_currentName, get_header_name()) == 0) {
